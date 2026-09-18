@@ -20,6 +20,7 @@ from opportunity_record import DeadlineFact, OpportunityRecord, SourceRef, safe_
 _TIMEZONE_TOKEN = re.compile(r"\b(?:UTC|GMT|ET|EST|EDT|CT|CST|CDT|MT|MST|MDT|PT|PST|PDT)\b", re.I)
 _OFFSET_END = re.compile(r"([+-]\d{2}:\d{2})$")
 _ALLOWED_METADATA = ("baseType", "subTier", "active")
+PROVIDER_ROLE = "discovery_only"
 
 
 def _text(value: Any) -> str | None:
