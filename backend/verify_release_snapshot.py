@@ -26,6 +26,7 @@ REQUIRED_MODULES=(
     "webhook_boundary.py",
     "opportunity_record.py",
     "providers/capture_mcp_sam.py",
+    "provider_comparison.py",
 )
 REQUIRED_TESTS=(
     "tests/test_evidence.py",
@@ -35,6 +36,7 @@ REQUIRED_TESTS=(
     "tests/test_webhook_boundary.py",
     "tests/test_opportunity_record.py",
     "tests/test_capture_mcp_sam.py",
+    "tests/test_provider_comparison.py",
 )
 
 FORBIDDEN_PATTERNS=(
