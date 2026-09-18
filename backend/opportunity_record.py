@@ -186,3 +186,31 @@ def compare_records(records: Iterable[OpportunityRecord]) -> tuple[ProviderConfl
         conflicts.append(ProviderConflict("amendments", tuple(amendment_values)))
 
     return tuple(conflicts)
+
+
+CONTROLLING_SOURCE_REQUIRED = frozenset({
+    "identity",
+    "response_deadline",
+    "set_aside",
+    "amendments",
+    "attachments",
+})
+
+@dataclass(frozen=True)
+class ControllingSourceReadiness:
+    eligible: bool
+    blockers: tuple[str, ...]
+
+def controlling_source_readiness(record: OpportunityRecord) -> ControllingSourceReadiness:
+    """Decide whether one provider record can serve as a controlling baseline.
+
+    A record can be perfectly useful for discovery while still being ineligible
+    to control CaptureBrief conclusions. Unknown amendment/attachment coverage is
+    therefore a hard blocker here even though it may only be a review condition
+    for general OpportunityRecord validation.
+    """
+    blockers=list(validate_record(record).blockers)
+    for field_name in sorted(CONTROLLING_SOURCE_REQUIRED):
+        if field_name in record.explicit_unknowns:
+            blockers.append(f"controlling_source_unknown:{field_name}")
+    return ControllingSourceReadiness(not blockers, tuple(dict.fromkeys(blockers)))
