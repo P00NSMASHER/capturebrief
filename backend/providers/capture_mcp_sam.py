@@ -117,11 +117,12 @@ def adapt_opportunity(opportunity: Mapping[str, Any], *, retrieved_at: str) -> O
 
     # The summary endpoint does not expose an amendment inventory. Keep this
     # deliberately unknown instead of interpreting baseType/type as amendments.
-    metadata = {
+    metadata = {"provider_role": PROVIDER_ROLE}
+    metadata.update({
         key: opportunity[key]
         for key in _ALLOWED_METADATA
         if key in opportunity and opportunity[key] is not None
-    }
+    })
 
     naics = _text(opportunity.get("naicsCode"))
     psc = _text(opportunity.get("classificationCode"))
