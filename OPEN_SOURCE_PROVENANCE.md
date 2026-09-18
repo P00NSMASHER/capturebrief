@@ -5,7 +5,7 @@ This ledger is a gating artifact. No external code is incorporated into a produc
 | Candidate | Intended use | Observed license | Pinned revision | Incorporation status | Required next check |
 |---|---|---|---|---|---|
 | blencorp/capture-mcp-server | SAM.gov + USASpending provider patterns for CaptureBrief | MIT | `e91ce243cd6a62e9c2a55609d34a187fca89703b` | NOT INCORPORATED | dependency/license audit; adapter-only design |
-| EthanHNguyen/rfp-map | bulk SAM opportunity ingestion/discovery patterns | MIT | `5c046e1abb80f515951a0d1c8ebb20a95aeb46d3` | NOT INCORPORATED | confirm bulk-data terms; isolate ingestion logic |
+| EthanHNguyen/rfp-map | future API-key-free bulk discovery only | MIT | `5c046e1abb80f515951a0d1c8ebb20a95aeb46d3` | NOT INCORPORATED | HOLD for current core: normalized `responseDeadline` may fall back to ArchiveDate, `id` may fall back to solicitation/link/title, and description is truncated; do not use as controlling-source QA |
 | pretorin-ai/simple-crm | govtech CRM/workspace infrastructure patterns | MIT | `276b5fd871663605138fce5486831a422368b130` | NOT INCORPORATED | auth/dependency audit; extract only needed modules |
 | chakmarebel/federal-proposal-copilot | federal proposal/compliance workflow ideas | MIT | `fc8618e08d2bce924b412a22c2f0857beb3ceabf` | NOT INCORPORATED | separate methodology concepts from third-party marks/content; note upstream self-test warning in pinned commit |
 | jmapb/nycaabs | NYC address/building/BIN/permit normalization patterns | MIT | `149c27b6a42d3dc33f77be8e7c2b84dcc227239c` | NOT INCORPORATED | dependency/data-source audit; extract only normalization patterns |
