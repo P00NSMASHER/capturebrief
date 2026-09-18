@@ -46,8 +46,10 @@ def main()->int:
     if missing:
         raise SystemExit("missing consolidated backend files:\n"+"\n".join(missing))
 
+    # Production modules only: regression tests intentionally contain fake
+    # secret-shaped fixtures to prove validators fail closed.
     leaks=[]
-    for rel in REQUIRED_MODULES+REQUIRED_TESTS:
+    for rel in REQUIRED_MODULES:
         text=(BACKEND_DIR/rel).read_text(encoding="utf-8")
         for pattern in FORBIDDEN_PATTERNS:
             if pattern.search(text):
