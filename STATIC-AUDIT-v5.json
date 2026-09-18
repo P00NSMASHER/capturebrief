@@ -1,0 +1,24 @@
+{
+  "posture_assumptions": true,
+  "netlify_form": true,
+  "no_file_upload": true,
+  "utm_on_submit_only": true,
+  "restricted_source_warning": true,
+  "outside_not_internal_independent": true,
+  "founding_price_not_validation": true,
+  "named_operator": true,
+  "sample_assumptions_illustrative": true,
+  "privacy_form_updated": true,
+  "terms_restricted_boundary": true,
+  "data_restricted_boundary": true,
+  "thanks_page": true,
+  "price_unchanged": true,
+  "version": "v5.1-redteam",
+  "redteam_fixes": [
+    "CSP form-action changed from none to self",
+    "FAA SAVES sample promoted to public proof",
+    "homepage preview aligned to FAA sample",
+    "4 action-changing vs 1 useful-confirmation distinction made explicit"
+  ],
+  "form_name": "pursuit-qa-intake"
+}

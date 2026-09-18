@@ -33,3 +33,16 @@ menus.forEach((menu) => {
     }
   });
 });
+
+
+// v5: capture acquisition context only when a visitor chooses to submit the intake form.
+const intakeForm = document.querySelector('form[name="pursuit-qa-intake"]');
+if (intakeForm) {
+  const params = new URLSearchParams(window.location.search);
+  const page = intakeForm.querySelector('input[name="source_page"]');
+  const utmSource = intakeForm.querySelector('input[name="utm_source"]');
+  const utmCampaign = intakeForm.querySelector('input[name="utm_campaign"]');
+  if (page) page.value = window.location.pathname;
+  if (utmSource) utmSource.value = params.get('utm_source') || '';
+  if (utmCampaign) utmCampaign.value = params.get('utm_campaign') || '';
+}
