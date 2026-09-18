@@ -69,7 +69,7 @@ def safe_source_url(value: str) -> str:
     """
     if not isinstance(value, str) or any(c.isspace() or ord(c) < 32 for c in value):
         raise ValueError("Source URL contains whitespace/control characters")
-    if "\" in value or any(ord(c) == 127 for c in value):
+    if "\\" in value or any(ord(c) == 127 for c in value):
         raise ValueError("Unsafe source URL")
     try:
         parts = urlsplit(value)
