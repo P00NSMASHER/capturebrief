@@ -1,4 +1,4 @@
-name: CaptureBrief backend snapshot verification
+name: CaptureBrief backend source verification
 
 on:
   push:
@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 jobs:
-  verify-backend-snapshot:
+  verify-backend:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -28,8 +28,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Verify immutable release and run original tests
+      - name: Verify imported Sept. 15 source subset byte-for-byte
         run: python backend/verify_release_snapshot.py
 
       - name: Run normalized portfolio backend tests
+        env:
+          PYTHONWARNINGS: "error::ResourceWarning"
         run: python -m unittest discover -s backend/tests -v
