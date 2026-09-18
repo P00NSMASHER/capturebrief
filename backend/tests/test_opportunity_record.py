@@ -1,6 +1,6 @@
 import unittest
 
-from opportunity_record import SourceRef, DeadlineFact, OpportunityRecord, compare_records, validate_record
+from opportunity_record import SourceRef, DeadlineFact, OpportunityRecord, compare_records, controlling_source_readiness, validate_record
 
 SRC = SourceRef('sam.gov','https://sam.gov/opp/example','2026-09-18T22:00:00Z','a'*64)
 
@@ -15,6 +15,11 @@ def record(**overrides):
     return OpportunityRecord(**values)
 
 class OpportunityRecordTests(unittest.TestCase):
+    def test_complete_reference_can_be_controlling_source(self):
+        readiness=controlling_source_readiness(record())
+        self.assertTrue(readiness.eligible)
+        self.assertEqual(readiness.blockers,())
+
     def test_valid_record(self):
         result=validate_record(record())
         self.assertTrue(result.valid)
