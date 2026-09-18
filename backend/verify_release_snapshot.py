@@ -16,8 +16,8 @@ import sys
 import tempfile
 import zipfile
 
-ROOT = Path(__file__).resolve().parents[1]
-SNAPSHOT = ROOT / "snapshots" / "CaptureBrief_Backend_Deploy_Ready_2026-09-15.zip"
+BACKEND_DIR = Path(__file__).resolve().parent
+SNAPSHOT = BACKEND_DIR / "snapshots" / "CaptureBrief_Backend_Deploy_Ready_2026-09-15.zip"
 EXPECTED_ARCHIVE_SHA256 = "a8a147371ac95ec69f3e8f7473b2379f1b74183ef1e4675af9cd5e8f35b1850d"
 
 EXPECTED_FILES = {
