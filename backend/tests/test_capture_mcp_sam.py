@@ -4,7 +4,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from opportunity_record import validate_record
+from opportunity_record import controlling_source_readiness, validate_record
 from providers.capture_mcp_sam import adapt_opportunity
 
 RETRIEVED="2026-09-18T23:00:00Z"
@@ -42,7 +42,14 @@ class CaptureMcpSamAdapterTests(unittest.TestCase):
         self.assertEqual(record.response_deadline.normalized_value,"2026-10-01T17:00:00-04:00")
         self.assertIn("amendments",record.explicit_unknowns)
         self.assertIn("attachments",record.explicit_unknowns)
-        self.assertEqual(record.provider_metadata,{"baseType":"Combined Synopsis/Solicitation","subTier":"Example Subtier","active":"Yes"})
+        self.assertEqual(record.provider_metadata,{"provider_role":"discovery_only","baseType":"Combined Synopsis/Solicitation","subTier":"Example Subtier","active":"Yes"})
+
+    def test_summary_is_not_controlling_source_eligible(self):
+        record=adapt_opportunity(row(),retrieved_at=RETRIEVED)
+        readiness=controlling_source_readiness(record)
+        self.assertFalse(readiness.eligible)
+        self.assertIn("controlling_source_unknown:amendments",readiness.blockers)
+        self.assertIn("controlling_source_unknown:attachments",readiness.blockers)
 
     def test_missing_set_aside_and_deadline_are_explicit_unknowns(self):
         record=adapt_opportunity(row(setAside=None,responseDeadLine=None),retrieved_at=RETRIEVED)
