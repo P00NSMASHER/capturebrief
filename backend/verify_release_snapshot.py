@@ -9,7 +9,7 @@ Historical provenance:
 
 The normal source tree is a compatibility implementation, not a byte-for-byte
 copy of that ZIP. Behavioral compatibility is enforced by the Sept. 15
-regression suites in backend/tests plus new provider-boundary tests.
+regression suites in backend/tests plus provider-boundary tests.
 """
 from __future__ import annotations
 
@@ -25,6 +25,7 @@ REQUIRED_MODULES=(
     "source_budget.py",
     "webhook_boundary.py",
     "opportunity_record.py",
+    "providers/capture_mcp_sam.py",
 )
 REQUIRED_TESTS=(
     "tests/test_evidence.py",
@@ -33,6 +34,7 @@ REQUIRED_TESTS=(
     "tests/test_source_budget.py",
     "tests/test_webhook_boundary.py",
     "tests/test_opportunity_record.py",
+    "tests/test_capture_mcp_sam.py",
 )
 
 FORBIDDEN_PATTERNS=(
