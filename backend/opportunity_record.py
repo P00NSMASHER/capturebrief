@@ -82,6 +82,7 @@ class OpportunityRecord:
     field_sources: Mapping[str, SourceRef] = field(default_factory=dict)
     source_manifest: tuple[SourceRef, ...] = ()
     explicit_unknowns: frozenset[str] = frozenset()
+    provider_metadata: Mapping[str, object] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
