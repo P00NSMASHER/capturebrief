@@ -1,0 +1,37 @@
+{
+  "version": "v6.1-simple-homepage",
+  "updated": "2026-09-19",
+  "goal": "Make the offer understandable in under five minutes",
+  "founding_price_usd": 149,
+  "price_unchanged": true,
+  "homepage_sections": [
+    "hero",
+    "deliverables",
+    "example",
+    "3-step method",
+    "pilot",
+    "boundaries",
+    "intake",
+    "faq"
+  ],
+  "buyer_receives": [
+    "one public pursuit checked",
+    "up to five assumptions checked",
+    "concise action brief",
+    "public source appendix",
+    "14-day source-change watch"
+  ],
+  "removed_or_collapsed": [
+    "long positioning prose",
+    "full decision-ledger explanation from homepage",
+    "extended operator section",
+    "duplicative process explanations",
+    "eight-question FAQ"
+  ],
+  "public_source_only": true,
+  "no_pwin": true,
+  "no_proposal_writing": true,
+  "no_bid_verdict": true,
+  "no_restricted_portal_ingest": true,
+  "form_name": "pursuit-qa-intake"
+}
