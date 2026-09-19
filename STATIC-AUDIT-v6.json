@@ -1,0 +1,33 @@
+{
+  "version": "v6-evidence-linked-control",
+  "updated": "2026-09-19",
+  "price_unchanged": true,
+  "founding_price_usd": 149,
+  "one_time": true,
+  "public_source_only": true,
+  "no_pwin": true,
+  "no_proposal_writing": true,
+  "no_bid_verdict": true,
+  "no_restricted_portal_ingest": true,
+  "source_manifest": true,
+  "assumption_register": true,
+  "evidence_state_labels": [
+    "SUPPORTED",
+    "CONTRADICTED",
+    "UNPROVEN",
+    "SUPERSEDED",
+    "SOURCE-LIMITED"
+  ],
+  "decision_classes": [
+    "GATE-CHANGING",
+    "VERIFY-NOW",
+    "MONITOR-ONLY"
+  ],
+  "owner_next_action": true,
+  "reopen_trigger": true,
+  "default_handoff_max_items": 5,
+  "change_watch_days": 14,
+  "generic_amendment_alerts": false,
+  "sample_decision_ledger": true,
+  "expansion_requires_paid_evidence": true
+}
