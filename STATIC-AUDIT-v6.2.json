@@ -1,0 +1,14 @@
+{
+  "version": "v6.2-executive-copy-mobile",
+  "updated": "2026-09-19",
+  "changes": [
+    "replaced ambiguous hero headline",
+    "removed transactional opening sentence",
+    "explained service before repeating price",
+    "changed CTAs from QA jargon to review language",
+    "made $149 deliverables explicit",
+    "added clearer buyer-facing source and action language",
+    "reduced mobile hero headline size and vertical space",
+    "kept price, scope, safety boundaries and product logic unchanged"
+  ]
+}
