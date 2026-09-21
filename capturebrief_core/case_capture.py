@@ -4,7 +4,12 @@ import copy
 from typing import Any, Callable
 
 from .case_artifacts import CaseArtifactError, apply_api_byte_receipt
-from .current_api import CurrentApiError, download_resource_from_api_observation
+from .current_api import (
+    SEARCH_URL,
+    CurrentApiError,
+    download_resource_from_api_observation,
+    validate_api_observation,
+)
 from .model import valid_sha256
 
 
@@ -18,22 +23,35 @@ def _retained_api_observation(case: dict[str, Any]) -> dict[str, Any]:
     if current.get("source_contract") != "SAM_GET_OPPORTUNITIES_V2":
         raise CaseCaptureError("case does not retain a documented current API observation")
     digest = current.get("api_payload_sha256")
+    response_digest = current.get("api_response_sha256")
     if not valid_sha256(digest):
         raise CaseCaptureError("case current API observation lacks a valid payload digest")
+    if not valid_sha256(response_digest):
+        raise CaseCaptureError(
+            "case current API observation predates raw-response proof; refresh current authority before capture"
+        )
     links = [str(x) for x in packet.get("current_resource_links") or [] if str(x)]
     if int(current.get("resource_link_count") or 0) != len(links):
         raise CaseCaptureError("case current resource-link count disagrees with retained links")
-    return {
+    observation = {
         "source_contract": "SAM_GET_OPPORTUNITIES_V2",
         "automation_mode": "APPROVED_API",
+        "source_url": SEARCH_URL,
         "observed_at": current.get("observed_at"),
         "payload_sha256": digest,
+        "response_sha256": response_digest,
+        "pagination": copy.deepcopy(current.get("pagination")),
         "resource_links": links,
         "record": {
             "noticeId": current.get("notice_id"),
             "solicitationNumber": current.get("solicitation_number"),
         },
     }
+    try:
+        validate_api_observation(observation)
+    except CurrentApiError as exc:
+        raise CaseCaptureError(f"retained current API observation is incomplete: {exc}") from exc
+    return observation
 
 
 def capture_current_artifact(
