@@ -78,11 +78,17 @@ try:
                 check(page.locator('h1').count() == 1, 'Example has one H1')
                 check('Fictional example' in page.locator('.fiction-label').inner_text(), 'Fictional warning visible')
                 check(page.locator('form, input, script').count() == 0, 'Example has no submission inputs or scripts')
+                # Inspect actual visible text, not innerText of closed disclosures.
+                for details in page.locator('details').all():
+                    if details.get_attribute('open') is None:
+                        details.locator(':scope > summary').click()
                 for quote in page.locator('blockquote[data-source]').all():
+                    check(quote.is_visible(), 'Quoted passage is visible after disclosure')
                     source = quote.get_attribute('data-source')
                     line = int(quote.get_attribute('data-line'))
                     check(quote.inner_text() == (ROOT/source).read_text().splitlines()[line-1], 'Exact quote '+source+':'+str(line))
                 for code in page.locator('[data-hash-for]').all():
+                    check(code.is_visible(), 'Fingerprint is visible after disclosure')
                     check(code.inner_text() == hashes[code.get_attribute('data-hash-for')], 'Displayed fingerprint matches file')
                 check(page.locator('.finding-card').count() == 3, 'Three bounded example findings')
                 for width in WIDTHS:
