@@ -1,8 +1,126 @@
-# CaptureBrief Product Core v0.11 — Decision Evidence
+# CaptureBrief Product Core v0.12 — Rule Source Registry
 
 Updated: September 21, 2026
 
-CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.11 adds a fail-closed Decision Evidence layer so a buyer-facing assumption can be traced to exact retained passages, source versions, reviewed rule editions, and version changes without letting the system automatically decide legal applicability or rewrite earlier decisions.
+CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.12 adds a content-addressed FAR/DFARS/deviation source registry beneath Decision Evidence so reviewed rule editions can be pinned to exact repository revisions and normalized source text without treating Git recency as effective-date or applicability authority.
+
+## v0.12 — Rule Source Registry
+
+CaptureBrief now has a first-class rule-source layer beneath Decision Evidence.
+
+The registry pins exact machine-readable FAR/DFARS snapshots and deviation discovery sources, normalizes them into content-addressed rule records, and keeps multiple editions side-by-side. It is designed to answer:
+
+> **Which exact rule text/version did the reviewer use, where did it come from, and what changed?**
+
+It does **not** answer:
+
+> **Does this rule automatically apply to this solicitation?**
+
+That remains a human-reviewed Decision Evidence judgment with cited basis.
+
+### Pinned source catalog
+
+`RULE-SOURCE-CATALOG.json` currently pins:
+
+- GSA machine-readable FAR DITA at an exact Git revision;
+- GSA machine-readable DFARS DITA at an exact Git revision;
+- the `acqagent/rfo-deviations` agency-deviation manifest snapshot;
+- `acqagent/far-collector` as collection/reference implementation provenance only.
+
+The source catalog deliberately distinguishes source roles. A collector or deviation index can help locate evidence without becoming authority for applicability.
+
+### Rule version record
+
+A normalized FAR/DFARS rule source retains:
+
+- namespace;
+- citation;
+- agency;
+- edition label;
+- exact source repository;
+- exact 40-character Git revision;
+- exact source path and HTTPS URL;
+- raw source SHA-256;
+- normalized text SHA-256;
+- observation time;
+- paragraph-level locators and hashes;
+- optional explicit effective dates;
+- explicit effective-date authority state;
+- `applicability_authoritative = false`.
+
+### Time semantics stay separate
+
+CaptureBrief does not collapse these into one date:
+
+- repository commit time;
+- CaptureBrief observation time;
+- regulatory publication date;
+- rule effective date;
+- solicitation incorporation date/version;
+- buyer decision time.
+
+**A newer Git commit is not an effective date. A newer rule edition is not automatically the controlling edition.**
+
+If an effective date is not established from a reviewed authoritative source, it remains `UNKNOWN`.
+
+### Append-only history and change review
+
+The SQLite registry stores content-addressed rule versions append-only.
+
+A later source version can be diffed against an earlier version. A changed diff produces:
+
+- `review_required = true`;
+- `automatic_applicability_change = false`.
+
+The older version remains available for replay of the earlier bid decision.
+
+### FAR / DFARS DITA handling
+
+The GSA DITA parser:
+
+- accepts a full pinned Git revision;
+- derives the citation from the machine-readable title/autonumber;
+- retains paragraph locators;
+- hashes the original DITA and normalized text separately;
+- rejects DTD/entity declarations;
+- refuses to infer an effective date from source-control metadata.
+
+### Deviation discovery boundary
+
+The agency-deviation manifest is normalized into content-addressed source candidates with agency, FAR Part, URL, size and source revision.
+
+Those rows are **discovery evidence only**:
+
+- manifest presence does not prove the deviation applies;
+- filename/agency/part match does not prove the deviation is current;
+- manifest date does not establish effective date;
+- a candidate PDF must still be reviewed and tied to the solicitation/rule question before it can support an applicability conclusion.
+
+### Decision Evidence bridge
+
+A validated normalized FAR/DFARS source can be converted into:
+
+1. a CaptureBrief public source-manifest row; and
+2. a Decision Evidence rule-text snapshot.
+
+That makes the exact reviewed rule text available to an assumption trace while preserving the human applicability boundary.
+
+CLI:
+
+    python -m capturebrief_core.rule_cli catalog
+    python -m capturebrief_core.rule_cli parse-dita rule.dita \
+      --namespace FAR --agency "FAR Council" --edition "FAC ..." \
+      --repository GSA/GSA-Acquisition-FAR --revision <40-char-sha> \
+      --source-path dita/52.204-21.dita --source-url <pinned-url> \
+      --observed-at 2026-09-21T16:00:00Z -o rule.json
+    python -m capturebrief_core.rule_cli add rules.sqlite rule.json
+    python -m capturebrief_core.rule_cli list rules.sqlite --citation 52.204-21
+    python -m capturebrief_core.rule_cli diff rule-old.json rule-new.json
+    python -m capturebrief_core.rule_cli parse-deviation-manifest manifest.csv \
+      --repository acqagent/rfo-deviations --revision <40-char-sha> \
+      --observed-at 2026-09-21T16:00:00Z -o deviations.json
+
+See `RULE-SOURCES.md` for the source-authority and review boundary.
 
 ## v0.11 — Decision Evidence
 
