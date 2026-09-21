@@ -217,37 +217,27 @@ def deviation_candidate_work_item(case: dict[str,Any])->dict[str,Any]|None:
     if not deviation_candidate_proposal_is_current(case):
         return None
     proposal=case["packet"]["deviation_candidate_proposal"]
-    captured=current_deviation_artifact_receipts(case)
-    candidate_ids={str(x.get("deviation_source_id") or "") for x in proposal.get("candidates") or []}
-    missing=sorted(x for x in candidate_ids if x and x not in captured)
-    zero=proposal.get("candidate_count")==0
+    if proposal.get("candidate_count")!=0:
+        # Candidate-specific byte capture/text/authority tasks own the positive path.
+        return None
     return {
         "task_key":"deviations:review-candidates",
-        "priority":"P0" if zero or not missing else "P1",
-        "title":"Review agency class-deviation candidates",
+        "priority":"P0",
+        "title":"Review zero-result class-deviation search",
         "actor":"HUMAN_REVIEW",
         "can_auto_execute":False,
         "status":"OPEN",
-        "reason":(
-            "The pinned corpus returned no candidate rows; bounded-corpus absence is not proof that no deviation exists."
-            if zero else
-            "Candidate official PDFs are captured; human review must establish currentness, effective date, supersession, and pursuit-specific applicability."
-            if not missing else
-            "Deviation candidates exist, but official PDF capture should complete before human authority/applicability review."
-        ),
-        "evidence_needed":"Retain/hash candidate official artifacts, establish currentness/effective date/supersession, then cite pursuit-specific applicability basis in Decision Evidence.",
+        "reason":"The pinned corpus returned no candidate rows; bounded-corpus absence is not proof that no deviation exists.",
+        "evidence_needed":"Review source scope/current official deviation surfaces before making any negative rule claim. Keep applicability unresolved if stronger evidence is unavailable.",
         "metadata":{
             "agency":proposal["agency"],
             "part_numbers":proposal["part_numbers"],
-            "candidate_count":proposal["candidate_count"],
-            "captured_candidate_count":len(captured),
-            "missing_artifact_ids":missing,
+            "candidate_count":0,
             "proposal_sha256":proposal["proposal_sha256"],
             "applicability_authoritative":False,
             "can_auto_apply":False,
         },
     }
-
 
 def _candidate_map(case: dict[str,Any])->dict[str,dict[str,Any]]:
     if not deviation_candidate_proposal_is_current(case):
