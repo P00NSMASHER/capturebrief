@@ -108,6 +108,36 @@ The ZIP contains:
 
 The bundle intentionally excludes the raw internal case object and does not package restricted source bytes. ZIP entry metadata is normalized so the same case and generation time produce the same bundle bytes and hash.
 
+## Targeted 14-day watch baseline
+
+Every release-ready buyer bundle now includes a privacy-minimized `watch-baseline.json`.
+
+The baseline records only the state needed to know whether a delivered assumption should be reopened:
+
+- verified current action;
+- complete history action-set fingerprint;
+- latest per-action manifest fingerprints;
+- retained resource/artifact byte state and hashes;
+- reference closure state;
+- Decision Evidence source-version identities;
+- reviewed rule-version identities;
+- each assumption's explicit source/rule/reopen dependencies.
+
+It deliberately excludes customer intake fields, the raw internal case object, and retained source text.
+
+Two commands support the watch:
+
+    python -m capturebrief_core.trace_cli watch-baseline case.json -o watch-baseline.json
+
+    python -m capturebrief_core.trace_cli watch-check \
+      watch-baseline.json refreshed-case.json -o watch-observation.json
+
+A watch observation is itself hash-bound. A changed current action, history set, manifest, retained resource, reference closure, source version, rule version, or trace-integrity failure can require review.
+
+Resource-byte events retain their precise `ARTIFACT:<id>` event identity while also exposing the established `RESOURCE:<id>` trigger alias, so existing assumption reopen rules remain compatible.
+
+The watch never silently changes the buyer's prior finding or rule applicability. It emits `REVIEW_REQUIRED`, preserves the previous decision, and reopens only assumptions whose stored dependencies match the observed change.
+
 ## Change watch
 
 The trace is append-preserving.
