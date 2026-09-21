@@ -2,6 +2,7 @@ import io
 import unittest
 
 from capturebrief_core.current_api import (
+    SEARCH_URL,
     CurrentApiError,
     download_resource_from_api_observation,
     make_current_action_receipt,
@@ -203,9 +204,17 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
                 "postedDate": "2026-09-20",
                 "active": "Yes",
             },
-            "source_url": "https://api.sam.gov/opportunities/v2/search",
+            "source_url": SEARCH_URL,
             "observed_at": NOW,
             "payload_sha256": "a" * 64,
+            "response_sha256": "b" * 64,
+            "pagination": {
+                "total_records": 1,
+                "returned_records": 1,
+                "limit": 100,
+                "offset": 0,
+                "complete": True,
+            },
             "source_contract": "SAM_GET_OPPORTUNITIES_V2",
             "automation_mode": "APPROVED_API",
             "resource_links": [],
@@ -216,6 +225,8 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
         )
         self.assertEqual(receipt["asserted_action_id"], "a2")
         self.assertEqual(receipt["automation_mode"], "APPROVED_API")
+        self.assertFalse(receipt["final_url_retained"])
+        self.assertNotIn("final_url", receipt)
 
         with self.assertRaises(CurrentApiError):
             make_current_action_receipt(
@@ -229,8 +240,25 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
             "rid/download"
         )
         observation = {
-            "resource_links": [link],
+            "record": {
+                "noticeId": "a2",
+                "solicitationNumber": "SOL-1",
+                "resourceLinks": [link],
+            },
+            "source_url": SEARCH_URL,
+            "observed_at": NOW,
             "payload_sha256": "a" * 64,
+            "response_sha256": "b" * 64,
+            "source_contract": "SAM_GET_OPPORTUNITIES_V2",
+            "automation_mode": "APPROVED_API",
+            "resource_links": [link],
+            "pagination": {
+                "total_records": 1,
+                "returned_records": 1,
+                "limit": 100,
+                "offset": 0,
+                "complete": True,
+            },
         }
         data = b"abc123"
 
