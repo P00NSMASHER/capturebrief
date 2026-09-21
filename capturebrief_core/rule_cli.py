@@ -7,6 +7,7 @@ from pathlib import Path
 from .rule_candidates import attach_rule_candidate_proposal, attach_rule_candidate_review, sync_missing_rule_candidates_for_case
 from .rule_sync import sync_pinned_gsa_rule
 from .rule_evidence import prepare_rule_evidence
+from .rule_applicability import review_rule_applicability
 from .rule_registry import (
     add_rule_version,
     diff_rule_versions,
@@ -109,6 +110,12 @@ def main(argv=None):
     pe.add_argument("preparation")
     pe.add_argument("-o", "--output")
     pe.add_argument("--result-output")
+
+    ar = s.add_parser("case-review-rule-applicability")
+    ar.add_argument("case")
+    ar.add_argument("review")
+    ar.add_argument("-o", "--output")
+    ar.add_argument("--result-output")
 
     args = p.parse_args(argv)
 
@@ -222,6 +229,13 @@ def main(argv=None):
             args.registry,
             preparation,
         )
+        _write(updated, args.output)
+        if args.result_output:
+            _write(result, args.result_output)
+    elif args.cmd == "case-review-rule-applicability":
+        case = json.loads(Path(args.case).read_text(encoding="utf-8"))
+        review = json.loads(Path(args.review).read_text(encoding="utf-8"))
+        updated, result = review_rule_applicability(case, review)
         _write(updated, args.output)
         if args.result_output:
             _write(result, args.result_output)
