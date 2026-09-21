@@ -66,6 +66,9 @@ class FakeResponse:
 
 def api_payload(notice=A2):
     return {
+        "totalRecords":1,
+        "limit":100,
+        "offset":0,
         "opportunitiesData":[{
             "noticeId":notice,
             "solicitationNumber":"SOL-1",
@@ -115,7 +118,7 @@ class CurrentSearchTests(unittest.TestCase):
         plan=build_current_search_plan(case())
         result=fetch_current_from_plan(
             plan,api_key="test",
-            opener=lambda req,timeout=30: FakeResponse({"opportunitiesData":[]})
+            opener=lambda req,timeout=30: FakeResponse({"totalRecords":0,"limit":100,"offset":0,"opportunitiesData":[]})
         )
         self.assertEqual(result["status"],"NO_ACTIVE_MATCH")
         self.assertFalse(result["currentness_authoritative"])
