@@ -1,9 +1,0 @@
-{
-  "name": "CaptureBrief",
-  "short_name": "CaptureBrief",
-  "start_url": "./",
-  "display": "browser",
-  "background_color": "#f7fafc",
-  "theme_color": "#081a2c",
-  "icons": []
-}
