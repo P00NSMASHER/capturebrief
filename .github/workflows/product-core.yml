@@ -18,6 +18,10 @@ jobs:
         run: python -m py_compile capturebrief_core/*.py
       - name: Run regression corpus
         run: python -m unittest discover -s tests -v
+      - name: Build case from website intake
+        run: python -m capturebrief_core.cli case-from-intake fixtures/intake.json --submitted-at 2026-09-21T15:00:00+00:00 -o /tmp/intake-case.json
+      - name: Build operator work queue
+        run: python -m capturebrief_core.cli work-queue /tmp/intake-case.json -o /tmp/work-queue.json
       - name: Validate releasable fixture
         run: python -m capturebrief_core.cli validate fixtures/ready_case.json
       - name: Render releasable fixture
