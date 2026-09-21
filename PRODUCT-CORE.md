@@ -1,8 +1,90 @@
-# CaptureBrief Product Core v0.16 — Pinned Rule Source Sync
+# CaptureBrief Product Core v0.17 — Missing Rule Auto-Sync
 
 Updated: September 21, 2026
 
-CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.16 makes official rule ingestion operational: an operator can sync one FAR/DFARS citation directly from the exact pinned GSA Git revision into the append-only local registry, with a content-addressed fetch receipt and no caller-supplied URL, mutable branch, credentials, or redirect authority.
+CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.17 closes the rule-lookup loop: when a bound citation proposal references FAR/DFARS text missing from the local registry, the work queue can schedule an approved exact-revision GSA sync, refresh the proposal, preserve the old proposal, and invalidate any human review tied to the stale candidate set—without changing applicability.
+
+## v0.17 — Missing Rule Auto-Sync
+
+A missing local FAR/DFARS rule version is now an actionable source-acquisition state rather than a dead-end human lookup.
+
+When a current citation proposal contains an occurrence with `candidate_count = 0` and an explicit FAR/DFARS namespace, CaptureBrief can create:
+
+`rules:sync-missing-pinned-sources`
+
+with:
+
+- priority `P0`;
+- actor `AUTOMATED_APPROVED_SOURCE`;
+- `can_auto_execute = true`;
+- `can_auto_apply = false`.
+
+The ordinary human version-review task remains P1.
+
+This ordering means CaptureBrief should acquire the exact approved public source before asking a reviewer to choose among versions, while unrelated P0 case blockers may still coexist.
+
+### Narrow automatic scope
+
+Only missing references with an explicit/recognized `FAR` or `DFARS` namespace are eligible for this automatic source sync.
+
+The mapping is fixed:
+
+- FAR → `gsa-far-dita`;
+- DFARS → `gsa-dfars-dita`.
+
+Unknown namespaces and non-GSA deviation/supplement candidates remain manual/reviewed workflows.
+
+Duplicate occurrences of the same missing namespace/citation pair are synced once.
+
+### State transition
+
+The controlled flow is:
+
+`citation proposal with missing version -> exact pinned GSA sync -> registry insert -> proposal re-match -> human version review`
+
+After all required syncs succeed:
+
+1. the old proposal is copied to `packet.rule_candidate_proposal_history`;
+2. the active proposal is rebuilt against the updated registry;
+3. the refreshed proposal records `refreshed_from_proposal_sha256`;
+4. if an old human `rule_candidate_review` exists, it is moved to `rule_candidate_review_history` and removed from active state;
+5. the human version-review task reopens against the new candidate set.
+
+This prevents an old `UNRESOLVED` or previous candidate choice from surviving newly acquired official evidence.
+
+### Partial failure behavior
+
+The case object is not mutated until every requested source sync succeeds.
+
+If a later network fetch fails after an earlier registry insert:
+
+- the original case remains unchanged;
+- the registry may contain the successfully fetched content-addressed rule;
+- rerunning is safe because the registry is idempotent.
+
+This is deliberately different from pretending the multi-source operation is globally transactional.
+
+### Proposal history and no automatic applicability
+
+Proposal refresh changes lookup evidence, not the bid decision.
+
+Even after successful source acquisition:
+
+- `can_auto_apply = false`;
+- no assumption evidence state changes;
+- no controlling edition is chosen automatically;
+- applicability stays a later human Decision Evidence claim.
+
+### CLI
+
+    python -m capturebrief_core.rule_cli case-sync-missing-rules \
+      rules.sqlite case-with-rule-candidates.json \
+      --catalog RULE-SOURCE-CATALOG.json \
+      --observed-at 2026-09-21T17:00:00Z \
+      -o refreshed-case.json \
+      --result-output rule-sync-transition.json
+
+The refreshed case must still pass human rule-version review and Decision Evidence applicability review before rule-dependent findings can be released.
 
 ## v0.16 — Pinned Rule Source Sync
 

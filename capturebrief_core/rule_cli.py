@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from .rule_candidates import attach_rule_candidate_proposal, attach_rule_candidate_review
+from .rule_candidates import attach_rule_candidate_proposal, attach_rule_candidate_review, sync_missing_rule_candidates_for_case
 from .rule_sync import sync_pinned_gsa_rule
 from .rule_registry import (
     add_rule_version,
@@ -93,6 +93,14 @@ def main(argv=None):
     sd.add_argument("--observed-at", required=True)
     sd.add_argument("--receipt-output")
     sd.add_argument("--record-output")
+
+    sm = s.add_parser("case-sync-missing-rules")
+    sm.add_argument("registry")
+    sm.add_argument("case")
+    sm.add_argument("--catalog", default="RULE-SOURCE-CATALOG.json")
+    sm.add_argument("--observed-at", required=True)
+    sm.add_argument("-o", "--output")
+    sm.add_argument("--result-output")
 
     args = p.parse_args(argv)
 
@@ -187,6 +195,17 @@ def main(argv=None):
             _write(result["fetch_receipt"], args.receipt_output)
         if args.record_output:
             _write(result["record"], args.record_output)
+    elif args.cmd == "case-sync-missing-rules":
+        case = json.loads(Path(args.case).read_text(encoding="utf-8"))
+        updated, result = sync_missing_rule_candidates_for_case(
+            case,
+            args.registry,
+            args.catalog,
+            observed_at=args.observed_at,
+        )
+        _write(updated, args.output)
+        if args.result_output:
+            _write(result, args.result_output)
     return 0
 
 

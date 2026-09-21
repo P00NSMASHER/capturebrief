@@ -514,3 +514,221 @@ def tracked_rule_versions(case: dict[str, Any]) -> list[dict[str, Any]]:
             "can_auto_apply": False,
         })
     return out
+
+
+_AUTO_SYNC_SOURCE = {
+    "FAR": "gsa-far-dita",
+    "DFARS": "gsa-dfars-dita",
+}
+
+
+def _lookup_candidate_versions(
+    registry_path: str | Path,
+    *,
+    citation: str,
+    namespace_hint: str | None,
+    namespace_hint_basis: str | None,
+) -> tuple[list[dict[str, Any]], bool]:
+    candidates = list_rule_versions(
+        registry_path,
+        citation=citation,
+        namespace=namespace_hint if namespace_hint in {"FAR", "DFARS"} else None,
+    )
+    fallback = False
+    if not candidates and namespace_hint_basis == "NUMBER_RANGE_HEURISTIC":
+        candidates = list_rule_versions(registry_path, citation=citation)
+        fallback = True
+    rows = [
+        {
+            "rule_source_id": row["rule_source_id"],
+            "rule_key": row["rule_key"],
+            "namespace": row["namespace"],
+            "citation": row["citation"],
+            "agency": row["agency"],
+            "edition": row["edition"],
+            "observed_at": row["observed_at"],
+            "effective_from": row.get("effective_from"),
+            "effective_until": row.get("effective_until"),
+            "source_repository": row["source_repository"],
+            "source_revision": row["source_revision"],
+            "source_path": row["source_path"],
+            "source_sha256": row["source_sha256"],
+        }
+        for row in candidates
+    ]
+    return rows, fallback
+
+
+def refresh_rule_candidate_proposal(
+    registry_path: str | Path,
+    proposal: dict[str, Any],
+) -> dict[str, Any]:
+    """Re-run only registry matching while preserving the original text extraction."""
+    if proposal.get("contract") != CONTRACT or proposal.get("status") != "PROPOSED":
+        raise ValueError("rule candidate proposal contract is invalid")
+    body = {k: v for k, v in proposal.items() if k != "proposal_sha256"}
+    if digest(canonical(body)) != proposal.get("proposal_sha256"):
+        raise ValueError("rule candidate proposal digest mismatch")
+
+    refreshed: list[dict[str, Any]] = []
+    for old in proposal.get("matches") or []:
+        candidates, fallback = _lookup_candidate_versions(
+            registry_path,
+            citation=str(old.get("citation") or ""),
+            namespace_hint=old.get("namespace_hint"),
+            namespace_hint_basis=old.get("namespace_hint_basis"),
+        )
+        namespaces = sorted({row["namespace"] for row in candidates})
+        row = {
+            key: copy.deepcopy(value)
+            for key, value in old.items()
+            if key not in {
+                "candidate_count",
+                "candidate_namespaces",
+                "ambiguous_namespace",
+                "candidate_versions",
+                "namespace_fallback_used",
+            }
+        }
+        row.update({
+            "namespace_fallback_used": fallback,
+            "candidate_count": len(candidates),
+            "candidate_namespaces": namespaces,
+            "ambiguous_namespace": len(namespaces) > 1,
+            "candidate_versions": candidates,
+            "can_auto_select_version": False,
+            "can_auto_apply": False,
+        })
+        refreshed.append(row)
+
+    payload = {
+        "contract": CONTRACT,
+        "status": "PROPOSED",
+        "extraction_sha256": proposal["extraction_sha256"],
+        "captured_by": proposal["captured_by"],
+        "observed_at": proposal["observed_at"],
+        "matches": refreshed,
+        "review_required": bool(refreshed),
+        "can_auto_select_version": False,
+        "can_auto_apply": False,
+        "refreshed_from_proposal_sha256": proposal["proposal_sha256"],
+    }
+    return {**payload, "proposal_sha256": digest(canonical(payload))}
+
+
+def rule_sync_work_items(case: dict[str, Any]) -> list[dict[str, Any]]:
+    if not rule_candidate_proposal_is_current(case):
+        return []
+    proposal = case["packet"]["rule_candidate_proposal"]
+    needed = {}
+    for row in proposal.get("matches") or []:
+        namespace = row.get("namespace_hint")
+        citation = row.get("citation")
+        if row.get("candidate_count") != 0:
+            continue
+        source_id = _AUTO_SYNC_SOURCE.get(namespace)
+        if source_id and isinstance(citation, str):
+            needed[(namespace, citation)] = source_id
+    if not needed:
+        return []
+    entries = [
+        {"namespace": ns, "citation": citation, "source_id": source_id}
+        for (ns, citation), source_id in sorted(needed.items())
+    ]
+    return [{
+        "task_key": "rules:sync-missing-pinned-sources",
+        "priority": "P0",
+        "title": "Sync missing FAR/DFARS rules from pinned GSA sources",
+        "actor": "AUTOMATED_APPROVED_SOURCE",
+        "can_auto_execute": True,
+        "status": "OPEN",
+        "reason": "The citation proposal contains FAR/DFARS references with no local pinned rule version. Exact-revision GSA sync can fill this lookup gap without deciding applicability.",
+        "evidence_needed": "Fetch only the catalog-pinned GSA DITA revision, refresh the candidate proposal, then require human version/applicability review.",
+        "metadata": {
+            "proposal_sha256": proposal["proposal_sha256"],
+            "rules": entries,
+            "can_auto_apply": False,
+            "refresh_required_after_sync": True,
+        },
+    }]
+
+
+def sync_missing_rule_candidates_for_case(
+    case: dict[str, Any],
+    registry_path: str | Path,
+    catalog_path: str | Path,
+    *,
+    observed_at: str,
+    fetcher=None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Sync only missing FAR/DFARS candidates and refresh the bound proposal.
+
+    Registry writes may be partially complete if a later network fetch fails,
+    but the case itself is not updated until all requested syncs finish. Re-run
+    is safe because registry insertion is content-addressed/idempotent.
+    """
+    if not rule_candidate_proposal_is_current(case):
+        raise ValueError("case does not contain a current rule candidate proposal")
+    proposal = case["packet"]["rule_candidate_proposal"]
+    needed = {}
+    for row in proposal.get("matches") or []:
+        namespace = row.get("namespace_hint")
+        citation = row.get("citation")
+        if row.get("candidate_count") != 0:
+            continue
+        source_id = _AUTO_SYNC_SOURCE.get(namespace)
+        if source_id and isinstance(citation, str):
+            needed[(namespace, citation)] = source_id
+
+    if not needed:
+        return copy.deepcopy(case), {
+            "status": "NO_MISSING_PINNED_RULES",
+            "proposal_sha256": proposal["proposal_sha256"],
+            "synced": [],
+            "case_changed": False,
+            "can_auto_apply": False,
+        }
+
+    from .rule_sync import sync_pinned_gsa_rule
+
+    synced = []
+    for (namespace, citation), source_id in sorted(needed.items()):
+        result = sync_pinned_gsa_rule(
+            registry_path,
+            catalog_path,
+            source_id=source_id,
+            citation=citation,
+            observed_at=observed_at,
+            fetcher=fetcher,
+        )
+        synced.append({
+            "namespace": namespace,
+            "citation": citation,
+            "source_id": source_id,
+            "registry_result": result["registry_result"],
+            "rule_source_id": result["rule_source_id"],
+            "edition": result["edition"],
+            "source_revision": result["source_revision"],
+            "fetch_receipt": copy.deepcopy(result["fetch_receipt"]),
+        })
+
+    refreshed = refresh_rule_candidate_proposal(registry_path, proposal)
+    result_case = copy.deepcopy(case)
+    packet = result_case.setdefault("packet", {})
+    packet.setdefault("rule_candidate_proposal_history", []).append(copy.deepcopy(proposal))
+    packet["rule_candidate_proposal"] = refreshed
+
+    stale_review = packet.pop("rule_candidate_review", None)
+    review_invalidated = stale_review is not None
+    if stale_review is not None:
+        packet.setdefault("rule_candidate_review_history", []).append(stale_review)
+
+    return result_case, {
+        "status": "MISSING_PINNED_RULES_SYNCED",
+        "previous_proposal_sha256": proposal["proposal_sha256"],
+        "proposal_sha256": refreshed["proposal_sha256"],
+        "synced": synced,
+        "review_invalidated": review_invalidated,
+        "case_changed": True,
+        "can_auto_apply": False,
+    }

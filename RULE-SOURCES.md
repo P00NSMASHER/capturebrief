@@ -96,6 +96,27 @@ A redirect or final URL change is a hard failure. The fetch path is intentionall
 
 The sync step establishes **source provenance and exact version retrieval only**. Applicability remains a later human-reviewed claim.
 
+## Missing-rule auto-sync and proposal refresh
+
+A current citation proposal may contain a FAR/DFARS reference with no local rule version yet. That state does not mean the rule is absent or inapplicable.
+
+For explicit FAR/DFARS namespaces, CaptureBrief may schedule an approved exact-revision source sync before human version selection.
+
+The auto-sync path:
+- deduplicates repeated mentions of the same missing namespace/citation pair;
+- fetches only through the pinned GSA sync contract;
+- updates the append-only registry;
+- re-runs registry matching over the original citation extraction;
+- preserves the prior proposal in history;
+- invalidates/archives any active human review bound to the previous proposal SHA;
+- leaves applicability untouched.
+
+The active case is updated only after all required source syncs complete. If a later source fetch fails, the original case remains unchanged. Earlier successful registry insertions may remain, but they are content-addressed and safe to reuse on retry.
+
+A refreshed proposal is evidence that the lookup surface changed. It is not authority to change the buyer's bid assumption.
+
+After refresh, the reviewer must again decide whether to track a specific edition, leave the occurrence unresolved, or ignore it. A tracked edition still enters Decision Evidence with applicability unresolved.
+
 ## Time model
 
 The following are deliberately distinct:
