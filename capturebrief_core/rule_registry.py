@@ -321,6 +321,25 @@ def add_rule_version(path: str | Path, record: dict[str, Any]) -> str:
     return "INSERTED"
 
 
+def get_rule_version(path: str | Path, rule_source_id: str) -> dict[str, Any] | None:
+    """Return one exact content-addressed rule source without falling back to latest."""
+    if not isinstance(rule_source_id, str) or not rule_source_id.startswith("RULESRC:"):
+        raise ValueError("rule_source_id must be a content-addressed RULESRC identifier")
+    init_registry(path)
+    with sqlite3.connect(path) as db:
+        row = db.execute(
+            "SELECT payload_json FROM rule_versions WHERE rule_source_id=?",
+            (rule_source_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    value = json.loads(row[0])
+    errors = validate_rule_source(value)
+    if errors:
+        raise ValueError("stored rule source failed validation: " + ",".join(errors))
+    return value
+
+
 def list_rule_versions(path: str | Path, *, rule_key: str | None = None, namespace: str | None = None, citation: str | None = None, agency: str | None = None) -> list[dict[str, Any]]:
     init_registry(path)
     clauses: list[str] = []
