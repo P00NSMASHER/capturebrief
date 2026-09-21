@@ -14,7 +14,7 @@ from .model import canonical_json, sha256_hex
 
 OUTCOME_SCHEMA="1.0"
 RECORD_TYPE="CAPTUREBRIEF_OUTCOME_EVENT"
-EVENT_TYPES={"PAYMENT","DELIVERY","FEEDBACK","RETRACTION","REPEAT_REQUEST"}
+EVENT_TYPES={"PAYMENT","DELIVERY","FEEDBACK","RETRACTION","REPEAT_REQUEST","EFFORT"}
 PAYMENT_STATES={"PAID","UNPAID","REFUNDED","UNKNOWN"}
 USEFULNESS={"USEFUL","NOT_USEFUL","UNKNOWN"}
 ACTION_EFFECTS={
@@ -26,6 +26,11 @@ RETRACTION_SEVERITIES={"CRITICAL","NONCRITICAL"}
 RETRACTION_REASONS={
     "WRONG_SOURCE","WRONG_VERSION","WRONG_RULE_EDITION","BAD_APPLICABILITY",
     "BAD_IDENTITY","MISREAD_PASSAGE","MISSING_CONTROLLING_EVIDENCE","OTHER",
+}
+EFFORT_STAGES={
+    "INTAKE_SCOPE","HISTORY_CURRENT","PACKET_BYTES","REFERENCE_REVIEW",
+    "ASSUMPTION_REVIEW","RULE_REVIEW","DEVIATION_REVIEW","WATCH",
+    "DELIVERY","CUSTOMER_COMMS","OTHER",
 }
 FINDING_CLASS_RE=re.compile(r"^[A-Z][A-Z0-9_]{1,63}$")
 SHA_RE=re.compile(r"^[0-9a-f]{64}$")
@@ -125,6 +130,13 @@ def validate_outcome_event(event:dict[str,Any])->list[str]:
         required=allowed
         if data.get("state") not in REPEAT_STATES: errors.append("data.state")
         if data.get("state")!="UNKNOWN" and not _ref(data.get("repeat_evidence_ref")): errors.append("data.repeat_evidence_ref")
+    elif kind=="EFFORT":
+        allowed={"stage","minutes","effort_evidence_ref"}
+        required=allowed
+        if data.get("stage") not in EFFORT_STAGES: errors.append("data.stage")
+        minutes=data.get("minutes")
+        if type(minutes) is not int or minutes<1 or minutes>1440: errors.append("data.minutes")
+        if not _ref(data.get("effort_evidence_ref")): errors.append("data.effort_evidence_ref")
     else:
         allowed=set(); required=set()
 
@@ -182,21 +194,37 @@ def summarize_outcomes(path:str|Path)->dict[str,Any]:
     finding_counts=Counter()
     for row in records:
         event=row["event"]; cid=event["case_id"]; kind=event["event_type"]
-        state=cases.setdefault(cid,{"events":0,"payments":[],"deliveries":[],"feedback":[],"retractions":[],"repeat":[]})
+        state=cases.setdefault(cid,{"events":0,"payments":[],"deliveries":[],"feedback":[],"retractions":[],"repeat":[],"effort":[]})
         state["events"]+=1
-        state[{"PAYMENT":"payments","DELIVERY":"deliveries","FEEDBACK":"feedback","RETRACTION":"retractions","REPEAT_REQUEST":"repeat"}[kind]].append(row)
+        state[{"PAYMENT":"payments","DELIVERY":"deliveries","FEEDBACK":"feedback","RETRACTION":"retractions","REPEAT_REQUEST":"repeat","EFFORT":"effort"}[kind]].append(row)
         if kind=="FEEDBACK":
             finding_counts.update(event["data"]["finding_classes"])
 
     paid=0; paid_cents=0; paid_with_amount=0; delivered=0; turnaround=[]; feedback_cases=0
     useful=not_useful=changed=closed=confirmed=already=false_positive=source_limited=0
     repeat_requested=would_repeat=no_repeat=0; retraction_cases=critical_retractions=0
+    paid_amount_by_currency=Counter(); effort_case_minutes=[]; effort_stage_minutes=Counter()
+    paid_effort_covered=0; paid_effort_minutes_by_currency=Counter(); paid_effort_amount_by_currency=Counter()
     for cid,state in cases.items():
+        effort_minutes=sum(x["event"]["data"]["minutes"] for x in state["effort"])
+        if effort_minutes:
+            effort_case_minutes.append(effort_minutes)
+            for effort_row in state["effort"]:
+                effort_stage_minutes[effort_row["event"]["data"]["stage"]]+=effort_row["event"]["data"]["minutes"]
         latest_payment=max(state["payments"],key=lambda x:_dt(x["event"]["event_at"])) if state["payments"] else None
         if latest_payment and latest_payment["event"]["data"]["state"]=="PAID":
             paid+=1
-            amount=latest_payment["event"]["data"].get("amount_cents")
-            if amount is not None: paid_cents+=amount; paid_with_amount+=1
+            payment_data=latest_payment["event"]["data"]
+            amount=payment_data.get("amount_cents")
+            currency=payment_data.get("currency")
+            if amount is not None:
+                paid_cents+=amount; paid_with_amount+=1
+                paid_amount_by_currency[currency]+=amount
+            if effort_minutes:
+                paid_effort_covered+=1
+                if amount is not None:
+                    paid_effort_amount_by_currency[currency]+=amount
+                    paid_effort_minutes_by_currency[currency]+=effort_minutes
         latest_delivery=max(state["deliveries"],key=lambda x:_dt(x["event"]["event_at"])) if state["deliveries"] else None
         if latest_delivery:
             delivered+=1
@@ -222,8 +250,11 @@ def summarize_outcomes(path:str|Path)->dict[str,Any]:
         "repeat_request_at_least_1":repeat_requested>=1,
         "action_changed_or_costly_uncertainty_closed_at_least_1":changed+closed>=1,
         "turnaround_evidence_present":bool(turnaround),
+        "effort_evidence_present":bool(effort_case_minutes),
+        "paid_engagement_effort_coverage_complete":paid>0 and paid_effort_covered==paid,
         "retraction_evidence_present":bool(cases),
         "turnaround_acceptability_requires_human_threshold":True,
+        "effort_acceptability_requires_human_threshold":True,
         "retraction_acceptability_requires_human_threshold":True,
         "automatic_pricing_or_subscription_change":False,
     }
@@ -234,9 +265,24 @@ def summarize_outcomes(path:str|Path)->dict[str,Any]:
         "engagements":len(cases),
         "paid_engagements":paid,
         "paid_amount_cents_recorded":paid_cents,
+        "paid_amount_cents_by_currency":dict(sorted(paid_amount_by_currency.items())),
         "paid_engagements_with_amount":paid_with_amount,
         "delivered_engagements":delivered,
         "turnaround_hours":{"count":len(turnaround),"median":statistics.median(turnaround) if turnaround else None,"min":min(turnaround) if turnaround else None,"max":max(turnaround) if turnaround else None},
+        "effort_hours":{
+            "count":len(effort_case_minutes),
+            "total":sum(effort_case_minutes)/60 if effort_case_minutes else 0,
+            "median":statistics.median(effort_case_minutes)/60 if effort_case_minutes else None,
+            "min":min(effort_case_minutes)/60 if effort_case_minutes else None,
+            "max":max(effort_case_minutes)/60 if effort_case_minutes else None,
+        },
+        "effort_stage_minutes":dict(sorted(effort_stage_minutes.items())),
+        "paid_effort_coverage":{"paid_engagements":paid,"paid_with_effort":paid_effort_covered},
+        "collected_cents_per_recorded_effort_hour_by_currency":{
+            currency: round(cents/(paid_effort_minutes_by_currency[currency]/60),2)
+            for currency,cents in sorted(paid_effort_amount_by_currency.items())
+            if paid_effort_minutes_by_currency[currency]>0
+        },
         "buyer_feedback_cases":feedback_cases,
         "feedback":{
             "useful":useful,"not_useful":not_useful,"changed_action":changed,
