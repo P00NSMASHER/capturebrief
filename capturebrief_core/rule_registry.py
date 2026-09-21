@@ -396,7 +396,7 @@ def parse_deviation_manifest(csv_text: str, *, source_repository: str, source_re
             is_dod = int(str(row.get("is_dod") or ""))
         except ValueError as exc:
             raise ValueError(f"invalid numeric deviation fields row {n}") from exc
-        if size <= 0 or part <= 0 or is_dod not in (0, 1):
+        if size <= 0 or part < -1 or part > 53 or is_dod not in (0, 1):
             raise ValueError(f"invalid deviation values row {n}")
         payload = {
             "agency": row["agency"].strip(),
