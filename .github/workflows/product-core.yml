@@ -1,9 +1,9 @@
 name: Product Core
 on:
   push:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','RELEASE-CONSISTENCY.md','index.html','sample.html','decision-evidence-sample.html']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','RELEASE-CONSISTENCY.md','DELIVERY-VERIFICATION.md','index.html','sample.html','decision-evidence-sample.html']
   pull_request:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','RELEASE-CONSISTENCY.md','index.html','sample.html','decision-evidence-sample.html']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','RELEASE-CONSISTENCY.md','DELIVERY-VERIFICATION.md','index.html','sample.html','decision-evidence-sample.html']
 permissions:
   contents: read
 jobs:
@@ -24,6 +24,8 @@ jobs:
         run: python -m unittest tests.test_decision_trace -v
       - name: Customer delivery bundle contracts
         run: python -m unittest tests.test_delivery_bundle -v
+      - name: Delivery command and existing archive verification
+        run: python -m unittest tests.test_delivery_command tests.test_delivery_verify -v
       - name: Shared release consistency integration contracts
         run: python -m unittest tests.test_release_consistency -v
       - name: Targeted watch baseline contracts
@@ -44,8 +46,27 @@ jobs:
           python -m capturebrief_core.cli outcome-append /tmp/capturebrief-outcomes.jsonl fixtures/outcome_event_example.json --recorded-at 2026-09-21T18:10:00Z -o /tmp/outcome-record.json
           python -m capturebrief_core.cli outcome-effort /tmp/capturebrief-outcomes.jsonl CB-EFFORT aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ASSUMPTION_REVIEW 15 timer:CB-EFFORT:review --event-at 2026-09-21T18:20:00Z --recorded-at 2026-09-21T18:21:00Z -o /tmp/effort-record.json
           python -m capturebrief_core.cli outcome-summary /tmp/capturebrief-outcomes.jsonl -o /tmp/outcome-summary.json
-      - name: Build release-gated customer bundle
-        run: python -m capturebrief_core.trace_cli bundle fixtures/ready_trace_case.json -o /tmp/capturebrief-delivery.zip
+      - name: Build and independently reopen the command-produced delivery
+        run: |
+          python -m capturebrief_core.trace_cli bundle fixtures/ready_trace_case.json -o /tmp/capturebrief-delivery.zip > /tmp/capturebrief-delivery-receipt.json
+          python - <<'PY'
+          import hashlib, json, zipfile
+          from pathlib import Path
+          path = Path('/tmp/capturebrief-delivery.zip')
+          receipt = json.loads(Path('/tmp/capturebrief-delivery-receipt.json').read_text())
+          assert zipfile.is_zipfile(path), 'Command output is not a ZIP'
+          assert hashlib.sha256(path.read_bytes()).hexdigest() == receipt['bundle_sha256']
+          assert path.stat().st_size == receipt['bundle_bytes']
+          assert receipt['artifact_verification']['integrity_verified'] is True
+          assert receipt['external_send_authorized'] is False
+          with zipfile.ZipFile(path) as archive:
+              assert archive.testzip() is None
+              assert len(archive.namelist()) == 7
+          print('Verified actual CLI ZIP, independent hashes, and separate receipt.')
+          PY
+          EXPECTED_SHA="$(python -c "import json; print(json.load(open('/tmp/capturebrief-delivery-receipt.json'))['bundle_sha256'])")"
+          python -m capturebrief_core.trace_cli verify-bundle /tmp/capturebrief-delivery.zip --expected-sha256 "$EXPECTED_SHA" > /tmp/capturebrief-delivery-verification.json
+          grep -q '"verification_state": "VERIFIED_INTEGRITY"' /tmp/capturebrief-delivery-verification.json
       - name: Build and compare targeted watch baseline
         run: |
           python -m capturebrief_core.trace_cli watch-baseline fixtures/ready_trace_case.json -o /tmp/watch-baseline.json
