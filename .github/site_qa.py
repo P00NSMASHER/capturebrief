@@ -1,0 +1,147 @@
+"""Rendered website checks. Never submit forms, activate checkout or send email."""
+import functools
+import hashlib
+import json
+import os
+import threading
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+
+ROOT = Path(os.environ.get('SITE_ROOT', '.')).resolve()
+OUT = Path(os.environ.get('QA_OUTPUT', '.qa-output')).resolve()
+OUT.mkdir(parents=True, exist_ok=True)
+PUBLIC_BASE = os.environ.get('QA_BASE_URL', '')
+WIDTHS = [1440, 1024, 768, 390, 320]
+PAGES = {
+    'index.html': 'Before you bid,',
+    'permitplate/index.html': 'Restaurant projects worth',
+    'freightrecovery/index.html': 'Freight discrepancies.',
+}
+RESULT = {'mode': 'public-deployment' if PUBLIC_BASE else 'committed-site-build', 'pages': [], 'errors': []}
+
+class QuietHandler(SimpleHTTPRequestHandler):
+    def log_message(self, *_args):
+        pass
+
+server = ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(QuietHandler, directory=str(ROOT)))
+threading.Thread(target=server.serve_forever, daemon=True).start()
+base = PUBLIC_BASE.rstrip('/') + '/' if PUBLIC_BASE else f'http://127.0.0.1:{server.server_port}/'
+
+def check(condition, message):
+    if not condition:
+        RESULT['errors'].append(message)
+
+def images_ready(page, label):
+    for img in page.locator('img').all():
+        img.scroll_into_view_if_needed(timeout=5000)
+        try:
+            img.evaluate('i => Promise.race([i.decode(), new Promise((_,reject) => setTimeout(() => reject(new Error("image timeout")), 15000))])')
+        except Exception as exc:
+            check(False, f'{label}: image decode failed: {str(exc)[:160]}')
+    images = page.eval_on_selector_all('img', 'els => els.map(i => ({src:i.currentSrc,loaded:i.complete&&i.naturalWidth>0,width:i.naturalWidth,height:i.naturalHeight}))')
+    check(all(i['loaded'] for i in images), f'{label}: every photo must load')
+    return images
+
+def contrast_check(page):
+    return page.evaluate('''() => {
+        const luminance = rgb => rgb.slice(0,3).map(v=>v/255).map(v=>v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)).reduce((a,v,i)=>a+v*[.2126,.7152,.0722][i],0);
+        const rgb = s => (s.match(/[\\d.]+/g)||[]).map(Number);
+        return Array.from(document.querySelectorAll('.mark,.button,.number,.tag')).filter(e=>e.getBoundingClientRect().width>0).map(e=>{
+            const s=getComputedStyle(e),f=rgb(s.color),b=rgb(s.backgroundColor);
+            if(b.length===4&&b[3]<1) return null;
+            const a=luminance(f),z=luminance(b),ratio=(Math.max(a,z)+.05)/(Math.min(a,z)+.05);
+            return {text:e.textContent.trim(),ratio:Number(ratio.toFixed(2))};
+        }).filter(Boolean);
+    }''')
+
+# The other project pages still depend on the original stylesheet.
+legacy = ROOT / 'assets/site.css'
+if legacy.exists():
+    data = legacy.read_bytes()
+    digest = hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest()
+    check(digest == 'd61e21c4edae7a741a5c7abf015aa1af4b4090f8', 'Original shared stylesheet must remain unchanged for other projects')
+else:
+    check(False, 'Legacy stylesheet missing')
+
+with sync_playwright() as pw:
+    browser = pw.chromium.launch(headless=True)
+    try:
+        for name, expected in PAGES.items():
+            context = browser.new_context(viewport={'width':1440,'height':1000}, reduced_motion='reduce')
+            page = context.new_page()
+            errors = []
+            page.on('pageerror', lambda error: errors.append(str(error)))
+            response = page.goto(base + name, wait_until='domcontentloaded', timeout=30000)
+            check(response and response.status == 200, f'{name}: HTTP 200')
+            check(page.locator('meta[name="site-release"]').get_attribute('content') == '2026-09-21-quality-2', f'{name}: current release marker')
+            summary = {'page':name,'headline':page.locator('h1').inner_text(),'viewports':[]}
+            check(expected in summary['headline'], f'{name}: correct headline')
+            check(page.locator('h1').count() == 1, f'{name}: exactly one H1')
+            check(page.locator('img').count() == 5, f'{name}: five photo placements')
+            check(page.locator('img:not([alt]),img[alt=""]').count() == 0, f'{name}: image alternative text')
+            check(page.locator('img:not([width]),img:not([height]),img:not([srcset])').count() == 0, f'{name}: responsive image dimensions')
+            check(page.locator('img[fetchpriority="high"]').count() == 1, f'{name}: prioritized hero only')
+            check(page.locator('link[rel="canonical"]').count() == 1, f'{name}: canonical URL')
+            missing = page.eval_on_selector_all('a[href^="#"]', 'els=>els.map(a=>a.getAttribute("href").slice(1)).filter(id=>!document.getElementById(id))')
+            check(not missing, f'{name}: broken anchors {missing}')
+            check(page.locator('input[type="file"]').count() == 0, f'{name}: no confidential upload')
+            for width in WIDTHS:
+                page.set_viewport_size({'width':width,'height':1000 if width>800 else 844})
+                page.evaluate('window.scrollTo(0,0)')
+                page.wait_for_timeout(100)
+                image_states = images_ready(page, f'{name}@{width}') if width in [1440,390] else None
+                page.evaluate('window.scrollTo(0,0)')
+                dims = page.evaluate('({width:innerWidth,scroll:document.documentElement.scrollWidth,body:document.body.scrollWidth})')
+                check(dims['scroll'] <= width+1 and dims['body'] <= width+1, f'{name}@{width}: no horizontal overflow {dims}')
+                summary['viewports'].append(dims)
+                if width <= 800:
+                    menu = page.locator('.menu')
+                    menu.locator('summary').click()
+                    check(menu.evaluate('e=>e.open'), f'{name}@{width}: menu opens')
+                    menu.locator('a[href="#sample"]').click()
+                    check(not menu.evaluate('e=>e.open'), f'{name}@{width}: menu closes after navigation')
+                    menu.locator('summary').click()
+                    page.keyboard.press('Escape')
+                    check(not menu.evaluate('e=>e.open'), f'{name}@{width}: Escape closes menu')
+                    check(menu.locator('summary').evaluate('e=>e===document.activeElement'), f'{name}@{width}: focus returns to menu')
+                if width in [1440,390]:
+                    page.evaluate('window.scrollTo(0,0)')
+                    page.screenshot(path=str(OUT/f'{name.split("/")[0].replace(".html","")}-{width}.png'), full_page=True)
+                    summary[f'images_{width}'] = image_states
+            question = page.locator('.faq details').first
+            question.locator('summary').click()
+            check(question.evaluate('e=>e.open'), f'{name}: FAQ opens')
+            question.locator('summary').click()
+            check(not question.evaluate('e=>e.open'), f'{name}: FAQ closes')
+            page.evaluate('Object.defineProperty(navigator,"clipboard",{value:{writeText:async t=>{window.__qaCopied=t}},configurable:true})')
+            page.locator('[data-copy-email]').click()
+            check(page.evaluate('window.__qaCopied') == 'jayp19386@gmail.com', f'{name}: copy requests correct address')
+            check('Nothing has been sent' in page.locator('#copy-status').inner_text(), f'{name}: no false send confirmation')
+            page.evaluate('Object.defineProperty(navigator,"clipboard",{value:undefined,configurable:true})')
+            page.locator('[data-copy-email]').click()
+            check('selected address' in page.locator('#copy-status').inner_text(), f'{name}: honest clipboard fallback')
+            check(page.evaluate('getSelection().toString()') == 'jayp19386@gmail.com', f'{name}: fallback selects address')
+            summary['solid_color_contrast'] = contrast_check(page)
+            check(all(x['ratio'] >= 4.5 for x in summary['solid_color_contrast']), f'{name}: solid-color controls/text contrast')
+            summary['javascript_errors'] = errors
+            check(not errors, f'{name}: JavaScript errors {errors}')
+            RESULT['pages'].append(summary)
+            context.close()
+            context = browser.new_context(java_script_enabled=False, viewport={'width':320,'height':844})
+            page = context.new_page()
+            page.goto(base+name, wait_until='domcontentloaded', timeout=30000)
+            page.locator('.menu summary').click()
+            check(page.locator('.menu-panel').is_visible(), f'{name}: navigation works without JavaScript')
+            page.locator('.menu summary').click()
+            page.locator('.faq summary').first.click()
+            check(page.locator('.faq details').first.locator('p').is_visible(), f'{name}: FAQ works without JavaScript')
+            check(not page.locator('[data-copy-email]').is_visible(), f'{name}: nonfunctional copy control hidden without JavaScript')
+            context.close()
+    finally:
+        browser.close()
+        server.shutdown()
+        RESULT['passed'] = not RESULT['errors']
+        (OUT/'report.json').write_text(json.dumps(RESULT,indent=2),encoding='utf-8')
+        print(json.dumps(RESULT,indent=2))
+raise SystemExit(0 if RESULT['passed'] else 1)

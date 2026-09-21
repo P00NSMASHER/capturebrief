@@ -1,0 +1,67 @@
+name: Website quality
+on:
+  push:
+    branches: [gh-pages, site-quality-20260921]
+    paths: ['index.html', 'permitplate/**', 'freightrecovery/**', 'assets/**', '.github/site_qa.py', '.github/workflows/site-quality.yml']
+  pull_request:
+    branches: [gh-pages]
+permissions:
+  contents: read
+concurrency:
+  group: website-quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned browser test tools
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+      - name: Render and test the committed websites
+        run: python .github/site_qa.py
+        env:
+          SITE_ROOT: .
+          QA_OUTPUT: .qa-output/build
+      - name: Wait for GitHub Pages to publish the new release
+        if: github.ref == 'refs/heads/gh-pages'
+        run: |
+          python - <<'PY'
+          import os, time, urllib.request
+          base = 'https://p00nsmasher.github.io/capturebrief/'
+          paths = ['', 'permitplate/', 'freightrecovery/']
+          for attempt in range(8):
+              ready = []
+              for path in paths:
+                  try:
+                      url = base + path + '?quality=' + os.environ['GITHUB_SHA']
+                      with urllib.request.urlopen(url, timeout=20) as response:
+                          ready.append('2026-09-21-quality-2' in response.read().decode())
+                  except Exception:
+                      ready.append(False)
+              if all(ready):
+                  print('All three published pages carry the release marker.')
+                  break
+              time.sleep(20)
+          else:
+              raise SystemExit('Published release not verified within the bounded wait.')
+          PY
+      - name: Verify the public deployment in Chromium
+        if: github.ref == 'refs/heads/gh-pages'
+        run: python .github/site_qa.py
+        env:
+          QA_BASE_URL: https://p00nsmasher.github.io/capturebrief/
+          QA_OUTPUT: .qa-output/live
+      - name: Preserve QA reports and rendered screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-quality-${{ github.sha }}
+          path: .qa-output/
+          retention-days: 7
+          if-no-files-found: warn
