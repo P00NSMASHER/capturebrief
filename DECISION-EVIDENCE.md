@@ -68,6 +68,22 @@ The resulting rule link records:
 
 The applicability conclusion is human-reviewed QA, not legal authority. CaptureBrief records `can_auto_apply = false` and does not change the assumption's evidence state automatically.
 
+## Exact source-version deltas
+
+When a finding depends on a source changing across versions, CaptureBrief can retain a paired version delta:
+
+- the exact prior source version;
+- the exact newer source version;
+- each version's retained document SHA-256;
+- an exact before passage and human-readable locator;
+- an exact after passage and human-readable locator;
+- the reviewed relation: `AMENDS`, `CORRECTS`, or `SUPERSEDES`;
+- a concise reviewer summary of the change.
+
+The before passage must belong to the declared from-version and the after passage must belong to the declared to-version. Supplying only one side fails closed. Older retained traces that contain a version relation without exact paired passages remain readable, but the report surfaces that omission as a warning rather than pretending the textual delta was captured.
+
+This lets the buyer inspect **what changed**, not merely see a label saying that a source changed.
+
 ## Change watch
 
 The trace is append-preserving.

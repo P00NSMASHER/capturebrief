@@ -1451,3 +1451,30 @@ This creates the approved straight-through segment:
 `history-complete case -> documented current API -> current resource discovery -> current byte capture -> retained artifact receipt`
 
 Human review remains required for historical tombstone state, semantic reference completeness, and final reference closure decisions.
+
+
+## v0.20 — Inspectable source-version deltas
+
+Decision Evidence now makes source-version changes inspectable instead of reporting only that a change occurred.
+
+For every retained `AMENDS`, `CORRECTS`, or `SUPERSEDES` relation, the trace can carry:
+
+- the exact from-version source metadata and document SHA-256;
+- the exact to-version source metadata and document SHA-256;
+- an exact before passage + locator;
+- an exact after passage + locator;
+- the concise reviewer change summary.
+
+The trace evaluator validates that both passages belong to their declared source versions. A one-sided delta fails closed. Older traces that retained only the relation/summary remain compatible, but emit `TRACE_CHANGE_PASSAGES_MISSING` as a warning so the buyer can distinguish “version relation recorded” from “exact textual delta captured.”
+
+The HTML and Markdown buyer reports now show the two source versions side by side / sequentially with their exact passages and hashes.
+
+This strengthens the product promise from:
+
+> a source changed
+
+to:
+
+> this exact text in this retained source version changed to this exact text in that retained source version.
+
+The change remains evidence for human Pursuit QA; it does not automatically alter rule applicability or the customer's bid decision.

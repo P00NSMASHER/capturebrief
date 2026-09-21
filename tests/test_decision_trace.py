@@ -27,7 +27,7 @@ def demo_case():
     ]
     common={"reviewed_by":"Demo reviewer","reviewed_at":"2026-09-21T14:00:00Z"}
     reviews=[
-      {"assumption_id":"A1","evidence_state":"CONTRADICTED","finding":f1,"citations":[{**passage(new,2,2,locator="L.3"),"role":"CONTRADICTS"},{**passage(old,2,2,locator="L.3"),"role":"CONTEXT"}],"rule_scope":{"status":"NOT_RELEVANT","rationale":"Bounded by the solicitation amendment."},"rule_links":[],"changes":[{"from_snapshot_id":old["snapshot_id"],"to_snapshot_id":new["snapshot_id"],"relation":"AMENDS","summary":"20 pages to 15 pages","authority_passage":passage(new,2,2,locator="L.3")}],**common},
+      {"assumption_id":"A1","evidence_state":"CONTRADICTED","finding":f1,"citations":[{**passage(new,2,2,locator="L.3"),"role":"CONTRADICTS"},{**passage(old,2,2,locator="L.3"),"role":"CONTEXT"}],"rule_scope":{"status":"NOT_RELEVANT","rationale":"Bounded by the solicitation amendment."},"rule_links":[],"changes":[{"from_snapshot_id":old["snapshot_id"],"to_snapshot_id":new["snapshot_id"],"relation":"AMENDS","summary":"20 pages to 15 pages","from_passage":passage(old,2,2,locator="L.3"),"to_passage":passage(new,2,2,locator="L.3"),"authority_passage":passage(new,2,2,locator="L.3")}],**common},
       {"assumption_id":"A2","evidence_state":"CONTRADICTED","finding":f2,"citations":[{**passage(new,3,3,locator="incorporation"),"role":"CONTRADICTS"}],"rule_scope":{"status":"REQUIRED","rationale":"Assumption depends on rule edition."},"rule_links":[{"rule_version_id":rules[0]["rule_version_id"],"family_id":"DEMO-1","applicability":"APPLIES","basis":"INCORPORATED_EDITION","incorporated_edition":"May 2025","rationale":"Amendment retains this edition.","basis_passage":passage(new,3,3,locator="incorporation")},{"rule_version_id":rules[1]["rule_version_id"],"family_id":"DEMO-1","applicability":"DOES_NOT_APPLY","basis":"INCORPORATED_EDITION","incorporated_edition":"September 2026","rationale":"Amendment excludes this edition.","basis_passage":passage(new,3,3,locator="incorporation")}],"changes":[],**common},
       {"assumption_id":"A3","evidence_state":"SOURCE_LIMITED","finding":f3,"citations":[{**passage(new,4,4,locator="attachment note"),"role":"CONTEXT"}],"rule_scope":{"status":"UNRESOLVED","rationale":"Missing appendix."},"rule_links":[],"evidence_request":"Authoritative eligibility appendix or clarification.","changes":[],**common},
     ]
@@ -53,7 +53,30 @@ class DecisionTraceTests(unittest.TestCase):
     def test_unrelated_rule_does_not_reopen(self):
         after=copy.deepcopy(self.case); rule=copy.deepcopy(after["decision_trace"]["rule_versions"][0]); rule["rule_key"]="FAR:all:unrelated"; rule["rule_version_id"]="RULE:other"; after["decision_trace"]["rule_versions"].append(rule); self.assertEqual(compare_decision_traces(self.case,after)["reopened_assumptions"],[])
     def test_work_items_are_human_only(self): del self.case["decision_trace"]; tasks=trace_work_items(self.case,now=NOW); self.assertTrue(tasks); self.assertTrue(all(not t["can_auto_execute"] for t in tasks))
-    def test_renderers(self): self.assertIn("Decision evidence",render_trace_markdown(self.case)); self.assertIn("Know what your bid decision rests on",render_trace_html(self.case))
+    def test_renderers(self):
+        markdown=render_trace_markdown(self.case); html=render_trace_html(self.case)
+        self.assertIn("Decision evidence",markdown); self.assertIn("Know what your bid decision rests on",html)
+        for rendered in (markdown,html):
+            self.assertIn("Original solicitation",rendered)
+            self.assertIn("Amendment 02",rendered)
+            self.assertIn("20 pages",rendered)
+            self.assertIn("15 pages",rendered)
+    def test_change_passage_pair_is_required(self):
+        change=self.case["decision_trace"]["reviews"][0]["changes"][0]
+        change.pop("to_passage")
+        self.assertIn("TRACE_CHANGE_PASSAGE_PAIR_INCOMPLETE",self.codes())
+    def test_change_passage_must_match_declared_version(self):
+        change=self.case["decision_trace"]["reviews"][0]["changes"][0]
+        change["from_passage"]=copy.deepcopy(change["to_passage"])
+        self.assertIn("TRACE_CHANGE_PASSAGE_VERSION_MISMATCH",self.codes())
+    def test_legacy_change_without_passages_warns_but_does_not_block(self):
+        change=self.case["decision_trace"]["reviews"][0]["changes"][0]
+        change.pop("from_passage"); change.pop("to_passage")
+        report=evaluate_decision_trace(self.case,now=NOW,allow_synthetic=True)
+        self.assertEqual(report["trace_state"],"ILLUSTRATIVE_TRACE_COMPLETE")
+        self.assertIn("TRACE_CHANGE_PASSAGES_MISSING",{f["code"] for f in report["findings"]})
+        warning=next(f for f in report["findings"] if f["code"]=="TRACE_CHANGE_PASSAGES_MISSING")
+        self.assertEqual(warning["severity"],"WARN")
     def test_content_addressed_freeze(self):
         with tempfile.TemporaryDirectory() as d: a=freeze_case(self.case,d); b=freeze_case(self.case,d); self.assertEqual(a,b)
 
