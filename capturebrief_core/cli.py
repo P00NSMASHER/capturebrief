@@ -25,6 +25,7 @@ from .resolver import attach_history_resolution, resolve_reference_from_index
 from .intake import build_case_from_intake
 from .workqueue import build_work_queue
 from .outcomes import append_outcome_event, summarize_outcomes, validate_outcome_event
+from .commercial_activation import build_activation_packet, render_checkout_invitation, review_scope
 
 
 def load(p): return json.loads(Path(p).read_text())
@@ -65,6 +66,8 @@ def main():
     x=sub.add_parser("current-search-plan"); x.add_argument("case"); x.add_argument("--output","-o")
     x=sub.add_parser("case-fetch-current"); x.add_argument("case"); x.add_argument("--api-key-env",default="SAM_API_KEY"); x.add_argument("--organization-code"); x.add_argument("--output","-o",required=True); x.add_argument("--result-output")
     x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o")
+    x=sub.add_parser("scope-review"); x.add_argument("case"); x.add_argument("decision"); x.add_argument("--reason",action="append",required=True); x.add_argument("--reviewed-by-role",required=True); x.add_argument("--reviewed-at",required=True); x.add_argument("--output","-o")
+    x=sub.add_parser("checkout-packet"); x.add_argument("case"); x.add_argument("scope_review"); x.add_argument("--created-at",required=True); x.add_argument("--checkout-url"); x.add_argument("--output","-o"); x.add_argument("--invitation-output")
     x=sub.add_parser("outcome-validate"); x.add_argument("event_json"); x.add_argument("--output","-o")
     x=sub.add_parser("outcome-append"); x.add_argument("ledger"); x.add_argument("event_json"); x.add_argument("--recorded-at"); x.add_argument("--output","-o")
     x=sub.add_parser("outcome-summary"); x.add_argument("ledger"); x.add_argument("--output","-o")
@@ -203,6 +206,14 @@ def main():
         observation=load(a.api_observation) if a.api_observation else None
         history_plan=load(a.history_index_plan) if a.history_index_plan else None
         dump(build_work_queue(load(a.case),api_observation=observation,history_index_plan=history_plan),a.output); return 0
+    if a.cmd=="scope-review":
+        result=review_scope(load(a.case),decision=a.decision,reason_codes=a.reason,reviewed_by_role=a.reviewed_by_role,reviewed_at=a.reviewed_at); dump(result,a.output); return 0
+    if a.cmd=="checkout-packet":
+        packet=build_activation_packet(load(a.case),load(a.scope_review),created_at=a.created_at,checkout_url=a.checkout_url)
+        dump(packet,a.output)
+        if a.invitation_output:
+            Path(a.invitation_output).write_text(render_checkout_invitation(packet),encoding="utf-8")
+        return 0
     if a.cmd=="outcome-validate":
         errors=validate_outcome_event(load(a.event_json))
         result={"valid":not errors,"errors":errors}; dump(result,a.output); return 0 if not errors else 2
