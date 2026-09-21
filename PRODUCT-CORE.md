@@ -2294,3 +2294,70 @@ Content-addressed history snapshots use the same exact-file publication primitiv
 - no fixed shared temporary filename is used.
 
 These controls strengthen provenance and concurrency behavior only. They do not turn Data Services ordering into current-action authority, and they do not alter the existing rule that history membership and current-action authority are separate claims.
+
+
+## v0.35 — Complete current-action API evidence
+
+CaptureBrief now requires the documented SAM Get Opportunities Public API response to prove its own result-set completeness before it can become controlling current-action evidence.
+
+The production acquisition surface is pinned to:
+
+`https://api.sam.gov/prod/opportunities/v2/search`
+
+### Pagination is evidence
+
+The v2 API returns `totalRecords`, `limit`, `offset`, and `opportunitiesData`.
+
+CaptureBrief no longer treats “one exact row on the first response page” as sufficient by itself.
+
+An approved current observation requires:
+
+- offset 0;
+- non-negative pagination fields;
+- returned row count no greater than the response limit;
+- `totalRecords == returned row count`;
+- exactly one exact solicitation-family row after the complete result set is established.
+
+If the API says more records exist than were returned, currentness remains unresolved rather than selecting from an incomplete page.
+
+### Raw-response and semantic hashes
+
+Each approved observation now retains both:
+
+- canonical parsed-payload SHA-256;
+- raw API response SHA-256.
+
+The current-action receipt carries both hashes plus the pagination proof. The independent authority validator checks that proof even if a receipt is later rehashed.
+
+The case retains the same raw-response digest and pagination record. A later attachment-byte receipt must match both the canonical API payload and the exact raw-response digest.
+
+Legacy cases remain readable, but fresh automated attachment capture requires a refreshed current observation carrying this v0.35 proof.
+
+### API response safety
+
+The current API response is bounded before parsing:
+
+- maximum response bytes are enforced;
+- publisher `Content-Length` is validated when present;
+- truncated responses fail closed;
+- the final API URL must remain on the approved SAM Opportunities v2 search endpoint;
+- the API-key-bearing request URL is never stored or logged as evidence.
+
+### Attachment redirect privacy
+
+Documented SAM resource links may redirect to short-lived object-storage delivery URLs.
+
+Those redirect URLs can contain temporary signed query parameters, so CaptureBrief no longer persists the full final URL in a byte receipt.
+
+The durable receipt records only:
+
+- approved SAM source resource URL;
+- whether a redirect occurred;
+- final HTTPS delivery host;
+- SHA-256 of the full final URL;
+- exact captured-byte SHA-256 and byte length;
+- binding to the current API canonical/raw response hashes.
+
+The full signed redirect URL is explicitly rejected from durable case evidence.
+
+These controls strengthen current-action and attachment provenance. They do not change the separate rule that Data Services history membership cannot select the controlling current action.
