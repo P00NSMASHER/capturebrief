@@ -1,0 +1,209 @@
+import csv
+import io
+import sqlite3
+import tempfile
+import unittest
+from pathlib import Path
+
+from capturebrief_core.archive_catalog import (
+    ARCHIVE_CATALOG_YEARS,
+    ArchiveCatalogStale,
+    catalog_snapshot,
+)
+from capturebrief_core.data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD
+from capturebrief_core.history import validate_history_receipts
+from capturebrief_core.history_index import (
+    fetch_and_ingest_slot,
+    index_status,
+    ingest_extract_file,
+    issue_history_receipt_from_index,
+    sync_plan,
+)
+
+FIELDS = [
+    "NoticeId","Sol#","PostedDate","Type","Active","AAC Code","Office","Link",
+    "CGAC","FPDS Code","Department/Ind.Agency","Sub-Tier","BaseType",
+]
+NOW="2026-09-21T15:30:00+00:00"
+
+
+def row(notice, sol="SOL-1", aac="AAC1", posted="09/20/2026", active="Yes", office="OFFICE"):
+    return {
+        "NoticeId":notice,
+        "Sol#":sol,
+        "PostedDate":posted,
+        "Type":"Solicitation",
+        "Active":active,
+        "AAC Code":aac,
+        "Office":office,
+        "Link":f"https://sam.gov/opp/{notice}/view",
+        "CGAC":"9700",
+        "FPDS Code":"FA1234",
+        "Department/Ind.Agency":"DEPT OF DEFENSE",
+        "Sub-Tier":"AIR FORCE",
+        "BaseType":"Solicitation",
+    }
+
+
+def write_csv(path:Path, rows):
+    with path.open("w",encoding="cp1252",newline="") as handle:
+        w=csv.DictWriter(handle,fieldnames=FIELDS)
+        w.writeheader(); w.writerows(rows)
+
+
+class FakeResponse:
+    def __init__(self,data:bytes):
+        self._io=io.BytesIO(data)
+        self.headers={"Content-Length":str(len(data))}
+    def read(self,n=-1): return self._io.read(n)
+    def __enter__(self): return self
+    def __exit__(self,*args): return False
+
+
+class HistoryIndexTests(unittest.TestCase):
+    def build_complete_index(self,root:Path,*,collision=False):
+        db=root/"history.sqlite"
+        snapshots=root/"snapshots"
+        active=root/"active.csv"
+        active_rows=[row("a2"),row("a1",posted="09/15/2026")]
+        if collision:
+            active_rows.append(row("z9",aac="AAC2",office="OTHER OFFICE"))
+        write_csv(active,active_rows)
+        ingest_extract_file(db,active,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots)
+
+        for fy in ARCHIVE_CATALOG_YEARS:
+            p=root/f"fy{fy}.csv"
+            rows=[]
+            if fy==2026:
+                rows=[row("a1",posted="09/15/2026",active="No"),row("a2",posted="09/20/2026",active="No")]
+                if collision:
+                    rows.append(row("z9",aac="AAC2",office="OTHER OFFICE",active="No"))
+            write_csv(p,rows)
+            ingest_extract_file(
+                db,p,source_url=ARCHIVE_DOWNLOAD.format(fy=fy),source_kind="ARCHIVE",
+                fiscal_year=fy,observed_at=NOW,snapshot_dir=snapshots
+            )
+        return db,snapshots
+
+    def test_full_catalog_index_issues_releasable_history_receipt(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db,_=self.build_complete_index(root)
+            status=index_status(db,fiscal_year=2026)
+            self.assertTrue(status["complete"],status["missing_slots"])
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026
+            )
+            self.assertEqual(receipt["status"],"COMPLETE")
+            self.assertEqual(set(receipt["action_ids"]),{"a1","a2"})
+            scope=receipt["evidence_payload"]["scope"]
+            self.assertEqual(scope["mode"],"FULL_CATALOG")
+            self.assertEqual(scope["catalog_snapshot"],catalog_snapshot())
+            self.assertEqual(scope["required_archive_fys"],list(ARCHIVE_CATALOG_YEARS))
+            verdict,findings=validate_history_receipts(receipt["action_ids"],[receipt])
+            self.assertEqual(verdict,"HISTORY_COMPLETE",[f.code for f in findings])
+
+    def test_missing_archive_slot_blocks_complete_history(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db,_=self.build_complete_index(root)
+            with sqlite3.connect(db) as conn:
+                conn.execute("DELETE FROM current_sources WHERE slot='ARCHIVE:1980'")
+            status=index_status(db,fiscal_year=2026)
+            self.assertFalse(status["complete"])
+            self.assertIn("ARCHIVE:1980",status["missing_slots"])
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026
+            )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            verdict,_=validate_history_receipts(receipt["action_ids"],[receipt])
+            self.assertEqual(verdict,"HISTORY_UNRESOLVED")
+
+    def test_seed_anchors_same_number_to_correct_aac(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db,_=self.build_complete_index(root,collision=True)
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026
+            )
+            self.assertEqual(set(receipt["action_ids"]),{"a1","a2"})
+            self.assertNotIn("z9",receipt["action_ids"])
+            self.assertEqual(receipt["evidence_payload"]["family"]["aac_code"],"AAC1")
+
+    def test_seed_is_never_selected_from_bulk(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db,_=self.build_complete_index(root)
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="missing",
+                observed_at=NOW,fiscal_year=2026
+            )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertEqual(receipt["action_ids"],[])
+            self.assertIn("SEED_NOTICE_NOT_IN_CURRENT_INDEX",receipt["evidence_payload"]["coverage_errors"])
+
+    def test_content_addressed_snapshots_are_reused(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db=root/"history.sqlite"; snapshots=root/"snapshots"; p=root/"active.csv"
+            write_csv(p,[row("a2")])
+            first=ingest_extract_file(db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots)
+            second=ingest_extract_file(db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots)
+            self.assertFalse(first["reused"]); self.assertTrue(second["reused"])
+            stored=Path(first["local_path"])
+            self.assertTrue(stored.exists())
+            self.assertEqual(stored.stem,first["extract_sha256"])
+            with sqlite3.connect(db) as conn:
+                self.assertEqual(conn.execute("SELECT COUNT(*) FROM source_snapshots").fetchone()[0],1)
+
+    def test_replacing_slot_preserves_old_snapshot_but_queries_new_current(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db,snapshots=self.build_complete_index(root)
+            p=root/"active-new.csv"
+            write_csv(p,[row("a3"),row("a2")])
+            ingest_extract_file(db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots)
+            with sqlite3.connect(db) as conn:
+                active_snapshots=conn.execute("SELECT COUNT(*) FROM source_snapshots WHERE slot='ACTIVE'").fetchone()[0]
+            self.assertEqual(active_snapshots,2)
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a3",
+                observed_at=NOW,fiscal_year=2026
+            )
+            self.assertIn("a3",receipt["action_ids"])
+            # a1 remains available via archive evidence; stale active rows do not leak through current_sources.
+            self.assertEqual(set(receipt["action_ids"]),{"a1","a2","a3"})
+
+    def test_sync_plan_lists_only_missing_catalog_slots(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db,_=self.build_complete_index(root)
+            with sqlite3.connect(db) as conn:
+                conn.execute("DELETE FROM current_sources WHERE slot='ARCHIVE:1970'")
+                conn.execute("DELETE FROM current_sources WHERE slot='ACTIVE'")
+            plan=sync_plan(db,fiscal_year=2026)
+            slots={x["slot"] for x in plan["download_plan"]}
+            self.assertEqual(slots,{"ACTIVE","ARCHIVE:1970"})
+
+    def test_streaming_fetch_ingests_only_requested_slot(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db=root/"history.sqlite"; dest=root/"fy2026.csv"; snapshots=root/"snapshots"
+            buf=io.StringIO()
+            writer=csv.DictWriter(buf,fieldnames=FIELDS)
+            writer.writeheader(); writer.writerow(row("a2"))
+            data=buf.getvalue().encode("cp1252")
+            result=fetch_and_ingest_slot(
+                db,slot="ARCHIVE:2026",destination=dest,snapshot_dir=snapshots,
+                observed_at=NOW,opener=lambda req,timeout=120: FakeResponse(data)
+            )
+            self.assertEqual(result["ingest"]["slot"],"ARCHIVE:2026")
+            self.assertTrue(dest.exists())
+            status=index_status(db,fiscal_year=2026)
+            self.assertIn("ARCHIVE:2026",status["present_slots"])
+            self.assertIn("ACTIVE",status["missing_slots"])
+            self.assertGreater(len(status["missing_slots"]),1)
+
+    def test_catalog_must_be_refreshed_after_current_through_fy(self):
+        with tempfile.TemporaryDirectory() as td:
+            with self.assertRaises(ArchiveCatalogStale):
+                index_status(Path(td)/"history.sqlite",fiscal_year=2027)
+
+
+if __name__=="__main__":
+    unittest.main()

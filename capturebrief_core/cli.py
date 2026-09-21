@@ -5,8 +5,13 @@ from . import audit_case,compare_cases,render_markdown
 from .ledger import append_record, verify_ledger
 from .manifest import normalize_manifest_payload
 from .current_api import download_resource_from_api_observation, fetch_latest_active, make_current_action_receipt
-from .data_services import collect_history_from_files
+from .data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD, collect_history_from_files
 from .packet import diff_manifest_receipts
+from .archive_catalog import catalog_snapshot
+from .history_index import (
+    fetch_and_ingest_slot, index_status, ingest_extract_file,
+    issue_history_receipt_from_index, sync_plan,
+)
 from .intake import build_case_from_intake
 from .workqueue import build_work_queue
 
@@ -27,6 +32,12 @@ def main():
     x=sub.add_parser("history-from-extracts"); x.add_argument("solicitation_number"); x.add_argument("active_csv"); x.add_argument("--archive",action="append",default=[]); x.add_argument("--seed-notice-id"); x.add_argument("--scope-start-fy",type=int); x.add_argument("--scope-end-fy",type=int); x.add_argument("--confirm-scope",action="store_true"); x.add_argument("--observed-at"); x.add_argument("--output","-o"); x.add_argument("--ledger")
     x=sub.add_parser("current-from-api"); x.add_argument("solicitation_number"); x.add_argument("history_receipt"); x.add_argument("posted_from"); x.add_argument("posted_to"); x.add_argument("--organization-code"); x.add_argument("--api-key-env",default="SAM_API_KEY"); x.add_argument("--output","-o"); x.add_argument("--observation-output")
     x=sub.add_parser("capture-api-resource"); x.add_argument("api_observation"); x.add_argument("resource_url"); x.add_argument("--output","-o",required=True); x.add_argument("--receipt-output"); x.add_argument("--ledger"); x.add_argument("--max-bytes",type=int,default=50*1024*1024)
+    x=sub.add_parser("archive-catalog"); x.add_argument("--output","-o")
+    x=sub.add_parser("history-index-status"); x.add_argument("index_db"); x.add_argument("--fiscal-year",type=int); x.add_argument("--output","-o")
+    x=sub.add_parser("history-index-plan"); x.add_argument("index_db"); x.add_argument("--fiscal-year",type=int); x.add_argument("--output","-o")
+    x=sub.add_parser("history-index-ingest"); x.add_argument("index_db"); x.add_argument("csv_path"); x.add_argument("--kind",choices=["active","archive"],required=True); x.add_argument("--fiscal-year",type=int); x.add_argument("--snapshot-dir"); x.add_argument("--observed-at"); x.add_argument("--output","-o")
+    x=sub.add_parser("history-index-fetch"); x.add_argument("index_db"); x.add_argument("slot"); x.add_argument("destination"); x.add_argument("--snapshot-dir"); x.add_argument("--observed-at"); x.add_argument("--max-bytes",type=int,default=2_000_000_000); x.add_argument("--output","-o")
+    x=sub.add_parser("history-from-index"); x.add_argument("index_db"); x.add_argument("solicitation_number"); x.add_argument("--seed-notice-id",required=True); x.add_argument("--fiscal-year",type=int); x.add_argument("--observed-at"); x.add_argument("--output","-o"); x.add_argument("--ledger")
     x=sub.add_parser("case-from-intake"); x.add_argument("intake_json"); x.add_argument("--submitted-at"); x.add_argument("--output","-o")
     x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--output","-o")
     x=sub.add_parser("ledger-append"); x.add_argument("ledger"); x.add_argument("record_type"); x.add_argument("payload_json")
@@ -66,6 +77,27 @@ def main():
         Path(a.output).write_bytes(content); receipt["stored_path"]=str(Path(a.output)); dump(receipt,a.receipt_output)
         if a.ledger: append_record(a.ledger,record_type="SAM_APPROVED_API_BYTE_CAPTURE",payload=receipt)
         return 0
+    if a.cmd=="archive-catalog":
+        dump(catalog_snapshot(),a.output); return 0
+    if a.cmd=="history-index-status":
+        result=index_status(a.index_db,fiscal_year=a.fiscal_year); dump(result,a.output); return 0 if result["complete"] else 2
+    if a.cmd=="history-index-plan":
+        result=sync_plan(a.index_db,fiscal_year=a.fiscal_year); dump(result,a.output); return 0 if result["complete"] else 2
+    if a.cmd=="history-index-ingest":
+        kind=a.kind.upper()
+        if kind=="ARCHIVE" and a.fiscal_year is None: raise SystemExit("--fiscal-year is required for archive ingest")
+        if kind=="ACTIVE" and a.fiscal_year is not None: raise SystemExit("--fiscal-year must be omitted for active ingest")
+        source_url=ACTIVE_DOWNLOAD if kind=="ACTIVE" else ARCHIVE_DOWNLOAD.format(fy=a.fiscal_year)
+        result=ingest_extract_file(a.index_db,a.csv_path,source_url=source_url,source_kind=kind,fiscal_year=a.fiscal_year,observed_at=a.observed_at,snapshot_dir=a.snapshot_dir)
+        dump(result,a.output); return 0
+    if a.cmd=="history-index-fetch":
+        result=fetch_and_ingest_slot(a.index_db,slot=a.slot,destination=a.destination,snapshot_dir=a.snapshot_dir,observed_at=a.observed_at,max_bytes=a.max_bytes)
+        dump(result,a.output); return 0
+    if a.cmd=="history-from-index":
+        receipt=issue_history_receipt_from_index(a.index_db,solicitation_number=a.solicitation_number,seed_notice_id=a.seed_notice_id,observed_at=a.observed_at,fiscal_year=a.fiscal_year)
+        dump(receipt,a.output)
+        if a.ledger: append_record(a.ledger,record_type="SAM_DATA_SERVICES_HISTORY_INDEX",payload=receipt)
+        return 0 if receipt["status"]=="COMPLETE" else 2
     if a.cmd=="case-from-intake":
         dump(build_case_from_intake(load(a.intake_json),submitted_at=a.submitted_at),a.output); return 0
     if a.cmd=="work-queue":

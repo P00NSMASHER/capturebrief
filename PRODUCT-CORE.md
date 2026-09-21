@@ -115,3 +115,32 @@ For `APPROVED_EXTRACT` history receipts, release requires the Data Services sour
 For `APPROVED_API` current-action receipts, release requires the documented Opportunities v2 source class, the `SAM_GET_OPPORTUNITIES_V2` contract, Notice ID equality, a valid API-payload digest, and resource links that remain inside the approved API-resource-link contract.
 
 Recomputing an outer receipt hash after altering those semantics cannot make the receipt green.
+
+
+## Full-catalog Data Services index
+
+The preferred history path is now a reusable, content-addressed Data Services index rather than per-case CSV scanning.
+
+A pinned human-supervised first-party archive catalog defines the public Contract Opportunities archive slots CaptureBrief must inspect through the current fiscal year. For the September 21, 2026 catalog snapshot, that means FY1970, FY1980, and every FY1998-FY2026 archive plus the active extract. The future-listed FY2030 entry is retained in the catalog evidence but is not required for FY2026.
+
+The SQLite evidence index:
+
+- streams CSV rows instead of loading the active extract into memory;
+- hashes each extract before indexing;
+- can retain a read-only content-addressed CSV copy named by SHA-256;
+- preserves old source snapshots when a slot refreshes while `current_sources` points to the newest indexed snapshot;
+- indexes solicitation number, Notice ID, AAC, office, source slot, row hash, and source-extract hash;
+- performs large-source work once and reuses the index across customer pursuits.
+
+A `FULL_CATALOG` history receipt is accepted only when the pinned catalog snapshot verifies, every required archive slot plus ACTIVE is indexed, the independently supplied seed Notice ID is present, and the family filter is anchored to that seed rather than chosen from bulk ordering.
+
+Useful commands:
+
+    python -m capturebrief_core.cli archive-catalog
+    python -m capturebrief_core.cli history-index-plan history.sqlite
+    python -m capturebrief_core.cli history-index-fetch history.sqlite ARCHIVE:2026 fy2026.csv --snapshot-dir evidence/snapshots
+    python -m capturebrief_core.cli history-index-ingest history.sqlite active.csv --kind active --snapshot-dir evidence/snapshots
+    python -m capturebrief_core.cli history-index-status history.sqlite
+    python -m capturebrief_core.cli history-from-index history.sqlite SOL-123 --seed-notice-id <VERIFIED_ACTION_UUID> -o history.json
+
+`history-index-fetch` downloads exactly one explicitly requested approved source slot. CaptureBrief does not silently initiate a whole-catalog multi-gigabyte sync.

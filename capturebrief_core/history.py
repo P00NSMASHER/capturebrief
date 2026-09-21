@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
+from .archive_catalog import catalog_years_for_fiscal_year, validate_catalog_snapshot
 from .model import Finding, canonical_json, first_party_sam, history_set_digest, parse_dt, sha256_hex, valid_sha256
 from .source_policy import classify_sam_url
 
@@ -87,19 +88,36 @@ def _validate_data_services_contract(receipt: dict[str, Any], receipt_actions: s
     if not isinstance(scope, dict):
         findings.append(Finding("HISTORY_DATA_SERVICES_SCOPE_MISSING", "BLOCK", "Data Services receipt lacks explicit archive scope.", path))
     else:
-        start, end = scope.get("start_fy"), scope.get("end_fy")
-        if not isinstance(start, int) or not isinstance(end, int) or start > end:
-            findings.append(Finding("HISTORY_DATA_SERVICES_SCOPE_RANGE_INVALID", "BLOCK", "Data Services scope fiscal-year range is invalid.", path))
-            expected_required: set[int] = set()
-        else:
-            expected_required = set(range(start, end + 1))
+        mode = str(scope.get("mode") or "DECLARED_RANGE").upper()
         required = {int(x) for x in scope.get("required_archive_fys", []) if isinstance(x, int)}
         supplied = {int(x) for x in scope.get("supplied_archive_fys", []) if isinstance(x, int)}
         missing = {int(x) for x in scope.get("missing_archive_fys", []) if isinstance(x, int)}
         if scope.get("scope_confirmed") is not True:
             findings.append(Finding("HISTORY_DATA_SERVICES_SCOPE_UNCONFIRMED", "BLOCK", "Data Services scope was not explicitly confirmed.", path))
+
+        if mode == "FULL_CATALOG":
+            catalog_fy = scope.get("catalog_fiscal_year")
+            snapshot = scope.get("catalog_snapshot")
+            if not isinstance(catalog_fy, int) or not isinstance(snapshot, dict) or not validate_catalog_snapshot(snapshot, fiscal_year=catalog_fy):
+                findings.append(Finding("HISTORY_DATA_SERVICES_CATALOG_INVALID", "BLOCK", "Full-catalog history receipt is not bound to the pinned human-supervised SAM archive catalog snapshot.", path))
+                expected_required: set[int] = set()
+            else:
+                expected_required = set(catalog_years_for_fiscal_year(catalog_fy))
+            if scope.get("catalog_sha256") != (snapshot or {}).get("catalog_sha256"):
+                findings.append(Finding("HISTORY_DATA_SERVICES_CATALOG_HASH_MISMATCH", "BLOCK", "Full-catalog scope digest does not match the retained catalog snapshot.", path))
+        elif mode == "DECLARED_RANGE":
+            start, end = scope.get("start_fy"), scope.get("end_fy")
+            if not isinstance(start, int) or not isinstance(end, int) or start > end:
+                findings.append(Finding("HISTORY_DATA_SERVICES_SCOPE_RANGE_INVALID", "BLOCK", "Data Services scope fiscal-year range is invalid.", path))
+                expected_required = set()
+            else:
+                expected_required = set(range(start, end + 1))
+        else:
+            findings.append(Finding("HISTORY_DATA_SERVICES_SCOPE_MODE_INVALID", "BLOCK", "Data Services scope mode is not recognized.", path))
+            expected_required = set()
+
         if required != expected_required:
-            findings.append(Finding("HISTORY_DATA_SERVICES_REQUIRED_RANGE_MISMATCH", "BLOCK", "Required archive years do not match the declared scope range.", path))
+            findings.append(Finding("HISTORY_DATA_SERVICES_REQUIRED_RANGE_MISMATCH", "BLOCK", "Required archive years do not match the proved scope.", path))
         if missing or not required.issubset(supplied):
             findings.append(Finding("HISTORY_DATA_SERVICES_ARCHIVE_COVERAGE_INCOMPLETE", "BLOCK", "Not every required Data Services archive year is supplied.", path))
         if scope.get("active_extract_present") is not True:
