@@ -57,4 +57,24 @@ def compare_cases(before:dict[str,Any],after:dict[str,Any])->dict[str,Any]:
     for item in after.get("assumptions") or []:
         matched=sorted(set(map(str,item.get("reopen_triggers") or [])) & keys)
         if matched: reopened.append({"assumption_id":item.get("assumption_id"),"matched_triggers":matched})
+    if "decision_trace" in before or "decision_trace" in after:
+        from .decision_trace import compare_decision_traces
+        trace_changes = compare_decision_traces(before, after)
+        events.extend(trace_changes["events"])
+        by_id = {x["assumption_id"]: x for x in reopened}
+        for row in trace_changes["reopened_assumptions"]:
+            target = by_id.setdefault(
+                row["assumption_id"],
+                {"assumption_id": row["assumption_id"], "matched_triggers": []},
+            )
+            target["matched_triggers"] = sorted(
+                set(target["matched_triggers"])
+                | {"TRACE:" + key for key in row["matched_dependencies"]}
+            )
+        return {
+            "events": events,
+            "reopened_assumptions": list(by_id.values()),
+            "trace_integrity_violations": trace_changes["integrity_violations"],
+            "automatic_applicability_change": False,
+        }
     return {"events":events,"reopened_assumptions":reopened}

@@ -55,4 +55,7 @@ def render_markdown(case:dict[str,Any],audit:AuditResult|None=None)->str:
     lines += ["","### Source manifest","","| Source | Authority | Artifact state | Observed | URL |","|---|---|---|---|---|"]
     for s in case.get("sources") or []: lines.append("| "+" | ".join(_e(s.get(k)) for k in ("source_id","authority","artifact_state","observed_at","url"))+" |")
     lines += ["","### Product boundary","","Public-source, human-supervised Pursuit QA only. Final pursuit decisions stay with the customer; no PWin scoring, bid submission, legal advice, or protected-portal authorization.",""]
+    if case.get("decision_trace_required") is True or "decision_trace" in case:
+        from .trace_render import render_trace_markdown
+        lines += ["", render_trace_markdown(case)]
     return "\n".join(lines)

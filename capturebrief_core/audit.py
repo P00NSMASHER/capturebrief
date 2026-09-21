@@ -80,5 +80,13 @@ def audit_case(case:dict[str,Any],*,now:datetime|None=None)->AuditResult:
     for i,d in enumerate(packet.get("external_dependencies") or []):
         if not d.get("url") or not d.get("reason"): findings.append(Finding("EXTERNAL_DEPENDENCY_INCOMPLETE","BLOCK","External/restricted dependency must include URL and reason.",f"packet.external_dependencies[{i}]"))
 
+    if case.get("decision_trace_required") is True or "decision_trace" in case:
+        from .decision_trace import evaluate_decision_trace
+        trace = evaluate_decision_trace(case, now=now)
+        findings.extend(
+            Finding(f["code"], f["severity"], f["message"], f.get("path"))
+            for f in trace["findings"]
+        )
+
     blocked=any(x.severity=="BLOCK" for x in findings)
     return AuditResult("FAIL_CLOSED" if blocked else "READY_FOR_HUMAN_RELEASE",verdict,current,tuple(findings))

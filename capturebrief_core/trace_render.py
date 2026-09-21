@@ -1,0 +1,46 @@
+from __future__ import annotations
+import html
+from typing import Any
+from .decision_trace import evaluate_decision_trace
+
+
+def render_trace_markdown(case: dict[str, Any]) -> str:
+    report = evaluate_decision_trace(case)
+    lines = ["## Decision evidence", "", "**Exact source / rule / version history behind the assumptions used in this pursuit.**", "",
+             f"Trace state: **{report['trace_state']}**", ""]
+    for card in report["assumptions"]:
+        lines += [f"### {card['assumption_id']} — {card.get('evidence_state')}",
+                  f"**Assumption:** {card.get('assumption') or ''}",
+                  f"**Finding:** {card.get('finding') or ''}"]
+        if card.get("next_action"): lines.append(f"**Next action:** {card['next_action']}")
+        lines.append("")
+        for cite in card.get("citations") or []:
+            src = cite.get("source") or {}
+            lines += [f"- **{src.get('title') or src.get('source_id')} — {src.get('version_label') or 'version not labeled'}**",
+                      f"  - Locator: {cite.get('locator')}", f"  - Exact passage: “{str(cite.get('quote') or '').replace(chr(10), ' / ')}”",
+                      f"  - Document SHA-256: `{src.get('document_sha256') or ''}`"]
+        for rule in card.get("rule_links") or []:
+            lines.append(f"- Rule review: **{rule.get('namespace')} {rule.get('citation')} — {rule.get('edition')}** → {rule.get('applicability')}")
+            lines.append(f"  - Basis: {rule.get('rationale') or ''}")
+        for change in card.get("changes") or []:
+            lines.append(f"- Version change: **{change.get('relation')}** — {change.get('summary')}")
+        lines.append("")
+    if report["findings"]:
+        lines += ["### Trace review gaps", ""] + [f"- **{x['code']}**: {x['message']}" for x in report["findings"]]
+    lines += ["", "_This evidence trail supports human pursuit QA. It does not make the bid decision or automatically decide legal applicability._"]
+    return "\n".join(lines)
+
+
+def render_trace_html(case: dict[str, Any]) -> str:
+    report = evaluate_decision_trace(case)
+    cards = []
+    for card in report["assumptions"]:
+        evidence = []
+        for cite in card.get("citations") or []:
+            src = cite.get("source") or {}
+            evidence.append(f"<li><strong>{html.escape(str(src.get('title') or src.get('source_id') or 'Source'))}</strong> · {html.escape(str(src.get('version_label') or 'version unlabeled'))}<br><span>{html.escape(str(cite.get('locator') or ''))}</span><blockquote>{html.escape(str(cite.get('quote') or ''))}</blockquote></li>")
+        rules = "".join(f"<li><strong>{html.escape(str(r.get('namespace') or ''))} {html.escape(str(r.get('citation') or ''))} · {html.escape(str(r.get('edition') or ''))}</strong> — {html.escape(str(r.get('applicability') or ''))}<br>{html.escape(str(r.get('rationale') or ''))}</li>" for r in card.get("rule_links") or [])
+        changes = "".join(f"<li><strong>{html.escape(str(c.get('relation') or ''))}</strong> — {html.escape(str(c.get('summary') or ''))}</li>" for c in card.get("changes") or [])
+        cards.append(f"<article><div class='eyebrow'>{html.escape(str(card.get('assumption_id')))} · {html.escape(str(card.get('evidence_state')))}</div><h2>{html.escape(str(card.get('assumption') or ''))}</h2><p class='finding'>{html.escape(str(card.get('finding') or ''))}</p><p><strong>Next:</strong> {html.escape(str(card.get('next_action') or card.get('evidence_request') or 'Human review'))}</p><details><summary>Inspect the evidence trail</summary><h3>Exact passages</h3><ul>{''.join(evidence) or '<li>No passage retained yet.</li>'}</ul><h3>Rule version review</h3><ul>{rules or '<li>No rule review required for this bounded finding.</li>'}</ul><h3>What changed</h3><ul>{changes or '<li>No version change recorded.</li>'}</ul></details></article>")
+    gaps = "".join(f"<li><strong>{html.escape(x['code'])}</strong> — {html.escape(x['message'])}</li>" for x in report["findings"])
+    return "<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>CaptureBrief Decision Evidence</title><style>body{font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;background:#f6f7fb;color:#171b26;margin:0}.wrap{max-width:880px;margin:auto;padding:32px 18px 64px}header{background:white;border:1px solid #e3e6ef;border-radius:18px;padding:26px;margin-bottom:18px}h1{font-size:clamp(28px,5vw,44px);line-height:1.05;margin:.2em 0}article{background:white;border:1px solid #e3e6ef;border-radius:16px;padding:22px;margin:14px 0}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#5a6275}h2{font-size:21px;margin:.4em 0}.finding{font-size:17px;line-height:1.5}details{border-top:1px solid #eceef4;margin-top:18px;padding-top:14px}summary{cursor:pointer;font-weight:750}blockquote{margin:8px 0;padding:12px 14px;background:#f7f8fb;border-left:3px solid #a2aabd;border-radius:5px;white-space:pre-wrap}li{margin:9px 0;line-height:1.45}.gaps{background:#fff8e7;border:1px solid #f0d894;border-radius:16px;padding:18px;margin-top:18px}@media(max-width:420px){.wrap{padding:18px 12px 44px}header,article{padding:18px}}</style></head><body><main class='wrap'><header><div class='eyebrow'>CaptureBrief · Pursuit QA</div><h1>Know what your bid decision rests on.</h1><p>Exact passages, source versions, rule editions, and what changed behind the assumptions your team is using.</p></header>" + "".join(cards) + (f"<section class='gaps'><h2>Evidence still needed</h2><ul>{gaps}</ul></section>" if gaps else "") + "</main></body></html>"
