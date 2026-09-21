@@ -83,6 +83,26 @@ The parser:
 - retains original-content and normalized-content hashes;
 - extracts paragraph text/locators without executing embedded instructions.
 
+## Citation candidate discovery
+
+CaptureBrief may scan retained public solicitation/amendment text for candidate FAR/DFARS references before the reviewer builds the final Decision Evidence trace.
+
+This is a lookup accelerator, not a rule-selection engine.
+
+The proposal:
+- binds the scan to the retained case source ID and document SHA-256;
+- records an independent SHA-256 of the text used for citation discovery;
+- stores exact mention/context/line information;
+- uses an explicit FAR/DFARS prefix when present;
+- may use regulation-number ranges only as non-authoritative namespace search hints for bare citations;
+- lists every matching pinned registry edition;
+- never chooses the newest edition;
+- never decides applicability.
+
+A citation with no current registry match remains an unresolved lookup item. It cannot become evidence that no rule exists.
+
+A proposal is routed to a human-only `rules:review-candidates` task. The reviewer must establish the relevant edition and solicitation-specific basis before a rule link can enter Decision Evidence.
+
 ## Decision Evidence boundary
 
 A normalized rule source may be bridged into Decision Evidence as:
