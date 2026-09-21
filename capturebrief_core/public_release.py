@@ -11,7 +11,7 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-from .atomic_io import fsync_directory
+from .atomic_io import atomic_write_text, fsync_directory
 from .model import canonical_json, sha256_hex
 
 RELEASE_SCHEMA="capturebrief-public-release-v1"
@@ -108,10 +108,15 @@ def _write_release_zip(temp_path: Path, dist: Path, manifest: dict[str,Any]) -> 
         zf.writestr(info,manifest_bytes)
         for row in manifest["files"]:
             source=dist/row["path"]
+            data=source.read_bytes()
+            if len(data)!=row["bytes"] or hashlib.sha256(data).hexdigest()!=row["sha256"]:
+                raise PublicReleaseError(
+                    f"public file changed after manifest scan: {row['path']}"
+                )
             info=zipfile.ZipInfo("dist/"+row["path"],date_time=FIXED_ZIP_TIME)
             info.compress_type=zipfile.ZIP_DEFLATED
             info.external_attr=0o100644<<16
-            zf.writestr(info,source.read_bytes())
+            zf.writestr(info,data)
     with temp_path.open("rb") as stream:
         os.fsync(stream.fileno())
 
@@ -135,6 +140,8 @@ def build_public_release(
     temp=Path(temp_name)
     try:
         _write_release_zip(temp,dist,manifest)
+        # Prove the completed archive before exposing it at the release path.
+        verify_public_release(temp,expected_source_commit=source_commit)
         if overwrite:
             os.replace(temp,target)
         else:
@@ -161,10 +168,18 @@ def build_public_release(
 
 
 def _safe_zip_name(name: str) -> bool:
-    if not name or name.startswith(("/", "\\")):
+    if (
+        not name
+        or name.startswith(("/", "\\"))
+        or "\\" in name
+        or "\x00" in name
+    ):
         return False
-    parts=Path(name).parts
-    return ".." not in parts
+    first=name.split("/",1)[0]
+    if ":" in first:
+        return False
+    parts=name.split("/")
+    return all(part not in {"", ".", ".."} for part in parts)
 
 
 def verify_public_release(
@@ -210,12 +225,16 @@ def verify_public_release(
 
         expected_entries={"release-manifest.json"}
         root_names:set[str]=set()
+        manifest_paths:set[str]=set()
         for row in rows:
             if not isinstance(row,dict):
                 raise PublicReleaseError("release manifest row is invalid")
             rel=str(row.get("path") or "")
-            if not rel or rel.startswith("/") or ".." in Path(rel).parts:
+            if not _safe_zip_name(rel):
                 raise PublicReleaseError("release manifest contains unsafe file path")
+            if rel in manifest_paths:
+                raise PublicReleaseError("release manifest contains duplicate file path")
+            manifest_paths.add(rel)
             root_names.add(rel.split("/",1)[0])
             entry="dist/"+rel
             expected_entries.add(entry)
@@ -267,7 +286,7 @@ def main(argv:list[str]|None=None)->int:
         )
         text=json.dumps(result,indent=2,ensure_ascii=False)+"\n"
         if args.manifest_output:
-            Path(args.manifest_output).write_text(text,encoding="utf-8")
+            atomic_write_text(args.manifest_output,text)
         else:
             print(text,end="")
         return 0
@@ -277,7 +296,7 @@ def main(argv:list[str]|None=None)->int:
     )
     text=json.dumps(result,indent=2,ensure_ascii=False)+"\n"
     if args.output:
-        Path(args.output).write_text(text,encoding="utf-8")
+        atomic_write_text(args.output,text)
     else:
         print(text,end="")
     return 0
