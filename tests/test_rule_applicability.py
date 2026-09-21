@@ -24,6 +24,7 @@ from capturebrief_core.rule_candidates import (
 from capturebrief_core.rule_evidence import prepare_rule_evidence, prepared_rule_evidence
 from capturebrief_core.rule_registry import add_rule_version, parse_gsa_dita
 from capturebrief_core.workqueue import build_work_queue
+from capturebrief_core.trace_render import render_trace_html, render_trace_markdown
 
 NOW = datetime(2026, 9, 21, 18, tzinfo=timezone.utc)
 SOL_TEXT = """ILLUSTRATIVE SOLICITATION
@@ -222,7 +223,18 @@ class RuleApplicabilityTests(unittest.TestCase):
         self.assertEqual(link["applicability"], "APPLIES")
         self.assertEqual(link["incorporated_edition"], "Nov 2021")
         self.assertEqual(link["reviewed_by"], "Applicability reviewer")
-        self.assertEqual(link["basis_passage"]["source_id"] if "source_id" in link["basis_passage"] else link["basis_passage"]["snapshot_id"], link["basis_passage"]["snapshot_id"])
+        self.assertEqual(
+            link["basis_passage"]["locator"],
+            "Solicitation clause incorporation",
+        )
+        markdown = render_trace_markdown(updated)
+        html = render_trace_html(updated)
+        for rendered in (markdown, html):
+            self.assertIn("Nov 2021", rendered)
+            self.assertIn("APPLIES", rendered)
+            self.assertIn("INCORPORATED_EDITION", rendered)
+            self.assertIn("Applicability reviewer", rendered)
+            self.assertIn("Solicitation clause incorporation", rendered)
         result = evaluate_decision_trace(updated, now=NOW)
         self.assertEqual(result["trace_state"], "TRACE_COMPLETE")
         self.assertIsNone(rule_applicability_work_item(updated))
