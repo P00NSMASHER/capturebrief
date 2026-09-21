@@ -1,6 +1,7 @@
 """Build a buyer-safe, hash-manifested CaptureBrief delivery bundle."""
 from __future__ import annotations
 
+import copy
 import json
 import os
 import tempfile
@@ -9,8 +10,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .audit import audit_case
-from .decision_trace import canonical, digest, evaluate_decision_trace
+from .decision_trace import canonical, digest
+from .delivery_readiness import evaluate_delivery_readiness
 from .render import render_markdown
 from .trace_render import render_trace_html, render_trace_markdown
 from .watch_baseline import build_watch_baseline
@@ -20,7 +21,7 @@ _FIXED_ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 
 
 def _aware(now: datetime) -> datetime:
-    if not isinstance(now, datetime) or now.tzinfo is None:
+    if not isinstance(now, datetime) or now.utcoffset() is None:
         raise ValueError("now must be timezone-aware")
     return now.astimezone(timezone.utc)
 
@@ -66,23 +67,18 @@ def _public_source_manifest(case: dict[str, Any]) -> dict[str, Any]:
 
 
 def build_delivery_files(case: dict[str, Any], *, now: datetime | None = None) -> dict[str, bytes]:
-    """Return buyer-safe delivery files. Refuses any case that is not release-ready."""
-    now = _aware(now or datetime.now(timezone.utc))
-    if case.get("decision_trace_required") is not True:
-        raise ValueError("delivery bundle requires decision_trace_required=true")
+    """Return buyer-safe files from one case snapshot and one evaluation time."""
+    case = copy.deepcopy(case)
+    readiness = evaluate_delivery_readiness(case, now=now)
+    if not readiness.eligible:
+        raise ValueError("case is not delivery-ready: " + ",".join(readiness.blocker_codes))
+    now = readiness.checked_at
+    audit = readiness.audit
+    trace = readiness.trace
 
-    audit = audit_case(case, now=now)
-    if audit.release_state != "READY_FOR_HUMAN_RELEASE":
-        codes = sorted({f.code for f in audit.findings if f.severity == "BLOCK"})
-        raise ValueError("case is not release-ready: " + ",".join(codes))
-
-    trace = evaluate_decision_trace(case, now=now)
-    if trace.get("trace_state") != "TRACE_COMPLETE" or trace.get("synthetic") is True:
-        raise ValueError("delivery bundle requires a complete non-synthetic decision trace")
-
-    brief = render_markdown(case, audit)
-    trace_md = render_trace_markdown(case)
-    trace_html = render_trace_html(case)
+    brief = render_markdown(case, audit, now=now)
+    trace_md = render_trace_markdown(case, now=now)
+    trace_html = render_trace_html(case, now=now)
     source_manifest = _public_source_manifest(case)
     summary = {
         "schema_version": BUNDLE_SCHEMA,
@@ -94,9 +90,11 @@ def build_delivery_files(case: dict[str, Any], *, now: datetime | None = None) -
         "current_action_id": audit.current_action_id,
         "trace_state": trace.get("trace_state"),
         "decision_at": trace.get("decision_at"),
+        "evaluated_at": now.isoformat().replace("+00:00", "Z"),
         "case_sha256": trace.get("case_sha256"),
         "assumptions": trace.get("assumptions") or [],
         "limitations": trace.get("limitations") or [],
+        "external_send_authorized": False,
     }
     return {
         "brief.md": brief.encode("utf-8"),
@@ -146,13 +144,15 @@ def build_delivery_bundle(
     now: datetime | None = None,
     overwrite: bool = False,
 ) -> dict[str, Any]:
-    """Write a deterministic ZIP and return its manifest + ZIP SHA-256.
+    """Write a deterministic ZIP and return the receipt for the bytes built.
 
-    The complete ZIP is built in the destination directory and published only
-    after close/fsync. A failed build never truncates an existing target, and
-    the default no-overwrite path cannot silently win a concurrent race.
+    The complete ZIP is staged in the destination directory. Its digest is
+    calculated before atomic publication, so a later replacement of the output
+    path cannot substitute another writer's bytes into this build's receipt.
+    A receipt is not proof that the path has never changed since publication.
     """
-    now = _aware(now or datetime.now(timezone.utc))
+    case = copy.deepcopy(case)
+    now = _aware(now if now is not None else datetime.now(timezone.utc))
     target = Path(output_zip)
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.exists() and not overwrite:
@@ -174,6 +174,7 @@ def build_delivery_bundle(
         "files": file_rows,
         "contains_raw_case": False,
         "contains_restricted_source_bytes": False,
+        "external_send_authorized": False,
     }
     files["delivery-manifest.json"] = _json_bytes(manifest)
 
@@ -186,6 +187,9 @@ def build_delivery_bundle(
     temp_path = Path(temp_name)
     try:
         _write_zip(temp_path, files)
+        built_bytes = temp_path.read_bytes()
+        bundle_sha256 = digest(built_bytes)
+        bundle_bytes = len(built_bytes)
         _publish_completed_zip(temp_path, target, overwrite=overwrite)
     finally:
         if temp_path.exists():
@@ -193,6 +197,7 @@ def build_delivery_bundle(
 
     result = dict(manifest)
     result["bundle_path"] = str(target)
-    result["bundle_sha256"] = digest(target.read_bytes())
-    result["bundle_bytes"] = target.stat().st_size
+    result["bundle_sha256"] = bundle_sha256
+    result["bundle_bytes"] = bundle_bytes
+    result["receipt_scope"] = "BUILT_ARTIFACT_NOT_CURRENT_PATH_STATE"
     return result
