@@ -11,6 +11,7 @@ from .audit import audit_case
 from .decision_trace import canonical, digest, evaluate_decision_trace
 from .render import render_markdown
 from .trace_render import render_trace_html, render_trace_markdown
+from .watch_baseline import build_watch_baseline
 
 BUNDLE_SCHEMA = "1.0"
 _FIXED_ZIP_TIME = (1980, 1, 1, 0, 0, 0)
@@ -101,6 +102,7 @@ def build_delivery_files(case: dict[str, Any], *, now: datetime | None = None) -
         "decision-evidence.html": trace_html.encode("utf-8"),
         "decision-summary.json": _json_bytes(summary),
         "source-version-manifest.json": _json_bytes(source_manifest),
+        "watch-baseline.json": _json_bytes(build_watch_baseline(case, now=now)),
     }
 
 
