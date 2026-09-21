@@ -1,0 +1,35 @@
+name: Red-team baseline snapshot
+on:
+  push:
+    branches: [capturebrief-redteam-20260921]
+    paths: ['.github/workflows/redteam-baseline.yml']
+permissions:
+  contents: read
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0f0136e1be8b01c6513f9b134af3349265abd895
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Export tracked source only, no credentials or runtime data
+        run: |
+          mkdir -p "$RUNNER_TEMP/redteam-baseline"
+          git archive --format=zip --output="$RUNNER_TEMP/redteam-baseline/source.zip" HEAD
+          git ls-tree -r HEAD > "$RUNNER_TEMP/redteam-baseline/source-tree.txt"
+          git rev-parse HEAD > "$RUNNER_TEMP/redteam-baseline/source-commit.txt"
+      - name: Run unchanged regression baseline
+        run: python -m unittest discover -s tests -v > "$RUNNER_TEMP/redteam-baseline/baseline-tests.txt" 2>&1
+      - name: Preserve bounded audit input
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturebrief-redteam-baseline-0f0136e
+          path: ${{ runner.temp }}/redteam-baseline/
+          retention-days: 1
+          if-no-files-found: error
