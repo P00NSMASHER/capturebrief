@@ -205,12 +205,15 @@ def compare_watch_baseline(
     before=baseline["state"]; after=_public_state(case,now=now)
     events=[]
 
-    def event(kind,key,before_value,after_value,**extra):
+    def event(kind,key,before_value,after_value,*,alias_keys=None,**extra):
         if before_value!=after_value:
-            events.append({
+            row={
                 "type":kind,"key":key,"before":copy.deepcopy(before_value),
                 "after":copy.deepcopy(after_value),**extra,
-            })
+            }
+            if alias_keys:
+                row["alias_keys"]=sorted({str(x) for x in alias_keys if str(x)})
+            events.append(row)
 
     event("CURRENT_ACTION_CHANGED","CURRENT_ACTION_CHANGE",before.get("current_action_id"),after.get("current_action_id"))
     event("HISTORY_ACTION_SET_CHANGED","HISTORY_ACTION_SET_CHANGE",before.get("history_set_sha256"),after.get("history_set_sha256"))
@@ -218,7 +221,14 @@ def compare_watch_baseline(
     for aid in sorted(set(before.get("manifests") or {})|set(after.get("manifests") or {})):
         event("MANIFEST_CHANGED",f"MANIFEST:{aid}",(before.get("manifests") or {}).get(aid),(after.get("manifests") or {}).get(aid),action_id=aid)
     for aid in sorted(set(before.get("artifacts") or {})|set(after.get("artifacts") or {})):
-        event("ARTIFACT_CHANGED",f"ARTIFACT:{aid}",(before.get("artifacts") or {}).get(aid),(after.get("artifacts") or {}).get(aid),artifact_id=aid)
+        event(
+            "ARTIFACT_CHANGED",
+            f"ARTIFACT:{aid}",
+            (before.get("artifacts") or {}).get(aid),
+            (after.get("artifacts") or {}).get(aid),
+            alias_keys=[f"RESOURCE:{aid}"],
+            artifact_id=aid,
+        )
     for rid in sorted(set(before.get("references") or {})|set(after.get("references") or {})):
         event("REFERENCE_CHANGED",f"REFERENCE:{rid}",(before.get("references") or {}).get(rid),(after.get("references") or {}).get(rid),reference_id=rid)
     for key in sorted(set(before.get("source_versions") or {})|set(after.get("source_versions") or {})):
@@ -227,6 +237,8 @@ def compare_watch_baseline(
         event("RULE_VERSION_CHANGED",f"RULE:{key}",(before.get("rule_versions") or {}).get(key),(after.get("rule_versions") or {}).get(key),rule_key=key)
 
     keys={e["key"] for e in events}
+    for e in events:
+        keys.update(e.get("alias_keys") or [])
     reopened=[]
     for dep in before.get("assumption_dependencies") or []:
         matched=set(dep.get("case_reopen_triggers") or []) & keys
