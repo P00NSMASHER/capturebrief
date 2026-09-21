@@ -40,6 +40,7 @@ def build_work_queue(
     case: dict[str, Any],
     *,
     api_observation: dict[str, Any] | None = None,
+    history_index_plan: dict[str, Any] | None = None,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     """Generate the smallest next-step queue needed to move a case toward release.
@@ -61,15 +62,75 @@ def build_work_queue(
         packet.get("history_receipts") or [],
     )
     if history_verdict != "HISTORY_COMPLETE":
-        add(_task(
-            "history:establish",
-            "Establish the complete public action set",
-            actor="HYBRID",
-            can_auto_execute=True,
-            reason="The action/version history is not yet supported by a complete receipt.",
-            evidence_needed="SAM Data Services active extract plus confirmed fiscal-year archive coverage.",
-            metadata={"finding_codes": sorted({f.code for f in history_findings})},
-        ))
+        plan = history_index_plan or {}
+        api_record = (api_observation or {}).get("record") or {}
+        seed_notice_id = str(api_record.get("noticeId") or "")
+        solicitation_number = str(api_record.get("solicitationNumber") or "")
+        if plan:
+            if plan.get("complete") is True:
+                if seed_notice_id and solicitation_number:
+                    add(_task(
+                        "history:issue-from-index",
+                        "Issue the complete action-set receipt from the shared Data Services index",
+                        actor="AUTOMATED_APPROVED_SOURCE",
+                        can_auto_execute=True,
+                        reason="The full-catalog Data Services index is complete and fresh, and the documented API supplied the family seed action.",
+                        evidence_needed="A FULL_CATALOG history receipt bound to the API seed Notice ID.",
+                        metadata={
+                            "index_fiscal_year": plan.get("fiscal_year"),
+                            "seed_notice_id": seed_notice_id,
+                            "solicitation_number": solicitation_number,
+                        },
+                    ))
+                else:
+                    add(_task(
+                        "history:seed-current-action",
+                        "Obtain the first-party current-action seed for indexed history lookup",
+                        actor="AUTOMATED_APPROVED_SOURCE",
+                        can_auto_execute=True,
+                        reason="The shared history index is ready, but family lookup must be anchored to an independently observed current action rather than selected from bulk data.",
+                        evidence_needed="Documented SAM Opportunities API observation containing Notice ID and solicitation number.",
+                    ))
+            else:
+                download_plan = plan.get("download_plan") or []
+                reason_counts: dict[str, int] = {}
+                for item in download_plan:
+                    reason = str(item.get("reason") or "MISSING")
+                    reason_counts[reason] = reason_counts.get(reason, 0) + 1
+                if download_plan:
+                    add(_task(
+                        "history-index:refresh",
+                        f"Bring {len(download_plan)} Data Services source slot(s) to releasable state",
+                        actor="AUTOMATED_APPROVED_SOURCE",
+                        can_auto_execute=True,
+                        reason="The shared full-catalog history index has missing, stale, or unverified source slots.",
+                        evidence_needed="Approved first-party source checks for every required ACTIVE/archive slot.",
+                        metadata={
+                            "index_fiscal_year": plan.get("fiscal_year"),
+                            "reason_counts": reason_counts,
+                            "download_plan": download_plan,
+                        },
+                    ))
+                else:
+                    add(_task(
+                        "history-index:diagnose",
+                        "Diagnose the shared Data Services history index",
+                        actor="HUMAN_REVIEW",
+                        can_auto_execute=False,
+                        reason="The history index reports incomplete coverage but did not produce a source remediation plan.",
+                        evidence_needed="Index status/coverage review and corrected sync plan.",
+                        metadata={"index_fiscal_year": plan.get("fiscal_year")},
+                    ))
+        else:
+            add(_task(
+                "history:establish",
+                "Establish the complete public action set",
+                actor="HYBRID",
+                can_auto_execute=True,
+                reason="The action/version history is not yet supported by a complete receipt.",
+                evidence_needed="Fresh shared Data Services index coverage or a complete approved extract receipt.",
+                metadata={"finding_codes": sorted({f.code for f in history_findings})},
+            ))
 
     current_verdict, current_action, current_findings = validate_current_action_receipts(
         history_ids,

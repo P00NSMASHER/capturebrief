@@ -33,3 +33,10 @@ When the evaluated fiscal year moves beyond the catalog's pinned `current_throug
 ## Why this matters
 
 The catalog snapshot is source metadata, not a claim that every listed file contains an action for a given solicitation. Its job is to prove the universe of public archive slots CaptureBrief was obligated to inspect. The actual history receipt still retains per-action Data Services row hashes and explicitly states that Data Services membership does not establish currentness or authoritative ordering.
+
+
+## Freshness
+
+Archive-slot presence is not permanent proof of currentness. GSA documents active notices as updated daily and archived notices as updated weekly. The index therefore separately records the current slot check state and requires periodic approved first-party revalidation before a `FULL_CATALOG` receipt can be released.
+
+A content hash identifies immutable bytes; a fresh source check proves those bytes are still the current extract for that slot. CaptureBrief keeps those claims separate.

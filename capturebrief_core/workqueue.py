@@ -6,8 +6,8 @@ from .decision_trace import validate_decision_trace
 from .packet_workqueue import build_work_queue as build_packet_queue, _task
 
 
-def build_work_queue(case: dict[str, Any], *, api_observation: dict[str, Any] | None = None, now: datetime | None = None) -> dict[str, Any]:
-    queue = build_packet_queue(case, api_observation=api_observation, now=now)
+def build_work_queue(case: dict[str, Any], *, api_observation: dict[str, Any] | None = None, history_index_plan: dict[str, Any] | None = None, now: datetime | None = None) -> dict[str, Any]:
+    queue = build_packet_queue(case, api_observation=api_observation, history_index_plan=history_index_plan, now=now)
     groups: dict[str, list] = {}
     for finding in validate_decision_trace(case, now=now):
         groups.setdefault(finding.path or "decision_trace", []).append(finding)

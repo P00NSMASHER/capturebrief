@@ -1,4 +1,4 @@
-# CaptureBrief Product Core v0.3 — Approved-Source Evidence Pipeline
+# CaptureBrief Product Core v0.5 — Current-Action Case Transition
 
 Updated: September 21, 2026
 
@@ -144,3 +144,155 @@ Useful commands:
     python -m capturebrief_core.cli history-from-index history.sqlite SOL-123 --seed-notice-id <VERIFIED_ACTION_UUID> -o history.json
 
 `history-index-fetch` downloads exactly one explicitly requested approved source slot. CaptureBrief does not silently initiate a whole-catalog multi-gigabyte sync.
+
+
+## Data Services freshness
+
+GSA's Get Opportunities documentation states that active notices are updated daily and archived notices weekly. CaptureBrief therefore treats source freshness as part of history completeness, not an operator convenience.
+
+Current full-catalog policy:
+- ACTIVE slot: must have an approved first-party source check within 48 hours;
+- ARCHIVE slots: must have an approved first-party source check within 9 days.
+
+The extra margin allows normal publication/check scheduling without silently stretching a daily/weekly source into an indefinite cache.
+
+The index distinguishes:
+- `APPROVED_FETCH` — bytes were fetched by CaptureBrief from the approved SAM Data Services extract URL;
+- `OPERATOR_FILE` — a local file was imported for analysis but its claimed source retrieval was not independently performed by the product.
+
+An operator import may populate the index and accelerate analysis, but it appears in `unverified_slots` and cannot support `HISTORY_COMPLETE`.
+
+`history-index-plan` now identifies three remediation reasons:
+- `MISSING`
+- `STALE`
+- `UNVERIFIED`
+
+A fresh approved fetch of unchanged bytes reuses the existing content-addressed source snapshot while updating that slot's source-check time. Source snapshots remain immutable; freshness is a property of the current slot verification, not a rewrite of historical bytes.
+
+Official cadence reference: https://open.gsa.gov/api/get-opportunities-public-api/
+
+
+## Index-aware operator queue
+
+The fulfillment queue now accepts the shared Data Services index plan as operational context.
+
+When history is not yet complete:
+
+- **index complete + documented API seed available** → queue `history:issue-from-index` as an approved automated step;
+- **index complete + no current-action seed yet** → queue `history:seed-current-action` so the family is anchored by the documented Opportunities API rather than bulk ordering;
+- **index missing/stale/unverified slots** → queue one `history-index:refresh` task carrying the exact source-slot remediation plan and reason counts;
+- **index says incomplete but cannot explain why** → queue `history-index:diagnose` for human review;
+- **no index context supplied** → retain the generic hybrid `history:establish` fallback.
+
+CLI:
+
+    python -m capturebrief_core.cli history-index-plan history.sqlite -o index-plan.json
+    python -m capturebrief_core.cli work-queue case.json \
+      --api-observation current-observation.json \
+      --history-index-plan index-plan.json \
+      -o work-queue.json
+
+This reduces the operator workflow from “remember how to establish history” to an explicit executable next action.
+
+
+## v0.4 — Intake resolution without bulk guessing
+
+The reusable full-catalog Data Services index now resolves customer intake references directly.
+
+Supported identity inputs:
+- SAM action URLs such as `https://sam.gov/opp/<ACTION_UUID>/view`;
+- SAM workspace URLs containing `/opp/<ACTION_UUID>/`;
+- a bare 32-character SAM action UUID;
+- a bare solicitation number.
+
+A SAM action URL/UUID is treated only as an **independent seed identity**, not as proof that the action is current. CaptureBrief looks that exact Notice ID up in the current content-addressed Data Services index, resolves its solicitation family/AAC, and issues the history receipt from the full catalog.
+
+A bare solicitation number is intentionally weaker. CaptureBrief returns candidate family/action groups but will not let Data Services choose a seed or current action. The operator must supply an independent Notice ID/currentness source.
+
+Useful commands:
+
+    python -m capturebrief_core.cli parse-opportunity-ref 'https://sam.gov/opp/<ACTION_UUID>/view'
+
+    python -m capturebrief_core.cli history-index-resolve history.sqlite       'https://sam.gov/opp/<ACTION_UUID>/view' -o resolution.json
+
+    python -m capturebrief_core.cli case-resolve-history history.sqlite intake-case.json       -o resolved-case.json --resolution-output resolution.json
+
+The case resolver:
+- preserves the buyer's assumptions as unproven;
+- attaches the source-hashed Data Services history receipt;
+- replaces the unresolved family ID with a SAM family identity;
+- keeps `family_status = UNKNOWN` until a separate approved current/terminal authority source proves status;
+- never links customer assumptions to Data Services history merely because the family was resolved.
+
+Index freshness still controls whether the resolution is `RESOLVED` or `RESOLVED_PARTIAL_COVERAGE`. Missing, stale, or operator-imported/unverified slots cannot be promoted by the resolver.
+
+## Resumable explicit catalog synchronization
+
+The index can now advance its missing/stale/unverified slot plan without one command per archive:
+
+    python -m capturebrief_core.cli history-index-sync history.sqlite evidence/downloads       --snapshot-dir evidence/snapshots
+
+The safe default processes **one** remediation slot. This makes the operation resumable and prevents an accidental multi-gigabyte full-catalog pull.
+
+A whole remaining catalog sync requires an explicit opt-in:
+
+    python -m capturebrief_core.cli history-index-sync history.sqlite evidence/downloads       --snapshot-dir evidence/snapshots --all
+
+Fresh approved slots are skipped. Each requested extract is still streamed, SHA-256 hashed, indexed, and optionally copied into content-addressed evidence storage.
+
+## Updated remaining P0
+
+History membership no longer needs a guessed family start year when the full pinned archive catalog is indexed. The next production bottleneck is **case orchestration after history resolution**:
+
+1. use the documented Opportunities API to verify active currentness without bulk ordering;
+2. preserve current API resource links and capture required current public bytes;
+3. route historical deletion/tombstone gaps to human-supervised review;
+4. complete conservative named-reference extraction/closure;
+5. return only then to the decision-changing assumption review.
+
+The product should continue preferring an explicit unknown/human-review task over a guessed current action or silently incomplete packet.
+
+
+## v0.5 — Apply documented current-action evidence
+
+Once the full history receipt exists, a documented SAM Opportunities API observation can now be applied to the case as one validated state transition:
+
+    python -m capturebrief_core.cli case-apply-current       resolved-case.json current-observation.json       -o current-case.json --transition-output current-transition.json
+
+The transition refuses to run unless:
+- history already validates as `HISTORY_COMPLETE`;
+- the API observation is `SAM_GET_OPPORTUNITIES_V2 / APPROVED_API`;
+- the API Notice ID belongs to the retained history set;
+- the API solicitation number agrees with the retained history family;
+- the generated current-action receipt passes the approved API semantic contract;
+- every returned resource link is inside the approved SAM API-resource-link contract.
+
+On success it:
+- sets `family_status = ACTIVE`;
+- records the independently verified current action ID;
+- appends/deduplicates the current-action receipt;
+- adds/replaces the controlling `sam-current-api` source;
+- preserves the API payload digest and current resource-link inventory;
+- creates source-object artifact stubs for current API resource links without pretending their bytes or semantic importance have been reviewed;
+- leaves every customer assumption unchanged and unlinked.
+
+The transition is idempotent: replaying the same observation does not duplicate receipts, sources, or resource objects.
+
+### Why the resource stubs stay conservative
+
+A URL returned by the documented API proves a current public source object is discoverable. It does **not** prove:
+- the object is required for the buyer's decision;
+- its bytes were captured;
+- its filename/semantic role;
+- historical tombstone completeness;
+- reference closure.
+
+Therefore newly discovered API resources begin as `required_for_analysis = false` and `BYTES_NOT_YET_CHECKED`. The later reference/compliance review decides which objects become load-bearing.
+
+## Updated orchestration boundary
+
+The operator path is now:
+
+`intake -> resolve seed/family -> complete history receipt -> apply current API observation -> historical packet review -> reference closure -> required byte capture -> assumption QA`
+
+The next automation target is generating the documented API search windows from retained history evidence so an operator does not have to hand-enter `postedFrom/postedTo` ranges. Those windows may guide API retrieval, but they must never become currentness evidence themselves.

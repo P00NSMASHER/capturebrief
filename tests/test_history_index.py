@@ -3,6 +3,7 @@ import io
 import sqlite3
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from capturebrief_core.archive_catalog import (
@@ -13,6 +14,7 @@ from capturebrief_core.archive_catalog import (
 from capturebrief_core.data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD
 from capturebrief_core.history import validate_history_receipts
 from capturebrief_core.history_index import (
+    APPROVED_FETCH,
     fetch_and_ingest_slot,
     index_status,
     ingest_extract_file,
@@ -24,7 +26,8 @@ FIELDS = [
     "NoticeId","Sol#","PostedDate","Type","Active","AAC Code","Office","Link",
     "CGAC","FPDS Code","Department/Ind.Agency","Sub-Tier","BaseType",
 ]
-NOW="2026-09-21T15:30:00+00:00"
+NOW_DT=datetime(2026,9,21,15,30,tzinfo=timezone.utc)
+NOW=NOW_DT.isoformat()
 
 
 def row(notice, sol="SOL-1", aac="AAC1", posted="09/20/2026", active="Yes", office="OFFICE"):
@@ -69,7 +72,7 @@ class HistoryIndexTests(unittest.TestCase):
         if collision:
             active_rows.append(row("z9",aac="AAC2",office="OTHER OFFICE"))
         write_csv(active,active_rows)
-        ingest_extract_file(db,active,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots)
+        ingest_extract_file(db,active,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH)
 
         for fy in ARCHIVE_CATALOG_YEARS:
             p=root/f"fy{fy}.csv"
@@ -81,14 +84,14 @@ class HistoryIndexTests(unittest.TestCase):
             write_csv(p,rows)
             ingest_extract_file(
                 db,p,source_url=ARCHIVE_DOWNLOAD.format(fy=fy),source_kind="ARCHIVE",
-                fiscal_year=fy,observed_at=NOW,snapshot_dir=snapshots
+                fiscal_year=fy,observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH
             )
         return db,snapshots
 
     def test_full_catalog_index_issues_releasable_history_receipt(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db,_=self.build_complete_index(root)
-            status=index_status(db,fiscal_year=2026)
+            status=index_status(db,fiscal_year=2026,now=NOW_DT)
             self.assertTrue(status["complete"],status["missing_slots"])
             receipt=issue_history_receipt_from_index(
                 db,solicitation_number="SOL-1",seed_notice_id="a2",
@@ -145,8 +148,8 @@ class HistoryIndexTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db=root/"history.sqlite"; snapshots=root/"snapshots"; p=root/"active.csv"
             write_csv(p,[row("a2")])
-            first=ingest_extract_file(db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots)
-            second=ingest_extract_file(db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots)
+            first=ingest_extract_file(db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH)
+            second=ingest_extract_file(db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH)
             self.assertFalse(first["reused"]); self.assertTrue(second["reused"])
             stored=Path(first["local_path"])
             self.assertTrue(stored.exists())
@@ -159,7 +162,7 @@ class HistoryIndexTests(unittest.TestCase):
             root=Path(td); db,snapshots=self.build_complete_index(root)
             p=root/"active-new.csv"
             write_csv(p,[row("a3"),row("a2")])
-            ingest_extract_file(db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots)
+            ingest_extract_file(db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH)
             with sqlite3.connect(db) as conn:
                 active_snapshots=conn.execute("SELECT COUNT(*) FROM source_snapshots WHERE slot='ACTIVE'").fetchone()[0]
             self.assertEqual(active_snapshots,2)
@@ -177,7 +180,7 @@ class HistoryIndexTests(unittest.TestCase):
             with sqlite3.connect(db) as conn:
                 conn.execute("DELETE FROM current_sources WHERE slot='ARCHIVE:1970'")
                 conn.execute("DELETE FROM current_sources WHERE slot='ACTIVE'")
-            plan=sync_plan(db,fiscal_year=2026)
+            plan=sync_plan(db,fiscal_year=2026,now=NOW_DT)
             slots={x["slot"] for x in plan["download_plan"]}
             self.assertEqual(slots,{"ACTIVE","ARCHIVE:1970"})
 
@@ -198,6 +201,41 @@ class HistoryIndexTests(unittest.TestCase):
             self.assertIn("ARCHIVE:2026",status["present_slots"])
             self.assertIn("ACTIVE",status["missing_slots"])
             self.assertGreater(len(status["missing_slots"]),1)
+
+    def test_operator_import_is_present_but_not_releasable(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db=root/"history.sqlite"; p=root/"active.csv"
+            write_csv(p,[row("a2")])
+            ingest_extract_file(db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW)
+            status=index_status(db,fiscal_year=2026,now=NOW_DT)
+            self.assertIn("ACTIVE",status["present_slots"])
+            self.assertIn("ACTIVE",status["unverified_slots"])
+            self.assertFalse(status["complete"])
+            plan=sync_plan(db,fiscal_year=2026,now=NOW_DT)
+            task=next(x for x in plan["download_plan"] if x["slot"]=="ACTIVE")
+            self.assertEqual(task["reason"],"UNVERIFIED")
+
+    def test_stale_approved_sources_require_refresh(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db,_=self.build_complete_index(root)
+            stale=(NOW_DT-timedelta(days=10)).isoformat()
+            with sqlite3.connect(db) as conn:
+                conn.execute("UPDATE current_sources SET checked_at=? WHERE slot='ARCHIVE:2026'",(stale,))
+                conn.execute("UPDATE current_sources SET checked_at=? WHERE slot='ACTIVE'",(stale,))
+            status=index_status(db,fiscal_year=2026,now=NOW_DT)
+            self.assertIn("ACTIVE",status["stale_slots"])
+            self.assertIn("ARCHIVE:2026",status["stale_slots"])
+            self.assertFalse(status["complete"])
+            plan=sync_plan(db,fiscal_year=2026,now=NOW_DT)
+            reasons={x["slot"]:x["reason"] for x in plan["download_plan"]}
+            self.assertEqual(reasons["ACTIVE"],"STALE")
+            self.assertEqual(reasons["ARCHIVE:2026"],"STALE")
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026
+            )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertIn("FULL_ARCHIVE_CATALOG_STALE",receipt["evidence_payload"]["coverage_errors"])
 
     def test_catalog_must_be_refreshed_after_current_through_fy(self):
         with tempfile.TemporaryDirectory() as td:
