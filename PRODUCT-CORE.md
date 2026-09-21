@@ -1,70 +1,83 @@
-# CaptureBrief Product Core v0.2 — Evidence Acquisition + Packet Integrity
+# CaptureBrief Product Core v0.3 — Approved-Source Evidence Pipeline
 
 Updated: September 21, 2026
 
-CaptureBrief remains a human-supervised, public-source Pursuit QA second pass. v0.2 upgrades the product from a release validator into an evidence-preserving case engine.
+CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.3 hardens the product around approved SAM automation surfaces and explicitly separates automated evidence from human-supervised source observations.
 
-## Release contract
+## v0.3 source architecture
 
-A case reaches `READY_FOR_HUMAN_RELEASE` only when all applicable gates pass:
+### Automated
+- **SAM Get Opportunities Public API v2** — current/latest-active assertion and current `resourceLinks`.
+- **SAM Data Services Contract Opportunities extracts** — action/version membership across active and declared fiscal-year archive coverage.
 
-1. current/terminal authority is supported by a fresh first-party receipt;
-2. the observed action/version history is supported by a first-party history receipt;
-3. every observed action has a successful, deletion-inclusive SAM resource-manifest receipt;
-4. named or incorporated dependencies are semantically closed;
-5. required public artifacts have verified SHA-256 byte receipts;
-6. assumption evidence/action rules and timezone/source-integrity rules pass.
+### Human-supervised
+- SAM UI pages and the undocumented resource-manifest web-UI implementation surface, used only when deletion/tombstone or historical packet state cannot be established from approved APIs/extracts.
 
-A caller-provided `manifest_complete: true` cannot override missing receipts.
+The old automated SAM web-UI manifest poller and canary are retired. Production code now throws if asked to automate that surface.
 
-## Evidence acquisition
+## History receipt
 
-The operator CLI can observe the public SAM web-interface resource manifest, preserve the raw payload and digest, normalize resource state, and append evidence to a hash-chained JSONL ledger.
+`history-from-extracts` scans official Contract Opportunities CSV extracts, hashes each extract, exact-matches the solicitation number, disambiguates by AAC when possible, and issues a Data Services history receipt.
 
-The manifest client:
-- sends no API key;
-- requests deletion-inclusive state;
-- retains raw response + SHA-256;
-- distinguishes checked-empty from source failure;
-- fails closed on response-shape drift;
-- classifies public, deleted, restricted, export-controlled, unavailable, and external-link resources.
+A Data Services receipt records:
+- every observed Notice ID/action UUID;
+- per-action source-row hashes;
+- extract SHA-256 values;
+- active vs archive source;
+- supplied and missing fiscal-year coverage;
+- AAC/office family context;
+- `ordering_authoritative = false`;
+- `current_action_authoritative = false`.
 
-This SAM resource surface is treated as an undocumented web-UI interface and is monitored separately by a live canary rather than assumed to be a stable published API contract.
+A receipt becomes `COMPLETE` only when the declared archive-year scope is explicitly confirmed and every required archive year plus the active extract is present. CaptureBrief does not guess the family start year.
 
-## Identity and history
+## Current-action receipt
 
-CaptureBrief does not use filename as source identity. Resource ID, action identity, observation time, source state, and byte hash are retained independently.
+`current-from-api` uses the documented Opportunities v2 API with an API key supplied through an environment variable. The API observation is not allowed to redefine the history set: its `noticeId` must already be a member of the Data Services receipt.
 
-Manifest diffs surface additions, disappearances after complete observations, explicit deletions, access restrictions, metadata changes, and same-filename replacement by a new resource ID.
+This creates the required separation:
 
-## Public byte capture
+`HISTORY MEMBERSHIP != CURRENT ACTION`
 
-Permitted public SAM file resources can be captured and hashed before historical bytes disappear. The downloader refuses external-link, restricted, or export-controlled resources and applies a maximum-byte limit.
+The documented API's latest-active assertion proves currentness; Data Services proves version membership.
 
-Historical source-object identity and byte availability are separate claims. A required historical artifact whose source identity survives but whose bytes are unavailable remains fail-closed unless explicit source-backed supersession closes the dependency.
+## Attachment evidence
 
-## Semantic reference closure
+Historical/deletion-inclusive SAM resource manifests can still be normalized and hashed, but only as human-supervised observations. Automated polling of the undocumented web-UI manifest endpoint is disabled by source policy.
 
-A complete attachment list is not automatically a complete decision packet. Named amendments, attachments, exhibits, drawings, schedules, and external systems referenced by controlling material must resolve to:
+For current attachments, CaptureBrief may download only an exact `resourceLinks` URL bound to an approved Opportunities API observation. It refuses guessed resource URLs.
 
-- a verified resource with verified hashed bytes;
-- an explicit source-backed superseding resource; or
-- an explicit external/restricted dependency with a reason.
+## Release gates
 
-Otherwise the reference remains unresolved and blocks packet completeness.
+The existing case schema remains backward-compatible. The evidence pipeline adds stricter acquisition rules without silently changing the case format.
 
-## Evidence ledger
+A case can reach `READY_FOR_HUMAN_RELEASE` only when applicable gates pass:
+1. current/terminal authority;
+2. complete history evidence;
+3. deletion-inclusive per-action packet evidence where required;
+4. semantic reference closure;
+5. required public byte hashes;
+6. assumption/source/timezone rules.
 
-Manifest and byte observations can be appended to a hash-chained JSONL ledger. Each record carries a payload SHA-256, previous-record SHA-256, and record SHA-256 so silent mutation of the 14-day evidence history is detectable.
+Unknowns remain unknown. Restricted or source-limited evidence cannot become a resolved gate-changing fact.
 
-## Change watch
+## CLI
 
-The watch layer reopens only assumptions whose declared triggers match the actual change: current action, per-action manifest, resource ID, artifact bytes, or reference closure.
+    python -m capturebrief_core.cli history-from-extracts SOL-123 active.csv \
+      --archive 2026:FY2026_archived_opportunities.csv \
+      --seed-notice-id <NOTICE_ID> --scope-start-fy 2026 --scope-end-fy 2026 --confirm-scope \
+      -o history.json
 
-## CI
+    SAM_API_KEY=... python -m capturebrief_core.cli current-from-api \
+      SOL-123 history.json 09/01/2026 09/30/2026 -o current.json \
+      --observation-output current-observation.json
 
-The deterministic Product Core workflow compiles the package, runs the regression corpus, validates the v0.2 releasable fixture, renders a sample brief, and exercises change detection. A separate SAM Manifest Canary monitors the live undocumented source surface without making deterministic CI depend on SAM availability.
+    python -m capturebrief_core.cli normalize-manifest <ACTION_UUID> manually-saved-manifest.json \
+      --observed-at 2026-09-21T13:00:00-04:00 -o manifest.json
+
+    python -m capturebrief_core.cli capture-api-resource current-observation.json '<RESOURCE_LINK>' \
+      -o artifact.bin --receipt-output artifact-receipt.json
 
 ## Remaining P0
 
-The largest remaining gap is automated first-party history issuance. v0.2 can validate and preserve history evidence, but the production service still needs a hardened SAM History/Data Services ingestion path that automatically issues history receipts. After that, the next highest-value layer is conservative notice/document reference extraction with human confirmation.
+The remaining automation gap is proving the **history scope start** without guessing. Until GSA exposes a narrower all-version family query with authoritative completeness semantics, CaptureBrief requires an explicit scope boundary for Data Services archive coverage. The product should prefer one extra human confirmation over a false “all amendments found” claim.
