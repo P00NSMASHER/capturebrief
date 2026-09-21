@@ -71,6 +71,7 @@ def build_case_from_intake(
         "case_id": f"CB-{token}",
         "family_id": f"UNRESOLVED-{token}",
         "current_posture": posture,
+        "decision_trace_required": True,
         "intake": {
             "submitted_at": submitted_at,
             "company": company,
