@@ -22,7 +22,7 @@ jobs:
         run: python -m unittest tests.test_decision_trace -v
       - name: FAR DFARS rule registry contracts
         run: python -m unittest tests.test_rule_registry -v
-      - name: Rule citation candidate contracts
+      - name: Rule citation and human review contracts
         run: python -m unittest tests.test_rule_candidates -v
       - name: Build case from website intake
         run: python -m capturebrief_core.cli case-from-intake fixtures/intake.json --submitted-at 2026-09-21T15:00:00+00:00 -o /tmp/intake-case.json
