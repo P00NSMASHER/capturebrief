@@ -1,7 +1,7 @@
 from __future__ import annotations
 import copy, tempfile, unittest
 from pathlib import Path
-from capturebrief_core.rule_registry import add_rule_version, diff_rule_versions, filter_deviation_sources, list_rule_versions, load_source_catalog, parse_deviation_manifest, parse_gsa_dita, to_trace_source_snapshot, validate_rule_source
+from capturebrief_core.rule_registry import add_rule_version, diff_rule_versions, digest, filter_deviation_sources, list_rule_versions, load_source_catalog, parse_deviation_manifest, parse_gsa_dita, to_trace_source_snapshot, validate_rule_source
 
 DITA='''<?xml version="1.0" encoding="UTF-8"?>
 <concept id="FAR_52_204_21"><title><ph props="autonumber">52.204-21</ph> Basic Safeguarding</title><conbody><p id="a">Contractors shall use safeguards.</p><p id="b">This is a synthetic fixture.</p></conbody></concept>'''
@@ -56,11 +56,24 @@ class RuleRegistryTests(unittest.TestCase):
     def test_diff_requires_review_not_auto_applicability(self):
         first=parse_gsa_dita(DITA,**KW); second=parse_gsa_dita(DITA.replace("shall use safeguards","shall use revised safeguards"),**{**KW,"edition":"FAC NEXT","source_revision":"b"*40,"source_url":"https://github.com/GSA/GSA-Acquisition-FAR/blob/"+"b"*40+"/dita/52.204-21.dita","observed_at":"2026-09-22T16:00:00Z"}); diff=diff_rule_versions(first,second); self.assertTrue(diff["changed"]); self.assertTrue(diff["review_required"]); self.assertFalse(diff["automatic_applicability_change"])
     def test_deviation_manifest(self):
-        text='on_disk_filename,url_hash,original_filename,agency,part_number,is_dod,source_url,pdf_size_bytes\na.pdf,0123456789abcdef,A.pdf,DOD,12,1,https://www.acquisition.gov/a.pdf,100\nb.pdf,fedcba9876543210,B.pdf,CFTC,12,0,https://www.acquisition.gov/b.pdf,200\n'; m=parse_deviation_manifest(text,source_repository="acqagent/rfo-deviations",source_revision="c"*40,observed_at="2026-09-21T16:00:00Z"); self.assertEqual(m["row_count"],2); self.assertEqual(len(filter_deviation_sources(m,agency="DOD",part_number=12)),1); self.assertFalse(m["rows"][0]["applicability_authoritative"])
+        a="https://www.acquisition.gov/a.pdf"; b="https://www.acquisition.gov/b.pdf"
+        text=(
+            'on_disk_filename,url_hash,original_filename,agency,part_number,is_dod,source_url,pdf_size_bytes\n'
+            f'a.pdf,{digest(a)[:16]},A.pdf,DOD,12,1,{a},100\n'
+            f'b.pdf,{digest(b)[:16]},B.pdf,CFTC,12,0,{b},200\n'
+        )
+        m=parse_deviation_manifest(text,source_repository="acqagent/rfo-deviations",source_revision="c"*40,observed_at="2026-09-21T16:00:00Z")
+        self.assertEqual(m["row_count"],2); self.assertEqual(len(filter_deviation_sources(m,agency="DOD",part_number=12)),1); self.assertFalse(m["rows"][0]["applicability_authoritative"])
+
+    def test_deviation_manifest_rejects_url_hash_mismatch(self):
+        text='on_disk_filename,url_hash,original_filename,agency,part_number,is_dod,source_url,pdf_size_bytes\na.pdf,0123456789abcdef,A.pdf,CFTC,12,0,https://www.acquisition.gov/a.pdf,100\n'
+        with self.assertRaises(ValueError):
+            parse_deviation_manifest(text,source_repository="acqagent/rfo-deviations",source_revision="c"*40,observed_at="2026-09-21T16:00:00Z")
     def test_deviation_manifest_preserves_unparsed_and_zero_part_sentinels(self):
+        a="https://www.acquisition.gov/a.pdf"; b="https://www.acquisition.gov/b.pdf"
         text='on_disk_filename,url_hash,original_filename,agency,part_number,is_dod,source_url,pdf_size_bytes\n' \
-             'a.pdf,0123456789abcdef,A.pdf,GSA,-1,0,https://www.acquisition.gov/a.pdf,100\n' \
-             'b.pdf,fedcba9876543210,B.pdf,DHS,0,0,https://www.acquisition.gov/b.pdf,200\n'
+             f'a.pdf,{digest(a)[:16]},A.pdf,GSA,-1,0,{a},100\n' \
+             f'b.pdf,{digest(b)[:16]},B.pdf,DHS,0,0,{b},200\n'
         m=parse_deviation_manifest(text,source_repository="acqagent/rfo-deviations",source_revision="d"*40,observed_at="2026-09-21T16:00:00Z")
         self.assertEqual([x["part_number"] for x in m["rows"]],[-1,0])
         self.assertEqual(filter_deviation_sources(m,agency="GSA",part_number=-1)[0]["original_filename"],"A.pdf")
