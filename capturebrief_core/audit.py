@@ -4,6 +4,7 @@ from typing import Any
 
 from .authority import validate_current_action_receipts
 from .history import validate_history_receipts
+from .decision_trace import evaluate_decision_trace
 from .manifest import validate_manifest_receipts
 from .packet import validate_reference_closure
 from .model import ARTIFACT_STATES, DECISION_CLASSES, EVIDENCE_STATES, SOURCE_AUTHORITIES, AuditResult, Finding, parse_dt, valid_sha256
@@ -87,6 +88,23 @@ def audit_case(case:dict[str,Any],*,now:datetime|None=None)->AuditResult:
             Finding(f["code"], f["severity"], f["message"], f.get("path"))
             for f in trace["findings"]
         )
+
+    if case.get("decision_trace_required") is True or isinstance(case.get("decision_trace"),dict):
+        trace=evaluate_decision_trace(case,now=now)
+        for item in trace.get("findings") or []:
+            findings.append(Finding(
+                str(item.get("code") or "TRACE_INVALID"),
+                str(item.get("severity") or "BLOCK"),
+                str(item.get("message") or "Decision evidence trace is incomplete."),
+                item.get("path"),
+            ))
+        if trace.get("trace_state")!="TRACE_COMPLETE":
+            findings.append(Finding(
+                "DECISION_TRACE_NOT_RELEASE_READY",
+                "BLOCK",
+                "Exact source/rule/version evidence is not complete for customer release.",
+                "decision_trace",
+            ))
 
     blocked=any(x.severity=="BLOCK" for x in findings)
     return AuditResult("FAIL_CLOSED" if blocked else "READY_FOR_HUMAN_RELEASE",verdict,current,tuple(findings))
