@@ -2241,3 +2241,56 @@ The same bytes-first ordering applies to class-deviation PDF capture.
 Content-addressed Decision Evidence case freezes now use the same exact-bytes publication contract. Repeating the same freeze is idempotent; conflicting bytes at the content-addressed path are treated as corruption.
 
 These changes improve local artifact durability only. They do not weaken source authority, human applicability review, release gates, or outbound-message approval requirements.
+
+
+## v0.34 — Immutable Data Services history provenance
+
+Approved SAM Data Services history refreshes now preserve the exact source bytes used to populate the history index even when an operator does not explicitly provide a snapshot directory.
+
+### Automatic immutable retention
+
+`fetch_and_ingest_slot` now always retains approved-fetch CSV bytes at a content-addressed path:
+
+`<history-index>.snapshots/<extract-sha256>.csv`
+
+A caller-supplied snapshot directory is still supported. Operator-file imports remain distinct and do not become approved/releasable merely because they were indexed.
+
+The database `source_snapshots.local_path` therefore points to immutable content-addressed bytes for approved fetches rather than a mutable working download filename.
+
+### Serialized fetch through ingest
+
+One destination-specific lock now spans:
+
+`approved fetch -> completed destination publication -> immutable snapshot retention -> database ingest`
+
+A competing process cannot replace the mutable working destination between the hash/receipt step and ingestion.
+
+Lock files are never guessed stale. A timeout requires operator review.
+
+### Safe large-file publication
+
+Data Services extracts use unique temporary files rather than a shared `.part` name.
+
+The completed download is:
+
+1. streamed with a hard byte limit;
+2. hashed while receiving bytes;
+3. checked against `Content-Length` when the publisher supplies it;
+4. required to finish on an approved SAM Data Services extract surface;
+5. fsynced;
+6. atomically published to the working destination;
+7. copied/verified into immutable content-addressed retention.
+
+A failed or truncated refresh preserves the previous complete destination and removes temporary state.
+
+### Concurrent snapshot retention
+
+Content-addressed history snapshots use the same exact-file publication primitive as other local evidence artifacts:
+
+- same hash/size is idempotent;
+- different existing bytes fail closed;
+- concurrent same-content publication is accepted;
+- mutable source bytes are rechecked during retention;
+- no fixed shared temporary filename is used.
+
+These controls strengthen provenance and concurrency behavior only. They do not turn Data Services ordering into current-action authority, and they do not alter the existing rule that history membership and current-action authority are separate claims.

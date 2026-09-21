@@ -3,14 +3,16 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-import shutil
+import os
 import sqlite3
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from .atomic_io import exclusive_path_lock, ensure_exact_file, fsync_directory
 from .archive_catalog import (
     catalog_snapshot,
     catalog_years_for_fiscal_year,
@@ -69,6 +71,11 @@ def _slot(source_kind: str, fiscal_year: int | None) -> str:
             raise ValueError("ARCHIVE source requires fiscal_year")
         return f"ARCHIVE:{int(fiscal_year)}"
     raise ValueError("source_kind must be ACTIVE or ARCHIVE")
+
+
+def _default_snapshot_dir(index_path: str | Path) -> Path:
+    p=Path(index_path)
+    return p.with_name(p.name + ".snapshots")
 
 
 def _connect(path: str | Path) -> sqlite3.Connection:
@@ -150,7 +157,7 @@ def init_index(path: str | Path) -> None:
         )
 
 
-def download_extract_to_file(
+def _download_extract_unlocked(
     destination: str | Path,
     *,
     source_url: str,
@@ -158,55 +165,100 @@ def download_extract_to_file(
     max_bytes: int = DEFAULT_MAX_EXTRACT_BYTES,
     opener=urlopen,
 ) -> dict[str, Any]:
-    """Stream one approved Data Services extract to disk with a verified SHA-256."""
     require_approved_automation(source_url, expected="SAM_DATA_SERVICES_EXTRACT")
     if max_bytes <= 0:
         raise ValueError("max_bytes must be positive")
-    dest = Path(destination)
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    tmp = dest.with_suffix(dest.suffix + ".part")
-    digest = hashlib.sha256()
-    size = 0
-    req = Request(source_url, headers={"User-Agent": "CaptureBrief/0.3"})
+    dest=Path(destination)
+    dest.parent.mkdir(parents=True,exist_ok=True)
+    digest=hashlib.sha256()
+    size=0
+    req=Request(source_url,headers={"User-Agent":"CaptureBrief/0.3"})
+    fd,temp_name=tempfile.mkstemp(prefix=f".{dest.name}.",suffix=".download",dir=str(dest.parent))
+    tmp=Path(temp_name)
     try:
-        response = opener(req, timeout=timeout)
-        with response, tmp.open("wb") as out:
-            declared = response.headers.get("Content-Length") if getattr(response, "headers", None) else None
-            if declared and int(declared) > max_bytes:
-                raise HistoryIndexError(f"extract exceeds max_bytes before download: {declared}")
-            while True:
-                chunk = response.read(1024 * 1024)
-                if not chunk:
-                    break
-                size += len(chunk)
-                if size > max_bytes:
-                    raise HistoryIndexError("extract exceeds max_bytes during download")
-                digest.update(chunk)
-                out.write(chunk)
-        final_url = response.geturl() if hasattr(response, "geturl") else source_url
-        source_etag = response.headers.get("ETag") if getattr(response, "headers", None) else None
-        source_last_modified = response.headers.get("Last-Modified") if getattr(response, "headers", None) else None
-        tmp.replace(dest)
+        try:
+            response=opener(req,timeout=timeout)
+            with response, os.fdopen(fd,"wb",closefd=False) as out:
+                declared=response.headers.get("Content-Length") if getattr(response,"headers",None) else None
+                declared_size=None
+                if declared not in (None,""):
+                    try:
+                        declared_size=int(declared)
+                    except (TypeError,ValueError) as exc:
+                        raise HistoryIndexError("extract Content-Length is invalid") from exc
+                    if declared_size < 0:
+                        raise HistoryIndexError("extract Content-Length is negative")
+                    if declared_size>max_bytes:
+                        raise HistoryIndexError(f"extract exceeds max_bytes before download: {declared}")
+                while True:
+                    chunk=response.read(1024*1024)
+                    if not chunk:
+                        break
+                    size += len(chunk)
+                    if size>max_bytes:
+                        raise HistoryIndexError("extract exceeds max_bytes during download")
+                    digest.update(chunk)
+                    out.write(chunk)
+                if declared_size is not None and size != declared_size:
+                    raise HistoryIndexError(
+                        f"extract byte count {size} does not match Content-Length {declared_size}"
+                    )
+                final_url=response.geturl() if hasattr(response,"geturl") else source_url
+                require_approved_automation(final_url,expected="SAM_DATA_SERVICES_EXTRACT")
+                out.flush()
+                os.fsync(out.fileno())
+                source_etag=response.headers.get("ETag") if getattr(response,"headers",None) else None
+                source_last_modified=response.headers.get("Last-Modified") if getattr(response,"headers",None) else None
+        finally:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+
+        os.replace(tmp,dest)
+        fsync_directory(dest.parent)
     except HTTPError as exc:
-        tmp.unlink(missing_ok=True)
         raise HistoryIndexError(f"Data Services HTTP {exc.code}") from exc
     except URLError as exc:
-        tmp.unlink(missing_ok=True)
         raise HistoryIndexError(f"Data Services transport failure: {exc.reason}") from exc
-    except BaseException:
-        tmp.unlink(missing_ok=True)
-        raise
+    finally:
+        if tmp.exists():
+            tmp.unlink()
     return {
-        "path": str(dest),
-        "source_url": source_url,
-        "sha256": digest.hexdigest(),
-        "size_bytes": size,
-        "observed_at": datetime.now(timezone.utc).isoformat(),
-        "final_url": final_url,
-        "source_etag": source_etag,
-        "source_last_modified": source_last_modified,
+        "path":str(dest),
+        "source_url":source_url,
+        "sha256":digest.hexdigest(),
+        "size_bytes":size,
+        "observed_at":datetime.now(timezone.utc).isoformat(),
+        "final_url":final_url,
+        "source_etag":source_etag,
+        "source_last_modified":source_last_modified,
     }
 
+
+def download_extract_to_file(
+    destination: str | Path,
+    *,
+    source_url: str,
+    timeout: float = 120.0,
+    max_bytes: int = DEFAULT_MAX_EXTRACT_BYTES,
+    opener=urlopen,
+    lock_timeout_seconds: float = 5.0,
+) -> dict[str, Any]:
+    """Stream one approved Data Services extract to disk with atomic publication."""
+    dest=Path(destination)
+    with exclusive_path_lock(
+        dest,
+        timeout_seconds=lock_timeout_seconds,
+        suffix=".download.lock",
+    ):
+        return _download_extract_unlocked(
+            dest,
+            source_url=source_url,
+            timeout=timeout,
+            max_bytes=max_bytes,
+            opener=opener,
+        )
 
 def fetch_and_ingest_slot(
     index_path: str | Path,
@@ -217,35 +269,53 @@ def fetch_and_ingest_slot(
     observed_at: str | None = None,
     max_bytes: int = DEFAULT_MAX_EXTRACT_BYTES,
     opener=urlopen,
+    lock_timeout_seconds: float = 5.0,
 ) -> dict[str, Any]:
-    """Explicitly fetch and ingest one catalog slot. Never syncs other slots implicitly."""
-    slot = str(slot).upper()
-    if slot == "ACTIVE":
-        kind, fy, url = "ACTIVE", None, ACTIVE_DOWNLOAD
+    """Fetch and ingest one slot while preserving exact immutable source bytes."""
+    slot=str(slot).upper()
+    if slot=="ACTIVE":
+        kind,fy,url="ACTIVE",None,ACTIVE_DOWNLOAD
     elif slot.startswith("ARCHIVE:"):
-        fy = int(slot.split(":", 1)[1])
+        fy=int(slot.split(":",1)[1])
         if fy not in set(catalog_years_for_fiscal_year(fiscal_year_for_datetime())):
             raise HistoryIndexError(f"archive slot is not in the current pinned catalog: {slot}")
-        kind, url = "ARCHIVE", ARCHIVE_DOWNLOAD.format(fy=fy)
+        kind,url="ARCHIVE",ARCHIVE_DOWNLOAD.format(fy=fy)
     else:
         raise ValueError("slot must be ACTIVE or ARCHIVE:<FY>")
-    download = download_extract_to_file(
-        destination, source_url=url, max_bytes=max_bytes, opener=opener
-    )
-    ingested = ingest_extract_file(
-        index_path,
-        download["path"],
-        source_url=url,
-        source_kind=kind,
-        fiscal_year=fy,
-        observed_at=download["observed_at"],
-        snapshot_dir=snapshot_dir,
-        collection_mode=APPROVED_FETCH,
-        source_etag=download.get("source_etag"),
-        source_last_modified=download.get("source_last_modified"),
-    )
-    return {"download": download, "ingest": ingested}
 
+    dest=Path(destination)
+    effective_snapshot_dir=Path(snapshot_dir) if snapshot_dir is not None else _default_snapshot_dir(index_path)
+    with exclusive_path_lock(
+        dest,
+        timeout_seconds=lock_timeout_seconds,
+        suffix=".download.lock",
+    ):
+        download=_download_extract_unlocked(
+            dest,source_url=url,max_bytes=max_bytes,opener=opener
+        )
+        ingested=ingest_extract_file(
+            index_path,
+            download["path"],
+            source_url=url,
+            source_kind=kind,
+            fiscal_year=fy,
+            observed_at=download["observed_at"],
+            snapshot_dir=effective_snapshot_dir,
+            collection_mode=APPROVED_FETCH,
+            source_etag=download.get("source_etag"),
+            source_last_modified=download.get("source_last_modified"),
+        )
+
+    return {
+        "download":download,
+        "ingest":ingested,
+        "retention":{
+            "content_addressed":True,
+            "snapshot_dir":str(effective_snapshot_dir),
+            "snapshot_path":ingested["local_path"],
+            "caller_supplied_snapshot_dir":snapshot_dir is not None,
+        },
+    }
 
 def ingest_extract_file(
     index_path: str | Path,
@@ -282,21 +352,20 @@ def ingest_extract_file(
 
     retained_path = source_path
     if snapshot_dir is not None:
-        root = Path(snapshot_dir)
-        root.mkdir(parents=True, exist_ok=True)
-        retained_path = root / f"{digest}.csv"
-        if not retained_path.exists():
-            tmp = retained_path.with_suffix(".csv.part")
-            shutil.copyfile(source_path, tmp)
-            copied_digest, copied_size = _file_sha256(tmp)
-            if copied_digest != digest or copied_size != size:
-                tmp.unlink(missing_ok=True)
-                raise HistoryIndexError("content-addressed snapshot copy failed hash verification")
-            tmp.replace(retained_path)
-            try:
-                retained_path.chmod(0o444)
-            except OSError:
-                pass
+        root=Path(snapshot_dir)
+        root.mkdir(parents=True,exist_ok=True)
+        retained_path=root/f"{digest}.csv"
+        try:
+            retained=ensure_exact_file(
+                source_path,
+                retained_path,
+                expected_sha256=digest,
+                expected_size=size,
+                mode=0o444,
+            )
+        except (OSError,ValueError) as exc:
+            raise HistoryIndexError("content-addressed snapshot retention failed") from exc
+        retained_path=Path(str(retained["path"]))
 
     init_index(index_path)
     with _connect(index_path) as conn:
