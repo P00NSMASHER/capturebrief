@@ -1,15 +1,23 @@
 import copy, hashlib, json, unittest
 from datetime import datetime, timedelta, timezone
 
-from capturebrief_core import audit_case, make_history_receipt, normalize_manifest_payload, compare_cases
+from capturebrief_core import audit_case, make_history_receipt, normalize_manifest_payload, compare_cases, confirm_reference_scan, propose_reference_scan
 from capturebrief_core.model import history_set_digest
 
 NOW=datetime(2026,9,21,13,0,tzinfo=timezone.utc)
 
-def refscan():
-    data={"source_ids":["sam"],"references_extracted":[]}
-    raw=json.dumps(data,sort_keys=True,separators=(",",":")).encode()
-    return {"status":"COMPLETE","scan_sha256":hashlib.sha256(raw).hexdigest(),"parser_version":"refs-v1","payload":data}
+def reviewed_reference(label="Current solicitation"):
+    proposal=propose_reference_scan([{"source_id":"sam","text":"Human review source text."}],observed_at=NOW.isoformat())
+    review={
+        "reviewer":"CaptureBrief reviewer",
+        "reviewed_at":NOW.isoformat(),
+        "attests_complete":True,
+        "reviewed_source_ids":["sam"],
+        "candidate_decisions":[],
+        "manual_additions":[{"label":label,"kind":"MANUAL","source_id":"sam","reason":"Reviewer identified a required dependency."}],
+    }
+    scan,refs=confirm_reference_scan(proposal,review)
+    return scan,refs[0]
 
 def authority_receipt(history,action):
     payload={"status":"ACTIVE","action":action,"history":list(history)}
@@ -24,19 +32,21 @@ def case():
     h=["a1","a2"]
     history_payload={"actions":h,"surface":"SAM history"}
     hr=make_history_receipt(h,source_url="https://sam.gov/opp/example/view",observed_at=NOW.isoformat(),source_surface="SAM_HISTORY",payload=history_payload)
+    scan,ref=reviewed_reference()
+    ref.update({"resolution":"RESOLVED_TO_RESOURCE","source_object_state":"VERIFIED_SOURCE_OBJECT","resource_id":"r2","byte_state":"BYTES_VERIFIED_HASHED","byte_sha256":"b"*64})
     return {
         "case_schema_version":"0.2","case_id":"CB-2","family_id":"DEMO","current_posture":"GO",
         "packet":{
             "family_status":"ACTIVE","history_action_ids":h,"history_receipts":[hr],
             "manifest_receipts":[manifest("a1","r1"),manifest("a2","r2")],
-            "reference_scan":refscan(),
-            "references":[{"reference_id":"ref-r2","label":"Current solicitation","resolution":"RESOLVED_TO_RESOURCE","source_object_state":"VERIFIED_SOURCE_OBJECT","resource_id":"r2","byte_state":"BYTES_VERIFIED_HASHED","byte_sha256":"b"*64}],
+            "reference_scan":scan,
+            "references":[ref],
             "artifacts":[{"artifact_id":"r2","name":"r2.pdf","state":"PUBLIC","required_for_analysis":True,"sha256":"b"*64,"source_object_state":"VERIFIED_SOURCE_OBJECT","byte_state":"BYTES_VERIFIED_HASHED"}],
             "external_dependencies":[]
         },
         "current_action_receipts":[authority_receipt(h,"a2")],
         "sources":[{"source_id":"sam","url":"https://sam.gov/opp/example/view","authority":"CONTROLLING_CURRENT","artifact_state":"PUBLIC","observed_at":NOW.isoformat(),"content_sha256":"c"*64}],
-        "assumptions":[{"assumption_id":"A1","text":"Current solicitation controls","evidence_state":"SUPPORTED","decision_class":"MONITOR_ONLY","finding":"Verified","source_ids":["sam"],"reopen_triggers":["CURRENT_ACTION_CHANGE","MANIFEST:a2","RESOURCE:r2","REFERENCE:ref-r2"]}]
+        "assumptions":[{"assumption_id":"A1","text":"Current solicitation controls","evidence_state":"SUPPORTED","decision_class":"MONITOR_ONLY","finding":"Verified","source_ids":["sam"],"reopen_triggers":["CURRENT_ACTION_CHANGE","MANIFEST:a2","RESOURCE:r2",f"REFERENCE:{ref['reference_id']}"]}]
     }
 
 class HistoryAuditTests(unittest.TestCase):

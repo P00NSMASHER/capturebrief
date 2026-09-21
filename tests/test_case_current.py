@@ -131,7 +131,7 @@ class CaseCurrentTests(unittest.TestCase):
         self.assertNotIn("current:authority",keys)
         self.assertIn(f"manifest:{A1}",keys)
         self.assertIn(f"manifest:{A2}",keys)
-        self.assertIn("references:scan",keys)
+        self.assertIn("references:propose",keys)
 
 
 if __name__=="__main__":

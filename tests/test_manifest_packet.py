@@ -3,13 +3,22 @@ from datetime import datetime, timezone
 
 from capturebrief_core.manifest import ManifestShapeError, normalize_manifest_payload, validate_manifest_receipts, MANIFEST_PARSER_VERSION
 from capturebrief_core.packet import diff_manifest_receipts, validate_reference_closure
+from capturebrief_core.references import confirm_reference_scan, propose_reference_scan
 
 NOW="2026-09-21T13:00:00+00:00"
 
-def refscan():
-    data={"source_ids":["sam"],"references_extracted":[]}
-    raw=json.dumps(data,sort_keys=True,separators=(",",":")).encode()
-    return {"status":"COMPLETE","scan_sha256":hashlib.sha256(raw).hexdigest(),"parser_version":"refs-v1","payload":data}
+def reviewed_reference(label):
+    proposal=propose_reference_scan([{"source_id":"sam","text":"Human review source text."}],observed_at=NOW)
+    review={
+        "reviewer":"CaptureBrief reviewer",
+        "reviewed_at":NOW,
+        "attests_complete":True,
+        "reviewed_source_ids":["sam"],
+        "candidate_decisions":[],
+        "manual_additions":[{"label":label,"kind":"MANUAL","source_id":"sam","reason":"Reviewer identified a required dependency."}],
+    }
+    scan,refs=confirm_reference_scan(proposal,review)
+    return scan,refs[0]
 
 def payload(items):
     if items is None:
@@ -65,25 +74,32 @@ class ManifestPacketTests(unittest.TestCase):
 
     def test_reference_missing_from_complete_manifest_blocks(self):
         r=normalize_manifest_payload("a1",payload([item("r1","Amend 0004.docx")]),observed_at=NOW); r["payload_hash_verified"]=True
-        packet={"manifest_receipts":[r],"reference_scan":refscan(),"references":[{"reference_id":"ref-1","label":"Amend 0001","resolution":"UNRESOLVED","source_object_state":"UNRESOLVED_SOURCE_OBJECT","byte_state":"BYTES_NOT_YET_CHECKED"}]}
+        scan,ref=reviewed_reference("Amend 0001")
+        packet={"manifest_receipts":[r],"reference_scan":scan,"references":[ref]}
         verdict,findings=validate_reference_closure(packet)
         self.assertEqual(verdict,"REFERENCE_CLOSURE_UNRESOLVED"); self.assertIn("REFERENCED_ARTIFACT_UNRESOLVED",{f.code for f in findings})
 
     def test_verified_reference_needs_bytes(self):
         r=normalize_manifest_payload("a1",payload([item("r1")]),observed_at=NOW); r["payload_hash_verified"]=True
-        packet={"manifest_receipts":[r],"reference_scan":refscan(),"references":[{"reference_id":"ref-1","resolution":"RESOLVED_TO_RESOURCE","source_object_state":"VERIFIED_SOURCE_OBJECT","resource_id":"r1","byte_state":"BYTES_UNAVAILABLE_AT_OBSERVATION"}]}
+        scan,ref=reviewed_reference("Attachment 1")
+        ref.update({"resolution":"RESOLVED_TO_RESOURCE","source_object_state":"VERIFIED_SOURCE_OBJECT","resource_id":"r1","byte_state":"BYTES_UNAVAILABLE_AT_OBSERVATION"})
+        packet={"manifest_receipts":[r],"reference_scan":scan,"references":[ref]}
         _,findings=validate_reference_closure(packet)
         self.assertIn("REFERENCE_BYTES_NOT_VERIFIED",{f.code for f in findings})
 
     def test_source_backed_supersession_closes_reference(self):
         r=normalize_manifest_payload("a1",payload([item("r4","Amend 0004.docx")]),observed_at=NOW); r["payload_hash_verified"]=True
-        packet={"manifest_receipts":[r],"reference_scan":refscan(),"references":[{"reference_id":"ref-1","resolution":"SUPERSEDED_BY","source_object_state":"UNRESOLVED_SOURCE_OBJECT","byte_state":"BYTES_UNAVAILABLE_AT_OBSERVATION","successor_resource_id":"r4","supersession_source_id":"notice-current"}]}
+        scan,ref=reviewed_reference("Amend 0001")
+        ref.update({"resolution":"SUPERSEDED_BY","source_object_state":"UNRESOLVED_SOURCE_OBJECT","byte_state":"BYTES_UNAVAILABLE_AT_OBSERVATION","successor_resource_id":"r4","supersession_source_id":"notice-current"})
+        packet={"manifest_receipts":[r],"reference_scan":scan,"references":[ref]}
         verdict,findings=validate_reference_closure(packet)
         self.assertEqual(verdict,"REFERENCE_CLOSURE_COMPLETE"); self.assertFalse(findings)
 
     def test_external_dependency_is_preserved_not_download_claimed(self):
         r=normalize_manifest_payload("a1",payload([{"resourceId":"link","type":"link","description":"PIEE","uri":"https://piee.eb.mil/x","accessStatus":"public","exportControlled":"0","deletedFlag":"0","size":0}]),observed_at=NOW); r["payload_hash_verified"]=True
-        packet={"manifest_receipts":[r],"reference_scan":refscan(),"references":[{"reference_id":"ref-x","resolution":"EXTERNAL_DEPENDENCY","source_object_state":"VERIFIED_SOURCE_OBJECT","byte_state":"BYTES_EXTERNAL_DEPENDENCY","url":"https://piee.eb.mil/x","reason":"Controlling package is off-SAM"}]}
+        scan,ref=reviewed_reference("PIEE")
+        ref.update({"resolution":"EXTERNAL_DEPENDENCY","source_object_state":"VERIFIED_SOURCE_OBJECT","byte_state":"BYTES_EXTERNAL_DEPENDENCY","url":"https://piee.eb.mil/x","reason":"Controlling package is off-SAM"})
+        packet={"manifest_receipts":[r],"reference_scan":scan,"references":[ref]}
         verdict,findings=validate_reference_closure(packet)
         self.assertEqual(verdict,"REFERENCE_CLOSURE_COMPLETE"); self.assertFalse(findings)
 

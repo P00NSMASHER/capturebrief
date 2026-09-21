@@ -8,6 +8,7 @@ from .current_api import download_resource_from_api_observation, fetch_latest_ac
 from .case_current import apply_current_api_observation
 from .data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD, collect_history_from_files
 from .packet import diff_manifest_receipts
+from .references import confirm_reference_scan, propose_reference_scan
 from .archive_catalog import catalog_snapshot
 from .history_index import (
     fetch_and_ingest_slot, index_status, ingest_extract_file,
@@ -46,6 +47,8 @@ def main():
     x=sub.add_parser("history-index-resolve"); x.add_argument("index_db"); x.add_argument("reference"); x.add_argument("--fiscal-year",type=int); x.add_argument("--observed-at"); x.add_argument("--output","-o")
     x=sub.add_parser("case-resolve-history"); x.add_argument("index_db"); x.add_argument("case"); x.add_argument("--fiscal-year",type=int); x.add_argument("--observed-at"); x.add_argument("--output","-o",required=True); x.add_argument("--resolution-output")
     x=sub.add_parser("history-index-sync"); x.add_argument("index_db"); x.add_argument("download_dir"); x.add_argument("--snapshot-dir"); x.add_argument("--fiscal-year",type=int); x.add_argument("--observed-at"); x.add_argument("--max-slots",type=int,default=1); x.add_argument("--all",action="store_true"); x.add_argument("--max-bytes",type=int,default=2_000_000_000); x.add_argument("--output","-o")
+    x=sub.add_parser("references-propose"); x.add_argument("--source",action="append",required=True,metavar="SOURCE_ID=TEXTFILE"); x.add_argument("--observed-at"); x.add_argument("--output","-o")
+    x=sub.add_parser("references-confirm"); x.add_argument("proposal"); x.add_argument("review_json"); x.add_argument("--output","-o"); x.add_argument("--scan-output"); x.add_argument("--references-output")
     x=sub.add_parser("case-from-intake"); x.add_argument("intake_json"); x.add_argument("--submitted-at"); x.add_argument("--output","-o")
     x=sub.add_parser("case-apply-current"); x.add_argument("case"); x.add_argument("api_observation"); x.add_argument("--output","-o",required=True); x.add_argument("--transition-output")
     x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o")
@@ -122,6 +125,22 @@ def main():
         limit=None if a.all else a.max_slots
         result=sync_missing_slots(a.index_db,a.download_dir,snapshot_dir=a.snapshot_dir,fiscal_year=a.fiscal_year,max_slots=limit,observed_at=a.observed_at,max_bytes=a.max_bytes)
         dump(result,a.output); return 0
+    if a.cmd=="references-propose":
+        sources=[]
+        for token in a.source:
+            if "=" not in token: raise SystemExit(f"invalid --source value, expected SOURCE_ID=TEXTFILE: {token}")
+            source_id,path=token.split("=",1)
+            text=Path(path).read_text(encoding="utf-8",errors="replace")
+            sources.append({"source_id":source_id,"text":text})
+        proposal=propose_reference_scan(sources,observed_at=a.observed_at)
+        dump(proposal,a.output); return 0
+    if a.cmd=="references-confirm":
+        scan,references=confirm_reference_scan(load(a.proposal),load(a.review_json))
+        combined={"reference_scan":scan,"references":references}
+        dump(combined,a.output)
+        if a.scan_output: dump(scan,a.scan_output)
+        if a.references_output: dump(references,a.references_output)
+        return 0
     if a.cmd=="case-from-intake":
         dump(build_case_from_intake(load(a.intake_json),submitted_at=a.submitted_at),a.output); return 0
     if a.cmd=="case-apply-current":

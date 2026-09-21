@@ -16,6 +16,7 @@ from .opportunity_ref import OpportunityReferenceError, parse_opportunity_refere
 from .resolver import attach_history_resolution, resolve_reference_from_index
 from .source_policy import SourcePolicyError, classify_sam_url, require_approved_automation
 from .packet import build_resource_union, diff_manifest_receipts, validate_reference_closure
+from .references import ReferenceReviewError, confirm_reference_scan, propose_reference_scan
 from .render import render_markdown
 from .intake import IntakeError, build_case_from_intake
 from .workqueue import build_work_queue
@@ -30,5 +31,7 @@ __all__=[
     "OpportunityReferenceError","parse_opportunity_reference","attach_history_resolution","resolve_reference_from_index",
     "SourcePolicyError","classify_sam_url","require_approved_automation",
     "IntakeError","build_case_from_intake","build_work_queue",
-    "build_resource_union","diff_manifest_receipts","validate_reference_closure","render_markdown","compare_cases"
+    "build_resource_union","diff_manifest_receipts","validate_reference_closure",
+    "ReferenceReviewError","confirm_reference_scan","propose_reference_scan",
+    "render_markdown","compare_cases"
 ]

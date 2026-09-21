@@ -1,9 +1,9 @@
 name: Product Core
 on:
   push:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','SOURCE-POLICY.md','ARCHIVE-CATALOG.md']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md']
   pull_request:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','SOURCE-POLICY.md']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','SOURCE-POLICY.md','REFERENCE-REVIEW.md']
 permissions:
   contents: read
 jobs:

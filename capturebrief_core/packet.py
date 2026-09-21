@@ -3,7 +3,8 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any, Iterable
 
-from .model import Finding, canonical_json, sha256_hex, valid_sha256
+from .model import Finding, canonical_json, parse_dt, sha256_hex, valid_sha256
+from .references import CANDIDATE_DECISIONS, REFERENCE_REVIEW_VERSION
 
 REFERENCE_RESOLUTIONS = {"RESOLVED_TO_RESOURCE", "SUPERSEDED_BY", "EXTERNAL_DEPENDENCY", "UNRESOLVED"}
 SOURCE_OBJECT_STATES = {"VERIFIED_SOURCE_OBJECT", "INFERRED_SOURCE_OBJECT", "UNRESOLVED_SOURCE_OBJECT"}
@@ -126,12 +127,65 @@ def validate_reference_closure(packet: dict[str, Any]) -> tuple[str, list[Findin
         findings.append(Finding("REFERENCE_SCAN_PAYLOAD_UNVERIFIED", "BLOCK", "Reference scan digest is not bound to retained payload evidence.", "packet.reference_scan"))
     if not scan.get("parser_version"):
         findings.append(Finding("REFERENCE_SCAN_PARSER_MISSING", "BLOCK", "Reference scan must identify the extraction/parser version.", "packet.reference_scan.parser_version"))
+    elif scan.get("parser_version") != REFERENCE_REVIEW_VERSION:
+        findings.append(Finding("REFERENCE_SCAN_REVIEW_VERSION_INVALID", "BLOCK", "Complete reference scan must use the pinned human-review contract version.", "packet.reference_scan.parser_version"))
+    if scan.get("review_mode") != "HUMAN_CONFIRMED":
+        findings.append(Finding("REFERENCE_SCAN_NOT_HUMAN_CONFIRMED", "BLOCK", "Automated reference proposals cannot claim complete semantic coverage.", "packet.reference_scan.review_mode"))
+    if scan.get("coverage_attestation") is not True:
+        findings.append(Finding("REFERENCE_SCAN_COVERAGE_UNATTESTED", "BLOCK", "Complete reference scan requires explicit human coverage attestation.", "packet.reference_scan.coverage_attestation"))
+    if not str(scan.get("reviewer") or "").strip():
+        findings.append(Finding("REFERENCE_SCAN_REVIEWER_MISSING", "BLOCK", "Complete reference scan must identify the reviewer.", "packet.reference_scan.reviewer"))
+    if not parse_dt(scan.get("reviewed_at")):
+        findings.append(Finding("REFERENCE_SCAN_REVIEW_TIME_INVALID", "BLOCK", "Complete reference scan requires a timezone-aware review timestamp.", "packet.reference_scan.reviewed_at"))
+    if not valid_sha256(scan.get("proposal_sha256")):
+        findings.append(Finding("REFERENCE_SCAN_PROPOSAL_HASH_INVALID", "BLOCK", "Complete reference scan must bind to a verified proposal digest.", "packet.reference_scan.proposal_sha256"))
+
+    scan_payload = scan.get("payload") if isinstance(scan.get("payload"), dict) else {}
+    proposal_payload = scan_payload.get("proposal_payload")
+    if not isinstance(proposal_payload, dict) or sha256_hex(canonical_json(proposal_payload)) != scan.get("proposal_sha256"):
+        findings.append(Finding("REFERENCE_SCAN_PROPOSAL_PAYLOAD_MISMATCH", "BLOCK", "Human review is not bound to the exact automated proposal payload.", "packet.reference_scan.payload"))
+    else:
+        proposal_sources = {str(x.get("source_id")) for x in proposal_payload.get("sources", []) if isinstance(x, dict) and x.get("source_id")}
+        reviewed_sources = {str(x) for x in scan_payload.get("reviewed_source_ids", []) if str(x)}
+        if reviewed_sources != proposal_sources:
+            findings.append(Finding("REFERENCE_SCAN_SOURCE_COVERAGE_MISMATCH", "BLOCK", "Human-reviewed source IDs do not exactly cover the proposal source set.", "packet.reference_scan.payload.reviewed_source_ids"))
+        candidates = {str(x.get("candidate_id")) for x in proposal_payload.get("candidates", []) if isinstance(x, dict) and x.get("candidate_id")}
+        decisions = scan_payload.get("candidate_decisions")
+        if not isinstance(decisions, list):
+            findings.append(Finding("REFERENCE_SCAN_DECISIONS_MISSING", "BLOCK", "Human review must retain a decision for every proposal candidate.", "packet.reference_scan.payload.candidate_decisions"))
+        else:
+            decision_ids: set[str] = set()
+            for j, decision in enumerate(decisions):
+                dpath = f"packet.reference_scan.payload.candidate_decisions[{j}]"
+                if not isinstance(decision, dict):
+                    findings.append(Finding("REFERENCE_SCAN_DECISION_INVALID", "BLOCK", "Reference decision is not an object.", dpath)); continue
+                cid = str(decision.get("candidate_id") or "")
+                action = str(decision.get("decision") or "").upper()
+                if not cid or cid in decision_ids or action not in CANDIDATE_DECISIONS:
+                    findings.append(Finding("REFERENCE_SCAN_DECISION_INVALID", "BLOCK", "Reference candidate decision is missing, duplicated, or invalid.", dpath))
+                if action == "IGNORE_NOT_DEPENDENCY" and not str(decision.get("reason") or "").strip():
+                    findings.append(Finding("REFERENCE_SCAN_IGNORE_REASON_MISSING", "BLOCK", "Ignored proposal candidates require a retained reviewer reason.", dpath))
+                decision_ids.add(cid)
+            if decision_ids != candidates:
+                findings.append(Finding("REFERENCE_SCAN_CANDIDATE_COVERAGE_MISMATCH", "BLOCK", "Human decisions do not exactly cover every automated reference candidate.", "packet.reference_scan.payload.candidate_decisions"))
+        if scan_payload.get("attests_complete") is not True:
+            findings.append(Finding("REFERENCE_SCAN_PAYLOAD_ATTESTATION_MISSING", "BLOCK", "Retained review payload does not attest complete source review.", "packet.reference_scan.payload"))
+        if scan_payload.get("reviewer") != scan.get("reviewer") or scan_payload.get("reviewed_at") != scan.get("reviewed_at"):
+            findings.append(Finding("REFERENCE_SCAN_REVIEW_METADATA_MISMATCH", "BLOCK", "Top-level review metadata differs from the retained review payload.", "packet.reference_scan"))
 
     resource_ids = set()
     for receipt in packet.get("manifest_receipts") or []:
         resource_ids.update(_resources(receipt))
 
     references = packet.get("references") or []
+    reference_ids = sorted(str(ref.get("reference_id")) for ref in references if ref.get("reference_id"))
+    reference_set_digest = sha256_hex(canonical_json(reference_ids))
+    if not valid_sha256(scan.get("reference_set_sha256")) or scan.get("reference_set_sha256") != reference_set_digest:
+        findings.append(Finding("REFERENCE_SET_HASH_MISMATCH", "BLOCK", "Case reference IDs are not exactly bound to the human-confirmed scan.", "packet.reference_scan.reference_set_sha256"))
+    tracked_ids = sorted(str(x) for x in scan_payload.get("tracked_reference_ids", []) if str(x))
+    if tracked_ids != reference_ids:
+        findings.append(Finding("REFERENCE_SET_TRACKED_IDS_MISMATCH", "BLOCK", "Retained review payload tracked-reference IDs differ from the case reference set.", "packet.reference_scan.payload.tracked_reference_ids"))
+
     seen: set[str] = set()
     for i, ref in enumerate(references):
         path = f"packet.references[{i}]"
