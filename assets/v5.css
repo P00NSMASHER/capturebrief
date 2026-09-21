@@ -23,3 +23,11 @@
   .pilot-inline span,.pilot-inline strong{line-height:1.35}
   .section{padding:56px 0}
 }
+
+/* Decision Evidence: retain full hashes without widening phone/tablet layouts. */
+.evidence-sample .watch-flow{grid-template-columns:repeat(4,minmax(0,1fr))}
+.evidence-sample .watch-flow>div{min-width:0;overflow-wrap:anywhere}
+.evidence-sample .watch-flow code{display:block;white-space:normal;overflow-wrap:anywhere;font-size:.7rem}
+@media(max-width:960px){.evidence-sample .watch-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.evidence-sample .watch-flow{grid-template-columns:minmax(0,1fr)}}
+.evidence-sample .mini-meta{overflow-wrap:anywhere}
