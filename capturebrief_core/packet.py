@@ -176,6 +176,11 @@ def validate_reference_closure(packet: dict[str, Any]) -> tuple[str, list[Findin
     resource_ids = set()
     for receipt in packet.get("manifest_receipts") or []:
         resource_ids.update(_resources(receipt))
+    artifacts = {
+        str(item.get("artifact_id")): item
+        for item in packet.get("artifacts") or []
+        if item.get("artifact_id")
+    }
 
     references = packet.get("references") or []
     reference_ids = sorted(str(ref.get("reference_id")) for ref in references if ref.get("reference_id"))
@@ -215,6 +220,15 @@ def validate_reference_closure(packet: dict[str, Any]) -> tuple[str, list[Findin
                 findings.append(Finding("REFERENCE_BYTES_NOT_VERIFIED", "BLOCK", "Controlling referenced public artifact does not have verified hashed bytes.", path))
             if byte_state == "BYTES_VERIFIED_HASHED" and not valid_sha256(ref.get("byte_sha256")):
                 findings.append(Finding("REFERENCE_BYTE_HASH_INVALID", "BLOCK", "Verified byte state requires a valid SHA-256 digest.", path))
+            artifact = artifacts.get(rid)
+            if artifact is None:
+                findings.append(Finding("REFERENCE_ARTIFACT_RECEIPT_MISSING", "BLOCK", "Resolved reference is not bound to a retained case artifact/byte receipt.", path))
+            else:
+                artifact_sha = artifact.get("sha256")
+                if artifact.get("byte_state") != "BYTES_VERIFIED_HASHED" or not valid_sha256(artifact_sha):
+                    findings.append(Finding("REFERENCE_ARTIFACT_BYTES_NOT_VERIFIED", "BLOCK", "Resolved reference artifact does not carry verified hashed bytes.", path))
+                elif ref.get("byte_sha256") != artifact_sha:
+                    findings.append(Finding("REFERENCE_ARTIFACT_HASH_MISMATCH", "BLOCK", "Reference byte hash does not match the retained case artifact hash.", path))
         elif resolution == "SUPERSEDED_BY":
             successor = str(ref.get("successor_resource_id", ""))
             if not successor or successor not in resource_ids:

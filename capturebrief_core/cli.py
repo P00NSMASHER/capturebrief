@@ -6,6 +6,7 @@ from .ledger import append_record, verify_ledger
 from .manifest import normalize_manifest_payload
 from .current_api import download_resource_from_api_observation, fetch_latest_active, make_current_action_receipt
 from .case_current import apply_current_api_observation
+from .case_references import apply_reference_resolution, apply_reference_review_result
 from .current_search import build_current_search_plan, fetch_and_apply_current
 from .data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD, collect_history_from_files
 from .packet import diff_manifest_receipts
@@ -50,6 +51,8 @@ def main():
     x=sub.add_parser("history-index-sync"); x.add_argument("index_db"); x.add_argument("download_dir"); x.add_argument("--snapshot-dir"); x.add_argument("--fiscal-year",type=int); x.add_argument("--observed-at"); x.add_argument("--max-slots",type=int,default=1); x.add_argument("--all",action="store_true"); x.add_argument("--max-bytes",type=int,default=2_000_000_000); x.add_argument("--output","-o")
     x=sub.add_parser("references-propose"); x.add_argument("--source",action="append",required=True,metavar="SOURCE_ID=TEXTFILE"); x.add_argument("--observed-at"); x.add_argument("--output","-o")
     x=sub.add_parser("references-confirm"); x.add_argument("proposal"); x.add_argument("review_json"); x.add_argument("--output","-o"); x.add_argument("--scan-output"); x.add_argument("--references-output")
+    x=sub.add_parser("case-apply-reference-review"); x.add_argument("case"); x.add_argument("review_result"); x.add_argument("--output","-o",required=True); x.add_argument("--transition-output")
+    x=sub.add_parser("case-resolve-reference"); x.add_argument("case"); x.add_argument("reference_id"); x.add_argument("decision_json"); x.add_argument("--output","-o",required=True); x.add_argument("--transition-output")
     x=sub.add_parser("case-from-intake"); x.add_argument("intake_json"); x.add_argument("--submitted-at"); x.add_argument("--output","-o")
     x=sub.add_parser("case-apply-current"); x.add_argument("case"); x.add_argument("api_observation"); x.add_argument("--output","-o",required=True); x.add_argument("--transition-output")
     x=sub.add_parser("current-search-plan"); x.add_argument("case"); x.add_argument("--output","-o")
@@ -143,6 +146,16 @@ def main():
         dump(combined,a.output)
         if a.scan_output: dump(scan,a.scan_output)
         if a.references_output: dump(references,a.references_output)
+        return 0
+    if a.cmd=="case-apply-reference-review":
+        updated,transition=apply_reference_review_result(load(a.case),load(a.review_result))
+        dump(updated,a.output)
+        if a.transition_output: dump(transition,a.transition_output)
+        return 0
+    if a.cmd=="case-resolve-reference":
+        updated,transition=apply_reference_resolution(load(a.case),a.reference_id,load(a.decision_json))
+        dump(updated,a.output)
+        if a.transition_output: dump(transition,a.transition_output)
         return 0
     if a.cmd=="case-from-intake":
         dump(build_case_from_intake(load(a.intake_json),submitted_at=a.submitted_at),a.output); return 0

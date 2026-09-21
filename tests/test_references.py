@@ -119,9 +119,34 @@ class ReferencePipelineTests(unittest.TestCase):
             "reference_scan":scan,
             "references":references,
             "manifest_receipts":[{"items":[{"resource_id":"resource-4"}]}],
+            "artifacts":[{"artifact_id":"resource-4","byte_state":"BYTES_VERIFIED_HASHED","sha256":"a"*64}],
         }
         verdict,findings=validate_reference_closure(packet)
         self.assertEqual(verdict,"REFERENCE_CLOSURE_COMPLETE",[f.code for f in findings])
+
+    def test_reference_hash_must_match_retained_artifact(self):
+        proposal=propose_reference_scan(
+            [{"source_id":"notice","text":"Review Attachment 4."}],
+            observed_at=NOW,
+        )
+        scan,references=confirm_reference_scan(proposal,review_for(proposal))
+        ref=references[0]
+        ref.update({
+            "resolution":"RESOLVED_TO_RESOURCE",
+            "source_object_state":"VERIFIED_SOURCE_OBJECT",
+            "resource_id":"resource-4",
+            "byte_state":"BYTES_VERIFIED_HASHED",
+            "byte_sha256":"a"*64,
+        })
+        packet={
+            "reference_scan":scan,
+            "references":references,
+            "manifest_receipts":[{"items":[{"resource_id":"resource-4"}]}],
+            "artifacts":[{"artifact_id":"resource-4","byte_state":"BYTES_VERIFIED_HASHED","sha256":"b"*64}],
+        }
+        verdict,findings=validate_reference_closure(packet)
+        self.assertEqual(verdict,"REFERENCE_CLOSURE_UNRESOLVED")
+        self.assertIn("REFERENCE_ARTIFACT_HASH_MISMATCH",{f.code for f in findings})
 
     def test_reference_set_tampering_after_review_is_detected(self):
         proposal=propose_reference_scan(

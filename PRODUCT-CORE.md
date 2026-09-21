@@ -1,4 +1,4 @@
-# CaptureBrief Product Core v0.6 — Planned Current Retrieval
+# CaptureBrief Product Core v0.7 — Reference Case Transitions
 
 Updated: September 21, 2026
 
@@ -402,3 +402,74 @@ The approved automated path now covers:
 `intake seed -> full history -> planned current API retrieval -> current-action case transition -> current resource discovery`
 
 The highest-value remaining product work is on historical packet review and reference closure: reduce the manual burden of matching human-confirmed references to observed resources and captured bytes without crossing the source-policy boundary into automated SAM UI scraping.
+
+
+## v0.7 — Apply reviewed references without hand-editing the case
+
+The human-confirmed reference inventory can now be applied directly to a case:
+
+    python -m capturebrief_core.cli case-apply-reference-review       current-case.json reference-review-result.json       -o referenced-case.json --transition-output reference-review-transition.json
+
+This transition accepts only a `COMPLETE / HUMAN_CONFIRMED` inventory. Every newly attached reference must still be:
+
+- `resolution = UNRESOLVED`;
+- `source_object_state = UNRESOLVED_SOURCE_OBJECT`;
+- `byte_state = BYTES_NOT_YET_CHECKED`.
+
+A review result cannot smuggle pre-resolved dependencies into the case.
+
+Reapplying the exact same review is idempotent. If closure work has already begun, replaying the same review preserves those later resolutions rather than resetting them. Replacing the reviewed inventory with a different one after closure work begins is rejected.
+
+### Explicit reference-resolution transition
+
+Each confirmed dependency can then be resolved with a separate human decision record:
+
+    python -m capturebrief_core.cli case-resolve-reference       referenced-case.json <REFERENCE_ID> resolution-decision.json       -o resolved-case.json --transition-output resolution-transition.json
+
+Every resolution decision requires:
+
+- reviewer identity;
+- timezone-aware review time;
+- explicit reason;
+- a hash-bound resolution decision record.
+
+Supported outcomes remain:
+
+- `RESOLVED_TO_RESOURCE`;
+- `SUPERSEDED_BY`;
+- `EXTERNAL_DEPENDENCY`.
+
+### Stronger byte binding
+
+A `RESOLVED_TO_RESOURCE` reference now has to satisfy all of these simultaneously:
+
+1. the resource ID exists in retained manifest evidence;
+2. the case contains a retained artifact/byte receipt for that resource;
+3. the artifact is `BYTES_VERIFIED_HASHED`;
+4. the artifact SHA-256 is valid;
+5. the reference SHA-256 exactly matches that artifact SHA-256.
+
+A syntactically valid but unrelated SHA-256 can no longer satisfy reference closure.
+
+### Supersession and external dependencies
+
+A `SUPERSEDED_BY` transition requires:
+- the successor resource to exist in retained manifest evidence;
+- the supersession source ID to exist in retained case sources.
+
+An `EXTERNAL_DEPENDENCY` transition requires:
+- an absolute HTTP(S) URL;
+- an explicit reviewer reason;
+- an explicit `BYTES_EXTERNAL_DEPENDENCY` or `BYTES_RESTRICTED` state.
+
+### Change watch
+
+Because reference IDs do not change when closure state changes, applying a resolution emits the existing `REFERENCE:<id>` / packet-reference-closure change events. Only assumptions that declared those triggers reopen.
+
+## Updated operator path
+
+The end-to-end path is now:
+
+`intake -> history resolution -> documented current retrieval -> current case transition -> reference proposal -> human reference confirmation -> apply review -> resolve each dependency -> required byte capture -> assumption QA`
+
+The remaining friction is attaching byte-capture receipts to case artifacts without manual JSON editing and proposing likely resource matches for human review. Matching may reduce reviewer effort, but automation must never auto-close a reference.
