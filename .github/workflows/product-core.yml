@@ -1,7 +1,7 @@
 name: Product Core
 on:
   push:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','index.html','sample.html','decision-evidence-sample.html']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','index.html','sample.html','decision-evidence-sample.html']
   pull_request:
     paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','index.html','sample.html','decision-evidence-sample.html']
 permissions:
@@ -28,6 +28,14 @@ jobs:
         run: python -m unittest tests.test_watch_baseline -v
       - name: Commercial outcome ledger contracts
         run: python -m unittest tests.test_outcomes -v
+      - name: Internal calibration contracts
+        run: python -m unittest tests.test_calibration -v
+      - name: Exercise calibration CLI
+        run: |
+          python -m capturebrief_core.cli calibration-validate fixtures/calibration_review_example.json -o /tmp/calibration-valid.json
+          python -m capturebrief_core.cli calibration-summary fixtures/calibration_review_example.json -o /tmp/calibration-summary.json
+          grep -q '"calibration_state": "OPEN_CRITICAL_OR_MATERIAL"' /tmp/calibration-summary.json
+          grep -q '"public_attribution_allowed": false' /tmp/calibration-summary.json
       - name: Exercise outcome ledger CLI
         run: |
           python -m capturebrief_core.cli outcome-validate fixtures/outcome_event_example.json -o /tmp/outcome-valid.json
