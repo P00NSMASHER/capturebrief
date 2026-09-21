@@ -60,10 +60,29 @@ def apply_api_byte_receipt(
     if current.get("source_contract") != "SAM_GET_OPPORTUNITIES_V2":
         raise CaseArtifactError("case does not retain the documented current API observation")
     api_digest = str(current.get("api_payload_sha256") or "")
+    response_digest = str(current.get("api_response_sha256") or "")
     if not valid_sha256(api_digest):
         raise CaseArtifactError("case current API observation lacks a valid payload digest")
+    if not valid_sha256(response_digest):
+        raise CaseArtifactError(
+            "case current API observation predates raw-response proof; refresh current authority"
+        )
+    pagination = current.get("pagination")
+    if not isinstance(pagination, dict) or pagination.get("complete") is not True:
+        raise CaseArtifactError("case current API observation lacks pagination-completeness proof")
+    try:
+        total = int(pagination.get("total_records"))
+        returned = int(pagination.get("returned_records"))
+        limit = int(pagination.get("limit"))
+        offset = int(pagination.get("offset"))
+    except (TypeError, ValueError) as exc:
+        raise CaseArtifactError("case current API pagination proof is malformed") from exc
+    if min(total, returned, limit, offset) < 0 or offset != 0 or total != returned or returned > limit:
+        raise CaseArtifactError("case current API pagination proof is inconsistent")
     if receipt.get("api_payload_sha256") != api_digest:
         raise CaseArtifactError("byte receipt is not bound to the case current API payload")
+    if receipt.get("api_response_sha256") != response_digest:
+        raise CaseArtifactError("byte receipt is not bound to the exact current API response")
 
     current_links = {str(x) for x in packet.get("current_resource_links") or []}
     if source_url not in current_links:
