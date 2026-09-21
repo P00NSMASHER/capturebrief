@@ -296,3 +296,48 @@ The operator path is now:
 `intake -> resolve seed/family -> complete history receipt -> apply current API observation -> historical packet review -> reference closure -> required byte capture -> assumption QA`
 
 The next automation target is generating the documented API search windows from retained history evidence so an operator does not have to hand-enter `postedFrom/postedTo` ranges. Those windows may guide API retrieval, but they must never become currentness evidence themselves.
+
+
+## Human-confirmed reference inventory
+
+Named-dependency extraction now uses a two-stage trust contract after current-action evidence is applied:
+
+1. `references-propose` performs deterministic local candidate extraction from retained public text and can only emit `PROPOSED`.
+2. `references-confirm` requires explicit human source coverage, a decision on every candidate, reasons for ignored hits, and allows manual additions for parser misses.
+
+Automation may surface likely references to amendments, attachments, exhibits, appendices, annexes, enclosures, schedules, drawings, procurement systems, and external URLs. It may not declare that inventory complete or decide that a missing reference is irrelevant.
+
+A `COMPLETE` reference scan is cryptographically bound to:
+- the exact proposal payload;
+- reviewer identity and timezone-aware review time;
+- the exact source set reviewed;
+- a decision for every proposed candidate;
+- every manual reviewer addition;
+- the exact final reference-ID set attached to the case.
+
+Changing the case reference set after review invalidates the scan.
+
+After human confirmation, every tracked dependency begins `UNRESOLVED`. It must become:
+- `RESOLVED_TO_RESOURCE` with verified source object and hashed bytes;
+- `SUPERSEDED_BY` with a verified successor and explicit supersession evidence; or
+- `EXTERNAL_DEPENDENCY` with explicit non-public state, URL, and reason.
+
+Anything else remains fail-closed.
+
+CLI:
+
+    python -m capturebrief_core.cli references-propose \
+      --source notice=notice.txt \
+      --source solicitation=solicitation.txt \
+      -o reference-proposal.json
+
+    python -m capturebrief_core.cli references-confirm \
+      reference-proposal.json reference-review.json \
+      -o reference-review-result.json
+
+The operator queue is sequential:
+- no reviewed scan → `references:propose` (local automation);
+- proposal exists → `references:review-proposal` (human-only);
+- reviewed inventory exists → individual reference-resolution tasks.
+
+This closes a major failure mode exposed by the packet-integrity research: “the parser did not see a named amendment” can never become evidence that the amendment is safely irrelevant.

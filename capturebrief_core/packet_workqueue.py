@@ -200,38 +200,51 @@ def build_work_queue(
             ))
 
     scan = packet.get("reference_scan") or {}
-    if scan.get("status") != "COMPLETE":
+    scan_status = str(scan.get("status") or "PENDING").upper()
+    if scan_status == "PROPOSED":
         add(_task(
-            "references:scan",
-            "Complete the named-dependency scan",
+            "references:review-proposal",
+            "Review the proposed named-dependency inventory",
             actor="HUMAN_REVIEW",
-            reason="The notice/document reference inventory is not complete.",
-            evidence_needed="Reviewed named amendments, attachments, exhibits, schedules, drawings, and external systems.",
+            can_auto_execute=False,
+            reason="Automation has surfaced candidate references but cannot attest semantic completeness or decide which mentions are controlling dependencies.",
+            evidence_needed="Human decision for every proposed candidate, source-coverage attestation, and any manually added parser misses.",
+            metadata={"proposal_sha256": scan.get("proposal_sha256")},
+        ))
+    elif scan_status != "COMPLETE":
+        add(_task(
+            "references:propose",
+            "Generate a conservative named-dependency proposal from retained public text",
+            actor="AUTOMATED_LOCAL",
+            can_auto_execute=True,
+            reason="No reviewed dependency inventory exists yet. Automated extraction may propose candidates but cannot mark the scan complete.",
+            evidence_needed="Retained public notice/document text followed by human review.",
         ))
 
-    reference_verdict, ref_findings = validate_reference_closure(packet)
-    if reference_verdict != "REFERENCE_CLOSURE_COMPLETE":
-        for ref in packet.get("references") or []:
-            resolution = str(ref.get("resolution") or "UNRESOLVED").upper()
-            if resolution == "UNRESOLVED":
-                rid = str(ref.get("reference_id") or ref.get("label") or "unknown")
+    if scan_status == "COMPLETE":
+        reference_verdict, ref_findings = validate_reference_closure(packet)
+        if reference_verdict != "REFERENCE_CLOSURE_COMPLETE":
+            for ref in packet.get("references") or []:
+                resolution = str(ref.get("resolution") or "UNRESOLVED").upper()
+                if resolution == "UNRESOLVED":
+                    rid = str(ref.get("reference_id") or ref.get("label") or "unknown")
+                    add(_task(
+                        f"reference:{rid}",
+                        f"Resolve referenced dependency: {ref.get('label') or rid}",
+                        actor="HUMAN_REVIEW",
+                        reason="A controlling/named dependency is still unresolved.",
+                        evidence_needed="Verified resource+bytes, source-backed supersession, or explicit external/restricted dependency.",
+                        metadata={"reference_id": ref.get("reference_id")},
+                    ))
+            if not any(key.startswith("reference:") for key in tasks):
                 add(_task(
-                    f"reference:{rid}",
-                    f"Resolve referenced dependency: {ref.get('label') or rid}",
+                    "references:closure",
+                    "Resolve reference-review or closure blockers",
                     actor="HUMAN_REVIEW",
-                    reason="A controlling/named dependency is still unresolved.",
-                    evidence_needed="Verified resource+bytes, source-backed supersession, or explicit external/restricted dependency.",
-                    metadata={"reference_id": ref.get("reference_id")},
+                    reason="The human-confirmed reference inventory exists but does not yet satisfy closure rules.",
+                    evidence_needed="Corrected review receipt, reference states, and supporting evidence.",
+                    metadata={"finding_codes": sorted({f.code for f in ref_findings})},
                 ))
-        if not any(key.startswith("reference:") for key in tasks):
-            add(_task(
-                "references:closure",
-                "Resolve reference-closure blockers",
-                actor="HUMAN_REVIEW",
-                reason="Reference closure is not complete.",
-                evidence_needed="Corrected reference states and supporting evidence.",
-                metadata={"finding_codes": sorted({f.code for f in ref_findings})},
-            ))
 
     approved_links = set((api_observation or {}).get("resource_links") or [])
     for artifact in packet.get("artifacts") or []:

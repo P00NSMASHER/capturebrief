@@ -144,21 +144,59 @@
     ],
     "reference_scan": {
       "status": "COMPLETE",
-      "scan_sha256": "df2463e1c897c77c49a000f898e19ba8809cbbc18a738c81e48652846ee7483f",
-      "parser_version": "reference-review-v1",
+      "scan_sha256": "d9c59cd2e2b4f6bb86e2f2e644ad5afc526e67ff957079071121ec67bfcbb2c6",
+      "parser_version": "capturebrief-reference-review-v1",
+      "review_mode": "HUMAN_CONFIRMED",
+      "reviewer": "CaptureBrief reviewer",
+      "reviewed_at": "2026-09-21T13:00:00+00:00",
+      "coverage_attestation": true,
+      "proposal_sha256": "a1fe8e1000d8e6d43f94b9118a5cc0d5788a2e82efa7895eba32a0763df3bcca",
+      "reference_set_sha256": "58ed5ce73b35a84765067d1c68e985b179438ffa5c3be30331fd9c638b3c1fef",
       "payload": {
-        "sources_scanned": [
+        "proposal_sha256": "a1fe8e1000d8e6d43f94b9118a5cc0d5788a2e82efa7895eba32a0763df3bcca",
+        "proposal_payload": {
+          "parser_version": "capturebrief-reference-proposal-v1",
+          "sources": [
+            {
+              "source_id": "sam-current",
+              "content_sha256": "e3c9b45283fe7fab69bf6dc0a4ef7c66dbf2e9a5aecc68645cbd5ca1d89a8cc5",
+              "characters": 25
+            }
+          ],
+          "candidates": [],
+          "automatic_completeness_claim": false
+        },
+        "reviewer": "CaptureBrief reviewer",
+        "reviewed_at": "2026-09-21T13:00:00+00:00",
+        "attests_complete": true,
+        "reviewed_source_ids": [
           "sam-current"
         ],
-        "references_extracted": [
-          "Current solicitation"
+        "candidate_decisions": [],
+        "manual_additions": [
+          {
+            "reference_id": "ref-3199e359bb940d69",
+            "label": "Current solicitation",
+            "kind": "MANUAL",
+            "source_id": "sam-current",
+            "reason": "Reviewer identified the controlling solicitation as a required dependency."
+          }
+        ],
+        "tracked_reference_ids": [
+          "ref-3199e359bb940d69"
         ]
       }
     },
     "references": [
       {
-        "reference_id": "ref-current",
+        "reference_id": "ref-3199e359bb940d69",
         "label": "Current solicitation",
+        "reference_kind": "MANUAL",
+        "origin_source_ids": [
+          "sam-current"
+        ],
+        "manual_addition": true,
+        "manual_reason": "Reviewer identified the controlling solicitation as a required dependency.",
         "resolution": "RESOLVED_TO_RESOURCE",
         "source_object_state": "VERIFIED_SOURCE_OBJECT",
         "resource_id": "resource-current",
@@ -223,7 +261,7 @@
         "CURRENT_ACTION_CHANGE",
         "MANIFEST:action-002",
         "RESOURCE:resource-current",
-        "REFERENCE:ref-current"
+        "REFERENCE:ref-3199e359bb940d69"
       ]
     }
   ]
