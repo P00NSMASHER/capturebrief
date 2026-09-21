@@ -180,8 +180,16 @@ def _download_extract_unlocked(
             response=opener(req,timeout=timeout)
             with response, os.fdopen(fd,"wb",closefd=False) as out:
                 declared=response.headers.get("Content-Length") if getattr(response,"headers",None) else None
-                if declared and int(declared)>max_bytes:
-                    raise HistoryIndexError(f"extract exceeds max_bytes before download: {declared}")
+                declared_size=None
+                if declared not in (None,""):
+                    try:
+                        declared_size=int(declared)
+                    except (TypeError,ValueError) as exc:
+                        raise HistoryIndexError("extract Content-Length is invalid") from exc
+                    if declared_size < 0:
+                        raise HistoryIndexError("extract Content-Length is negative")
+                    if declared_size>max_bytes:
+                        raise HistoryIndexError(f"extract exceeds max_bytes before download: {declared}")
                 while True:
                     chunk=response.read(1024*1024)
                     if not chunk:
@@ -191,9 +199,14 @@ def _download_extract_unlocked(
                         raise HistoryIndexError("extract exceeds max_bytes during download")
                     digest.update(chunk)
                     out.write(chunk)
+                if declared_size is not None and size != declared_size:
+                    raise HistoryIndexError(
+                        f"extract byte count {size} does not match Content-Length {declared_size}"
+                    )
+                final_url=response.geturl() if hasattr(response,"geturl") else source_url
+                require_approved_automation(final_url,expected="SAM_DATA_SERVICES_EXTRACT")
                 out.flush()
                 os.fsync(out.fileno())
-                final_url=response.geturl() if hasattr(response,"geturl") else source_url
                 source_etag=response.headers.get("ETag") if getattr(response,"headers",None) else None
                 source_last_modified=response.headers.get("Last-Modified") if getattr(response,"headers",None) else None
         finally:
