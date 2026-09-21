@@ -104,3 +104,14 @@ This makes the fulfillment process reproducible rather than dependent on the fou
 ## Remaining P0
 
 The remaining automation gap is proving the **history scope start** without guessing. Until GSA exposes a narrower all-version family query with authoritative completeness semantics, CaptureBrief requires an explicit scope boundary for Data Services archive coverage. The product should prefer one extra human confirmation over a false “all amendments found” claim.
+
+
+## Receipt contract verification
+
+Approved automation receipts are verified semantically, not only by their outer SHA-256.
+
+For `APPROVED_EXTRACT` history receipts, release requires the Data Services source contract, non-authoritative ordering/currentness flags, action-set equality, valid row hashes, confirmed archive scope with no gaps, approved source-snapshot URLs and hashes, active-extract evidence, and a valid family/seed binding.
+
+For `APPROVED_API` current-action receipts, release requires the documented Opportunities v2 source class, the `SAM_GET_OPPORTUNITIES_V2` contract, Notice ID equality, a valid API-payload digest, and resource links that remain inside the approved API-resource-link contract.
+
+Recomputing an outer receipt hash after altering those semantics cannot make the receipt green.

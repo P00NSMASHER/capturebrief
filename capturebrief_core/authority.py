@@ -2,6 +2,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Iterable
 from .model import FAMILY_STATUSES, RECEIPT_SEMANTICS, Finding, canonical_json, first_party_sam, history_set_digest, parse_dt, sha256_hex, valid_sha256
+from .source_policy import classify_sam_url
 
 def _fresh(r:dict[str,Any],now:datetime)->bool:
     observed,expires=parse_dt(r.get("observed_at")),parse_dt(r.get("expires_at"))
@@ -13,6 +14,31 @@ def _payload_verified(r:dict[str,Any])->bool:
     if r.get("evidence_payload") is not None:
         return sha256_hex(canonical_json(r["evidence_payload"]))==digest
     return r.get("payload_hash_verified") is True
+
+def _approved_api_contract_ok(r:dict[str,Any])->tuple[bool,str|None,str|None]:
+    mode=r.get("automation_mode")
+    if mode is None or mode=="HUMAN_SUPERVISED":
+        return True,None,None
+    if mode!="APPROVED_API":
+        return False,"RECEIPT_AUTOMATION_MODE_INVALID","Receipt automation mode is not recognized."
+    if classify_sam_url(str(r.get("source_url","")))!="SAM_PUBLIC_API":
+        return False,"RECEIPT_APPROVED_API_SOURCE_INVALID","Approved API receipt does not point to the documented SAM public API."
+    evidence=r.get("evidence_payload")
+    if not isinstance(evidence,dict):
+        return False,"RECEIPT_APPROVED_API_EVIDENCE_MISSING","Approved API receipt lacks structured evidence."
+    if evidence.get("source_contract")!="SAM_GET_OPPORTUNITIES_V2":
+        return False,"RECEIPT_APPROVED_API_CONTRACT_INVALID","Approved API receipt source contract is invalid."
+    if str(evidence.get("notice_id",""))!=str(r.get("asserted_action_id","")):
+        return False,"RECEIPT_APPROVED_API_NOTICE_MISMATCH","Approved API receipt notice ID does not match the asserted action."
+    if not valid_sha256(evidence.get("api_payload_sha256")):
+        return False,"RECEIPT_APPROVED_API_PAYLOAD_HASH_INVALID","Approved API receipt lacks a valid API payload SHA-256."
+    links=evidence.get("resource_links") or []
+    if not isinstance(links,list):
+        return False,"RECEIPT_APPROVED_API_RESOURCE_LINKS_INVALID","Approved API receipt resource links are not a list."
+    for link in links:
+        if classify_sam_url(str(link))!="SAM_API_RESOURCE_LINK":
+            return False,"RECEIPT_APPROVED_API_RESOURCE_LINK_INVALID","Approved API receipt contains a resource link outside the approved SAM resource-link contract."
+    return True,None,None
 
 def validate_current_action_receipts(history_ids:Iterable[str],family_status:str,receipts:Iterable[dict[str,Any]],*,now:datetime|None=None):
     findings:list[Finding]=[]
@@ -34,6 +60,9 @@ def validate_current_action_receipts(history_ids:Iterable[str],family_status:str
             (r.get("history_set_sha256")==digest,"RECEIPT_HISTORY_DIGEST_MISMATCH","Receipt history-set digest does not match the observed history set."),
             (observed_status==status,"RECEIPT_STATUS_MISMATCH","Receipt status does not match the case family status."),
         ]
+        api_ok,api_code,api_message=_approved_api_contract_ok(r)
+        if not api_ok:
+            checks.append((False,api_code or "RECEIPT_APPROVED_API_INVALID",api_message or "Approved API receipt failed source-contract validation."))
         failed=next(((c,m) for ok,c,m in checks if not ok),None)
         if failed:
             findings.append(Finding(failed[0],"WARN",failed[1],path)); continue
