@@ -5,7 +5,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from .authority import validate_current_action_receipts
-from .current_api import make_current_action_receipt
+from .current_api import CurrentApiError, make_current_action_receipt
 from .history import validate_history_receipts
 from .model import parse_dt
 from .source_policy import classify_sam_url
@@ -83,10 +83,13 @@ def apply_current_api_observation(
     if active in {"no", "false", "0"}:
         raise CaseCurrentError("latest-active API observation explicitly reports the record inactive")
 
-    receipt = make_current_action_receipt(
-        api_observation,
-        history_action_ids=history_ids,
-    )
+    try:
+        receipt = make_current_action_receipt(
+            api_observation,
+            history_action_ids=history_ids,
+        )
+    except CurrentApiError as exc:
+        raise CaseCurrentError(str(exc)) from exc
     observed = parse_dt(receipt.get("observed_at"))
     if not observed:
         raise CaseCurrentError("current receipt observation time is invalid")
