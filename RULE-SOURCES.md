@@ -134,6 +134,23 @@ The resulting memo is represented in the ordinary Decision Evidence rule model u
 
 Applicability review never updates the assumption's evidence state automatically.
 
+### Deviation changes during the targeted watch
+
+A completed class-deviation applicability review is still a time-bounded observation.
+
+CaptureBrief's targeted watch records privacy-safe fingerprints for the current deviation candidate set, captured PDF, authority review and applicability review.
+
+If any of those change:
+
+- the prior reviewed decision remains intact;
+- the affected assumption is marked `REVIEW_REQUIRED`;
+- unrelated assumptions stay closed;
+- no new applicability conclusion is inferred automatically.
+
+A refreshed deviation candidate proposal may assign a new content-addressed candidate ID. Proposal-change events therefore carry both prior/new candidate identifiers so assumptions depending on the prior reviewed candidate still reopen.
+
+Watch fingerprints contain hashes/IDs and review states—not memo text, solicitation text, PDF bytes or deviation URLs.
+
 ### Agency/FAR-Part proposal
 
 The operator can filter the pinned index by an explicit civilian agency and explicit FAR Parts 1–53.
