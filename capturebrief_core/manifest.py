@@ -8,6 +8,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from .model import Finding, canonical_json, first_party_sam, parse_dt, sha256_hex, valid_sha256
+from .source_policy import SourcePolicyError
 
 MANIFEST_PARSER_VERSION = "capturebrief-sam-manifest-v1"
 MANIFEST_URL = "https://sam.gov/api/prod/opps/v3/opportunities/{action_id}/resources?excludeDeleted=false&withScanResult=false"
@@ -100,6 +101,7 @@ def normalize_manifest_payload(
     *,
     observed_at: str | None = None,
     source_url: str | None = None,
+    observation_mode: str = "HUMAN_SUPERVISED",
 ) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ManifestShapeError("manifest response is not an object")
@@ -144,6 +146,7 @@ def normalize_manifest_payload(
         "with_scan_result": False,
         "parser_version": MANIFEST_PARSER_VERSION,
         "source_contract": "UNDOCUMENTED_SAM_WEB_UI",
+        "observation_mode": observation_mode,
         "endpoint_version": "v3",
         "shape_validated": True,
         "raw_manifest_sha256": raw_digest,
@@ -154,27 +157,11 @@ def normalize_manifest_payload(
 
 
 def fetch_manifest(action_id: str, *, timeout: float = 30.0) -> dict[str, Any]:
-    """Fetch the public SAM web-UI resource manifest without credentials.
-
-    This endpoint is not a documented public API contract. The parser therefore fails closed
-    on shape drift and callers should maintain a canary before relying on it operationally.
-    """
-    url = MANIFEST_URL.format(action_id=action_id)
-    req = Request(url, headers={"Accept": MANIFEST_ACCEPT, "User-Agent": "CaptureBrief/0.2"})
-    try:
-        with urlopen(req, timeout=timeout) as response:
-            body = response.read()
-    except HTTPError as exc:
-        if exc.code == 400:
-            raise NoticeUnknown(f"SAM.gov did not recognize action {action_id}") from exc
-        raise ManifestUnavailable(f"SAM manifest HTTP {exc.code}") from exc
-    except URLError as exc:
-        raise ManifestUnavailable(f"SAM manifest transport failure: {exc.reason}") from exc
-    try:
-        payload = json.loads(body.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise ManifestShapeError("manifest response is not valid UTF-8 JSON") from exc
-    return normalize_manifest_payload(action_id, payload, source_url=url)
+    """Automation is disabled for the undocumented SAM web-UI manifest surface."""
+    raise SourcePolicyError(
+        "automated SAM web-UI manifest collection is disabled by source policy; "
+        "capture a first-party snapshot manually and use normalize_manifest_payload"
+    )
 
 
 def _verified_raw_hash(receipt: dict[str, Any]) -> bool:
@@ -270,6 +257,8 @@ def download_public_resource(
     It starts only from SAM's first-party resource download endpoint; redirects may terminate on
     SAM's short-lived object-storage delivery URL.
     """
+    if opener is urlopen:
+        raise SourcePolicyError("automated downloads from web-UI manifest receipts are disabled; use a documented API resourceLinks observation")
     if resource.get("kind") != "file" or resource.get("artifact_state") != "PUBLIC":
         raise ValueError("only public SAM file resources may be downloaded")
     resource_id = str(resource.get("resource_id", ""))
