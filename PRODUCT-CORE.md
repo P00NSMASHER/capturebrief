@@ -1,8 +1,103 @@
-# CaptureBrief Product Core v0.26 — Deviation-to-Assumption Decision Evidence
+# CaptureBrief Product Core v0.27 — Deviation-Aware Targeted Watch
 
 Updated: September 21, 2026
 
 CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.23 adds a controlled class-deviation discovery path on top of the v0.22 Decision Evidence, release bundle, and targeted-watch system. It can now prove which exact pinned deviation index was inspected and surface agency/FAR-Part candidates without turning corpus membership—or corpus absence—into an applicability decision.
+
+## v0.27 — Deviation-Aware Targeted Watch
+
+v0.26 completed the reviewed class-deviation chain into a specific bid assumption. v0.27 closes the monitoring gap that appears **before** a reviewer has had time to rebuild that rule evidence.
+
+The 14-day targeted watch now preserves privacy-safe fingerprints of:
+
+- the current deviation candidate proposal;
+- pinned deviation manifest revision/hash;
+- candidate ID set and candidate fingerprint;
+- latest captured official PDF receipt and PDF SHA-256;
+- current authority review ID/currentness/effective interval;
+- current assumption-specific deviation applicability review and rule-version ID.
+
+The watch baseline does **not** retain source text, PDF bytes, or public-source URLs for this purpose.
+
+### Early warning before re-review
+
+A later observation can now trigger review even while the previously issued Decision Evidence trace still contains the old reviewed rule link.
+
+CaptureBrief detects changes to:
+
+- the pinned deviation proposal / candidate set;
+- the latest official deviation PDF bytes;
+- the reviewed authority state;
+- the reviewed applicability state.
+
+Each deviation event is keyed by the stable prior `deviation_source_id` where possible.
+
+### Reopen only the assumptions that depended on it
+
+When a deviation applicability review is current, the watch baseline maps that `deviation_source_id` to the exact assumption that depended on it.
+
+If the official PDF later changes, CaptureBrief reopens that assumption:
+
+`DEVIATION:<id> -> Affected assumption -> REVIEW_REQUIRED`
+
+Other assumptions are not reopened merely because they belong to the same pursuit.
+
+### Proposal refresh handles identity turnover
+
+A newly pinned deviation manifest can create a new content-addressed candidate ID even when the agency/Part search is conceptually the same.
+
+The proposal-change event therefore carries aliases for both the prior and newly observed candidate IDs. An assumption that depended on the prior candidate is reopened even before a new applicability review exists.
+
+### Prior decision is preserved
+
+A watch event never:
+
+- changes `APPLIES` to `DOES_NOT_APPLY`;
+- changes an assumption's `SUPPORTED / UNPROVEN / ...` state;
+- edits the old rule link;
+- rewrites the prior decision date.
+
+Instead the observation records:
+
+- `requires_human_review = true`;
+- `previous_decision_preserved = true`;
+- `automatic_decision_change = false`.
+
+The buyer can therefore see that a prior decision was reasonable on the evidence available then, while still knowing that one of its dependencies has changed and must be reviewed again.
+
+### Privacy contract
+
+Deviation watch state contains identifiers and hashes only.
+
+It deliberately omits:
+
+- memo text;
+- solicitation text;
+- raw PDF content;
+- deviation PDF URL.
+
+This makes the watch baseline useful for change detection without turning it into a duplicate evidence warehouse.
+
+### Validation target
+
+The regression corpus now proves a two-assumption case:
+
+1. A1 depends on a reviewed class deviation.
+2. A2 does not.
+
+When only the official deviation PDF changes:
+
+- A1 reopens;
+- A2 does not;
+- the old Decision Evidence rule link remains untouched;
+- applicability does not change automatically;
+- the prior decision remains preserved.
+
+At this point the technical source/rule/version chain is end-to-end:
+
+`solicitation history + exact source bytes + FAR/DFARS/deviation version authority + assumption-specific applicability + dependency-aware change watch`
+
+The next product milestone is no longer another rule-engine feature. It is running this complete chain against real public pursuits and recording whether buyers say it changed a gate decision, closed a costly uncertainty, or surfaced something they had missed.
 
 ## v0.26 — Deviation-to-Assumption Decision Evidence
 
