@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "catalog_observed_at": "2026-09-21T16:00:00Z",
+  "sources": [
+    {
+      "source_id": "gsa-far-dita",
+      "namespace": "FAR",
+      "repository": "GSA/GSA-Acquisition-FAR",
+      "repository_url": "https://github.com/GSA/GSA-Acquisition-FAR",
+      "revision": "da52ccbbe114e1f031a7f4c59195c508dbfa485f",
+      "snapshot_label": "FAC 2026-01 merge snapshot",
+      "path_pattern": "dita/<citation>.dita",
+      "authority_note": "First-party machine-readable FAR publication snapshot. Commit date is provenance, not rule effective date or solicitation applicability."
+    },
+    {
+      "source_id": "gsa-dfars-dita",
+      "namespace": "DFARS",
+      "repository": "GSA/GSA-Acquisition-DFARS",
+      "repository_url": "https://github.com/GSA/GSA-Acquisition-DFARS",
+      "revision": "7e609f791af9cc6d8e7d75a7b05c83b1f62c0cb8",
+      "snapshot_label": "DFARS Publication 20260507 merge snapshot",
+      "path_pattern": "dita/<citation>.dita",
+      "authority_note": "First-party machine-readable DFARS publication snapshot. Commit date is provenance, not rule effective date or solicitation applicability."
+    },
+    {
+      "source_id": "acqagent-rfo-deviations",
+      "namespace": "CLASS_DEVIATION",
+      "repository": "acqagent/rfo-deviations",
+      "repository_url": "https://github.com/acqagent/rfo-deviations",
+      "revision": "ccf31107508085cc311fb07488eb513ab97c6b7d",
+      "snapshot_label": "2026-06-23 deviation snapshot",
+      "path_pattern": "manifest.csv + source PDFs",
+      "authority_note": "Discovery/index layer for agency deviation PDFs. Manifest presence does not establish applicability or effective date."
+    },
+    {
+      "source_id": "acqagent-far-collector",
+      "namespace": "FAR",
+      "repository": "acqagent/far-collector",
+      "repository_url": "https://github.com/acqagent/far-collector",
+      "revision": "40789a073134a484b2e4a5a2398629b067da0eea",
+      "snapshot_label": "collector implementation snapshot",
+      "path_pattern": "collector/parser implementation",
+      "authority_note": "Collector implementation/reference only. Rule authority must resolve to the underlying official source artifact."
+    }
+  ]
+}
