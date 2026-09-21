@@ -10,7 +10,8 @@
       "revision": "da52ccbbe114e1f031a7f4c59195c508dbfa485f",
       "snapshot_label": "FAC 2026-01 merge snapshot",
       "path_pattern": "dita/<citation>.dita",
-      "authority_note": "First-party machine-readable FAR publication snapshot. Commit date is provenance, not rule effective date or solicitation applicability."
+      "authority_note": "First-party machine-readable FAR publication snapshot. Commit date is provenance, not rule effective date or solicitation applicability.",
+      "agency": "FAR Council"
     },
     {
       "source_id": "gsa-dfars-dita",
@@ -20,7 +21,8 @@
       "revision": "7e609f791af9cc6d8e7d75a7b05c83b1f62c0cb8",
       "snapshot_label": "DFARS Publication 20260507 merge snapshot",
       "path_pattern": "dita/<citation>.dita",
-      "authority_note": "First-party machine-readable DFARS publication snapshot. Commit date is provenance, not rule effective date or solicitation applicability."
+      "authority_note": "First-party machine-readable DFARS publication snapshot. Commit date is provenance, not rule effective date or solicitation applicability.",
+      "agency": "DoD"
     },
     {
       "source_id": "acqagent-rfo-deviations",

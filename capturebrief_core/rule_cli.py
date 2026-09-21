@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from .rule_candidates import attach_rule_candidate_proposal, attach_rule_candidate_review
+from .rule_sync import sync_pinned_gsa_rule
 from .rule_registry import (
     add_rule_version,
     diff_rule_versions,
@@ -83,6 +84,15 @@ def main(argv=None):
     rv.add_argument("review")
     rv.add_argument("-o", "--output")
     rv.add_argument("--result-output")
+
+    sd = s.add_parser("sync-dita")
+    sd.add_argument("registry")
+    sd.add_argument("--catalog", default="RULE-SOURCE-CATALOG.json")
+    sd.add_argument("--source-id", required=True, choices=("gsa-far-dita", "gsa-dfars-dita"))
+    sd.add_argument("--citation", required=True)
+    sd.add_argument("--observed-at", required=True)
+    sd.add_argument("--receipt-output")
+    sd.add_argument("--record-output")
 
     args = p.parse_args(argv)
 
@@ -163,6 +173,20 @@ def main(argv=None):
         _write(updated, args.output)
         if args.result_output:
             _write(result, args.result_output)
+    elif args.cmd == "sync-dita":
+        result = sync_pinned_gsa_rule(
+            args.registry,
+            args.catalog,
+            source_id=args.source_id,
+            citation=args.citation,
+            observed_at=args.observed_at,
+        )
+        summary = {k: v for k, v in result.items() if k != "record"}
+        _write(summary)
+        if args.receipt_output:
+            _write(result["fetch_receipt"], args.receipt_output)
+        if args.record_output:
+            _write(result["record"], args.record_output)
     return 0
 
 
