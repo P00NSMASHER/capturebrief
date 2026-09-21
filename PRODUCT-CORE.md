@@ -78,6 +78,29 @@ Unknowns remain unknown. Restricted or source-limited evidence cannot become a r
     python -m capturebrief_core.cli capture-api-resource current-observation.json '<RESOURCE_LINK>' \
       -o artifact.bin --receipt-output artifact-receipt.json
 
+## Operator workflow
+
+The product now turns the existing website intake directly into fulfillment work.
+
+`case-from-intake` maps the Netlify form fields into a deliberately non-evidentiary case:
+- customer assumptions begin as `UNPROVEN / VERIFY_NOW`;
+- no source is invented;
+- no intake statement is promoted to evidence;
+- the public/non-sensitive confirmation is required.
+
+`work-queue` then derives the smallest next-step queue from the case state. Tasks are deduplicated, prioritized, and labeled by execution mode:
+- `AUTOMATED_APPROVED_SOURCE` — safe for documented API/extract automation;
+- `HYBRID` — automated retrieval plus an explicit human boundary;
+- `HUMAN_REVIEW` — source interpretation or evidence CaptureBrief must not automate.
+
+The queue currently covers history establishment, family/current authority, missing historical manifests, reference closure, required public-byte capture, source linkage, ownership, next actions, and deadline timezone defects.
+
+CI exercises the full path:
+
+    website-shaped intake JSON -> case skeleton -> operator work queue
+
+This makes the fulfillment process reproducible rather than dependent on the founder remembering the next evidence step.
+
 ## Remaining P0
 
 The remaining automation gap is proving the **history scope start** without guessing. Until GSA exposes a narrower all-version family query with authoritative completeness semantics, CaptureBrief requires an explicit scope boundary for Data Services archive coverage. The product should prefer one extra human confirmation over a false “all amendments found” claim.
