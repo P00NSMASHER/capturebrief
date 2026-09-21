@@ -24,11 +24,19 @@
       const address = document.getElementById(button.dataset.copyEmail);
       const status = document.getElementById(button.getAttribute('aria-describedby'));
       if (!address || !status) return;
+      const href = address.getAttribute('href') || '';
+      if (!href.toLowerCase().startsWith('mailto:')) return;
+      let email;
+      try { email = decodeURIComponent(href.slice(7).split('?')[0]); }
+      catch (_) { status.textContent = 'Please use the email link. Nothing has been sent.'; return; }
+      if (!email || !email.includes('@')) return;
       try {
         if (!navigator.clipboard) throw new Error('Clipboard unavailable');
-        await navigator.clipboard.writeText(address.textContent.trim());
+        await navigator.clipboard.writeText(email);
         status.textContent = 'Email address copied. Nothing has been sent.';
       } catch (_) {
+        // Reveal the existing inbox only when manual copying is needed.
+        address.textContent = email;
         const range = document.createRange();
         range.selectNodeContents(address);
         const selection = window.getSelection();
