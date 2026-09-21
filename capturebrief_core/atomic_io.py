@@ -25,6 +25,10 @@ def _fsync_directory(path: Path) -> None:
         os.close(fd)
 
 
+def fsync_directory(path: str | Path) -> None:
+    _fsync_directory(Path(path))
+
+
 def _write_all(fd: int, data: bytes) -> None:
     view=memoryview(data)
     written=0
