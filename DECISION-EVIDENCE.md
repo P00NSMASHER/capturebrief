@@ -84,6 +84,30 @@ The before passage must belong to the declared from-version and the after passag
 
 This lets the buyer inspect **what changed**, not merely see a label saying that a source changed.
 
+## Buyer delivery bundle
+
+A completed Decision Evidence case can be packaged through one release-gated command:
+
+    python -m capturebrief_core.trace_cli bundle case.json -o capturebrief-delivery.zip
+
+The bundle is refused unless:
+
+- `decision_trace_required = true`;
+- the full CaptureBrief audit returns `READY_FOR_HUMAN_RELEASE`;
+- Decision Evidence returns `TRACE_COMPLETE`;
+- the trace is non-synthetic.
+
+The ZIP contains:
+
+- `brief.md` — concise pursuit QA handoff;
+- `decision-evidence.md` — exact source/rule/version evidence;
+- `decision-evidence.html` — buyer-readable evidence report;
+- `decision-summary.json` — machine-readable reviewed conclusions;
+- `source-version-manifest.json` — public source/rule version identities and hashes without raw source text;
+- `delivery-manifest.json` — SHA-256 + byte length for every delivered file.
+
+The bundle intentionally excludes the raw internal case object and does not package restricted source bytes. ZIP entry metadata is normalized so the same case and generation time produce the same bundle bytes and hash.
+
 ## Change watch
 
 The trace is append-preserving.
