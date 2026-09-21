@@ -32,6 +32,65 @@ The pinned `acqagent/rfo-deviations` manifest can identify agency/Part-specific 
 
 A candidate deviation remains a candidate until the underlying public artifact and solicitation-specific basis are reviewed.
 
+## Pinned class-deviation manifest workflow
+
+CaptureBrief now has a controlled retrieval path for the pinned `acqagent/rfo-deviations` manifest.
+
+The manifest fetch:
+
+- is constructed from the exact catalog-pinned repository revision;
+- accepts no caller-supplied URL or mutable branch/tag;
+- rejects redirects and host changes;
+- retains the exact byte SHA-256, byte length, repository/revision/path, catalog fingerprint, and observation time;
+- parses the downloaded bytes into the existing deviation-manifest schema;
+- verifies that the parser's manifest digest equals the downloaded-byte digest.
+
+The resulting receipt proves only:
+
+> **this exact candidate index snapshot was inspected.**
+
+It does not prove:
+
+- completeness of every official deviation source;
+- that a candidate artifact remains current;
+- an effective date;
+- supersession;
+- solicitation incorporation;
+- applicability.
+
+### Agency/FAR-Part proposal
+
+The operator can filter the pinned index by an explicit civilian agency and explicit FAR Parts 1–53.
+
+The proposal:
+
+- deduplicates the same public PDF when it covers multiple requested Parts;
+- retains all matched Parts;
+- preserves source URL, filename, source revision, URL hash and declared byte length;
+- marks every artifact `CANDIDATE_ONLY`;
+- leaves currentness/applicability unresolved;
+- can never auto-apply a deviation.
+
+The underlying corpus also includes `part_number = -1` multipart/unparsed rows and `part_number = 0` rows. CaptureBrief preserves those rows in the parsed manifest, but does not silently include them in a Part-scoped pursuit proposal.
+
+### Zero candidates is not a clean negative
+
+A proposal with zero rows still requires review.
+
+The pinned corpus is a discovery/index surface, and its own documentation notes source-link failures and scope limitations. Therefore:
+
+`0 matching rows != no deviation exists`
+
+A reviewer must not turn bounded-corpus absence into a gate-changing buyer fact.
+
+### Promotion into Decision Evidence
+
+A deviation may influence an assumption only after stronger evidence is retained:
+
+`candidate metadata -> underlying official artifact bytes -> reviewed current/effective/supersession state -> pursuit-specific basis -> Decision Evidence`
+
+The deviation manifest is never the terminal authority layer.
+
 ### FAR collector implementation
 Role: **collection/reference implementation**.
 

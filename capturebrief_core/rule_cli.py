@@ -8,6 +8,7 @@ from .rule_candidates import attach_rule_candidate_proposal, attach_rule_candida
 from .rule_sync import sync_pinned_gsa_rule
 from .rule_evidence import prepare_rule_evidence
 from .rule_applicability import review_rule_applicability
+from .deviation_sync import attach_deviation_candidate_proposal, sync_pinned_deviation_manifest
 from .rule_registry import (
     add_rule_version,
     diff_rule_versions,
@@ -67,6 +68,23 @@ def main(argv=None):
     dm.add_argument("--revision", required=True)
     dm.add_argument("--observed-at", required=True)
     dm.add_argument("-o", "--output")
+
+    sdv = s.add_parser("sync-deviation-manifest")
+    sdv.add_argument("--catalog", default="RULE-SOURCE-CATALOG.json")
+    sdv.add_argument("--observed-at", required=True)
+    sdv.add_argument("--manifest-output")
+    sdv.add_argument("--receipt-output")
+
+    pdv = s.add_parser("case-propose-deviations")
+    pdv.add_argument("case")
+    pdv.add_argument("manifest")
+    pdv.add_argument("receipt")
+    pdv.add_argument("--agency", required=True)
+    pdv.add_argument("--part", action="append", type=int, required=True)
+    pdv.add_argument("--proposed-by", required=True)
+    pdv.add_argument("--proposed-at", required=True)
+    pdv.add_argument("-o", "--output")
+    pdv.add_argument("--result-output")
 
     cat = s.add_parser("catalog")
     cat.add_argument("path", nargs="?", default="RULE-SOURCE-CATALOG.json")
@@ -166,6 +184,38 @@ def main(argv=None):
             ),
             args.output,
         )
+    elif args.cmd == "sync-deviation-manifest":
+        result = sync_pinned_deviation_manifest(
+            args.catalog,
+            observed_at=args.observed_at,
+        )
+        _write({
+            "status": result["status"],
+            "row_count": result["manifest"]["row_count"],
+            "manifest_sha256": result["manifest"]["manifest_sha256"],
+            "fetch_receipt_id": result["fetch_receipt"]["fetch_receipt_id"],
+            "can_auto_apply": False,
+        })
+        if args.manifest_output:
+            _write(result["manifest"], args.manifest_output)
+        if args.receipt_output:
+            _write(result["fetch_receipt"], args.receipt_output)
+    elif args.cmd == "case-propose-deviations":
+        case = json.loads(Path(args.case).read_text(encoding="utf-8"))
+        manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
+        receipt = json.loads(Path(args.receipt).read_text(encoding="utf-8"))
+        updated, transition = attach_deviation_candidate_proposal(
+            case,
+            manifest,
+            receipt,
+            agency=args.agency,
+            part_numbers=args.part,
+            proposed_by=args.proposed_by,
+            proposed_at=args.proposed_at,
+        )
+        _write(updated, args.output)
+        if args.result_output:
+            _write(transition, args.result_output)
     elif args.cmd == "catalog":
         _write(load_source_catalog(args.path), args.output)
     elif args.cmd == "case-propose-citations":
