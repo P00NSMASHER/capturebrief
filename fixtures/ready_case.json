@@ -1,0 +1,55 @@
+{
+  "case_id": "CB-DEMO-READY",
+  "family_id": "DEMO-FAMILY-001",
+  "current_posture": "GO",
+  "packet": {
+    "family_status": "ACTIVE",
+    "history_action_ids": ["action-001", "action-002"],
+    "history_complete": true,
+    "manifest_complete": true,
+    "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "artifacts": [
+      {
+        "artifact_id": "solicitation",
+        "name": "solicitation.pdf",
+        "state": "PUBLIC",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "external_dependencies": []
+  },
+  "current_action_receipts": [
+    {
+      "asserted_action_id": "action-002",
+      "semantics": "CURRENT_ACTIVE",
+      "observed_family_status": "ACTIVE",
+      "source_url": "https://sam.gov/opportunities/example",
+      "observed_at": "2026-09-21T11:55:00+00:00",
+      "expires_at": "2026-12-31T23:59:59+00:00",
+      "evidence_payload_sha256": "08237e134c89c76e408de3c86b1cf358e8414260b006220472723bdf6bf4db5f",
+      "payload_hash_verified": true,
+      "history_set_sha256": "4d6a53ca6e9698ba76f0e1ce280001fbca37f25d3768b6e87a57e0dd101fb548"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "sam-current",
+      "url": "https://sam.gov/opportunities/example",
+      "authority": "CONTROLLING_CURRENT",
+      "artifact_state": "PUBLIC",
+      "observed_at": "2026-09-21T12:00:00+00:00",
+      "content_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "assumptions": [
+    {
+      "assumption_id": "A1",
+      "text": "The latest verified public action controls the working baseline.",
+      "evidence_state": "SUPPORTED",
+      "decision_class": "MONITOR_ONLY",
+      "finding": "Current action is verified for this demo fixture.",
+      "source_ids": ["sam-current"],
+      "reopen_triggers": ["CURRENT_ACTION_CHANGE", "PACKET_MANIFEST_CHANGE", "ARTIFACT:solicitation"]
+    }
+  ]
+}
