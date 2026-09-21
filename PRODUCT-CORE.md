@@ -101,6 +101,35 @@ CI exercises the full path:
 
 This makes the fulfillment process reproducible rather than dependent on the founder remembering the next evidence step.
 
+## Evidence application bridge
+
+Collectors no longer produce disconnected JSON that a reviewer must manually splice into a case.
+
+`apply-approved-evidence` applies verified acquisition receipts to the case while preserving provenance:
+
+- Data Services history evidence replaces the active action set and stores superseded receipts separately;
+- a changed history set automatically invalidates any current-action receipt that no longer matches it;
+- documented Opportunities API evidence can mark the family active only when its current notice ID is already inside the observed history set;
+- current API `resourceLinks` become source-object placeholders without being mislabeled as verified public bytes;
+- verified byte receipts promote only the matching resource to a hashed public artifact;
+- applying the same evidence twice is idempotent for sources, current receipts, and resource placeholders.
+
+Most importantly, applying source evidence **does not** change a buyer-supplied assumption from `UNPROVEN`. Assumption adjudication remains a separate human-supervised step.
+
+The operational progression is now:
+
+    website intake
+      -> unproven case
+      -> operator work queue
+      -> approved Data Services/API evidence
+      -> evidence-applied case
+      -> smaller work queue
+      -> historical packet/reference review
+      -> assumption adjudication
+      -> release gate
+
+CI asserts that applying approved history/current evidence removes the history/current-authority tasks while retaining the historical manifest tasks that still require human review.
+
 ## Remaining P0
 
 The remaining automation gap is proving the **history scope start** without guessing. Until GSA exposes a narrower all-version family query with authoritative completeness semantics, CaptureBrief requires an explicit scope boundary for Data Services archive coverage. The product should prefer one extra human confirmation over a false “all amendments found” claim.
