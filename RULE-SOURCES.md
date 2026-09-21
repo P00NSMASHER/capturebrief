@@ -117,6 +117,36 @@ A refreshed proposal is evidence that the lookup surface changed. It is not auth
 
 After refresh, the reviewer must again decide whether to track a specific edition, leave the occurrence unresolved, or ignore it. A tracked edition still enters Decision Evidence with applicability unresolved.
 
+## Exact rule evidence preparation
+
+After a human rule-version review chooses `TRACK_VERSION`, CaptureBrief requires a second human step before that rule can enter the assumption trace: select the exact official paragraph that supports the rule text being reviewed.
+
+The preparation stage reads only the exact content-addressed `RULESRC` selected by the reviewer.
+
+For each tracked occurrence it prepares:
+- a deterministic case source row;
+- a content-addressed normalized rule snapshot;
+- an exact paragraph passage;
+- a Decision Evidence rule-version object whose revision reference is the exact `RULESRC`.
+
+The paragraph selection must identify exactly one retained paragraph locator. Unknown, missing, or duplicate selections fail closed.
+
+The preparation is bound to the human rule-review SHA. If the rule review changes, the preparation is stale and must be redone.
+
+Prepared rule evidence never makes these claims:
+- that the rule applies;
+- that the rule is incorporated;
+- that the selected paragraph controls the acquisition;
+- that a buyer assumption is resolved.
+
+Instead every prepared item remains:
+- `applicability = UNRESOLVED`;
+- `bound_assumption_id = null`;
+- `can_auto_bind_assumption = false`;
+- `can_auto_apply = false`.
+
+The later Decision Evidence reviewer must still bind the rule to a specific assumption and cite the solicitation/incorporation/effective-date basis.
+
 ## Time model
 
 The following are deliberately distinct:

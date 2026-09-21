@@ -1,8 +1,110 @@
-# CaptureBrief Product Core v0.17 — Missing Rule Auto-Sync
+# CaptureBrief Product Core v0.18 — Exact Rule Evidence Preparation
 
 Updated: September 21, 2026
 
-CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.17 closes the rule-lookup loop: when a bound citation proposal references FAR/DFARS text missing from the local registry, the work queue can schedule an approved exact-revision GSA sync, refresh the proposal, preserve the old proposal, and invalidate any human review tied to the stale candidate set—without changing applicability.
+CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.18 closes the next rule-evidence gap: after a human selects a pinned FAR/DFARS edition, the reviewer selects the exact official paragraph to carry forward and CaptureBrief prepares the content-addressed source, snapshot, passage, and rule-version objects for Decision Evidence—without binding the rule to an assumption or deciding applicability.
+
+## v0.18 — Exact Rule Evidence Preparation
+
+A selected rule edition is now converted into exact trace-ready evidence before it can support an assumption review.
+
+The controlled state transition is:
+
+`human TRACK_VERSION -> exact paragraph selection -> prepared source/snapshot/rule-version -> Decision Evidence applicability review`
+
+### Exact paragraph selection is human
+
+Once the v0.14 human rule review contains one or more `TRACK_VERSION` decisions, the work queue opens:
+
+`rules:prepare-evidence`
+
+with:
+
+- priority `P0`;
+- actor `HUMAN_REVIEW`;
+- `can_auto_execute = false`;
+- `can_auto_bind_assumption = false`;
+- `can_auto_apply = false`.
+
+The reviewer selects one exact paragraph locator from each selected pinned rule source.
+
+CaptureBrief refuses:
+- unknown paragraph locators;
+- duplicate preparation for one occurrence;
+- missing preparation for any tracked occurrence;
+- a selected rule source that is no longer in the local registry;
+- selected-rule metadata that no longer matches the content-addressed registry record.
+
+### Trace-ready objects
+
+For each selected occurrence CaptureBrief prepares:
+
+1. a deterministic public source-manifest row;
+2. a content-addressed rule-text snapshot;
+3. an exact line-bounded passage with the selected official paragraph locator;
+4. a content-addressed Decision Evidence `rule_version` object whose `revision_ref` points back to the exact `RULESRC:...` record.
+
+The preparation retains:
+
+- occurrence ID;
+- citation;
+- human rule-version review reason;
+- exact selected `rule_source_id`;
+- paragraph locator and paragraph text SHA-256;
+- source row;
+- source snapshot;
+- exact passage;
+- prepared rule-version object.
+
+### No assumption binding or applicability
+
+Preparation deliberately stops before the legal/procurement judgment.
+
+Every prepared item contains:
+
+- `applicability = UNRESOLVED`;
+- `applicability_authoritative = false`;
+- `bound_assumption_id = null`;
+- `can_auto_bind_assumption = false`;
+- `can_auto_apply = false`.
+
+The preparation step does **not** create a Decision Evidence review, attach the rule to an assumption, or change any buyer-facing evidence state.
+
+The ordinary `trace:...` work remains open until a human later cites the solicitation-specific incorporation/effective/applicability basis.
+
+### Review binding and history
+
+The complete preparation is content-addressed and bound to the current human `rule_candidate_review.review_sha256`.
+
+If the selected-version review changes, the old preparation is no longer current.
+
+When a new preparation replaces an older one, the older preparation is retained in `packet.rule_evidence_preparation_history`.
+
+Prepared public rule sources are added to the case source manifest under a deterministic source ID derived from the content-addressed `RULESRC` identifier. A conflicting existing source ID is a hard failure.
+
+### CLI
+
+Preparation input:
+
+    {
+      "prepared_by": "CaptureBrief reviewer",
+      "prepared_at": "2026-09-21T17:00:00Z",
+      "selections": [
+        {
+          "occurrence_id": "RULEMENTION:...",
+          "paragraph_locator": "p-FAR_52_204_21_1"
+        }
+      ]
+    }
+
+Apply:
+
+    python -m capturebrief_core.rule_cli case-prepare-rule-evidence \
+      rules.sqlite case-with-rule-review.json rule-evidence-preparation.json \
+      -o case-with-prepared-rule-evidence.json \
+      --result-output rule-evidence-transition.json
+
+The output is ready for the later Decision Evidence assumption/applicability review, but it is not itself a releasable applicability decision.
 
 ## v0.17 — Missing Rule Auto-Sync
 
