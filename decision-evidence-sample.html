@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CaptureBrief Decision Evidence Sample — Exact Source, Rule & Version Trail</title>
-<meta name="description" content="Illustrative CaptureBrief delivery showing exact before/after source passages, source versions, reviewed rule editions, missing evidence, and targeted change-watch behavior.">
+<meta name="description" content="Illustrative CaptureBrief delivery showing exact source passages, amendment history, reviewed FAR/DFARS/class-deviation evidence, missing evidence, and targeted change-watch behavior.">
 <meta name="theme-color" content="#081a2c"><meta name="robots" content="index,follow">
 <link rel="canonical" href="https://capturebrief.netlify.app/decision-evidence-sample.html"><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="manifest" href="site.webmanifest"><link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/v5.css">
 <style>
@@ -39,7 +39,37 @@
 </section>
 
 <section class="decision-card">
-<p class="eyebrow">Assumption A3</p><h2>“We meet every eligibility condition.”</h2>
+<p class="eyebrow">Assumption A3</p><h2>“We can ignore agency class deviations because the base FAR text is enough.”</h2>
+<div class="state-line"><span class="state state-red">CONTRADICTED</span><strong>GATE-CHANGING</strong></div>
+<p><strong>Finding:</strong> In this fictional example, the solicitation expressly identifies a class deviation. CaptureBrief keeps discovery, captured bytes, memo authority, and pursuit-specific applicability as separate evidence steps.</p>
+<p><strong>Next action:</strong> Use the reviewed deviation edition and the solicitation-specific basis in the next gate review.</p>
+
+<h3>Four separate evidence planes</h3>
+<div class="watch-flow">
+<div><b>1. Candidate index</b><span class="mini-meta">CFTC · FAR Part 12 · candidate only</span><br>CD-26-04 appears in the pinned fictional deviation index.<br><strong>Not applicability proof.</strong></div>
+<div><b>2. Exact public bytes</b><span class="mini-meta">Fictional acquisition.gov PDF</span><br>The exact PDF is captured and hashed independently of the index.<br><code>2ad537a17f539c2db2c2222aa475d2321b7d4156492871957a41366d2223fe12</code></div>
+<div><b>3. Memo authority</b><span class="mini-meta">Reviewed memo + separate currentness basis</span><br>Effective date and currentness are reviewed from retained evidence.<br><strong>CURRENT · effective 2026-09-01</strong></div>
+<div><b>4. Pursuit applicability</b><span class="mini-meta">Separate solicitation passage</span><br>The solicitation—not the memo itself—supplies the pursuit-specific basis.<br><strong>APPLIES</strong></div>
+</div>
+
+<div class="rule-box"><span class="version-label">CAPTURED DEVIATION MEMO</span><h3>CD-26-04 · fictional example</h3>
+<div class="quote">“Effective September 1, 2026. Covered acquisitions use the replacement Part 12 text in this memorandum.”</div>
+<p class="mini-meta"><strong>Reviewed text SHA-256:</strong> 0fd5325db5b7b308c2a14f6c6d589ec631d5aac4594a70b95a60068b79eb8221</p>
+<p class="mini-meta"><strong>Currentness basis:</strong> “CD-26-04 is listed as a current CFTC class deviation.”</p>
+<code>Currentness-source text SHA-256 ee99956e594f2f50fd6d320a3a9b0564de8e664176a1b0ffa32e430be879a692</code>
+</div>
+
+<div class="rule-box"><span class="version-label">PURSUIT-SPECIFIC BASIS</span><h3>Fictional solicitation · Section I</h3>
+<div class="quote">“Offerors shall follow CFTC Class Deviation CD-26-04 for the Part 12 provisions identified in this solicitation.”</div>
+<p><strong>Applicability:</strong> APPLIES</p>
+<p class="mini-meta"><strong>Why this matters:</strong> Finding the memo did not make it applicable. The retained solicitation passage is the separate basis for the reviewer’s pursuit-specific conclusion.</p>
+<code>Solicitation text SHA-256 7796d3cf4bac26d47d52b043af7f84700bac0a63dbcd5e766ca6b195c4316ff7</code>
+</div>
+<p class="mini-meta">If the official PDF, its authority/currentness evidence, or the reviewed applicability changes during the included watch, only assumptions depending on this deviation reopen. The prior decision remains preserved.</p>
+</section>
+
+<section class="decision-card">
+<p class="eyebrow">Assumption A4</p><h2>“We meet every eligibility condition.”</h2>
 <div class="state-line"><span class="state state-amber">SOURCE-LIMITED</span><strong>VERIFY-NOW</strong></div>
 <p><strong>Finding:</strong> The packet references an eligibility appendix that is not available in the retained public evidence.</p>
 <p><strong>Evidence request:</strong> Obtain the authoritative eligibility appendix or a controlling clarification before treating eligibility as resolved.</p>
