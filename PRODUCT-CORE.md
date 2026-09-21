@@ -1535,3 +1535,55 @@ The watch observation is hash-bound and also surfaces Decision Evidence integrit
 `delivered evidence state -> fresh approved observations -> explicit delta -> only affected assumptions reopened -> human review`
 
 rather than “send an alert when something on SAM changes.”
+
+
+## v0.24 — Evidence-grounded commercial outcome ledger
+
+CaptureBrief now has an append-only commercial-learning plane instead of relying on informal notes to decide whether the founding pilot should expand.
+
+Outcome evidence is event-sourced through `capturebrief_core/outcomes.py` and the existing hash-chained evidence ledger.
+
+Supported events:
+
+- `PAYMENT` — current paid/unpaid/refunded/unknown state; paid/refunded events require an opaque evidence reference;
+- `DELIVERY` — timezone-aware work-start and delivery timestamps plus delivery evidence;
+- `FEEDBACK` — explicit usefulness, action effect, source-limited state, finding classes and buyer-feedback evidence reference;
+- `RETRACTION` — critical/noncritical correction with a controlled reason and evidence reference;
+- `REPEAT_REQUEST` — explicit requested-repeat / would-repeat / no-repeat state.
+
+The schema intentionally rejects customer identity/contact fields, free-text notes and unsupported economic claims such as ROI, PWin uplift, proposal savings or revenue uplift.
+
+Operator commands:
+
+    python -m capturebrief_core.cli outcome-validate outcome.json
+
+    python -m capturebrief_core.cli outcome-append outcomes.jsonl outcome.json
+
+    python -m capturebrief_core.cli outcome-summary outcomes.jsonl
+
+The append path refuses an invalid existing hash chain.
+
+The summary derives only observable commercial evidence:
+
+- distinct engagements;
+- current paid engagement count;
+- recorded collected amount where provided;
+- delivery turnaround count and distribution;
+- explicit usefulness/action-effect labels;
+- source-limited cases;
+- retractions;
+- explicit repeat requests;
+- finding-class counts.
+
+Refunded engagements are not counted as currently paid.
+
+The commercial-proof summary exposes the factual gates from Business Model v7:
+
+- at least 3 current paid engagements;
+- at least 1 explicit repeat request;
+- at least 1 changed action or explicitly closed costly uncertainty;
+- turnaround evidence present.
+
+It never automatically changes price, creates a subscription, claims product-market fit, or decides whether turnaround/retraction levels are acceptable. Those remain human commercial decisions.
+
+See `OUTCOME-LEDGER.md` and `BUSINESS-MODEL-v7.md`.
