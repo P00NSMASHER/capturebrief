@@ -8,10 +8,14 @@ from pathlib import Path
 
 from capturebrief_core.rule_candidates import (
     attach_rule_candidate_proposal,
+    attach_rule_candidate_review,
+    confirm_rule_candidate_review,
     extract_rule_citations,
     match_rule_versions,
     rule_candidate_proposal_is_current,
+    rule_candidate_review_is_current,
     rule_candidate_work_item,
+    tracked_rule_versions,
 )
 from capturebrief_core.rule_registry import add_rule_version, digest, parse_gsa_dita
 from capturebrief_core.workqueue import build_work_queue
@@ -172,6 +176,113 @@ class RuleCandidateTests(unittest.TestCase):
         queued = [t for t in queue["tasks"] if t["task_key"] == "rules:review-candidates"]
         self.assertEqual(len(queued), 1)
         self.assertFalse(queued[0]["metadata"]["can_auto_apply"])
+
+    def proposed_case(self):
+        updated, _ = attach_rule_candidate_proposal(
+            case_with_source("x"),
+            self.registry,
+            [{"source_id": "solicitation", "text": "FAR 52.204-21"}],
+            captured_by="Reviewer",
+            observed_at="2026-09-21T16:30:00Z",
+        )
+        return updated
+
+    def review_for(self, case, *, decision="TRACK_VERSION", candidate_index=0):
+        match = case["packet"]["rule_candidate_proposal"]["matches"][0]
+        row = {
+            "occurrence_id": match["occurrence_id"],
+            "decision": decision,
+            "reason": "Solicitation citation requires edition review.",
+        }
+        if decision == "TRACK_VERSION":
+            row["selected_rule_source_id"] = match["candidate_versions"][candidate_index]["rule_source_id"]
+        return {
+            "reviewer": "Human reviewer",
+            "reviewed_at": "2026-09-21T16:45:00Z",
+            "decisions": [row],
+        }
+
+    def test_human_can_track_older_edition_without_latest_selection(self):
+        case = self.proposed_case()
+        proposal = case["packet"]["rule_candidate_proposal"]
+        editions = [c["edition"] for c in proposal["matches"][0]["candidate_versions"]]
+        older_index = editions.index("Nov 2021")
+        result = confirm_rule_candidate_review(
+            proposal,
+            self.review_for(case, candidate_index=older_index),
+        )
+        decision = result["decisions"][0]
+        self.assertEqual(decision["selected_rule"]["edition"], "Nov 2021")
+        self.assertEqual(decision["applicability"], "UNRESOLVED")
+        self.assertFalse(decision["applicability_authoritative"])
+        self.assertFalse(decision["can_auto_apply"])
+
+    def test_review_must_cover_every_occurrence(self):
+        case, _ = attach_rule_candidate_proposal(
+            case_with_source("x"),
+            self.registry,
+            [{"source_id": "solicitation", "text": "FAR 52.204-21 and DFARS 252.204-7012"}],
+            captured_by="Reviewer",
+        )
+        proposal = case["packet"]["rule_candidate_proposal"]
+        review = {
+            "reviewer": "Human reviewer",
+            "reviewed_at": "2026-09-21T16:45:00Z",
+            "decisions": [{
+                "occurrence_id": proposal["matches"][0]["occurrence_id"],
+                "decision": "IGNORE",
+                "reason": "Not material to the reviewed assumption.",
+            }],
+        }
+        with self.assertRaises(ValueError):
+            confirm_rule_candidate_review(proposal, review)
+
+    def test_tracked_version_must_come_from_proposal(self):
+        case = self.proposed_case()
+        review = self.review_for(case)
+        review["decisions"][0]["selected_rule_source_id"] = "RULESRC:not-in-proposal"
+        with self.assertRaises(ValueError):
+            confirm_rule_candidate_review(case["packet"]["rule_candidate_proposal"], review)
+
+    def test_ignore_and_unresolved_cannot_select_version(self):
+        for decision in ("IGNORE", "UNRESOLVED"):
+            case = self.proposed_case()
+            review = self.review_for(case, decision=decision)
+            review["decisions"][0]["selected_rule_source_id"] = (
+                case["packet"]["rule_candidate_proposal"]["matches"][0]["candidate_versions"][0]["rule_source_id"]
+            )
+            with self.assertRaises(ValueError):
+                confirm_rule_candidate_review(case["packet"]["rule_candidate_proposal"], review)
+
+    def test_review_requires_reason_and_timezone(self):
+        case = self.proposed_case()
+        review = self.review_for(case)
+        review["decisions"][0]["reason"] = ""
+        with self.assertRaises(ValueError):
+            confirm_rule_candidate_review(case["packet"]["rule_candidate_proposal"], review)
+        review = self.review_for(case)
+        review["reviewed_at"] = "2026-09-21T16:45:00"
+        with self.assertRaises(ValueError):
+            confirm_rule_candidate_review(case["packet"]["rule_candidate_proposal"], review)
+
+    def test_attached_human_review_closes_candidate_review_task_only(self):
+        case = self.proposed_case()
+        updated, transition = attach_rule_candidate_review(case, self.review_for(case))
+        self.assertEqual(transition["status"], "RULE_CANDIDATE_REVIEW_ATTACHED")
+        self.assertTrue(rule_candidate_review_is_current(updated))
+        self.assertIsNone(rule_candidate_work_item(updated))
+        self.assertEqual(len(tracked_rule_versions(updated)), 1)
+        self.assertEqual(tracked_rule_versions(updated)[0]["applicability"], "UNRESOLVED")
+        queue = build_work_queue(updated, now=NOW)
+        self.assertFalse(any(t["task_key"] == "rules:review-candidates" for t in queue["tasks"]))
+        self.assertTrue(any(t["task_key"].startswith("trace:") for t in queue["tasks"]))
+
+    def test_review_tampering_is_detected(self):
+        case = self.proposed_case()
+        updated, _ = attach_rule_candidate_review(case, self.review_for(case))
+        updated["packet"]["rule_candidate_review"]["decisions"][0]["reason"] = "rewritten"
+        self.assertFalse(rule_candidate_review_is_current(updated))
+        self.assertIsNotNone(rule_candidate_work_item(updated))
 
 
 if __name__ == "__main__":
