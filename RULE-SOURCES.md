@@ -48,6 +48,33 @@ CaptureBrief should prefer, in order:
 
 A weaker layer cannot silently override a stronger solicitation-specific source.
 
+## Official GSA DITA parsing
+
+GSA FAR/DFARS DITA uses the standard external OASIS declaration:
+
+```xml
+<!DOCTYPE dita
+  PUBLIC "-//OASIS//DTD DITA Composite//EN" "ditabase.dtd">
+```
+
+The CaptureBrief parser allows only this exact declaration on the GSA DITA path. It removes the declaration from the local parse copy and never resolves the external DTD.
+
+It continues to reject:
+- XML entity declarations;
+- arbitrary `SYSTEM` DTDs;
+- unrecognized or multiple `DOCTYPE` declarations.
+
+The retained source SHA-256 is computed over the original source, not the sanitized parse copy.
+
+For clause/provision topics, CaptureBrief also reads an embedded month/year edition from the official heading when available. That rule-text edition is kept separate from the Git revision and any repository/publication snapshot label.
+
+Example:
+- source revision: exact GSA Git commit;
+- source snapshot label: `FAC 2026-01 snapshot`;
+- embedded rule edition: `Nov 2021`.
+
+The embedded rule edition is preferred for the rule record; the source snapshot label remains separate provenance. Neither one establishes solicitation applicability by itself.
+
 ## Time model
 
 The following are deliberately distinct:
