@@ -7,6 +7,8 @@ from .manifest import normalize_manifest_payload
 from .current_api import download_resource_from_api_observation, fetch_latest_active, make_current_action_receipt
 from .data_services import collect_history_from_files
 from .packet import diff_manifest_receipts
+from .intake import build_case_from_intake
+from .workqueue import build_work_queue
 
 
 def load(p): return json.loads(Path(p).read_text())
@@ -25,6 +27,8 @@ def main():
     x=sub.add_parser("history-from-extracts"); x.add_argument("solicitation_number"); x.add_argument("active_csv"); x.add_argument("--archive",action="append",default=[]); x.add_argument("--seed-notice-id"); x.add_argument("--scope-start-fy",type=int); x.add_argument("--scope-end-fy",type=int); x.add_argument("--confirm-scope",action="store_true"); x.add_argument("--observed-at"); x.add_argument("--output","-o"); x.add_argument("--ledger")
     x=sub.add_parser("current-from-api"); x.add_argument("solicitation_number"); x.add_argument("history_receipt"); x.add_argument("posted_from"); x.add_argument("posted_to"); x.add_argument("--organization-code"); x.add_argument("--api-key-env",default="SAM_API_KEY"); x.add_argument("--output","-o"); x.add_argument("--observation-output")
     x=sub.add_parser("capture-api-resource"); x.add_argument("api_observation"); x.add_argument("resource_url"); x.add_argument("--output","-o",required=True); x.add_argument("--receipt-output"); x.add_argument("--ledger"); x.add_argument("--max-bytes",type=int,default=50*1024*1024)
+    x=sub.add_parser("case-from-intake"); x.add_argument("intake_json"); x.add_argument("--submitted-at"); x.add_argument("--output","-o")
+    x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--output","-o")
     x=sub.add_parser("ledger-append"); x.add_argument("ledger"); x.add_argument("record_type"); x.add_argument("payload_json")
     x=sub.add_parser("ledger-verify"); x.add_argument("ledger")
     a=p.parse_args()
@@ -62,6 +66,11 @@ def main():
         Path(a.output).write_bytes(content); receipt["stored_path"]=str(Path(a.output)); dump(receipt,a.receipt_output)
         if a.ledger: append_record(a.ledger,record_type="SAM_APPROVED_API_BYTE_CAPTURE",payload=receipt)
         return 0
+    if a.cmd=="case-from-intake":
+        dump(build_case_from_intake(load(a.intake_json),submitted_at=a.submitted_at),a.output); return 0
+    if a.cmd=="work-queue":
+        observation=load(a.api_observation) if a.api_observation else None
+        dump(build_work_queue(load(a.case),api_observation=observation),a.output); return 0
     if a.cmd=="ledger-append": dump(append_record(a.ledger,record_type=a.record_type,payload=load(a.payload_json))); return 0
     if a.cmd=="ledger-verify":
         result=verify_ledger(a.ledger); dump(result); return 0 if result["valid"] else 2

@@ -1,0 +1,13 @@
+{
+  "email": "buyer@example.com",
+  "company": "Example Federal",
+  "public_opportunity": "https://sam.gov/opp/example/view",
+  "current_posture": "GO",
+  "assumption_1": "The current deadline is still Friday.",
+  "assumption_2": "We can submit revised pages only.",
+  "assumption_3": "",
+  "assumption_4": "",
+  "assumption_5": "",
+  "question": "Focus on submission mechanics.",
+  "public_only_confirmation": "yes"
+}
