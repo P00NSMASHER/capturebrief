@@ -32,6 +32,20 @@ def _approved_api_contract_ok(r:dict[str,Any])->tuple[bool,str|None,str|None]:
         return False,"RECEIPT_APPROVED_API_NOTICE_MISMATCH","Approved API receipt notice ID does not match the asserted action."
     if not valid_sha256(evidence.get("api_payload_sha256")):
         return False,"RECEIPT_APPROVED_API_PAYLOAD_HASH_INVALID","Approved API receipt lacks a valid API payload SHA-256."
+    if not valid_sha256(evidence.get("api_response_sha256")):
+        return False,"RECEIPT_APPROVED_API_RESPONSE_HASH_INVALID","Approved API receipt lacks a valid raw-response SHA-256."
+    pagination=evidence.get("pagination")
+    if not isinstance(pagination,dict) or pagination.get("complete") is not True:
+        return False,"RECEIPT_APPROVED_API_PAGINATION_MISSING","Approved API receipt lacks pagination-completeness evidence."
+    try:
+        total=int(pagination.get("total_records"))
+        returned=int(pagination.get("returned_records"))
+        limit=int(pagination.get("limit"))
+        offset=int(pagination.get("offset"))
+    except (TypeError,ValueError):
+        return False,"RECEIPT_APPROVED_API_PAGINATION_INVALID","Approved API receipt pagination values are malformed."
+    if min(total,returned,limit,offset)<0 or offset!=0 or total!=returned or returned>limit:
+        return False,"RECEIPT_APPROVED_API_PAGINATION_INCOMPLETE","Approved API receipt does not prove a complete first page/result set."
     links=evidence.get("resource_links") or []
     if not isinstance(links,list):
         return False,"RECEIPT_APPROVED_API_RESOURCE_LINKS_INVALID","Approved API receipt resource links are not a list."
