@@ -20,8 +20,32 @@ def render_trace_markdown(case: dict[str, Any]) -> str:
                       f"  - Locator: {cite.get('locator')}", f"  - Exact passage: “{str(cite.get('quote') or '').replace(chr(10), ' / ')}”",
                       f"  - Document SHA-256: `{src.get('document_sha256') or ''}`"]
         for rule in card.get("rule_links") or []:
-            lines.append(f"- Rule review: **{rule.get('namespace')} {rule.get('citation')} — {rule.get('edition')}** → {rule.get('applicability')}")
-            lines.append(f"  - Basis: {rule.get('rationale') or ''}")
+            lines.append(
+                f"- Rule review: **{rule.get('namespace')} {rule.get('citation')} — "
+                f"{rule.get('edition')}** → {rule.get('applicability')}"
+            )
+            lines.append(
+                f"  - Applicability basis: {rule.get('basis') or 'not recorded'}"
+            )
+            if rule.get("incorporated_edition"):
+                lines.append(
+                    f"  - Incorporated edition: {rule.get('incorporated_edition')}"
+                )
+            lines.append(f"  - Reviewer rationale: {rule.get('rationale') or ''}")
+            if rule.get("reviewed_by") or rule.get("reviewed_at"):
+                lines.append(
+                    f"  - Reviewed by: {rule.get('reviewed_by') or 'unknown'}"
+                    f" · {rule.get('reviewed_at') or 'time not recorded'}"
+                )
+            basis_passage = rule.get("basis_passage")
+            if isinstance(basis_passage, dict):
+                lines.append(
+                    f"  - Pursuit-specific basis: {basis_passage.get('locator') or ''}"
+                )
+                lines.append(
+                    f"  - Exact basis passage: “"
+                    f"{str(basis_passage.get('quote') or '').replace(chr(10), ' / ')}”"
+                )
         for change in card.get("changes") or []:
             lines.append(f"- Version change: **{change.get('relation')}** — {change.get('summary')}")
         lines.append("")
@@ -39,7 +63,54 @@ def render_trace_html(case: dict[str, Any]) -> str:
         for cite in card.get("citations") or []:
             src = cite.get("source") or {}
             evidence.append(f"<li><strong>{html.escape(str(src.get('title') or src.get('source_id') or 'Source'))}</strong> · {html.escape(str(src.get('version_label') or 'version unlabeled'))}<br><span>{html.escape(str(cite.get('locator') or ''))}</span><blockquote>{html.escape(str(cite.get('quote') or ''))}</blockquote></li>")
-        rules = "".join(f"<li><strong>{html.escape(str(r.get('namespace') or ''))} {html.escape(str(r.get('citation') or ''))} · {html.escape(str(r.get('edition') or ''))}</strong> — {html.escape(str(r.get('applicability') or ''))}<br>{html.escape(str(r.get('rationale') or ''))}</li>" for r in card.get("rule_links") or [])
+        rule_items = []
+        for rule in card.get("rule_links") or []:
+            basis_passage = rule.get("basis_passage")
+            basis_html = ""
+            if isinstance(basis_passage, dict):
+                basis_html = (
+                    "<br><span><strong>Pursuit-specific basis:</strong> "
+                    + html.escape(str(basis_passage.get("locator") or ""))
+                    + "</span><blockquote>"
+                    + html.escape(str(basis_passage.get("quote") or ""))
+                    + "</blockquote>"
+                )
+            incorporated = (
+                "<br><span><strong>Incorporated edition:</strong> "
+                + html.escape(str(rule.get("incorporated_edition")))
+                + "</span>"
+                if rule.get("incorporated_edition")
+                else ""
+            )
+            reviewer = ""
+            if rule.get("reviewed_by") or rule.get("reviewed_at"):
+                reviewer = (
+                    "<br><span><strong>Reviewed by:</strong> "
+                    + html.escape(str(rule.get("reviewed_by") or "unknown"))
+                    + " · "
+                    + html.escape(str(rule.get("reviewed_at") or "time not recorded"))
+                    + "</span>"
+                )
+            rule_items.append(
+                "<li><strong>"
+                + html.escape(str(rule.get("namespace") or ""))
+                + " "
+                + html.escape(str(rule.get("citation") or ""))
+                + " · "
+                + html.escape(str(rule.get("edition") or ""))
+                + "</strong> — "
+                + html.escape(str(rule.get("applicability") or ""))
+                + "<br><span><strong>Basis:</strong> "
+                + html.escape(str(rule.get("basis") or "not recorded"))
+                + "</span>"
+                + incorporated
+                + "<br>"
+                + html.escape(str(rule.get("rationale") or ""))
+                + reviewer
+                + basis_html
+                + "</li>"
+            )
+        rules = "".join(rule_items)
         changes = "".join(f"<li><strong>{html.escape(str(c.get('relation') or ''))}</strong> — {html.escape(str(c.get('summary') or ''))}</li>" for c in card.get("changes") or [])
         cards.append(f"<article><div class='eyebrow'>{html.escape(str(card.get('assumption_id')))} · {html.escape(str(card.get('evidence_state')))}</div><h2>{html.escape(str(card.get('assumption') or ''))}</h2><p class='finding'>{html.escape(str(card.get('finding') or ''))}</p><p><strong>Next:</strong> {html.escape(str(card.get('next_action') or card.get('evidence_request') or 'Human review'))}</p><details><summary>Inspect the evidence trail</summary><h3>Exact passages</h3><ul>{''.join(evidence) or '<li>No passage retained yet.</li>'}</ul><h3>Rule version review</h3><ul>{rules or '<li>No rule review required for this bounded finding.</li>'}</ul><h3>What changed</h3><ul>{changes or '<li>No version change recorded.</li>'}</ul></details></article>")
     gaps = "".join(f"<li><strong>{html.escape(x['code'])}</strong> — {html.escape(x['message'])}</li>" for x in report["findings"])
