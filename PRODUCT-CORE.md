@@ -2200,3 +2200,44 @@ The default public-attribution state is false. A separate explicit approval evid
 This is intentionally not another customer-facing feature. It converts bounded independent product criticism into auditable engineering decisions before supervised pilots.
 
 See `CALIBRATION-PROTOCOL.md`.
+
+
+## v0.33 — Atomic local evidence artifacts
+
+CaptureBrief now uses one fail-closed publication layer for operator-generated local artifacts.
+
+### Atomic writes
+
+JSON/report outputs are written to a completed temporary file, fsynced, and then atomically replaced at the requested destination. A pre-publication write failure leaves the prior destination unchanged and cleans the temporary file.
+
+The shared helper defaults local evidence files to private permissions where the platform supports POSIX file modes.
+
+### Content-addressed captured bytes
+
+Captured source bytes use stricter semantics:
+
+- a new path is published only after all bytes are written and fsynced;
+- an existing path is accepted only when byte length and SHA-256 exactly match the newly captured bytes;
+- an existing symlink is never trusted as retained evidence;
+- a concurrent writer publishing the exact same bytes is accepted;
+- a concurrent/different payload fails closed rather than being replaced.
+
+### Fresh current-artifact capture ordering
+
+For a fresh `case-capture-artifact` operation:
+
+1. approved source bytes are downloaded and hashed;
+2. `--bytes-output` is required;
+3. the bytes are persisted/verified first;
+4. persisted size/SHA-256 must equal the applied byte receipt;
+5. only then are the updated case and optional transition artifact published.
+
+This prevents an operator case file from being advanced while a requested local byte artifact failed to persist.
+
+The same bytes-first ordering applies to class-deviation PDF capture.
+
+### Decision Evidence freeze
+
+Content-addressed Decision Evidence case freezes now use the same exact-bytes publication contract. Repeating the same freeze is idempotent; conflicting bytes at the content-addressed path are treated as corruption.
+
+These changes improve local artifact durability only. They do not weaken source authority, human applicability review, release gates, or outbound-message approval requirements.
