@@ -1,5 +1,7 @@
 # CaptureBrief Business Model v6 — Evidence-Linked Pursuit Control
 
+> **Superseded:** Current product/commercial model is `BUSINESS-MODEL-v7.md` (2026-09-21). This file is retained for decision history.
+
 Updated: September 19, 2026
 
 ## Wedge
