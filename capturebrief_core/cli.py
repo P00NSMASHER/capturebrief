@@ -24,6 +24,7 @@ from .opportunity_ref import parse_opportunity_reference
 from .resolver import attach_history_resolution, resolve_reference_from_index
 from .intake import build_case_from_intake
 from .workqueue import build_work_queue
+from .fulfillment_plan import build_fulfillment_plan
 from .outcomes import EFFORT_STAGES, append_outcome_event, make_outcome_event, summarize_outcomes, validate_outcome_event
 
 
@@ -65,6 +66,7 @@ def main():
     x=sub.add_parser("current-search-plan"); x.add_argument("case"); x.add_argument("--output","-o")
     x=sub.add_parser("case-fetch-current"); x.add_argument("case"); x.add_argument("--api-key-env",default="SAM_API_KEY"); x.add_argument("--organization-code"); x.add_argument("--output","-o",required=True); x.add_argument("--result-output")
     x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o")
+    x=sub.add_parser("fulfillment-plan"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o")
     x=sub.add_parser("outcome-validate"); x.add_argument("event_json"); x.add_argument("--output","-o")
     x=sub.add_parser("outcome-append"); x.add_argument("ledger"); x.add_argument("event_json"); x.add_argument("--recorded-at"); x.add_argument("--output","-o")
     x=sub.add_parser("outcome-summary"); x.add_argument("ledger"); x.add_argument("--output","-o")
@@ -204,6 +206,10 @@ def main():
         observation=load(a.api_observation) if a.api_observation else None
         history_plan=load(a.history_index_plan) if a.history_index_plan else None
         dump(build_work_queue(load(a.case),api_observation=observation,history_index_plan=history_plan),a.output); return 0
+    if a.cmd=="fulfillment-plan":
+        observation=load(a.api_observation) if a.api_observation else None
+        history_plan=load(a.history_index_plan) if a.history_index_plan else None
+        dump(build_fulfillment_plan(load(a.case),api_observation=observation,history_index_plan=history_plan),a.output); return 0
     if a.cmd=="outcome-validate":
         errors=validate_outcome_event(load(a.event_json))
         result={"valid":not errors,"errors":errors}; dump(result,a.output); return 0 if not errors else 2
