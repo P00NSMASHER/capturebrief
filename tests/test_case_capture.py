@@ -17,6 +17,7 @@ NOW_DT=datetime.fromisoformat(NOW)
 RID="r1"
 LINK=f"https://sam.gov/api/prod/opps/v3/opportunities/resources/files/{RID}/download"
 API_HASH="e"*64
+RESPONSE_HASH="f"*64
 DATA=b"captured-current-resource"
 
 
@@ -48,6 +49,8 @@ def case():
                 "solicitation_number":"SOL-1",
                 "observed_at":NOW,
                 "api_payload_sha256":API_HASH,
+                "api_response_sha256":RESPONSE_HASH,
+                "pagination":{"total_records":1,"returned_records":1,"limit":100,"offset":0,"complete":True},
                 "resource_link_count":1,
             },
             "current_resource_links":[LINK],
