@@ -115,6 +115,8 @@ def apply_current_api_observation(
         "solicitation_number": record.get("solicitationNumber"),
         "observed_at": api_observation.get("observed_at"),
         "api_payload_sha256": api_observation.get("payload_sha256"),
+        "api_response_sha256": api_observation.get("response_sha256"),
+        "pagination": copy.deepcopy(api_observation.get("pagination")),
         "resource_link_count": len(resources),
     }
     packet["current_resource_links"] = links

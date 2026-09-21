@@ -43,6 +43,16 @@ def apply_api_byte_receipt(
         raise CaseArtifactError("byte receipt is not marked APPROVED_API")
     if receipt.get("byte_state") != "BYTES_VERIFIED_HASHED":
         raise CaseArtifactError("byte receipt is not BYTES_VERIFIED_HASHED")
+    if "final_url" in receipt:
+        raise CaseArtifactError("byte receipt must not retain a potentially signed final redirect URL")
+    if receipt.get("final_url_retained") is not False:
+        raise CaseArtifactError("byte receipt final redirect retention flag is invalid")
+    if not isinstance(receipt.get("final_delivery_host"), str) or not receipt["final_delivery_host"].strip():
+        raise CaseArtifactError("byte receipt final delivery host is missing")
+    if not valid_sha256(receipt.get("final_url_sha256")):
+        raise CaseArtifactError("byte receipt final URL hash is invalid")
+    if type(receipt.get("redirect_used")) is not bool:
+        raise CaseArtifactError("byte receipt redirect_used is invalid")
     if not valid_sha256(receipt.get("sha256")):
         raise CaseArtifactError("byte receipt lacks a valid SHA-256")
     if not parse_dt(receipt.get("observed_at")):
@@ -60,10 +70,29 @@ def apply_api_byte_receipt(
     if current.get("source_contract") != "SAM_GET_OPPORTUNITIES_V2":
         raise CaseArtifactError("case does not retain the documented current API observation")
     api_digest = str(current.get("api_payload_sha256") or "")
+    response_digest = str(current.get("api_response_sha256") or "")
     if not valid_sha256(api_digest):
         raise CaseArtifactError("case current API observation lacks a valid payload digest")
+    if not valid_sha256(response_digest):
+        raise CaseArtifactError(
+            "case current API observation predates raw-response proof; refresh current authority"
+        )
+    pagination = current.get("pagination")
+    if not isinstance(pagination, dict) or pagination.get("complete") is not True:
+        raise CaseArtifactError("case current API observation lacks pagination-completeness proof")
+    try:
+        total = int(pagination.get("total_records"))
+        returned = int(pagination.get("returned_records"))
+        limit = int(pagination.get("limit"))
+        offset = int(pagination.get("offset"))
+    except (TypeError, ValueError) as exc:
+        raise CaseArtifactError("case current API pagination proof is malformed") from exc
+    if min(total, returned, limit, offset) < 0 or offset != 0 or total != returned or returned > limit:
+        raise CaseArtifactError("case current API pagination proof is inconsistent")
     if receipt.get("api_payload_sha256") != api_digest:
         raise CaseArtifactError("byte receipt is not bound to the case current API payload")
+    if receipt.get("api_response_sha256") != response_digest:
+        raise CaseArtifactError("byte receipt is not bound to the exact current API response")
 
     current_links = {str(x) for x in packet.get("current_resource_links") or []}
     if source_url not in current_links:
