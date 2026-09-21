@@ -59,6 +59,71 @@ class OperatorWorkflowTests(unittest.TestCase):
         self.assertTrue(queue["release_blocked"])
         self.assertGreaterEqual(queue["summary"]["auto_executable"], 2)
 
+    def test_complete_shared_index_queues_history_receipt_issue(self):
+        case = build_case_from_intake(
+            intake(),
+            submitted_at="2026-09-21T15:00:00+00:00",
+        )
+        plan = {
+            "complete": True,
+            "fiscal_year": 2026,
+            "download_plan": [],
+        }
+        observation = {
+            "record": {
+                "noticeId": "current-action",
+                "solicitationNumber": "SOL-123",
+            },
+            "resource_links": [],
+        }
+        queue = build_work_queue(
+            case,
+            api_observation=observation,
+            history_index_plan=plan,
+            now=NOW,
+        )
+        keys = {x["task_key"] for x in queue["tasks"]}
+        self.assertIn("history:issue-from-index", keys)
+        self.assertNotIn("history:establish", keys)
+        task = next(x for x in queue["tasks"] if x["task_key"] == "history:issue-from-index")
+        self.assertTrue(task["can_auto_execute"])
+        self.assertEqual(task["metadata"]["seed_notice_id"], "current-action")
+
+    def test_complete_index_without_api_seed_queues_seed_observation(self):
+        case = build_case_from_intake(
+            intake(),
+            submitted_at="2026-09-21T15:00:00+00:00",
+        )
+        queue = build_work_queue(
+            case,
+            history_index_plan={"complete": True, "fiscal_year": 2026, "download_plan": []},
+            now=NOW,
+        )
+        keys = {x["task_key"] for x in queue["tasks"]}
+        self.assertIn("history:seed-current-action", keys)
+        self.assertNotIn("history:establish", keys)
+
+    def test_incomplete_shared_index_queues_exact_refresh_plan(self):
+        case = build_case_from_intake(
+            intake(),
+            submitted_at="2026-09-21T15:00:00+00:00",
+        )
+        plan = {
+            "complete": False,
+            "fiscal_year": 2026,
+            "download_plan": [
+                {"slot": "ACTIVE", "reason": "STALE", "source_url": "https://sam.gov/example-active"},
+                {"slot": "ARCHIVE:2026", "reason": "MISSING", "source_url": "https://sam.gov/example-archive"},
+                {"slot": "ARCHIVE:2025", "reason": "UNVERIFIED", "source_url": "https://sam.gov/example-archive-2"},
+            ],
+        }
+        queue = build_work_queue(case, history_index_plan=plan, now=NOW)
+        task = next(x for x in queue["tasks"] if x["task_key"] == "history-index:refresh")
+        self.assertTrue(task["can_auto_execute"])
+        self.assertEqual(task["metadata"]["reason_counts"], {"STALE": 1, "MISSING": 1, "UNVERIFIED": 1})
+        self.assertEqual(len(task["metadata"]["download_plan"]), 3)
+        self.assertNotIn("history:establish", {x["task_key"] for x in queue["tasks"]})
+
     def test_required_current_api_resource_can_be_auto_executable(self):
         case = build_case_from_intake(
             intake(),

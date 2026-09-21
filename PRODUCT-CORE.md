@@ -170,3 +170,26 @@ An operator import may populate the index and accelerate analysis, but it appear
 A fresh approved fetch of unchanged bytes reuses the existing content-addressed source snapshot while updating that slot's source-check time. Source snapshots remain immutable; freshness is a property of the current slot verification, not a rewrite of historical bytes.
 
 Official cadence reference: https://open.gsa.gov/api/get-opportunities-public-api/
+
+
+## Index-aware operator queue
+
+The fulfillment queue now accepts the shared Data Services index plan as operational context.
+
+When history is not yet complete:
+
+- **index complete + documented API seed available** → queue `history:issue-from-index` as an approved automated step;
+- **index complete + no current-action seed yet** → queue `history:seed-current-action` so the family is anchored by the documented Opportunities API rather than bulk ordering;
+- **index missing/stale/unverified slots** → queue one `history-index:refresh` task carrying the exact source-slot remediation plan and reason counts;
+- **index says incomplete but cannot explain why** → queue `history-index:diagnose` for human review;
+- **no index context supplied** → retain the generic hybrid `history:establish` fallback.
+
+CLI:
+
+    python -m capturebrief_core.cli history-index-plan history.sqlite -o index-plan.json
+    python -m capturebrief_core.cli work-queue case.json \
+      --api-observation current-observation.json \
+      --history-index-plan index-plan.json \
+      -o work-queue.json
+
+This reduces the operator workflow from “remember how to establish history” to an explicit executable next action.

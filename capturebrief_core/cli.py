@@ -39,7 +39,7 @@ def main():
     x=sub.add_parser("history-index-fetch"); x.add_argument("index_db"); x.add_argument("slot"); x.add_argument("destination"); x.add_argument("--snapshot-dir"); x.add_argument("--observed-at"); x.add_argument("--max-bytes",type=int,default=2_000_000_000); x.add_argument("--output","-o")
     x=sub.add_parser("history-from-index"); x.add_argument("index_db"); x.add_argument("solicitation_number"); x.add_argument("--seed-notice-id",required=True); x.add_argument("--fiscal-year",type=int); x.add_argument("--observed-at"); x.add_argument("--output","-o"); x.add_argument("--ledger")
     x=sub.add_parser("case-from-intake"); x.add_argument("intake_json"); x.add_argument("--submitted-at"); x.add_argument("--output","-o")
-    x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--output","-o")
+    x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o")
     x=sub.add_parser("ledger-append"); x.add_argument("ledger"); x.add_argument("record_type"); x.add_argument("payload_json")
     x=sub.add_parser("ledger-verify"); x.add_argument("ledger")
     a=p.parse_args()
@@ -102,7 +102,8 @@ def main():
         dump(build_case_from_intake(load(a.intake_json),submitted_at=a.submitted_at),a.output); return 0
     if a.cmd=="work-queue":
         observation=load(a.api_observation) if a.api_observation else None
-        dump(build_work_queue(load(a.case),api_observation=observation),a.output); return 0
+        history_plan=load(a.history_index_plan) if a.history_index_plan else None
+        dump(build_work_queue(load(a.case),api_observation=observation,history_index_plan=history_plan),a.output); return 0
     if a.cmd=="ledger-append": dump(append_record(a.ledger,record_type=a.record_type,payload=load(a.payload_json))); return 0
     if a.cmd=="ledger-verify":
         result=verify_ledger(a.ledger); dump(result); return 0 if result["valid"] else 2
