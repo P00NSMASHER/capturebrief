@@ -9,6 +9,7 @@ NOW="2026-09-21T17:15:00+00:00"
 RID="r1"
 LINK=f"https://sam.gov/api/prod/opps/v3/opportunities/resources/files/{RID}/download"
 API_HASH="e"*64
+RESPONSE_HASH="f"*64
 BYTE_HASH="a"*64
 
 
@@ -32,6 +33,8 @@ def case():
                 "solicitation_number":"SOL-1",
                 "observed_at":NOW,
                 "api_payload_sha256":API_HASH,
+                "api_response_sha256":RESPONSE_HASH,
+                "pagination":{"total_records":1,"returned_records":1,"limit":100,"offset":0,"complete":True},
                 "resource_link_count":1,
             },
             "current_resource_links":[LINK],
@@ -56,17 +59,21 @@ def case():
     }
 
 
-def receipt(byte_hash=BYTE_HASH,api_hash=API_HASH,link=LINK):
+def receipt(byte_hash=BYTE_HASH,api_hash=API_HASH,response_hash=RESPONSE_HASH,link=LINK):
     return {
         "source_contract":"SAM_GET_OPPORTUNITIES_RESOURCE_LINK",
         "automation_mode":"APPROVED_API",
         "source_url":link,
-        "final_url":"https://objects.example/file",
+        "final_url_retained":False,
+        "final_delivery_host":"objects.example",
+        "final_url_sha256":"c"*64,
+        "redirect_used":True,
         "observed_at":NOW,
         "byte_state":"BYTES_VERIFIED_HASHED",
         "sha256":byte_hash,
         "size":6,
         "api_payload_sha256":api_hash,
+        "api_response_sha256":response_hash,
     }
 
 
@@ -101,6 +108,14 @@ class CaseArtifactTests(unittest.TestCase):
         other="https://sam.gov/api/prod/opps/v3/opportunities/resources/files/other/download"
         with self.assertRaises(CaseArtifactError):
             apply_api_byte_receipt(case(),receipt(link=other))
+
+    def test_receipt_must_bind_to_exact_raw_api_response_and_not_retain_signed_url(self):
+        with self.assertRaises(CaseArtifactError):
+            apply_api_byte_receipt(case(),receipt(response_hash="d"*64))
+        leaked=receipt()
+        leaked["final_url"]="https://objects.example/file?X-Amz-Signature=secret"
+        with self.assertRaises(CaseArtifactError):
+            apply_api_byte_receipt(case(),leaked)
 
     def test_replay_is_idempotent_and_conflict_is_rejected(self):
         once,_=apply_api_byte_receipt(case(),receipt())
