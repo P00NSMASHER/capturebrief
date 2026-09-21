@@ -5,6 +5,7 @@ from . import audit_case,compare_cases,render_markdown
 from .ledger import append_record, verify_ledger
 from .manifest import normalize_manifest_payload
 from .current_api import download_resource_from_api_observation, fetch_latest_active, make_current_action_receipt
+from .case_current import apply_current_api_observation
 from .data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD, collect_history_from_files
 from .packet import diff_manifest_receipts
 from .archive_catalog import catalog_snapshot
@@ -46,6 +47,7 @@ def main():
     x=sub.add_parser("case-resolve-history"); x.add_argument("index_db"); x.add_argument("case"); x.add_argument("--fiscal-year",type=int); x.add_argument("--observed-at"); x.add_argument("--output","-o",required=True); x.add_argument("--resolution-output")
     x=sub.add_parser("history-index-sync"); x.add_argument("index_db"); x.add_argument("download_dir"); x.add_argument("--snapshot-dir"); x.add_argument("--fiscal-year",type=int); x.add_argument("--observed-at"); x.add_argument("--max-slots",type=int,default=1); x.add_argument("--all",action="store_true"); x.add_argument("--max-bytes",type=int,default=2_000_000_000); x.add_argument("--output","-o")
     x=sub.add_parser("case-from-intake"); x.add_argument("intake_json"); x.add_argument("--submitted-at"); x.add_argument("--output","-o")
+    x=sub.add_parser("case-apply-current"); x.add_argument("case"); x.add_argument("api_observation"); x.add_argument("--output","-o",required=True); x.add_argument("--transition-output")
     x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o")
     x=sub.add_parser("ledger-append"); x.add_argument("ledger"); x.add_argument("record_type"); x.add_argument("payload_json")
     x=sub.add_parser("ledger-verify"); x.add_argument("ledger")
@@ -122,6 +124,11 @@ def main():
         dump(result,a.output); return 0
     if a.cmd=="case-from-intake":
         dump(build_case_from_intake(load(a.intake_json),submitted_at=a.submitted_at),a.output); return 0
+    if a.cmd=="case-apply-current":
+        updated,transition=apply_current_api_observation(load(a.case),load(a.api_observation))
+        dump(updated,a.output)
+        if a.transition_output: dump(transition,a.transition_output)
+        return 0
     if a.cmd=="work-queue":
         observation=load(a.api_observation) if a.api_observation else None
         history_plan=load(a.history_index_plan) if a.history_index_plan else None

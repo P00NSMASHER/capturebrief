@@ -1,4 +1,4 @@
-# CaptureBrief Product Core v0.4 — Intake Resolution + Resumable History
+# CaptureBrief Product Core v0.5 — Current-Action Case Transition
 
 Updated: September 21, 2026
 
@@ -251,3 +251,48 @@ History membership no longer needs a guessed family start year when the full pin
 5. return only then to the decision-changing assumption review.
 
 The product should continue preferring an explicit unknown/human-review task over a guessed current action or silently incomplete packet.
+
+
+## v0.5 — Apply documented current-action evidence
+
+Once the full history receipt exists, a documented SAM Opportunities API observation can now be applied to the case as one validated state transition:
+
+    python -m capturebrief_core.cli case-apply-current       resolved-case.json current-observation.json       -o current-case.json --transition-output current-transition.json
+
+The transition refuses to run unless:
+- history already validates as `HISTORY_COMPLETE`;
+- the API observation is `SAM_GET_OPPORTUNITIES_V2 / APPROVED_API`;
+- the API Notice ID belongs to the retained history set;
+- the API solicitation number agrees with the retained history family;
+- the generated current-action receipt passes the approved API semantic contract;
+- every returned resource link is inside the approved SAM API-resource-link contract.
+
+On success it:
+- sets `family_status = ACTIVE`;
+- records the independently verified current action ID;
+- appends/deduplicates the current-action receipt;
+- adds/replaces the controlling `sam-current-api` source;
+- preserves the API payload digest and current resource-link inventory;
+- creates source-object artifact stubs for current API resource links without pretending their bytes or semantic importance have been reviewed;
+- leaves every customer assumption unchanged and unlinked.
+
+The transition is idempotent: replaying the same observation does not duplicate receipts, sources, or resource objects.
+
+### Why the resource stubs stay conservative
+
+A URL returned by the documented API proves a current public source object is discoverable. It does **not** prove:
+- the object is required for the buyer's decision;
+- its bytes were captured;
+- its filename/semantic role;
+- historical tombstone completeness;
+- reference closure.
+
+Therefore newly discovered API resources begin as `required_for_analysis = false` and `BYTES_NOT_YET_CHECKED`. The later reference/compliance review decides which objects become load-bearing.
+
+## Updated orchestration boundary
+
+The operator path is now:
+
+`intake -> resolve seed/family -> complete history receipt -> apply current API observation -> historical packet review -> reference closure -> required byte capture -> assumption QA`
+
+The next automation target is generating the documented API search windows from retained history evidence so an operator does not have to hand-enter `postedFrom/postedTo` ranges. Those windows may guide API retrieval, but they must never become currentness evidence themselves.
