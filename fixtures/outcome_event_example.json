@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "case_id": "CB-ILLUSTRATIVE-OUTCOME",
+  "case_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "event_type": "FEEDBACK",
+  "event_at": "2026-09-21T18:00:00Z",
+  "delivery_bundle_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "data": {
+    "usefulness": "USEFUL",
+    "action_effect": "CHANGED_ACTION",
+    "source_limited": false,
+    "finding_classes": [
+      "SOURCE_VERSION",
+      "RULE_CURRENCY"
+    ],
+    "feedback_evidence_ref": "illustrative:feedback:001"
+  }
+}
