@@ -1,9 +1,9 @@
 name: Product Core
 on:
   push:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','index.html','sample.html','decision-evidence-sample.html']
   pull_request:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','SOURCE-POLICY.md','REFERENCE-REVIEW.md']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','index.html','sample.html','decision-evidence-sample.html']
 permissions:
   contents: read
 jobs:
