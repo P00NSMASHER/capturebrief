@@ -205,6 +205,8 @@ def review_rule_applicability(
             "basis_passage": basis_passage,
             "applicability_authoritative": False,
             "human_reviewed": True,
+            "reviewed_by": reviewed_by.strip(),
+            "reviewed_at": reviewed_at,
             "can_auto_apply": False,
         })
 
@@ -262,6 +264,8 @@ def review_rule_applicability(
             "incorporated_edition": decision["incorporated_edition"],
             "rationale": decision["rationale"],
             "basis_passage": copy.deepcopy(decision["basis_passage"]),
+            "reviewed_by": decision["reviewed_by"],
+            "reviewed_at": decision["reviewed_at"],
         }
         same_rule = [
             x for x in existing_links
@@ -404,6 +408,8 @@ def rule_applicability_review_is_current(case: dict[str, Any]) -> bool:
             "incorporated_edition": decision.get("incorporated_edition"),
             "rationale": decision["rationale"],
             "basis_passage": decision.get("basis_passage"),
+            "reviewed_by": decision.get("reviewed_by"),
+            "reviewed_at": decision.get("reviewed_at"),
         }
         links = [
             row for row in target.get("rule_links") or []
