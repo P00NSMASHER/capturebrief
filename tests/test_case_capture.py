@@ -1,9 +1,15 @@
 import hashlib
 import io
+import json
+import sys
+import tempfile
 import unittest
 from datetime import datetime
+from pathlib import Path
+from unittest.mock import patch
 
 from capturebrief_core.case_capture import CaseCaptureError, capture_current_artifact
+from capturebrief_core.cli import main as cli_main
 from capturebrief_core.workqueue import build_work_queue
 
 NOW="2026-09-21T17:45:00+00:00"
@@ -102,6 +108,68 @@ class CaseCaptureTests(unittest.TestCase):
         c=case(); c["packet"]["current_resource_links"]=[]
         with self.assertRaises(CaseCaptureError):
             capture_current_artifact(c,RID,opener=lambda req,timeout=30: FakeResponse())
+
+    def test_cli_fresh_capture_requires_bytes_output_before_case_publish(self):
+        payload=b"fresh-bytes"
+        sha=hashlib.sha256(payload).hexdigest()
+        updated={"case_id":"CB-UPDATED"}
+        transition={"status":"CURRENT_ARTIFACT_CAPTURED","sha256":sha,"size":len(payload)}
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            source=root/"case.json"; source.write_text("{}")
+            output=root/"updated.json"
+            argv=["capturebrief-core","case-capture-artifact",str(source),RID,"-o",str(output)]
+            with patch("capturebrief_core.cli.capture_current_artifact",return_value=(updated,transition,payload)), \
+                 patch.object(sys,"argv",argv):
+                with self.assertRaises(SystemExit) as ctx:
+                    cli_main()
+            self.assertIn("--bytes-output",str(ctx.exception))
+            self.assertFalse(output.exists())
+
+    def test_cli_conflicting_persisted_bytes_block_case_publish(self):
+        payload=b"fresh-bytes"
+        sha=hashlib.sha256(payload).hexdigest()
+        updated={"case_id":"CB-UPDATED"}
+        transition={"status":"CURRENT_ARTIFACT_CAPTURED","sha256":sha,"size":len(payload)}
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            source=root/"case.json"; source.write_text("{}")
+            output=root/"updated.json"
+            byte_output=root/"artifact.bin"; byte_output.write_bytes(b"different")
+            argv=[
+                "capturebrief-core","case-capture-artifact",str(source),RID,
+                "-o",str(output),"--bytes-output",str(byte_output),
+            ]
+            with patch("capturebrief_core.cli.capture_current_artifact",return_value=(updated,transition,payload)), \
+                 patch.object(sys,"argv",argv):
+                with self.assertRaises(ValueError):
+                    cli_main()
+            self.assertFalse(output.exists())
+            self.assertEqual(byte_output.read_bytes(),b"different")
+
+    def test_cli_persists_fresh_bytes_before_publishing_updated_case(self):
+        payload=b"fresh-bytes"
+        sha=hashlib.sha256(payload).hexdigest()
+        updated={"case_id":"CB-UPDATED"}
+        transition={"status":"CURRENT_ARTIFACT_CAPTURED","sha256":sha,"size":len(payload)}
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            source=root/"case.json"; source.write_text("{}")
+            output=root/"updated.json"; byte_output=root/"artifact.bin"; trans_output=root/"transition.json"
+            argv=[
+                "capturebrief-core","case-capture-artifact",str(source),RID,
+                "-o",str(output),"--bytes-output",str(byte_output),
+                "--transition-output",str(trans_output),
+            ]
+            with patch("capturebrief_core.cli.capture_current_artifact",return_value=(updated,transition,payload)), \
+                 patch.object(sys,"argv",argv):
+                self.assertEqual(cli_main(),0)
+            self.assertEqual(byte_output.read_bytes(),payload)
+            self.assertEqual(json.loads(output.read_text()),updated)
+            saved_transition=json.loads(trans_output.read_text())
+            self.assertTrue(saved_transition["bytes_persisted"])
+            self.assertEqual(saved_transition["stored_path"],str(byte_output))
+            self.assertEqual(saved_transition["sha256"],sha)
 
     def test_work_queue_can_authorize_bytes_from_retained_case_observation(self):
         c=case()

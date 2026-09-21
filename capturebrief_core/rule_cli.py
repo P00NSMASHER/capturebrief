@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
+
+from .atomic_io import atomic_write_text, ensure_exact_bytes
 
 from .rule_candidates import attach_rule_candidate_proposal, attach_rule_candidate_review, sync_missing_rule_candidates_for_case
 from .rule_sync import sync_pinned_gsa_rule
@@ -21,10 +24,16 @@ from .rule_registry import (
 )
 
 
+def _assert_distinct_outputs(*paths):
+    values=[os.path.abspath(os.fspath(Path(p))) for p in paths if p]
+    if len(values)!=len(set(values)):
+        raise ValueError("output paths must be distinct")
+
+
 def _write(value, path=None):
     text = json.dumps(value, indent=2, ensure_ascii=False) + "\n"
     if path:
-        Path(path).write_text(text, encoding="utf-8")
+        atomic_write_text(path,text)
     else:
         print(text, end="")
 
@@ -249,13 +258,19 @@ def main(argv=None):
         if args.result_output:
             _write(transition, args.result_output)
     elif args.cmd == "case-capture-deviation-artifact":
+        _assert_distinct_outputs(args.artifact_output,args.output,args.receipt_output)
         case = json.loads(Path(args.case).read_text(encoding="utf-8"))
         updated, receipt, data = capture_and_attach_deviation_artifact(
             case,
             args.deviation_source_id,
             observed_at=args.observed_at,
         )
-        Path(args.artifact_output).write_bytes(data)
+        stored=ensure_exact_bytes(args.artifact_output,data)
+        if (
+            stored["sha256"]!=receipt.get("pdf_sha256")
+            or stored["bytes"]!=receipt.get("observed_pdf_size_bytes")
+        ):
+            raise RuntimeError("persisted deviation PDF disagrees with capture receipt")
         _write(updated, args.output)
         if args.receipt_output:
             _write(receipt, args.receipt_output)
@@ -264,6 +279,8 @@ def main(argv=None):
             "deviation_source_id": receipt["deviation_source_id"],
             "pdf_sha256": receipt["pdf_sha256"],
             "observed_pdf_size_bytes": receipt["observed_pdf_size_bytes"],
+            "stored_path": stored["path"],
+            "stored_bytes_created": stored["created"],
             "declared_size_matches_observed": receipt["declared_size_matches_observed"],
             "index_byte_identity_proven": False,
             "currentness": "UNRESOLVED",
