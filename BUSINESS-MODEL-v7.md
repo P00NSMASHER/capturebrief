@@ -210,6 +210,7 @@ Track explicit evidence only:
 
 - current paid/unpaid/refunded state;
 - delivery turnaround;
+- operator effort by fulfillment stage;
 - buyer usefulness;
 - changed action;
 - costly uncertainty closed;
@@ -231,7 +232,8 @@ Before testing team/subscription packaging, require factual evidence of:
 2. at least **1 explicit repeat request**;
 3. at least **1 buyer-reported changed action or costly uncertainty closed**;
 4. measured turnaround evidence;
-5. a human decision that turnaround and retraction levels are acceptable.
+5. recorded operator effort for every currently paid engagement;
+6. a human decision that turnaround, labor burden, and retraction levels are acceptable.
 
 Passing these conditions makes expansion eligible for human review. It does not automatically change the price or product.
 
@@ -240,11 +242,27 @@ Passing these conditions makes expansion eligible for human review. It does not 
 1. Sell and deliver the $149 founding review.
 2. Preserve exact source/rule/version evidence for every material finding.
 3. Run the included targeted watch.
-4. Record payment/delivery/feedback/retraction/repeat evidence.
-5. Use those outcomes—not additional feature count—to decide whether CaptureBrief expands.
+4. Record payment/delivery/effort/feedback/retraction/repeat evidence.
+5. Review which fulfillment stage consumes the most human minutes and remove avoidable operator work without weakening evidence gates.
+6. Use those outcomes—not additional feature count—to decide whether CaptureBrief expands.
 
 ## Stop rule
 
 If qualified buyers will not pay for the narrow review, do not respond by adding proposal generation, broad opportunity discovery, or autonomous bid scoring.
 
 Revisit buyer, problem, positioning, intake burden, and price first.
+
+
+## Fulfillment economics rule — v0.28
+
+The founding $149 offer is not treated as operationally scalable merely because buyers pay.
+
+Every paid engagement should record additive `EFFORT` events by stage. Before testing a recurring/team offer, the operator should be able to answer from evidence:
+
+- how many human hours the median paid case consumed;
+- which stage consumed those minutes;
+- whether every currently paid engagement has labor coverage;
+- collected dollars per recorded effort hour by currency where payment amount was recorded;
+- whether that labor burden is acceptable for the current price and operating model.
+
+CaptureBrief does not set an automatic labor threshold or auto-reprice itself. The evidence exists so a human commercial decision can distinguish product demand from a service that is quietly consuming too much founder time.
