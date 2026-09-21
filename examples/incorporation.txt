@@ -1,0 +1,4 @@
+FICTIONAL EXAMPLE ONLY — NOT A GOVERNMENT DOCUMENT
+DEMO-001 | Example requirements | 2026-09-01
+Section R.1: This fictional exercise incorporates DEMO-R7, January 2025 edition.
+Section R.2: The supplier must hold the fictional DEMO credential at submission.

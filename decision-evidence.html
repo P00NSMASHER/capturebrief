@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CaptureBrief — Inspect a Decision Evidence example</title>
+<meta name="description" content="See a fictional CaptureBrief review: exact passages, before-and-after versions, rule editions and explicit evidence gaps.">
+<meta name="theme-color" content="#10283f"><meta name="color-scheme" content="light">
+<meta name="capturebrief-evidence-release" content="2026-09-21-evidence-1">
+<link rel="canonical" href="https://p00nsmasher.github.io/capturebrief/decision-evidence.html">
+<link rel="stylesheet" href="assets/enterprise.css?v=2"><link rel="stylesheet" href="assets/evidence.css?v=1">
+</head>
+<body class="capture evidence-page">
+<a class="skip" href="#main">Skip to content</a>
+<header class="header"><div class="wrap nav"><a class="brand" href="./" aria-label="CaptureBrief home"><span class="mark" aria-hidden="true">CB</span>CaptureBrief</a><a class="button outline" href="./#request">Request a review</a></div></header>
+<main id="main">
+<section class="evidence-intro"><div class="wrap">
+<p class="eyebrow">Decision Evidence · interactive example</p>
+<h1>See exactly what<br>the finding rests on.</h1>
+<p class="intro-copy">Start with the action. Expand the evidence to inspect the passage, the version and the reason it matters.</p>
+<p class="fiction-label"><strong>Fictional example.</strong> Not a real solicitation, regulation, customer result or completed review.</p>
+<nav class="example-nav" aria-label="Example findings"><a href="#pages">01 · An amendment changes the answer</a><a href="#edition">02 · Newest is not automatically applicable</a><a href="#unknown">03 · Missing evidence stays missing</a></nav>
+</div></section>
+<div class="wrap evidence-body">
+<div class="example-meta"><span>Example pursuit <strong>DEMO-001</strong></span><span>Illustrative review <strong>September 11, 2026</strong></span><span>Review status <strong>Demonstration only</strong></span></div>
+<article class="finding-card" id="pages">
+<div class="finding-top"><span class="eyebrow">Assumption 01</span><span class="tag amber">CONTRADICTED</span></div>
+<h2>“We can submit 20 pages.”</h2>
+<p class="finding-answer">The amendment reduced the limit to <strong>15 pages</strong>.</p>
+<p class="action-line"><strong>Next action:</strong> Proposal lead: shorten the response before the next internal review.</p>
+<details class="evidence-trail"><summary>Inspect the exact before-and-after evidence</summary><div class="trail-content">
+<div class="version-pair">
+<section class="version"><p class="eyebrow">Before · original instructions</p><h3>Section L.2 · September 1</h3><blockquote data-source="examples/original.txt" data-line="3">Section L.2: The technical response must not exceed 20 pages.</blockquote><p class="small">Superseded by Amendment 02 for this requirement in the example.</p><a href="examples/original.txt">Open the original example file</a><details class="fingerprint"><summary>File fingerprint</summary><code data-hash-for="examples/original.txt">fa9428b83fb7b128c1a4e2796251539cb75681ad3b495a0200f0aa2a0d7d76a7</code></details></section>
+<section class="version after"><p class="eyebrow">After · amendment 02</p><h3>Section L.2 · September 10</h3><blockquote data-source="examples/amendment-02.txt" data-line="3">Section L.2 is replaced in full: The technical response must not exceed 15 pages.</blockquote><p class="small">The amendment explicitly identifies the section it replaces.</p><a href="examples/amendment-02.txt">Open Amendment 02 example file</a><details class="fingerprint"><summary>File fingerprint</summary><code data-hash-for="examples/amendment-02.txt">152bbe4d432fa3b8f4eb5c354202059e8d7ea5a68ae7b85f087263367526db4f</code></details></section>
+</div>
+<p class="review-note"><strong>Why this changes the finding:</strong> The example amendment expressly replaces Section L.2. Its upload order or filename alone would not establish that relationship.</p>
+<p class="small">Illustrative observations: original, September 1 at 14:00 UTC; amendment, September 10 at 14:00 UTC. These are invented scenario dates, not actual collection receipts.</p>
+</div></details>
+</article>
+<article class="finding-card" id="edition">
+<div class="finding-top"><span class="eyebrow">Assumption 02</span><span class="tag blue">VERSION REVIEW</span></div>
+<h2>“We should use the newest rule.”</h2>
+<p class="finding-answer">This example names an <strong>older edition</strong>. A newer publication is a review trigger—not an automatic replacement.</p>
+<p class="action-line"><strong>Next action:</strong> Capture lead: check the incorporated edition and any controlling amendments before changing the response plan.</p>
+<details class="evidence-trail"><summary>Inspect the rule edition and its applicability basis</summary><div class="trail-content">
+<p><strong>Pursuit-specific basis · Section R.1</strong></p>
+<blockquote data-source="examples/incorporation.txt" data-line="3">Section R.1: This fictional exercise incorporates DEMO-R7, January 2025 edition.</blockquote>
+<p><a href="examples/incorporation.txt">Open the example requirements</a></p>
+<div class="version-pair">
+<section class="version after"><p class="eyebrow">Incorporated edition</p><h3>DEMO-R7 · January 2025</h3><blockquote data-source="examples/rule-2025.txt" data-line="4">The response must include a two-page service continuity plan.</blockquote><a href="examples/rule-2025.txt">Open the January example edition</a><details class="fingerprint"><summary>File fingerprint</summary><code data-hash-for="examples/rule-2025.txt">69d687a7734b0283eaa4b04e91488c8de8857e9c87f592c9bfa89146ba2aa959</code></details></section>
+<section class="version"><p class="eyebrow">Newer publication</p><h3>DEMO-R7 · September 2026</h3><blockquote data-source="examples/rule-2026.txt" data-line="4">The response must include a three-page service continuity plan.</blockquote><a href="examples/rule-2026.txt">Open the September example edition</a><details class="fingerprint"><summary>File fingerprint</summary><code data-hash-for="examples/rule-2026.txt">dda6f908c90f2636534b016b9c79aaf0974bebdabf75824c3cc7024af22a4537</code></details></section>
+</div>
+<dl class="evidence-facts"><div><dt>Rule identity</dt><dd>DEMO-R7. Invented for this example; not a FAR or DFARS citation.</dd></div><div><dt>Effective date</dt><dd>Each example file states a different date. A date alone does not establish which edition this pursuit incorporates.</dd></div><div><dt>Currentness</dt><dd>A newer example edition exists. The older edition remains visible rather than being overwritten.</dd></div><div><dt>Applicability basis</dt><dd>Section R.1 expressly names January 2025. Actual procurement interpretation would still require qualified human review of the controlling materials.</dd></div></dl>
+</div></details>
+</article>
+<article class="finding-card" id="unknown">
+<div class="finding-top"><span class="eyebrow">Assumption 03</span><span class="tag amber">UNPROVEN</span></div>
+<h2>“We hold the required credential.”</h2>
+<p class="finding-answer">The public requirement is visible. <strong>The company's evidence is not.</strong></p>
+<p class="action-line"><strong>Next action:</strong> The buyer's compliance owner must confirm the credential internally. Do not upload sensitive records to this site.</p>
+<details class="evidence-trail"><summary>Inspect what is known—and what is still needed</summary><div class="trail-content">
+<p><strong>Example requirement · Section R.2</strong></p>
+<blockquote data-source="examples/incorporation.txt" data-line="4">Section R.2: The supplier must hold the fictional DEMO credential at submission.</blockquote>
+<p><a href="examples/incorporation.txt">Open the example requirements</a></p>
+<details class="fingerprint"><summary>File fingerprint</summary><code data-hash-for="examples/incorporation.txt">98220d8eb7a61e2073b1161d3673ffc2b06a845631556f7929057736548ffccf</code></details>
+<div class="missing-evidence"><h3>Evidence still needed</h3><p>A responsible person must verify the company's actual credential and validity against the relevant requirement. No company, registry or credential was investigated in this demonstration.</p></div>
+<p class="review-note"><strong>What we do not infer:</strong> A missing company record does not prove either eligibility or ineligibility.</p>
+</div></details>
+</article>
+<section class="watch-explainer" aria-labelledby="watch-title"><p class="eyebrow">What the 14-day watch is for</p><h2 id="watch-title">Reopen the affected assumption.<br>Keep the earlier decision.</h2><p>A relevant source change prompts another review of the assumption that depended on it. It does not silently rewrite the previous finding or make a new bid decision for your team.</p><p class="small">This page is not monitoring a live opportunity. Watch scope and delivery timing are confirmed for each engagement.</p></section>
+<section class="evidence-boundary" aria-labelledby="boundary-title"><h2 id="boundary-title">An evidence trail, not a certification.</h2><p>All five source files on this page were created for this fictional example. The fingerprints are real SHA-256 hashes of those example files. They check file consistency—not government authenticity, legal correctness or customer results.</p><p><a href="examples/manifest.json">Inspect the example file manifest</a> · <a href="./#product">See what the review includes</a></p></section>
+</div>
+<section class="offer section"><div class="wrap evidence-cta"><div><p class="eyebrow">Your actual pursuit</p><h2>Bring the assumptions.<br>Get the source trail.</h2><p>One public pursuit. Up to five non-sensitive assumptions. $149, with scope and timing confirmed before payment.</p></div><a class="button" href="./#request">Request a review</a></div></section>
+</main>
+<footer class="footer"><div class="wrap"><a href="./">Back to CaptureBrief</a><p>Public-source, human-supervised review. Your team keeps the bid decision. Not affiliated with or endorsed by the U.S. government.</p></div></footer>
+</body>
+</html>
