@@ -81,6 +81,26 @@ Records:
 
 Only an actual `REQUESTED_REPEAT` satisfies the current business-model condition that at least one customer ask for another pursuit or recurring coverage.
 
+### EFFORT
+
+Records actual operator time in whole minutes against one controlled fulfillment stage:
+
+- `INTAKE_SCOPE`
+- `HISTORY_CURRENT`
+- `PACKET_BYTES`
+- `REFERENCE_REVIEW`
+- `ASSUMPTION_REVIEW`
+- `RULE_REVIEW`
+- `DEVIATION_REVIEW`
+- `WATCH`
+- `DELIVERY`
+- `CUSTOMER_COMMS`
+- `OTHER`
+
+Each event requires an opaque `effort_evidence_ref` such as a timer/timesheet receipt. Events are additive; a later effort event never overwrites earlier labor.
+
+This is internal operating evidence. It is not a customer ROI claim and does not imply that operator time is billable.
+
 ## Operator commands
 
 Validate an event before writing:
@@ -90,6 +110,12 @@ Validate an event before writing:
 Append an event:
 
     python -m capturebrief_core.cli outcome-append outcomes.jsonl outcome.json
+
+Log fulfillment effort without hand-authoring JSON:
+
+    python -m capturebrief_core.cli outcome-effort \
+      outcomes.jsonl CB-CASE <CASE_SHA256> ASSUMPTION_REVIEW 35 timer:CB-CASE:review-1 \
+      --event-at 2026-09-21T18:30:00Z
 
 Generate the current evidence summary:
 
@@ -123,9 +149,11 @@ The ledger exposes the factual parts of the business model's commercial proof th
 1. at least **3 current paid engagements**;
 2. at least **1 explicit repeat request**;
 3. at least **1 changed action or explicitly closed costly uncertainty**;
-4. turnaround evidence exists.
+4. turnaround evidence exists;
+5. operator-effort evidence exists;
+6. every currently paid engagement has recorded effort before expansion economics are treated as complete.
 
-It deliberately does **not** decide whether turnaround is acceptable or whether the observed retraction rate is acceptable. Those thresholds require a human commercial/product decision with the raw counts visible.
+It deliberately does **not** decide whether turnaround, effort, or the observed retraction rate is acceptable. Those thresholds require a human commercial/product decision with the raw counts visible.
 
 Meeting the factual gates does not automatically:
 
