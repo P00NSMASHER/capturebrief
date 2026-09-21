@@ -36,7 +36,9 @@ class WatchBaselineTests(unittest.TestCase):
         result=compare_watch_baseline(baseline,after,now=NOW)
         self.assertIn("ARTIFACT:resource-current",{e["key"] for e in result["events"]})
         self.assertEqual([x["assumption_id"] for x in result["reopened_assumptions"]],["A1"])
-        self.assertIn("ARTIFACT:resource-current",result["reopened_assumptions"][0]["matched_dependencies"])
+        self.assertIn("RESOURCE:resource-current",result["reopened_assumptions"][0]["matched_dependencies"])
+        event=next(e for e in result["events"] if e["key"]=="ARTIFACT:resource-current")
+        self.assertIn("RESOURCE:resource-current",event["alias_keys"])
         self.assertTrue(result["requires_human_review"])
         self.assertFalse(result["automatic_decision_change"])
 
