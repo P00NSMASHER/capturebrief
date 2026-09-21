@@ -1,8 +1,101 @@
-# CaptureBrief Product Core v0.23 — Pinned Class-Deviation Discovery
+# CaptureBrief Product Core v0.24 — Official Deviation Artifact Capture
 
 Updated: September 21, 2026
 
 CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.23 adds a controlled class-deviation discovery path on top of the v0.22 Decision Evidence, release bundle, and targeted-watch system. It can now prove which exact pinned deviation index was inspected and surface agency/FAR-Part candidates without turning corpus membership—or corpus absence—into an applicability decision.
+
+## v0.24 — Official Deviation Artifact Capture
+
+v0.23 proved which pinned deviation index was inspected and surfaced bounded agency/FAR-Part candidates. v0.24 advances one authority layer deeper: it captures the **actual public acquisition.gov PDF bytes** behind a candidate and gives those bytes their own immutable identity.
+
+The flow is now:
+
+`pinned candidate index -> candidate URL -> exact official PDF capture -> PDF SHA-256 -> human current/effective/supersession review -> pursuit-specific applicability -> Decision Evidence`
+
+### Exact candidate binding
+
+CaptureBrief will fetch a deviation artifact only when:
+
+- the case contains a current content-addressed deviation candidate proposal;
+- the requested `deviation_source_id` is in that proposal;
+- its source URL is HTTPS on `acquisition.gov` / `www.acquisition.gov`;
+- the candidate's 16-character `url_hash` equals the first 16 hexadecimal characters of SHA-256(source URL).
+
+The deviation-manifest parser now validates that URL-hash semantic directly. A syntactically plausible but incorrect 16-character hash is rejected.
+
+### Official PDF capture
+
+For an eligible candidate the capture path:
+
+- uses exactly the candidate URL;
+- accepts no caller-supplied replacement URL;
+- rejects redirects/final-URL changes;
+- permits no embedded credentials, query authority, or fragment;
+- caps the response at 25 MiB;
+- requires a PDF file signature;
+- records observation time, exact final URL, actual byte length and SHA-256;
+- records whether the live byte length equals the historical index's declared size.
+
+The captured PDF receipt remains bound to the exact candidate proposal SHA-256.
+
+### Size agreement is not byte identity
+
+The pinned deviation manifest records a declared PDF size but does not provide a cryptographic PDF digest.
+
+Therefore CaptureBrief explicitly records:
+
+`index_byte_identity_proven = false`
+
+even when the live official PDF length equals the index's declared size.
+
+A size mismatch is also preserved rather than silently rejected or normalized away. It can indicate a changed live artifact and therefore requires review.
+
+### Append-only observations
+
+Artifact receipts are append-only. Re-running the exact same observation receipt is idempotent; a later distinct capture is preserved as another observation rather than overwriting the earlier bytes' identity.
+
+For each current candidate, CaptureBrief derives the latest valid capture only when the receipt still binds to the current proposal and candidate metadata.
+
+### Operator sequencing
+
+Before capture, the work queue opens one P0:
+
+`deviation-bytes:<deviation_source_id>`
+
+per uncaptured candidate as `AUTOMATED_APPROVED_SOURCE`.
+
+The human deviation review remains open but is P1 until every candidate PDF has been captured. Once the bytes exist, the human authority/applicability review becomes P0.
+
+A zero-candidate proposal remains P0 human review because there are no bytes to capture and corpus absence is not authoritative.
+
+### Still unresolved after capture
+
+A captured official PDF proves:
+
+> **these exact public bytes were observed at this URL at this time.**
+
+It still does not prove:
+
+- the memo remains current;
+- its effective date;
+- whether another memo supersedes it;
+- that it applies to this solicitation;
+- that it changes a specific bid assumption.
+
+Those are separate reviewed claims.
+
+### CLI
+
+Capture a candidate and attach its receipt to the case:
+
+    python -m capturebrief_core.rule_cli case-capture-deviation-artifact \
+      case-with-deviation-candidates.json <DEVSRC:...> \
+      --observed-at 2026-09-21T18:30:00Z \
+      --artifact-output deviation.pdf \
+      --receipt-output deviation-receipt.json \
+      -o case-with-deviation-bytes.json
+
+The next authority step is structured human review of the captured memo's effective/current/supersession state and exact supporting passage before promotion into Decision Evidence.
 
 ## v0.23 — Pinned Class-Deviation Discovery
 
