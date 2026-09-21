@@ -2,6 +2,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from .atomic_io import atomic_write_text, ensure_exact_bytes
 from .decision_trace import canonical, compare_decision_traces, digest, evaluate_decision_trace
 from .trace_render import render_trace_html, render_trace_markdown
 from .delivery_bundle import build_delivery_bundle
@@ -13,12 +14,12 @@ def read_case(path: str) -> dict:
 
 
 def freeze_case(case: dict, directory: str) -> Path:
-    raw = json.dumps(case, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    raw = (json.dumps(case, indent=2, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
     target = Path(directory) / (digest(canonical(case)) + ".json")
-    target.parent.mkdir(parents=True, exist_ok=True)
-    if target.exists() and target.read_text(encoding="utf-8") != raw:
-        raise ValueError("existing content-addressed decision file is corrupted")
-    target.write_text(raw, encoding="utf-8")
+    try:
+        ensure_exact_bytes(target, raw)
+    except ValueError as exc:
+        raise ValueError("existing content-addressed decision file is corrupted") from exc
     return target
 
 
@@ -47,7 +48,7 @@ def main(argv=None) -> int:
         if args.cmd == "check": print(json.dumps(state, indent=2)); return 1 if state["trace_state"] == "TRACE_INCOMPLETE" else 0
         payload = state if args.format == "json" else render_trace_html(case) if args.format == "html" else render_trace_markdown(case)
     text = json.dumps(payload, indent=2, ensure_ascii=False) if isinstance(payload, dict) else payload
-    if getattr(args, "output", None): Path(args.output).write_text(text + ("" if text.endswith("\n") else "\n"), encoding="utf-8")
+    if getattr(args, "output", None): atomic_write_text(args.output,text + ("" if text.endswith("\n") else "\n"))
     else: print(text)
     return 0
 
