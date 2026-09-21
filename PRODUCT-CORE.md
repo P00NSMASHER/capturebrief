@@ -1478,3 +1478,27 @@ to:
 > this exact text in this retained source version changed to this exact text in that retained source version.
 
 The change remains evidence for human Pursuit QA; it does not automatically alter rule applicability or the customer's bid decision.
+
+
+## v0.21 — Release-gated buyer delivery bundle
+
+A completed case can now be turned into the actual customer delivery in one command:
+
+    python -m capturebrief_core.trace_cli bundle case.json -o capturebrief-delivery.zip
+
+The bundle builder refuses to operate unless the case passes the full product audit as `READY_FOR_HUMAN_RELEASE`, requires `decision_trace_required = true`, and requires a complete non-synthetic Decision Evidence trace.
+
+The delivery contains:
+
+1. `brief.md` — the concise CaptureBrief pursuit handoff;
+2. `decision-evidence.md` — the exact evidence report;
+3. `decision-evidence.html` — the buyer-readable expandable evidence report;
+4. `decision-summary.json` — machine-readable reviewed conclusions;
+5. `source-version-manifest.json` — public snapshot/rule identities, versions, URLs and hashes without raw source text;
+6. `delivery-manifest.json` — SHA-256 and byte length for every delivered file.
+
+The ZIP normalizes entry timestamps and ordering, making the same case at the same declared generation time byte-deterministic. The resulting ZIP SHA-256 can therefore be retained as the delivery receipt.
+
+The bundle deliberately excludes the raw internal case object and customer intake metadata. It also does not package restricted source bytes. A trace tamper, missing evidence, synthetic demonstration, or other release blocker prevents bundle creation rather than generating a partially trusted customer artifact.
+
+CI now exercises the complete release path against a dedicated release-ready Decision Evidence fixture.
