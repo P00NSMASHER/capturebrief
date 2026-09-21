@@ -42,6 +42,8 @@ class OutcomeLedgerTests(unittest.TestCase):
     def test_evidence_backed_engagement_summary(self):
         self.append(event("PAYMENT",state="PAID",amount_cents=14900,currency="USD",payment_evidence_ref="stripe:pi_demo_001"))
         self.append(event("DELIVERY",at="2026-09-21T20:00:00Z",started_at="2026-09-21T18:00:00Z",delivered_at="2026-09-21T20:00:00Z",delivery_evidence_ref="bundle:sha256:demo001"))
+        self.append(event("EFFORT",at="2026-09-21T18:30:00Z",stage="HISTORY_CURRENT",minutes=18,effort_evidence_ref="timer:CB-1:history"))
+        self.append(event("EFFORT",at="2026-09-21T19:30:00Z",stage="ASSUMPTION_REVIEW",minutes=42,effort_evidence_ref="timer:CB-1:assumptions"))
         self.append(event("FEEDBACK",at="2026-09-22T15:00:00Z",usefulness="USEFUL",action_effect="CHANGED_ACTION",source_limited=False,finding_classes=["SOURCE_VERSION","DEADLINE"],feedback_evidence_ref="feedback:form:001"))
         self.append(event("REPEAT_REQUEST",at="2026-09-22T15:01:00Z",state="REQUESTED_REPEAT",repeat_evidence_ref="feedback:form:001"))
         summary=summarize_outcomes(self.path)
@@ -50,6 +52,11 @@ class OutcomeLedgerTests(unittest.TestCase):
         self.assertEqual(summary["paid_amount_cents_recorded"],14900)
         self.assertEqual(summary["delivered_engagements"],1)
         self.assertEqual(summary["turnaround_hours"]["median"],2.0)
+        self.assertEqual(summary["effort_hours"]["median"],1.0)
+        self.assertEqual(summary["effort_stage_minutes"]["HISTORY_CURRENT"],18)
+        self.assertEqual(summary["effort_stage_minutes"]["ASSUMPTION_REVIEW"],42)
+        self.assertEqual(summary["paid_effort_coverage"]["paid_with_effort"],1)
+        self.assertEqual(summary["collected_cents_per_recorded_effort_hour_by_currency"]["USD"],14900.0)
         self.assertEqual(summary["feedback"]["useful"],1)
         self.assertEqual(summary["feedback"]["changed_action"],1)
         self.assertEqual(summary["repeat"]["requested_repeat"],1)
@@ -62,6 +69,7 @@ class OutcomeLedgerTests(unittest.TestCase):
             cid=f"CB-{i}"
             self.append(event("PAYMENT",case_id=cid,at=f"2026-09-2{i}T12:00:00Z",state="PAID",payment_evidence_ref=f"stripe:pi_{i}"))
             self.append(event("DELIVERY",case_id=cid,at=f"2026-09-2{i}T15:00:00Z",started_at=f"2026-09-2{i}T13:00:00Z",delivered_at=f"2026-09-2{i}T15:00:00Z",delivery_evidence_ref=f"bundle:{i}"))
+            self.append(event("EFFORT",case_id=cid,at=f"2026-09-2{i}T14:00:00Z",stage="ASSUMPTION_REVIEW",minutes=45,effort_evidence_ref=f"timer:{cid}:assumptions"))
         self.append(event("FEEDBACK",case_id="CB-1",at="2026-09-24T12:00:00Z",usefulness="USEFUL",action_effect="CLOSED_COSTLY_UNCERTAINTY",source_limited=False,finding_classes=["RULE_CURRENCY"],feedback_evidence_ref="feedback:1"))
         self.append(event("REPEAT_REQUEST",case_id="CB-1",at="2026-09-24T12:01:00Z",state="REQUESTED_REPEAT",repeat_evidence_ref="feedback:1"))
         gates=summarize_outcomes(self.path)["commercial_proof_threshold_evidence"]
@@ -69,9 +77,29 @@ class OutcomeLedgerTests(unittest.TestCase):
         self.assertTrue(gates["repeat_request_at_least_1"])
         self.assertTrue(gates["action_changed_or_costly_uncertainty_closed_at_least_1"])
         self.assertTrue(gates["turnaround_evidence_present"])
+        self.assertTrue(gates["effort_evidence_present"])
+        self.assertTrue(gates["paid_engagement_effort_coverage_complete"])
         self.assertTrue(gates["turnaround_acceptability_requires_human_threshold"])
+        self.assertTrue(gates["effort_acceptability_requires_human_threshold"])
         self.assertTrue(gates["retraction_acceptability_requires_human_threshold"])
         self.assertFalse(gates["automatic_pricing_or_subscription_change"])
+
+    def test_effort_is_additive_and_stage_bounded(self):
+        self.append(event("EFFORT",stage="REFERENCE_REVIEW",minutes=12,effort_evidence_ref="timer:CB-1:ref1"))
+        self.append(event("EFFORT",at="2026-09-21T18:15:00Z",stage="REFERENCE_REVIEW",minutes=8,effort_evidence_ref="timer:CB-1:ref2"))
+        summary=summarize_outcomes(self.path)
+        self.assertEqual(summary["effort_hours"]["total"],20/60)
+        self.assertEqual(summary["effort_stage_minutes"]["REFERENCE_REVIEW"],20)
+        with self.assertRaises(ValueError):
+            event("EFFORT",stage="MADE_UP_STAGE",minutes=5,effort_evidence_ref="timer:bad")
+        with self.assertRaises(ValueError):
+            event("EFFORT",stage="WATCH",minutes=0,effort_evidence_ref="timer:bad")
+
+    def test_paid_without_effort_does_not_claim_complete_effort_coverage(self):
+        self.append(event("PAYMENT",state="PAID",amount_cents=14900,currency="USD",payment_evidence_ref="stripe:pi_1"))
+        gates=summarize_outcomes(self.path)["commercial_proof_threshold_evidence"]
+        self.assertFalse(gates["effort_evidence_present"])
+        self.assertFalse(gates["paid_engagement_effort_coverage_complete"])
 
     def test_paid_and_refunded_latest_payment_is_not_counted_as_paid(self):
         self.append(event("PAYMENT",at="2026-09-21T12:00:00Z",state="PAID",amount_cents=14900,currency="USD",payment_evidence_ref="stripe:pi_1"))

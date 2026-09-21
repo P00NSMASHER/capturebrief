@@ -30,6 +30,7 @@ jobs:
         run: |
           python -m capturebrief_core.cli outcome-validate fixtures/outcome_event_example.json -o /tmp/outcome-valid.json
           python -m capturebrief_core.cli outcome-append /tmp/capturebrief-outcomes.jsonl fixtures/outcome_event_example.json --recorded-at 2026-09-21T18:10:00Z -o /tmp/outcome-record.json
+          python -m capturebrief_core.cli outcome-effort /tmp/capturebrief-outcomes.jsonl CB-EFFORT aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ASSUMPTION_REVIEW 15 timer:CB-EFFORT:review --event-at 2026-09-21T18:20:00Z --recorded-at 2026-09-21T18:21:00Z -o /tmp/effort-record.json
           python -m capturebrief_core.cli outcome-summary /tmp/capturebrief-outcomes.jsonl -o /tmp/outcome-summary.json
       - name: Build release-gated customer bundle
         run: python -m capturebrief_core.trace_cli bundle fixtures/ready_trace_case.json -o /tmp/capturebrief-delivery.zip
@@ -61,6 +62,13 @@ jobs:
         run: python -m capturebrief_core.cli case-from-intake fixtures/intake.json --submitted-at 2026-09-21T15:00:00+00:00 -o /tmp/intake-case.json
       - name: Build operator work queue
         run: python -m capturebrief_core.cli work-queue /tmp/intake-case.json -o /tmp/work-queue.json
+      - name: Build fulfillment cockpit
+        run: |
+          python -m capturebrief_core.cli fulfillment-plan /tmp/intake-case.json -o /tmp/intake-plan.json
+          grep -q '"release_state": "FAIL_CLOSED"' /tmp/intake-plan.json
+          grep -q '"automatic_evidence_or_bid_decision": false' /tmp/intake-plan.json
+          python -m capturebrief_core.cli fulfillment-plan fixtures/ready_case.json -o /tmp/ready-plan.json
+          grep -q '"fulfillment_state": "READY_TO_BUILD_DELIVERY"' /tmp/ready-plan.json
       - name: Validate releasable fixture
         run: python -m capturebrief_core.cli validate fixtures/ready_case.json
       - name: Render releasable fixture

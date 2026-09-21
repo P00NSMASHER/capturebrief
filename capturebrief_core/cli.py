@@ -24,7 +24,8 @@ from .opportunity_ref import parse_opportunity_reference
 from .resolver import attach_history_resolution, resolve_reference_from_index
 from .intake import build_case_from_intake
 from .workqueue import build_work_queue
-from .outcomes import append_outcome_event, summarize_outcomes, validate_outcome_event
+from .fulfillment_plan import build_fulfillment_plan
+from .outcomes import EFFORT_STAGES, append_outcome_event, make_outcome_event, summarize_outcomes, validate_outcome_event
 
 
 def load(p): return json.loads(Path(p).read_text())
@@ -65,9 +66,11 @@ def main():
     x=sub.add_parser("current-search-plan"); x.add_argument("case"); x.add_argument("--output","-o")
     x=sub.add_parser("case-fetch-current"); x.add_argument("case"); x.add_argument("--api-key-env",default="SAM_API_KEY"); x.add_argument("--organization-code"); x.add_argument("--output","-o",required=True); x.add_argument("--result-output")
     x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o")
+    x=sub.add_parser("fulfillment-plan"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o")
     x=sub.add_parser("outcome-validate"); x.add_argument("event_json"); x.add_argument("--output","-o")
     x=sub.add_parser("outcome-append"); x.add_argument("ledger"); x.add_argument("event_json"); x.add_argument("--recorded-at"); x.add_argument("--output","-o")
     x=sub.add_parser("outcome-summary"); x.add_argument("ledger"); x.add_argument("--output","-o")
+    x=sub.add_parser("outcome-effort"); x.add_argument("ledger"); x.add_argument("case_id"); x.add_argument("case_sha256"); x.add_argument("stage",choices=sorted(EFFORT_STAGES)); x.add_argument("minutes",type=int); x.add_argument("effort_evidence_ref"); x.add_argument("--event-at",required=True); x.add_argument("--delivery-bundle-sha256"); x.add_argument("--recorded-at"); x.add_argument("--output","-o")
     x=sub.add_parser("ledger-append"); x.add_argument("ledger"); x.add_argument("record_type"); x.add_argument("payload_json")
     x=sub.add_parser("ledger-verify"); x.add_argument("ledger")
     a=p.parse_args()
@@ -203,6 +206,10 @@ def main():
         observation=load(a.api_observation) if a.api_observation else None
         history_plan=load(a.history_index_plan) if a.history_index_plan else None
         dump(build_work_queue(load(a.case),api_observation=observation,history_index_plan=history_plan),a.output); return 0
+    if a.cmd=="fulfillment-plan":
+        observation=load(a.api_observation) if a.api_observation else None
+        history_plan=load(a.history_index_plan) if a.history_index_plan else None
+        dump(build_fulfillment_plan(load(a.case),api_observation=observation,history_index_plan=history_plan),a.output); return 0
     if a.cmd=="outcome-validate":
         errors=validate_outcome_event(load(a.event_json))
         result={"valid":not errors,"errors":errors}; dump(result,a.output); return 0 if not errors else 2
@@ -210,6 +217,16 @@ def main():
         record=append_outcome_event(a.ledger,load(a.event_json),recorded_at=a.recorded_at); dump(record,a.output); return 0
     if a.cmd=="outcome-summary":
         dump(summarize_outcomes(a.ledger),a.output); return 0
+    if a.cmd=="outcome-effort":
+        event=make_outcome_event(
+            case_id=a.case_id,
+            case_sha256=a.case_sha256,
+            delivery_bundle_sha256=a.delivery_bundle_sha256,
+            event_type="EFFORT",
+            event_at=a.event_at,
+            data={"stage":a.stage,"minutes":a.minutes,"effort_evidence_ref":a.effort_evidence_ref},
+        )
+        dump(append_outcome_event(a.ledger,event,recorded_at=a.recorded_at),a.output); return 0
     if a.cmd=="ledger-append": dump(append_record(a.ledger,record_type=a.record_type,payload=load(a.payload_json))); return 0
     if a.cmd=="ledger-verify":
         result=verify_ledger(a.ledger); dump(result); return 0 if result["valid"] else 2
