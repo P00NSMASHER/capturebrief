@@ -2127,4 +2127,29 @@ from:
 
 `buyers paid + delivery was useful + labor was measured + economics can be reviewed`.
 
+### Fulfillment cockpit
+
+The existing fail-closed work queue can now be converted into one operator plan:
+
+    python -m capturebrief_core.cli fulfillment-plan case.json -o fulfillment-plan.json
+
+The plan does not create evidence or make procurement/applicability decisions. It reorganizes existing work into:
+
+- current release state and blocker codes;
+- P0 safe-automation batch;
+- P0 human/hybrid review batch;
+- later P1/P2 work;
+- one deterministic next task;
+- an effort stage for every task so actual labor can be timed consistently.
+
+When a case is already releasable and the work queue is empty, the plan returns:
+
+`READY_TO_BUILD_DELIVERY`
+
+The operating loop is therefore:
+
+`plan -> clear approved automation -> perform named human review -> log actual effort -> re-plan -> release-gated bundle -> commercial outcome events`
+
+This is intentionally an operator cockpit, not an autonomous capture agent.
+
 The next optimization target should be selected from measured stage minutes rather than intuition.
