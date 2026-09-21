@@ -5,6 +5,7 @@ from .history import validate_history_receipts
 from .manifest import validate_manifest_receipts
 from .packet import validate_reference_closure
 from .model import AuditResult
+from .trace_render import render_trace_markdown
 
 
 def _e(v): return str(v or "").replace("|","\\|").strip()
@@ -58,4 +59,6 @@ def render_markdown(case:dict[str,Any],audit:AuditResult|None=None)->str:
     if case.get("decision_trace_required") is True or "decision_trace" in case:
         from .trace_render import render_trace_markdown
         lines += ["", render_trace_markdown(case)]
+    if case.get("decision_trace_required") is True or isinstance(case.get("decision_trace"),dict):
+        lines += ["", render_trace_markdown(case), ""]
     return "\n".join(lines)
