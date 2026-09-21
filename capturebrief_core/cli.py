@@ -26,6 +26,7 @@ from .intake import build_case_from_intake
 from .workqueue import build_work_queue
 from .fulfillment_plan import build_fulfillment_plan
 from .outcomes import EFFORT_STAGES, append_outcome_event, make_outcome_event, summarize_outcomes, validate_outcome_event
+from .calibration import summarize_calibration_review, validate_calibration_review
 
 
 def load(p): return json.loads(Path(p).read_text())
@@ -71,6 +72,8 @@ def main():
     x=sub.add_parser("outcome-append"); x.add_argument("ledger"); x.add_argument("event_json"); x.add_argument("--recorded-at"); x.add_argument("--output","-o")
     x=sub.add_parser("outcome-summary"); x.add_argument("ledger"); x.add_argument("--output","-o")
     x=sub.add_parser("outcome-effort"); x.add_argument("ledger"); x.add_argument("case_id"); x.add_argument("case_sha256"); x.add_argument("stage",choices=sorted(EFFORT_STAGES)); x.add_argument("minutes",type=int); x.add_argument("effort_evidence_ref"); x.add_argument("--event-at",required=True); x.add_argument("--delivery-bundle-sha256"); x.add_argument("--recorded-at"); x.add_argument("--output","-o")
+    x=sub.add_parser("calibration-validate"); x.add_argument("review_json"); x.add_argument("--output","-o")
+    x=sub.add_parser("calibration-summary"); x.add_argument("review_json"); x.add_argument("--output","-o")
     x=sub.add_parser("ledger-append"); x.add_argument("ledger"); x.add_argument("record_type"); x.add_argument("payload_json")
     x=sub.add_parser("ledger-verify"); x.add_argument("ledger")
     a=p.parse_args()
@@ -227,6 +230,10 @@ def main():
             data={"stage":a.stage,"minutes":a.minutes,"effort_evidence_ref":a.effort_evidence_ref},
         )
         dump(append_outcome_event(a.ledger,event,recorded_at=a.recorded_at),a.output); return 0
+    if a.cmd=="calibration-validate":
+        errors=validate_calibration_review(load(a.review_json)); dump({"valid":not errors,"errors":errors},a.output); return 0 if not errors else 2
+    if a.cmd=="calibration-summary":
+        summary=summarize_calibration_review(load(a.review_json)); dump(summary,a.output); return 0 if summary["valid"] else 2
     if a.cmd=="ledger-append": dump(append_record(a.ledger,record_type=a.record_type,payload=load(a.payload_json))); return 0
     if a.cmd=="ledger-verify":
         result=verify_ledger(a.ledger); dump(result); return 0 if result["valid"] else 2

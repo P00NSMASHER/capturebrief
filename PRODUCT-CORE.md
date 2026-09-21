@@ -2167,3 +2167,36 @@ The operating loop is therefore:
 This is intentionally an operator cockpit, not an autonomous capture agent.
 
 The next optimization target should be selected from measured stage minutes rather than intuition.
+
+
+## v0.30 — Structured Internal Calibration
+
+CaptureBrief now has a bounded internal workflow for external methodology review.
+
+An expert calibration is pinned to the exact reviewed sample SHA-256 and remains separate from customer outcomes, procurement authority, and public endorsement.
+
+A calibration record preserves:
+
+- exact reviewed sample/reference and SHA-256;
+- opaque reviewer/scope references;
+- internal-only status;
+- public-attribution approval state;
+- categorized and severity-ranked methodology findings;
+- explicit ACCEPT / PARTIAL / REJECT / DEFER / PENDING dispositions;
+- implementation + regression references for accepted changes.
+
+Accepted feedback does not close merely because the team agrees with it. ACCEPT/PARTIAL findings close only when implementation and test references exist.
+
+CRITICAL or MATERIAL open findings remain visible in the summary.
+
+CLI:
+
+    python -m capturebrief_core.cli calibration-validate calibration.json
+
+    python -m capturebrief_core.cli calibration-summary calibration.json
+
+The default public-attribution state is false. A separate explicit approval evidence reference is required before the structured record can report public attribution as allowed.
+
+This is intentionally not another customer-facing feature. It converts bounded independent product criticism into auditable engineering decisions before supervised pilots.
+
+See `CALIBRATION-PROTOCOL.md`.

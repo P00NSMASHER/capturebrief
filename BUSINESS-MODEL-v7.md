@@ -266,3 +266,24 @@ Every paid engagement should record additive `EFFORT` events by stage. Before te
 - whether that labor burden is acceptable for the current price and operating model.
 
 CaptureBrief does not set an automatic labor threshold or auto-reprice itself. The evidence exists so a human commercial decision can distinguish product demand from a service that is quietly consuming too much founder time.
+
+
+## External methodology calibration
+
+A bounded external practitioner review may be used to challenge the product methodology before or during supervised pilots.
+
+That review is internal product evidence unless separate written attribution permission exists.
+
+It does not count as:
+
+- a paid customer engagement;
+- a repeat customer request;
+- customer-reported changed action;
+- legal/procurement certification;
+- general validation of all CaptureBrief outputs.
+
+Each calibration must stay pinned to the exact reviewed sample version. Findings are explicitly adjudicated, and accepted changes require implementation plus regression evidence.
+
+Do not use reviewer names, credentials, company names, logos, testimonials, or endorsement language publicly unless the exact attribution is separately authorized in writing.
+
+Commercial expansion continues to depend on paid customer outcomes and measured fulfillment economics, not expert approval.

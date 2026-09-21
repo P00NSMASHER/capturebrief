@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "review_id": "CAL-DEMO-001",
+  "sample_ref": "sample:cloudshape-aie-its:2026-09-15",
+  "sample_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "received_at": "2026-09-21T18:55:00Z",
+  "reviewer_ref": "reviewer:external-govcon:001",
+  "scope_ref": "scope:calibration:fixed-sample",
+  "internal_only": true,
+  "public_attribution_approved": false,
+  "public_attribution_evidence_ref": null,
+  "findings": [
+    {
+      "finding_id": "F1",
+      "category": "SOURCE_CONTROL",
+      "severity": "MATERIAL",
+      "summary": "Illustrative calibration finding about source-control logic.",
+      "evidence_ref": "review:demo:section-1",
+      "recommendation": "Review the source-control method and add a regression test if the finding is accepted.",
+      "disposition": "PENDING",
+      "disposition_rationale": null,
+      "implementation_status": "NOT_STARTED",
+      "change_ref": null,
+      "test_ref": null
+    },
+    {
+      "finding_id": "F2",
+      "category": "CAVEAT_LANGUAGE",
+      "severity": "MINOR",
+      "summary": "Illustrative calibration finding about caveat wording.",
+      "evidence_ref": "review:demo:section-2",
+      "recommendation": "Decide whether the wording change improves the product boundary.",
+      "disposition": "PENDING",
+      "disposition_rationale": null,
+      "implementation_status": "NOT_STARTED",
+      "change_ref": null,
+      "test_ref": null
+    }
+  ]
+}
