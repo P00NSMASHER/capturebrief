@@ -19,7 +19,7 @@ _EXPLICIT = re.compile(
     r"(?P<citation>\d{1,3}\.\d+(?:-\d+)?)\b",
     re.I,
 )
-_BARE = re.compile(r"(?<![A-Za-z0-9.])(?P<citation>\d{1,3}\.\d+(?:-\d+)?)(?![A-Za-z0-9.-])")
+_BARE = re.compile(r"(?<![A-Za-z0-9.])(?P<citation>\d{1,3}\.\d{3}(?:-\d+)?)(?![A-Za-z0-9.-])")
 _SHA = re.compile(r"^[0-9a-f]{64}$")
 
 
