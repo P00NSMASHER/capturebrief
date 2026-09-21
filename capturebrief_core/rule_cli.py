@@ -10,6 +10,7 @@ from .rule_evidence import prepare_rule_evidence
 from .rule_applicability import review_rule_applicability
 from .deviation_sync import attach_deviation_candidate_proposal, capture_and_attach_deviation_artifact, sync_pinned_deviation_manifest
 from .deviation_review import prepare_deviation_text, review_deviation_authority
+from .deviation_applicability import review_deviation_applicability
 from .rule_registry import (
     add_rule_version,
     diff_rule_versions,
@@ -110,6 +111,12 @@ def main(argv=None):
     rda.add_argument("review")
     rda.add_argument("-o", "--output", required=True)
     rda.add_argument("--result-output")
+
+    rdp = s.add_parser("case-review-deviation-applicability")
+    rdp.add_argument("case")
+    rdp.add_argument("review")
+    rdp.add_argument("-o", "--output", required=True)
+    rdp.add_argument("--result-output")
 
     cat = s.add_parser("catalog")
     cat.add_argument("path", nargs="?", default="RULE-SOURCE-CATALOG.json")
@@ -280,6 +287,13 @@ def main(argv=None):
         case = json.loads(Path(args.case).read_text(encoding="utf-8"))
         review = json.loads(Path(args.review).read_text(encoding="utf-8"))
         updated, transition = review_deviation_authority(case, review)
+        _write(updated, args.output)
+        if args.result_output:
+            _write(transition, args.result_output)
+    elif args.cmd == "case-review-deviation-applicability":
+        case = json.loads(Path(args.case).read_text(encoding="utf-8"))
+        review = json.loads(Path(args.review).read_text(encoding="utf-8"))
+        updated, transition = review_deviation_applicability(case, review)
         _write(updated, args.output)
         if args.result_output:
             _write(transition, args.result_output)
