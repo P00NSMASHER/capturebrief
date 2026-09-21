@@ -1,8 +1,108 @@
-# CaptureBrief Product Core v0.15 — Official Rule Ingestion
+# CaptureBrief Product Core v0.16 — Pinned Rule Source Sync
 
 Updated: September 21, 2026
 
-CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.15 makes the rule registry usable against real GSA FAR/DFARS DITA: it safely accepts only the known OASIS external DITA declaration, rejects arbitrary DTD/entity constructs, and derives clause/provision edition labels such as “Nov 2021” from the official rule text instead of confusing source-control recency with rule edition.
+CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.16 makes official rule ingestion operational: an operator can sync one FAR/DFARS citation directly from the exact pinned GSA Git revision into the append-only local registry, with a content-addressed fetch receipt and no caller-supplied URL, mutable branch, credentials, or redirect authority.
+
+## v0.16 — Pinned Rule Source Sync
+
+CaptureBrief can now fetch and register a specific FAR/DFARS topic from the approved source catalog in one controlled operation.
+
+Example:
+
+    python -m capturebrief_core.rule_cli sync-dita rules.sqlite \
+      --source-id gsa-far-dita \
+      --citation 52.204-21 \
+      --observed-at 2026-09-21T17:00:00Z \
+      --receipt-output fetch-receipt.json \
+      --record-output rule-record.json
+
+### No caller-supplied rule URL
+
+The sync command accepts:
+- approved source ID;
+- citation;
+- observation time.
+
+It does **not** accept a download URL or Git branch.
+
+The URL is constructed internally from `RULE-SOURCE-CATALOG.json`:
+
+`raw.githubusercontent.com/<approved-GSA-repo>/<exact-40-char-revision>/dita/<citation>.dita`
+
+Only the pinned FAR and DFARS GSA repositories are accepted on this path.
+
+### Immutable revision requirement
+
+The catalog revision must be a full lowercase 40-character Git SHA.
+
+Values such as:
+- `main`;
+- `master`;
+- tags;
+- shortened SHAs;
+- arbitrary repository names
+
+are rejected before network access.
+
+### Retrieval controls
+
+The pinned sync:
+
+- uses HTTPS;
+- uses the allowlisted `raw.githubusercontent.com` host;
+- permits no credentials in the URL;
+- permits no query/fragment authority;
+- rejects redirect/final-URL changes;
+- caps a DITA response at 5 MiB;
+- requires UTF-8;
+- verifies that the citation inside the fetched DITA equals the citation requested.
+
+A fetch therefore cannot silently turn `52.204-21` into another rule.
+
+### Fetch receipt
+
+Each successful retrieval emits a content-addressed receipt containing:
+
+- source ID;
+- citation/namespace;
+- repository;
+- exact revision;
+- exact DITA path;
+- requested and final raw URL;
+- approved catalog SHA-256;
+- observation time;
+- byte length;
+- source SHA-256;
+- resulting `rule_source_id`;
+- explicit `mutable_ref_used = false`;
+- explicit `caller_url_used = false`;
+- explicit `credentials_used = false`.
+
+The receipt byte hash must agree with the normalized rule record's original-source hash before insertion.
+
+### Idempotent local registry
+
+Syncing the same pinned citation/source snapshot twice is idempotent:
+
+- first run → `INSERTED`;
+- same content-addressed rule source again → `EXISTS`.
+
+A source/version change produces a different content-addressed rule record rather than overwriting prior history.
+
+### Still human-reviewed
+
+A successful pinned sync proves:
+
+**this exact public source snapshot was retrieved and normalized.**
+
+It does not prove:
+- the rule applies to the solicitation;
+- the edition was incorporated;
+- a deviation modifies it;
+- a bid assumption should change.
+
+Those remain v0.13/v0.14/v0.11 human-review stages.
 
 ## v0.15 — Official Rule Ingestion
 
