@@ -15,6 +15,7 @@ from capturebrief_core.data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD
 from capturebrief_core.history import validate_history_receipts
 from capturebrief_core.history_index import (
     APPROVED_FETCH,
+    download_extract_to_file,
     fetch_and_ingest_slot,
     index_status,
     ingest_extract_file,
@@ -201,6 +202,71 @@ class HistoryIndexTests(unittest.TestCase):
             self.assertIn("ARCHIVE:2026",status["present_slots"])
             self.assertIn("ACTIVE",status["missing_slots"])
             self.assertGreater(len(status["missing_slots"]),1)
+
+    def test_approved_fetch_without_snapshot_dir_retains_immutable_default_snapshot(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db=root/"history.sqlite"; dest=root/"active.csv"
+            buf=io.StringIO()
+            writer=csv.DictWriter(buf,fieldnames=FIELDS)
+            writer.writeheader(); writer.writerow(row("a2"))
+            data=buf.getvalue().encode("cp1252")
+            result=fetch_and_ingest_slot(
+                db,slot="ACTIVE",destination=dest,
+                opener=lambda req,timeout=120: FakeResponse(data),
+            )
+            retained=Path(result["ingest"]["local_path"])
+            self.assertTrue(result["retention"]["content_addressed"])
+            self.assertFalse(result["retention"]["caller_supplied_snapshot_dir"])
+            self.assertEqual(retained.parent,root/"history.sqlite.snapshots")
+            self.assertEqual(retained.stem,result["ingest"]["extract_sha256"])
+            self.assertEqual(retained.read_bytes(),data)
+            self.assertNotEqual(retained,dest)
+            with sqlite3.connect(db) as conn:
+                stored=conn.execute(
+                    "SELECT local_path FROM source_snapshots WHERE snapshot_id=?",
+                    (result["ingest"]["snapshot_id"],),
+                ).fetchone()[0]
+            self.assertEqual(Path(stored),retained)
+
+    def test_content_addressed_snapshot_conflict_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db=root/"history.sqlite"; p=root/"active.csv"; snapshots=root/"snapshots"
+            write_csv(p,[row("a2")])
+            import hashlib
+            digest=hashlib.sha256(p.read_bytes()).hexdigest()
+            snapshots.mkdir()
+            conflicting=snapshots/f"{digest}.csv"
+            conflicting.write_bytes(b"different")
+            with self.assertRaises(Exception) as ctx:
+                ingest_extract_file(
+                    db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                    observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH,
+                )
+            self.assertIn("content-addressed snapshot retention failed",str(ctx.exception))
+            self.assertEqual(conflicting.read_bytes(),b"different")
+
+    def test_failed_download_preserves_existing_destination_and_cleans_temp(self):
+        class FailingResponse(FakeResponse):
+            def __init__(self):
+                super().__init__(b"abcdef")
+                self.calls=0
+            def read(self,n=-1):
+                self.calls += 1
+                if self.calls==1:
+                    return b"abc"
+                raise OSError("simulated transport/read failure")
+
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); dest=root/"active.csv"; dest.write_bytes(b"previous-complete-file")
+            with self.assertRaises(OSError):
+                download_extract_to_file(
+                    dest,
+                    source_url=ACTIVE_DOWNLOAD,
+                    opener=lambda req,timeout=120: FailingResponse(),
+                )
+            self.assertEqual(dest.read_bytes(),b"previous-complete-file")
+            self.assertEqual(list(root.glob(".active.csv.*.download")),[])
+            self.assertFalse((root/"active.csv.download.lock").exists())
 
     def test_operator_import_is_present_but_not_releasable(self):
         with tempfile.TemporaryDirectory() as td:
