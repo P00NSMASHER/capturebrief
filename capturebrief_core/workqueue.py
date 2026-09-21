@@ -6,7 +6,7 @@ from typing import Any
 from .authority import validate_current_action_receipts
 from .history import validate_history_receipts
 from .manifest import validate_manifest_receipts
-from .model import parse_dt
+from .model import parse_dt, valid_sha256
 from .packet import validate_reference_closure
 from .reference_match import reference_match_proposal_is_current
 
@@ -273,7 +273,22 @@ def build_work_queue(
                     metadata={"finding_codes": sorted({f.code for f in ref_findings})},
                 ))
 
-    approved_links = set((api_observation or {}).get("resource_links") or [])
+    approved_links: set[str] = set()
+    supplied_api = api_observation or {}
+    if (
+        supplied_api.get("source_contract") == "SAM_GET_OPPORTUNITIES_V2"
+        and supplied_api.get("automation_mode") == "APPROVED_API"
+        and valid_sha256(supplied_api.get("payload_sha256"))
+    ):
+        approved_links.update(str(x) for x in supplied_api.get("resource_links") or [])
+    retained_api = packet.get("current_api_observation") or {}
+    retained_links = [str(x) for x in packet.get("current_resource_links") or [] if str(x)]
+    if (
+        retained_api.get("source_contract") == "SAM_GET_OPPORTUNITIES_V2"
+        and valid_sha256(retained_api.get("api_payload_sha256"))
+        and int(retained_api.get("resource_link_count") or 0) == len(retained_links)
+    ):
+        approved_links.update(retained_links)
     for artifact in packet.get("artifacts") or []:
         if artifact.get("required_for_analysis") is not True:
             continue

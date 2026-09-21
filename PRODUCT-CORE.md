@@ -1,4 +1,4 @@
-# CaptureBrief Product Core v0.9 — Local Reference Matching
+# CaptureBrief Product Core v0.10 — Straight-Through Current Byte Capture
 
 Updated: September 21, 2026
 
@@ -580,3 +580,41 @@ For a complete human-confirmed inventory:
 3. reviewer chooses/justifies a closure state through the validated reference transition.
 
 This reduces lookup work without weakening the evidence boundary.
+
+
+## v0.10 — Capture current bytes directly from retained case evidence
+
+Once a documented current API observation has been applied to the case, CaptureBrief no longer needs the original observation JSON supplied again just to capture a current resource.
+
+A current artifact can be captured and applied in one step:
+
+    python -m capturebrief_core.cli case-capture-artifact       current-case.json <ARTIFACT_ID>       -o captured-case.json       --bytes-output artifact.bin       --transition-output capture-transition.json
+
+Before any download, the transition verifies:
+
+- the case retains a `SAM_GET_OPPORTUNITIES_V2` current observation;
+- the retained API payload SHA-256 is valid;
+- the retained resource-link count matches the retained resource-link set;
+- the artifact is exactly one verified public source object;
+- its resource URL is in that retained current API resource-link set;
+- the URL is inside the approved SAM resource-link contract.
+
+It then performs the approved download, hashes the bytes, creates the resource receipt, and applies that receipt back into the case through the v0.8 byte-binding contract.
+
+### Idempotency
+
+If an artifact already carries `BYTES_VERIFIED_HASHED` plus a valid SHA-256, the command does not download the file again. It returns `ARTIFACT_ALREADY_CAPTURED`.
+
+Conflicting later bytes remain fail-closed.
+
+### Work queue authorization
+
+The work queue now recognizes the case's retained validated current API observation as sufficient evidence that a matching current resource URL can use `AUTOMATED_APPROVED_SOURCE`.
+
+Operators no longer have to pass an external API-observation object merely to make a byte-capture task executable.
+
+This creates the approved straight-through segment:
+
+`history-complete case -> documented current API -> current resource discovery -> current byte capture -> retained artifact receipt`
+
+Human review remains required for historical tombstone state, semantic reference completeness, and final reference closure decisions.

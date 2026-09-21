@@ -6,6 +6,7 @@ from .history import make_history_receipt, validate_history_receipts
 from .manifest import fetch_manifest, normalize_manifest_payload, validate_manifest_receipts
 from .current_api import download_resource_from_api_observation, fetch_latest_active, make_current_action_receipt
 from .case_current import CaseCurrentError, apply_current_api_observation
+from .case_capture import CaseCaptureError, capture_current_artifact
 from .case_artifacts import CaseArtifactError, apply_api_byte_receipt
 from .case_references import CaseReferenceError, apply_reference_resolution, apply_reference_review_result
 from .current_search import CurrentSearchError, build_current_search_plan, fetch_and_apply_current, fetch_current_from_plan
@@ -33,6 +34,7 @@ __all__=[
     "catalog_snapshot","audit_case","validate_current_action_receipts","make_history_receipt","validate_history_receipts",
     "fetch_manifest","normalize_manifest_payload","validate_manifest_receipts",
     "download_resource_from_api_observation","fetch_latest_active","make_current_action_receipt","CaseCurrentError","apply_current_api_observation",
+    "CaseCaptureError","capture_current_artifact",
     "CaseArtifactError","apply_api_byte_receipt",
     "CaseReferenceError","apply_reference_review_result","apply_reference_resolution",
     "CurrentSearchError","build_current_search_plan","fetch_current_from_plan","fetch_and_apply_current",

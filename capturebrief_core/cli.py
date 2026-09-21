@@ -6,6 +6,7 @@ from .ledger import append_record, verify_ledger
 from .manifest import normalize_manifest_payload
 from .current_api import download_resource_from_api_observation, fetch_latest_active, make_current_action_receipt
 from .case_current import apply_current_api_observation
+from .case_capture import capture_current_artifact
 from .case_artifacts import apply_api_byte_receipt
 from .case_references import apply_reference_resolution, apply_reference_review_result
 from .current_search import build_current_search_plan, fetch_and_apply_current
@@ -59,6 +60,7 @@ def main():
     x=sub.add_parser("case-from-intake"); x.add_argument("intake_json"); x.add_argument("--submitted-at"); x.add_argument("--output","-o")
     x=sub.add_parser("case-apply-current"); x.add_argument("case"); x.add_argument("api_observation"); x.add_argument("--output","-o",required=True); x.add_argument("--transition-output")
     x=sub.add_parser("case-apply-byte-receipt"); x.add_argument("case"); x.add_argument("receipt_json"); x.add_argument("--output","-o",required=True); x.add_argument("--transition-output")
+    x=sub.add_parser("case-capture-artifact"); x.add_argument("case"); x.add_argument("artifact_id"); x.add_argument("--output","-o",required=True); x.add_argument("--bytes-output"); x.add_argument("--transition-output"); x.add_argument("--max-bytes",type=int,default=50*1024*1024)
     x=sub.add_parser("current-search-plan"); x.add_argument("case"); x.add_argument("--output","-o")
     x=sub.add_parser("case-fetch-current"); x.add_argument("case"); x.add_argument("--api-key-env",default="SAM_API_KEY"); x.add_argument("--organization-code"); x.add_argument("--output","-o",required=True); x.add_argument("--result-output")
     x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o")
@@ -177,6 +179,12 @@ def main():
         updated,transition=apply_api_byte_receipt(load(a.case),load(a.receipt_json))
         dump(updated,a.output)
         if a.transition_output: dump(transition,a.transition_output)
+        return 0
+    if a.cmd=="case-capture-artifact":
+        updated,transition,content=capture_current_artifact(load(a.case),a.artifact_id,max_bytes=a.max_bytes)
+        dump(updated,a.output)
+        if a.transition_output: dump(transition,a.transition_output)
+        if a.bytes_output and content is not None: Path(a.bytes_output).write_bytes(content)
         return 0
     if a.cmd=="current-search-plan":
         dump(build_current_search_plan(load(a.case)),a.output); return 0
