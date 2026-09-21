@@ -1502,3 +1502,36 @@ The ZIP normalizes entry timestamps and ordering, making the same case at the sa
 The bundle deliberately excludes the raw internal case object and customer intake metadata. It also does not package restricted source bytes. A trace tamper, missing evidence, synthetic demonstration, or other release blocker prevents bundle creation rather than generating a partially trusted customer artifact.
 
 CI now exercises the complete release path against a dedicated release-ready Decision Evidence fixture.
+
+
+## v0.22 — Targeted 14-day watch baseline
+
+The 14-day watch is now an explicit product artifact rather than a generic monitoring promise.
+
+Every release-ready delivery bundle includes a content-addressed `watch-baseline.json` containing only the minimum public/evidence state needed to detect whether a delivered assumption should be reopened:
+
+- current-action identity;
+- complete history-set hash;
+- latest action-manifest fingerprints;
+- artifact/resource byte state and hashes;
+- reference closure state;
+- source-version identities;
+- rule-version identities;
+- assumption dependency/reopen keys.
+
+It excludes source text, customer intake fields, and the raw internal case.
+
+The comparison path:
+
+    python -m capturebrief_core.trace_cli watch-check \
+      watch-baseline.json refreshed-case.json -o watch-observation.json
+
+produces explicit events and a targeted `reopened_assumptions` list. It never rewrites the previous finding, never automatically changes rule applicability, and always records `automatic_decision_change = false`.
+
+An artifact/byte change keeps the precise `ARTIFACT:<id>` event while carrying the existing `RESOURCE:<id>` trigger alias so cases created under the prior change-watch convention continue to reopen correctly.
+
+The watch observation is hash-bound and also surfaces Decision Evidence integrity failures. This turns the paid 14-day watch into:
+
+`delivered evidence state -> fresh approved observations -> explicit delta -> only affected assumptions reopened -> human review`
+
+rather than “send an alert when something on SAM changes.”
