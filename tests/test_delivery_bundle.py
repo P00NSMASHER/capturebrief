@@ -8,6 +8,7 @@ import unittest
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from capturebrief_core.delivery_bundle import build_delivery_bundle, build_delivery_files
 
@@ -86,6 +87,51 @@ class DeliveryBundleTests(unittest.TestCase):
             target.write_bytes(b"existing")
             with self.assertRaises(FileExistsError):
                 build_delivery_bundle(case,target,now=NOW)
+
+    def test_failed_new_bundle_write_leaves_no_final_file(self):
+        case=ready_case()
+        with tempfile.TemporaryDirectory() as d:
+            target=Path(d)/"delivery.zip"
+            with patch("capturebrief_core.delivery_bundle._write_zip", side_effect=OSError("simulated write failure")):
+                with self.assertRaises(OSError):
+                    build_delivery_bundle(case,target,now=NOW)
+            self.assertFalse(target.exists())
+            self.assertEqual(list(Path(d).glob(".delivery.zip.*.tmp")),[])
+
+    def test_failed_explicit_overwrite_preserves_existing_delivery(self):
+        case=ready_case()
+        with tempfile.TemporaryDirectory() as d:
+            target=Path(d)/"delivery.zip"
+            target.write_bytes(b"existing-delivery")
+            with patch("capturebrief_core.delivery_bundle._write_zip", side_effect=OSError("simulated write failure")):
+                with self.assertRaises(OSError):
+                    build_delivery_bundle(case,target,now=NOW,overwrite=True)
+            self.assertEqual(target.read_bytes(),b"existing-delivery")
+            self.assertEqual(list(Path(d).glob(".delivery.zip.*.tmp")),[])
+
+    def test_concurrent_no_overwrite_race_preserves_other_writer(self):
+        case=ready_case()
+        with tempfile.TemporaryDirectory() as d:
+            target=Path(d)/"delivery.zip"
+            def race(_src,_dst):
+                Path(_dst).write_bytes(b"other-writer-won")
+                raise FileExistsError("simulated concurrent publication")
+            with patch("capturebrief_core.delivery_bundle.os.link", side_effect=race):
+                with self.assertRaises(FileExistsError):
+                    build_delivery_bundle(case,target,now=NOW)
+            self.assertEqual(target.read_bytes(),b"other-writer-won")
+            self.assertEqual(list(Path(d).glob(".delivery.zip.*.tmp")),[])
+
+    def test_explicit_overwrite_replaces_only_after_complete_bundle(self):
+        case=ready_case()
+        with tempfile.TemporaryDirectory() as d:
+            target=Path(d)/"delivery.zip"
+            target.write_bytes(b"existing-delivery")
+            result=build_delivery_bundle(case,target,now=NOW,overwrite=True)
+            self.assertNotEqual(target.read_bytes(),b"existing-delivery")
+            self.assertEqual(result["bundle_sha256"],hashlib.sha256(target.read_bytes()).hexdigest())
+            with zipfile.ZipFile(target) as zf:
+                self.assertIn("delivery-manifest.json",zf.namelist())
 
     def test_bundle_contains_no_raw_case_or_customer_intake(self):
         case=ready_case()
