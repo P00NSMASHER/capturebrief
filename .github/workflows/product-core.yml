@@ -20,6 +20,10 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Decision evidence contracts
         run: python -m unittest tests.test_decision_trace -v
+      - name: Customer delivery bundle contracts
+        run: python -m unittest tests.test_delivery_bundle -v
+      - name: Build release-gated customer bundle
+        run: python -m capturebrief_core.trace_cli bundle fixtures/ready_trace_case.json -o /tmp/capturebrief-delivery.zip
       - name: FAR DFARS rule registry contracts
         run: python -m unittest tests.test_rule_registry -v
       - name: Pinned GSA rule source sync contracts
