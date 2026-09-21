@@ -1,8 +1,50 @@
-# CaptureBrief Product Core v0.7 — Reference Case Transitions
+# CaptureBrief Product Core v0.8 — Decision Evidence
 
 Updated: September 21, 2026
 
-CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.3 hardens the product around approved SAM automation surfaces and explicitly separates automated evidence from human-supervised source observations.
+CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.8 adds a fail-closed Decision Evidence layer so a buyer-facing assumption can be traced to exact retained passages, source versions, reviewed rule editions, and version changes without letting the system automatically decide legal applicability or overwrite prior decisions.
+
+## v0.8 decision evidence contract
+
+The product promise is now:
+
+> **Know what your bid decision rests on.**
+>
+> CaptureBrief shows the exact public-source passages, source versions, reviewed rule editions, and changes behind the assumptions your team is using — plus what still needs verification.
+
+Decision Evidence is additive to the existing SAM history/current-action/packet gates. A complete trace does **not** substitute for complete solicitation history, current-action authority, attachment/tombstone review, reference closure, or required byte capture.
+
+New intake-generated cases set `decision_trace_required = true`. Older stored cases remain readable under the existing case schema and are not retroactively represented as fully traced.
+
+For each reviewed assumption, the trace can retain:
+
+- a content-addressed public source snapshot bound to the source manifest and original document SHA-256;
+- an exact line-bounded passage plus human-readable page/section/paragraph locator;
+- the buyer-facing evidence state and finding, which must match the trace review exactly;
+- a named reviewer and timezone-aware review time;
+- explicit rule-review scope: `REQUIRED`, `NOT_RELEVANT`, or `UNRESOLVED`;
+- a pinned FAR / DFARS / agency-supplement / class-deviation edition when a rule review is required;
+- applicability state: `APPLIES`, `DOES_NOT_APPLY`, or `UNRESOLVED`, with a reviewed basis;
+- source-version relationships such as `AMENDS`, `CORRECTS`, and `SUPERSEDES`;
+- a concrete evidence request for unresolved/source-limited assumptions.
+
+Important invariants:
+
+- **Newest publication is not automatically the controlling edition.**
+- A repository commit date, source observation time, rule effective date, solicitation incorporation, and controlling edition are separate facts.
+- A hash proves retained-byte consistency; it does not independently authenticate the publisher or decide legal applicability.
+- Rule applicability remains a named human review decision with cited basis.
+- New source/rule versions trigger re-review only for assumptions that depend on them; historical decisions are preserved instead of rewritten.
+- Decision-evidence gaps become human-review work-queue tasks. They are never auto-approved.
+- Synthetic/illustrative traces can exercise the product but cannot authorize a customer release.
+
+Decision-evidence CLI:
+
+    python -m capturebrief_core.trace_cli check case.json
+    python -m capturebrief_core.trace_cli report case.json --format markdown -o decision-evidence.md
+    python -m capturebrief_core.trace_cli report case.json --format html -o decision-evidence.html
+    python -m capturebrief_core.trace_cli freeze case.json --directory evidence/decisions
+    python -m capturebrief_core.trace_cli compare before.json after.json
 
 ## v0.3 source architecture
 
