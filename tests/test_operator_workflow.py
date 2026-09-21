@@ -54,7 +54,7 @@ class OperatorWorkflowTests(unittest.TestCase):
         self.assertEqual(len(keys), len(set(keys)))
         self.assertIn("history:establish", keys)
         self.assertIn("family:status", keys)
-        self.assertIn("references:scan", keys)
+        self.assertIn("references:propose", keys)
         self.assertIn("assumption-source:A1", keys)
         self.assertTrue(queue["release_blocked"])
         self.assertGreaterEqual(queue["summary"]["auto_executable"], 2)
@@ -123,6 +123,23 @@ class OperatorWorkflowTests(unittest.TestCase):
         self.assertEqual(task["metadata"]["reason_counts"], {"STALE": 1, "MISSING": 1, "UNVERIFIED": 1})
         self.assertEqual(len(task["metadata"]["download_plan"]), 3)
         self.assertNotIn("history:establish", {x["task_key"] for x in queue["tasks"]})
+
+    def test_proposed_reference_scan_requires_human_review(self):
+        case = build_case_from_intake(
+            intake(),
+            submitted_at="2026-09-21T15:00:00+00:00",
+        )
+        case["packet"]["reference_scan"] = {
+            "status": "PROPOSED",
+            "proposal_sha256": "a" * 64,
+        }
+        queue = build_work_queue(case, now=NOW)
+        keys = {x["task_key"] for x in queue["tasks"]}
+        self.assertIn("references:review-proposal", keys)
+        self.assertNotIn("references:propose", keys)
+        task = next(x for x in queue["tasks"] if x["task_key"] == "references:review-proposal")
+        self.assertFalse(task["can_auto_execute"])
+        self.assertEqual(task["actor"], "HUMAN_REVIEW")
 
     def test_required_current_api_resource_can_be_auto_executable(self):
         case = build_case_from_intake(
