@@ -1,8 +1,114 @@
-# CaptureBrief Product Core v0.24 — Official Deviation Artifact Capture
+# CaptureBrief Product Core v0.25 — Structured Deviation Authority Review
 
 Updated: September 21, 2026
 
 CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.23 adds a controlled class-deviation discovery path on top of the v0.22 Decision Evidence, release bundle, and targeted-watch system. It can now prove which exact pinned deviation index was inspected and surface agency/FAR-Part candidates without turning corpus membership—or corpus absence—into an applicability decision.
+
+## v0.25 — Structured Deviation Authority Review
+
+v0.24 proved the exact public PDF bytes behind a class-deviation candidate. v0.25 turns the next analyst step into a deterministic evidence transition rather than a free-text note.
+
+The path is now:
+
+`captured PDF SHA-256 -> reviewed text bound to those bytes -> exact memo passage -> reviewed effective-date passage -> separate currentness basis -> content-addressed authority review -> later pursuit-specific applicability`
+
+### Reviewed text bound to captured bytes
+
+Before authority review, a named reviewer prepares text from the captured public PDF.
+
+The preparation:
+
+- requires a current PDF capture receipt;
+- binds the source-manifest row to the captured PDF SHA-256;
+- creates a content-addressed `DEVIATION` text snapshot;
+- records reviewer, preparation time and a mapping note;
+- refuses preparation before the PDF observation time;
+- leaves currentness, effective date and applicability unresolved.
+
+The reviewed text does not become authoritative merely because it was extracted successfully.
+
+### Exact memo passage
+
+Every authority review requires an exact line-bounded memo passage with a human-readable locator.
+
+The passage is generated from the retained reviewed snapshot, so the reviewer cannot supply a quote that differs from the preserved text.
+
+### Effective-date claims require evidence
+
+A reviewer may record `effective_from` / `effective_until` only with an exact passage from the captured memo snapshot.
+
+Conversely, an effective-date passage cannot create an implicit date. The explicit reviewed date and the supporting passage must both exist.
+
+### Currentness cannot self-certify
+
+A deviation memo may describe its own issue/effective date, but it cannot prove that no later action superseded it.
+
+Therefore `CURRENT` or `SUPERSEDED` requires a **separate retained public Decision Evidence snapshot** as currentness basis.
+
+CaptureBrief verifies that the basis snapshot:
+
+- is content-addressed correctly;
+- has a valid retained-text SHA-256;
+- binds to a retained public source object;
+- was observed no later than the authority review;
+- is not the deviation memo snapshot itself.
+
+A `SUPERSEDED` decision also requires an explicit reference to the superseding source/artifact.
+
+Without this evidence, currentness must remain `UNRESOLVED`.
+
+### Human-reviewed state is not automatic applicability
+
+The authority review records:
+
+- `CURRENT`, `SUPERSEDED`, or `UNRESOLVED`;
+- exact memo passage;
+- reviewed effective interval when established;
+- exact effective-date passage;
+- exact separate currentness basis when resolved;
+- reviewer identity and review time;
+- superseding reference when applicable.
+
+It explicitly retains:
+
+- `currentness_authoritative = false`;
+- `effective_date_authoritative = false`;
+- `applicability = UNRESOLVED`;
+- `applicability_authoritative = false`;
+- `assumption_state_changed = false`;
+- `can_auto_apply = false`.
+
+That means the structured review can improve the evidence without silently changing the customer's bid decision.
+
+### Operator queue
+
+The positive-candidate path is now specific rather than duplicative:
+
+1. `deviation-bytes:<id>` — capture/hash official PDF;
+2. `deviation-text:<id>` — human-reviewed extraction bound to PDF SHA;
+3. `deviation-authority:<id>` — review memo passage/effective/current/supersession;
+4. `deviation-currentness:<id>` — remains open if currentness is still unresolved.
+
+The old aggregate candidate-review task is retained only for **zero-candidate searches**, where bounded-corpus absence still needs human handling.
+
+### CLI
+
+Prepare reviewed text:
+
+    python -m capturebrief_core.rule_cli case-prepare-deviation-text \
+      case-with-deviation-bytes.json <DEVSRC:...> memo.txt \
+      --prepared-by "CaptureBrief reviewer" \
+      --prepared-at 2026-09-21T19:00:00Z \
+      --mapping-note "Reviewed extraction against captured official PDF." \
+      -o case-with-deviation-text.json
+
+Apply a structured authority review:
+
+    python -m capturebrief_core.rule_cli case-review-deviation-authority \
+      case-with-deviation-text.json deviation-authority-review.json \
+      -o case-with-deviation-authority.json
+
+The next boundary is to bridge a reviewed deviation authority record into the existing Decision Evidence rule/applicability model for a specific bid assumption without weakening its separate pursuit-specific basis requirement.
 
 ## v0.24 — Official Deviation Artifact Capture
 
