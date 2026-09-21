@@ -1,9 +1,9 @@
 name: Product Core
 on:
   push:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','index.html','sample.html','decision-evidence-sample.html']
   pull_request:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','SOURCE-POLICY.md','REFERENCE-REVIEW.md']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','index.html','sample.html','decision-evidence-sample.html']
 permissions:
   contents: read
 jobs:
@@ -24,6 +24,13 @@ jobs:
         run: python -m unittest tests.test_delivery_bundle -v
       - name: Targeted watch baseline contracts
         run: python -m unittest tests.test_watch_baseline -v
+      - name: Commercial outcome ledger contracts
+        run: python -m unittest tests.test_outcomes -v
+      - name: Exercise outcome ledger CLI
+        run: |
+          python -m capturebrief_core.cli outcome-validate fixtures/outcome_event_example.json -o /tmp/outcome-valid.json
+          python -m capturebrief_core.cli outcome-append /tmp/capturebrief-outcomes.jsonl fixtures/outcome_event_example.json --recorded-at 2026-09-21T18:10:00Z -o /tmp/outcome-record.json
+          python -m capturebrief_core.cli outcome-summary /tmp/capturebrief-outcomes.jsonl -o /tmp/outcome-summary.json
       - name: Build release-gated customer bundle
         run: python -m capturebrief_core.trace_cli bundle fixtures/ready_trace_case.json -o /tmp/capturebrief-delivery.zip
       - name: Build and compare targeted watch baseline
