@@ -15,6 +15,7 @@ from .packet import build_resource_union, diff_manifest_receipts, validate_refer
 from .render import render_markdown
 from .intake import IntakeError, build_case_from_intake
 from .workqueue import build_work_queue
+from .evidence_apply import EvidenceApplyError, apply_approved_evidence, apply_byte_receipt, apply_current_api_evidence, apply_history_receipt
 from .watch import compare_cases
 
 __all__=[
@@ -25,5 +26,6 @@ __all__=[
     "fetch_and_ingest_slot","index_status","ingest_extract_file","issue_history_receipt_from_index","sync_plan",
     "SourcePolicyError","classify_sam_url","require_approved_automation",
     "IntakeError","build_case_from_intake","build_work_queue",
+    "EvidenceApplyError","apply_approved_evidence","apply_byte_receipt","apply_current_api_evidence","apply_history_receipt",
     "build_resource_union","diff_manifest_receipts","validate_reference_closure","render_markdown","compare_cases"
 ]

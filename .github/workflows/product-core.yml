@@ -22,6 +22,29 @@ jobs:
         run: python -m capturebrief_core.cli case-from-intake fixtures/intake.json --submitted-at 2026-09-21T15:00:00+00:00 -o /tmp/intake-case.json
       - name: Build operator work queue
         run: python -m capturebrief_core.cli work-queue /tmp/intake-case.json -o /tmp/work-queue.json
+      - name: Apply semantically hardened approved evidence
+        run: |
+          python -m capturebrief_core.cli apply-approved-evidence /tmp/intake-case.json \
+            --history-receipt fixtures/approved-history.json \
+            --current-receipt fixtures/approved-current-receipt.json \
+            --api-observation fixtures/approved-current-observation.json \
+            -o /tmp/evidence-case.json
+      - name: Prove approved evidence shrinks the queue
+        run: |
+          python - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          from capturebrief_core.workqueue import build_work_queue
+          case=json.load(open('/tmp/evidence-case.json'))
+          queue=build_work_queue(case,now=datetime(2026,9,21,16,0,tzinfo=timezone.utc))
+          keys={task['task_key'] for task in queue['tasks']}
+          assert 'history:establish' not in keys
+          assert 'family:status' not in keys
+          assert 'current:authority' not in keys
+          assert {'manifest:a1','manifest:a2'} <= keys
+          assert case['assumptions'][0]['evidence_state']=='UNPROVEN'
+          print(json.dumps(queue['summary'],indent=2))
+          PY
       - name: Validate releasable fixture
         run: python -m capturebrief_core.cli validate fixtures/ready_case.json
       - name: Render releasable fixture

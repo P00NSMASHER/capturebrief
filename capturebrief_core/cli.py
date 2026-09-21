@@ -14,6 +14,7 @@ from .history_index import (
 )
 from .intake import build_case_from_intake
 from .workqueue import build_work_queue
+from .evidence_apply import apply_approved_evidence
 
 
 def load(p): return json.loads(Path(p).read_text())
@@ -40,6 +41,7 @@ def main():
     x=sub.add_parser("history-from-index"); x.add_argument("index_db"); x.add_argument("solicitation_number"); x.add_argument("--seed-notice-id",required=True); x.add_argument("--fiscal-year",type=int); x.add_argument("--observed-at"); x.add_argument("--output","-o"); x.add_argument("--ledger")
     x=sub.add_parser("case-from-intake"); x.add_argument("intake_json"); x.add_argument("--submitted-at"); x.add_argument("--output","-o")
     x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--output","-o")
+    x=sub.add_parser("apply-approved-evidence"); x.add_argument("case"); x.add_argument("--history-receipt"); x.add_argument("--current-receipt"); x.add_argument("--api-observation"); x.add_argument("--byte-receipt",action="append",default=[]); x.add_argument("--output","-o")
     x=sub.add_parser("ledger-append"); x.add_argument("ledger"); x.add_argument("record_type"); x.add_argument("payload_json")
     x=sub.add_parser("ledger-verify"); x.add_argument("ledger")
     a=p.parse_args()
@@ -103,6 +105,13 @@ def main():
     if a.cmd=="work-queue":
         observation=load(a.api_observation) if a.api_observation else None
         dump(build_work_queue(load(a.case),api_observation=observation),a.output); return 0
+    if a.cmd=="apply-approved-evidence":
+        history=load(a.history_receipt) if a.history_receipt else None
+        current=load(a.current_receipt) if a.current_receipt else None
+        observation=load(a.api_observation) if a.api_observation else None
+        byte_receipts=[load(path) for path in a.byte_receipt]
+        updated=apply_approved_evidence(load(a.case),history_receipt=history,current_receipt=current,api_observation=observation,byte_receipts=byte_receipts)
+        dump(updated,a.output); return 0
     if a.cmd=="ledger-append": dump(append_record(a.ledger,record_type=a.record_type,payload=load(a.payload_json))); return 0
     if a.cmd=="ledger-verify":
         result=verify_ledger(a.ledger); dump(result); return 0 if result["valid"] else 2
