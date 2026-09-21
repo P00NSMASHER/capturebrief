@@ -101,6 +101,36 @@ CI exercises the full path:
 
 This makes the fulfillment process reproducible rather than dependent on the founder remembering the next evidence step.
 
+## Evidence application bridge
+
+Approved acquisition receipts now update the operational case directly instead of remaining disconnected JSON.
+
+`apply-approved-evidence`:
+- semantically validates a Data Services receipt before mutating the case;
+- applies the observed action set and preserves superseded history receipts separately;
+- invalidates a stale current-action receipt automatically when the history set changes;
+- applies documented Opportunities API currentness only when the asserted Notice ID is already inside the validated action set;
+- retains the API observation and its approved `resourceLinks` inside the case;
+- creates resource placeholders without mislabeling unverified bytes as public evidence;
+- promotes only a matching resource after a verified SHA-256 byte receipt;
+- is idempotent for sources, current receipts, and resource placeholders.
+
+Source evidence still does **not** adjudicate the customer's assumption. An intake assumption remains `UNPROVEN` until the human review step explicitly changes it.
+
+The tested fulfillment progression is now:
+
+    website intake
+      -> unproven case
+      -> work queue
+      -> hardened Data Services + Opportunities API receipts
+      -> evidence-applied case
+      -> smaller work queue
+      -> historical packet/reference review
+      -> human assumption adjudication
+      -> release gate
+
+CI asserts that hardened approved evidence removes history/family/current-authority tasks while historical manifest tasks remain open.
+
 ## Remaining P0
 
 The remaining automation gap is proving the **history scope start** without guessing. Until GSA exposes a narrower all-version family query with authoritative completeness semantics, CaptureBrief requires an explicit scope boundary for Data Services archive coverage. The product should prefer one extra human confirmation over a false “all amendments found” claim.
