@@ -1,0 +1,51 @@
+name: One-time JP Enterprises branding
+on:
+  push:
+    branches: [pages-buyer-evidence-jp-brand-20260921]
+    paths: ['.github/jp_brand_migration.py', '.github/workflows/jp-brand-migration.yml']
+permissions:
+  contents: write
+concurrency:
+  group: jp-brand-migration
+  cancel-in-progress: false
+jobs:
+  prepare-and-test:
+    if: github.event.head_commit.message == 'Prepare one-time JP Enterprises site branding'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Apply bounded static branding edit
+        run: python .github/jp_brand_migration.py
+      - name: Install existing pinned browser tools
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Preserve all existing Chromium and WebKit website checks
+        run: |
+          QA_BROWSER=chromium QA_OUTPUT=qa-output/chromium python .github/site_qa.py
+          QA_BROWSER=webkit QA_OUTPUT=qa-output/webkit python .github/site_qa.py
+          QA_OUTPUT=qa-output/buyer python .github/buyer_journey_qa.py
+      - name: Commit tested pages to the preparation branch only
+        env:
+          TARGET_BRANCH: pages-buyer-evidence-jp-brand-20260921
+        run: |
+          git fetch origin "$TARGET_BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git add -- '*.html' assets/enterprise.js
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Apply tested JP Enterprises display branding across published sites'
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          git rev-parse HEAD > qa-output/candidate-commit.txt
+      - name: Preserve branding and browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jp-enterprises-brand-proof
+          path: qa-output/
+          retention-days: 7
+          if-no-files-found: error
