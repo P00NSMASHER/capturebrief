@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -106,6 +108,37 @@ def build_delivery_files(case: dict[str, Any], *, now: datetime | None = None) -
     }
 
 
+def _write_zip(path: Path, files: dict[str, bytes]) -> None:
+    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+        for name in sorted(files):
+            info = zipfile.ZipInfo(name, date_time=_FIXED_ZIP_TIME)
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o100644 << 16
+            zf.writestr(info, files[name])
+    # Ensure the completed archive reaches the filesystem before publication.
+    with path.open("rb") as stream:
+        os.fsync(stream.fileno())
+
+
+def _publish_completed_zip(temp_path: Path, target: Path, *, overwrite: bool) -> None:
+    """Publish a completed archive without exposing a partially written target.
+
+    overwrite=False uses a hard-link publication step because link creation is
+    atomic and fails if another writer created the destination first.
+    overwrite=True is an explicit replacement request and uses os.replace,
+    which is atomic on the same filesystem.
+    """
+    if overwrite:
+        os.replace(temp_path, target)
+        return
+    try:
+        os.link(temp_path, target)
+    except FileExistsError:
+        raise FileExistsError(f"refusing to overwrite existing bundle: {target}") from None
+    else:
+        temp_path.unlink()
+
+
 def build_delivery_bundle(
     case: dict[str, Any],
     output_zip: str | Path,
@@ -113,12 +146,17 @@ def build_delivery_bundle(
     now: datetime | None = None,
     overwrite: bool = False,
 ) -> dict[str, Any]:
-    """Write a deterministic ZIP and return its manifest + ZIP SHA-256."""
+    """Write a deterministic ZIP and return its manifest + ZIP SHA-256.
+
+    The complete ZIP is built in the destination directory and published only
+    after close/fsync. A failed build never truncates an existing target, and
+    the default no-overwrite path cannot silently win a concurrent race.
+    """
     now = _aware(now or datetime.now(timezone.utc))
     target = Path(output_zip)
+    target.parent.mkdir(parents=True, exist_ok=True)
     if target.exists() and not overwrite:
         raise FileExistsError(f"refusing to overwrite existing bundle: {target}")
-    target.parent.mkdir(parents=True, exist_ok=True)
 
     files = build_delivery_files(case, now=now)
     file_rows = [
@@ -139,12 +177,19 @@ def build_delivery_bundle(
     }
     files["delivery-manifest.json"] = _json_bytes(manifest)
 
-    with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
-        for name in sorted(files):
-            info = zipfile.ZipInfo(name, date_time=_FIXED_ZIP_TIME)
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = 0o100644 << 16
-            zf.writestr(info, files[name])
+    fd, temp_name = tempfile.mkstemp(
+        prefix=f".{target.name}.",
+        suffix=".tmp",
+        dir=str(target.parent),
+    )
+    os.close(fd)
+    temp_path = Path(temp_name)
+    try:
+        _write_zip(temp_path, files)
+        _publish_completed_zip(temp_path, target, overwrite=overwrite)
+    finally:
+        if temp_path.exists():
+            temp_path.unlink()
 
     result = dict(manifest)
     result["bundle_path"] = str(target)
