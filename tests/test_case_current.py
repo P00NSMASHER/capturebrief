@@ -82,6 +82,8 @@ def observation(sol="SOL-1",notice=A2,links=None):
         "source_url":SEARCH_URL,
         "observed_at":NOW,
         "payload_sha256":"e"*64,
+        "response_sha256":"f"*64,
+        "pagination":{"total_records":1,"returned_records":1,"limit":100,"offset":0,"complete":True},
         "source_contract":"SAM_GET_OPPORTUNITIES_V2",
         "automation_mode":"APPROVED_API",
         "resource_links":links,
