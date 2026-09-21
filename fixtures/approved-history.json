@@ -1,0 +1,22 @@
+{
+  "source_surface": "SAM_DATA_SERVICES",
+  "source_url": "https://sam.gov/data-services/Contract%20Opportunities/datagov?privacy=Public",
+  "observed_at": "2026-09-21T16:00:00+00:00",
+  "status": "COMPLETE",
+  "action_ids": ["a1", "a2"],
+  "history_set_sha256": "7e0163940bce5934e57890c8cb890007d478774b78efdb0924dd0937e0d31688",
+  "evidence_payload_sha256": "dc02dd9566004366436a427a4422832ddb5ebeb1c662ec81b36eae1d2aae2309",
+  "evidence_payload": {
+    "source_contract": "SAM_DATA_SERVICES_EXTRACT",
+    "family": {"solicitation_number": "SOL-1", "aac_code": "AAC1", "office": "Office"},
+    "scope": {"start_fy": 2026, "end_fy": 2026, "scope_confirmed": true},
+    "actions": [
+      {"notice_id": "a1", "observations": []},
+      {"notice_id": "a2", "observations": []}
+    ],
+    "source_snapshots": [],
+    "ordering_authoritative": false,
+    "current_action_authoritative": false
+  },
+  "automation_mode": "APPROVED_EXTRACT"
+}
