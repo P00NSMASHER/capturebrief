@@ -1,5 +1,9 @@
 name: SAM Manifest Canary
 on:
+  push:
+    paths:
+      - 'capturebrief_core/manifest.py'
+      - '.github/workflows/sam-manifest-canary.yml'
   schedule:
     - cron: '17 12 * * *'
   workflow_dispatch:
