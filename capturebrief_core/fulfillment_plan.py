@@ -1,15 +1,19 @@
-"""Operator-facing fulfillment plan built from the existing fail-closed work queue."""
+"""Operator planning only: work availability is not execution or send authority."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from .audit import audit_case
+from .decision_trace import evaluate_decision_trace
 from .workqueue import build_work_queue
+
+_AUTOMATED_ACTORS = frozenset({"AUTOMATED_APPROVED_SOURCE", "AUTOMATED_LOCAL"})
+_PRIORITY = {"P0": 0, "P1": 1, "P2": 2}
 
 
 def effort_stage(task_key: str) -> str:
-    key=str(task_key or "")
+    key = str(task_key or "")
     if key.startswith(("history:", "history-index:", "current:", "family:")):
         return "HISTORY_CURRENT"
     if key.startswith(("manifest:", "manifest-conflict:", "bytes:")):
@@ -22,7 +26,14 @@ def effort_stage(task_key: str) -> str:
         return "RULE_REVIEW"
     if key.startswith("deviation"):
         return "DEVIATION_REVIEW"
+    if key.startswith("delivery:"):
+        return "DELIVERY"
     return "OTHER"
+
+
+def _automation_eligible(task: dict[str, Any]) -> bool:
+    # HYBRID can contain an automated substep, but the whole task still needs review.
+    return task.get("can_auto_execute") is True and task.get("actor") in _AUTOMATED_ACTORS
 
 
 def build_fulfillment_plan(
@@ -32,68 +43,90 @@ def build_fulfillment_plan(
     history_index_plan: dict[str, Any] | None = None,
     now: datetime | None = None,
 ) -> dict[str, Any]:
-    queue=build_work_queue(
-        case,
-        api_observation=api_observation,
-        history_index_plan=history_index_plan,
-        now=now,
+    now = now or datetime.now(timezone.utc)
+    if not isinstance(now, datetime) or now.tzinfo is None:
+        raise ValueError("now must be timezone-aware")
+    queue = build_work_queue(case, api_observation=api_observation,
+                             history_index_plan=history_index_plan, now=now)
+    audit = audit_case(case, now=now)
+    trace = evaluate_decision_trace(case, now=now)
+    blockers = {f.code for f in audit.findings if f.severity == "BLOCK"}
+    blockers.update(f["code"] for f in trace["findings"] if f["severity"] == "BLOCK")
+    trace_required = case.get("decision_trace_required") is True
+    if not trace_required:
+        blockers.add("DELIVERY_REQUIRES_DECISION_TRACE")
+    bundle_eligible = (
+        trace_required
+        and audit.release_state == "READY_FOR_HUMAN_RELEASE"
+        and trace.get("trace_state") == "TRACE_COMPLETE"
+        and trace.get("synthetic") is not True
     )
-    audit=audit_case(case,now=now)
-    tasks=[]
+    tasks = []
     for task in queue["tasks"]:
-        row={**task}
-        row["effort_stage"]=effort_stage(task["task_key"])
-        row["work_lane"]="SAFE_AUTOMATION" if task["can_auto_execute"] else "HUMAN_OR_HYBRID"
+        row = {**task}
+        row["queue_can_auto_execute"] = task.get("can_auto_execute") is True
+        row["can_auto_execute"] = _automation_eligible(task)
+        row["effort_stage"] = effort_stage(task["task_key"])
+        row["work_lane"] = "SAFE_AUTOMATION" if row["can_auto_execute"] else "HUMAN_OR_HYBRID"
         tasks.append(row)
 
-    p0=[x for x in tasks if x["priority"]=="P0"]
-    p1=[x for x in tasks if x["priority"]=="P1"]
-    p2=[x for x in tasks if x["priority"]=="P2"]
-    p0_auto=[x for x in p0 if x["can_auto_execute"]]
-    p0_human=[x for x in p0 if not x["can_auto_execute"]]
+    if not bundle_eligible:
+        tasks.append({
+            "task_key": "delivery:readiness", "priority": "P0", "status": "OPEN",
+            "title": "Resolve customer-bundle readiness before packaging",
+            "actor": "HUMAN_REVIEW", "can_auto_execute": False,
+            "queue_can_auto_execute": False, "work_lane": "HUMAN_OR_HYBRID",
+            "effort_stage": "DELIVERY",
+            "reason": "Legacy readability or an empty work queue cannot authorize a customer bundle.",
+            "evidence_needed": "Required non-synthetic complete Decision Evidence and a passing full case audit.",
+            "metadata": {"finding_codes": sorted(blockers)},
+        })
 
-    # Clear deterministic approved-source/local work first, but never convert that
-    # preference into permission to perform a human evidence/applicability decision.
-    next_task=(p0_auto or p0_human or [x for x in p1 if x["can_auto_execute"]]
-               or [x for x in p1 if not x["can_auto_execute"]]
-               or [x for x in p2 if x["can_auto_execute"]]
-               or [x for x in p2 if not x["can_auto_execute"]])
-    next_task=next_task[0] if next_task else None
-
-    stage_counts={}
+    tasks.sort(key=lambda t: (_PRIORITY.get(t["priority"], 0), t["task_key"]))
+    by_priority = {p: [t for t in tasks if t["priority"] == p] for p in _PRIORITY}
+    p0_auto = [t for t in by_priority["P0"] if t["can_auto_execute"]]
+    p0_human = [t for t in by_priority["P0"] if not t["can_auto_execute"]]
+    next_task = next((t for p in _PRIORITY for auto in (True, False)
+                      for t in by_priority[p] if t["can_auto_execute"] is auto), None)
+    stage_counts: dict[str, int] = {}
     for task in tasks:
-        stage=task["effort_stage"]
-        stage_counts[stage]=stage_counts.get(stage,0)+1
+        stage = task["effort_stage"]
+        stage_counts[stage] = stage_counts.get(stage, 0) + 1
 
-    if audit.release_state=="READY_FOR_HUMAN_RELEASE" and not tasks:
-        state="READY_TO_BUILD_DELIVERY"
+    if not trace_required:
+        state = "TRACE_UPGRADE_REQUIRED"
+    elif bundle_eligible and not tasks:
+        state = "READY_TO_BUILD_DELIVERY"
     elif p0_human:
-        state="HUMAN_REVIEW_REQUIRED"
+        state = "HUMAN_REVIEW_REQUIRED"
     elif p0_auto:
-        state="APPROVED_AUTOMATION_AVAILABLE"
+        state = "APPROVED_AUTOMATION_AVAILABLE"
     else:
-        state="WORK_REMAINS"
+        state = "WORK_REMAINS"
 
     return {
-        "case_id":case.get("case_id"),
-        "generated_at":queue["generated_at"],
-        "fulfillment_state":state,
-        "release_state":audit.release_state,
-        "release_blocker_codes":sorted({x.code for x in audit.findings if x.severity=="BLOCK"}),
-        "next_task":next_task,
-        "safe_automation_batch":p0_auto,
-        "human_review_batch":p0_human,
-        "later_work":{"P1":p1,"P2":p2},
-        "summary":{
-            "open_tasks":len(tasks),
-            "p0":len(p0),
-            "p0_safe_automation":len(p0_auto),
-            "p0_human_or_hybrid":len(p0_human),
-            "stage_task_counts":dict(sorted(stage_counts.items())),
-            "automatic_evidence_or_bid_decision":False,
+        "case_id": case.get("case_id"), "generated_at": queue["generated_at"],
+        "fulfillment_state": state, "release_state": audit.release_state,
+        "trace_state": trace["trace_state"],
+        "delivery_bundle_eligible": bundle_eligible,
+        "release_blocker_codes": sorted(blockers), "next_task": next_task,
+        "safe_automation_batch": p0_auto, "human_review_batch": p0_human,
+        "later_work": {"P1": by_priority["P1"], "P2": by_priority["P2"]},
+        "summary": {
+            "open_tasks": len(tasks), "p0": len(by_priority["P0"]),
+            "p0_safe_automation": len(p0_auto), "p0_human_or_hybrid": len(p0_human),
+            "stage_task_counts": dict(sorted(stage_counts.items())),
+            "automatic_evidence_or_bid_decision": False,
+            "automatic_execution_performed": False,
         },
-        "effort_logging":{
-            "instruction":"Time the actual operator work under the task's effort_stage; do not estimate or backfill invented minutes.",
-            "stages":sorted(stage_counts),
+        "communications": {
+            "external_send_authorized": False,
+            "approval_required_for_each_message": True,
+            "inbound_reply_grants_send_permission": False,
+            "completed_bundle_grants_send_permission": False,
+        },
+        "effort_logging": {
+            "instruction": "Time actual operator work under the task's effort_stage; do not invent minutes.",
+            "stages": sorted(stage_counts),
         },
     }
