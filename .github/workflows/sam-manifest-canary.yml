@@ -1,0 +1,29 @@
+name: SAM Manifest Canary
+on:
+  schedule:
+    - cron: '17 12 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-manifest-shape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Probe pinned public SAM manifest surface
+        env:
+          CANARY_ACTION_ID: 0f367577ad68477b947384888441974e
+        run: |
+          python - <<'PY'
+          import os
+          from capturebrief_core.manifest import fetch_manifest
+          receipt = fetch_manifest(os.environ['CANARY_ACTION_ID'])
+          print('status=', receipt['status'])
+          print('resources=', len(receipt['items']))
+          print('raw_manifest_sha256=', receipt['raw_manifest_sha256'])
+          print('parser_version=', receipt['parser_version'])
+          print('source_contract=', receipt['source_contract'])
+          PY
