@@ -1,8 +1,150 @@
-# CaptureBrief Product Core v0.18 — Exact Rule Evidence Preparation
+# CaptureBrief Product Core v0.19 — Rule-to-Assumption Applicability Review
 
 Updated: September 21, 2026
 
-CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.18 closes the next rule-evidence gap: after a human selects a pinned FAR/DFARS edition, the reviewer selects the exact official paragraph to carry forward and CaptureBrief prepares the content-addressed source, snapshot, passage, and rule-version objects for Decision Evidence—without binding the rule to an assumption or deciding applicability.
+CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.19 completes the rule-to-assumption evidence chain: a human reviewer binds the exact prepared rule edition/passage to one specific bid assumption and records APPLIES / DOES_NOT_APPLY / UNRESOLVED using a separate exact solicitation/amendment/context passage as the pursuit-specific basis.
+
+## v0.19 — Rule-to-Assumption Applicability Review
+
+CaptureBrief now has an explicit final human transition from prepared rule evidence into the buyer's Decision Evidence trace.
+
+The full path is:
+
+`solicitation citation -> pinned official rule source -> human edition selection -> exact official rule paragraph -> human applicability review -> specific bid assumption`
+
+### Separate rule text from applicability basis
+
+A rule's own text cannot prove that the rule governs a particular solicitation.
+
+For a resolved `APPLIES` or `DOES_NOT_APPLY` decision, the reviewer must supply a **different exact Decision Evidence passage** from retained:
+
+- solicitation text;
+- amendment text; or
+- other pursuit-specific context.
+
+That basis passage must:
+- reference an existing content-addressed trace snapshot;
+- have a valid line range;
+- match the retained quote exactly;
+- include a human-readable locator;
+- not be the prepared rule snapshot itself.
+
+This creates two inspectable evidence planes:
+
+1. **What does the exact rule edition say?**
+2. **Why does the reviewer believe that edition applies—or does not apply—to this pursuit?**
+
+### Human applicability states
+
+For each prepared rule occurrence the reviewer records:
+
+- affected `assumption_id`;
+- `APPLIES`, `DOES_NOT_APPLY`, or `UNRESOLVED`;
+- basis class;
+- rationale;
+- rule-scope rationale;
+- named reviewer;
+- timezone-aware review time;
+- exact pursuit-specific basis passage when resolved.
+
+Supported basis classes:
+
+- `INCORPORATED_EDITION`;
+- `SOLICITATION_TEXT`;
+- `AMENDMENT_TEXT`;
+- `EFFECTIVE_DATE_REVIEW`;
+- `DEVIATION_REVIEW`;
+- `UNRESOLVED`.
+
+An `UNRESOLVED` decision must stay `UNRESOLVED`; it cannot carry a resolved-looking basis.
+
+For `INCORPORATED_EDITION`, the named incorporated edition must exactly equal the prepared rule edition. A reviewer cannot silently substitute a newer edition.
+
+### Human-reviewed, not legal authority
+
+The applicability conclusion is preserved as a named human QA review, not as an autonomous or legally authoritative system fact.
+
+The record explicitly keeps:
+
+- `human_reviewed = true`;
+- `applicability_authoritative = false`;
+- `can_auto_apply = false`;
+- `assumption_state_changed = false`.
+
+The transition **does not** change the buyer-facing assumption's evidence state or finding. Those remain separately reviewed Decision Evidence fields.
+
+### Decision Evidence mutation boundary
+
+The transition may add:
+
+- the prepared rule snapshot to `decision_trace.snapshots`;
+- the prepared rule version to `decision_trace.rule_versions`;
+- one exact rule link to the named assumption review;
+- `rule_scope = REQUIRED` with the reviewer-supplied scope rationale.
+
+It does not rewrite a different existing link for the same rule version. If an already-issued link differs, CaptureBrief fails and requires a new preserved decision version rather than silently rewriting history.
+
+### Buyer-facing report
+
+The expandable evidence trail now shows:
+
+- FAR/DFARS namespace + citation;
+- exact rule edition;
+- `APPLIES` / `DOES_NOT_APPLY` / `UNRESOLVED`;
+- applicability basis type;
+- incorporated edition when relevant;
+- reviewer rationale;
+- reviewer identity + time;
+- pursuit-specific source locator;
+- exact pursuit-specific basis passage.
+
+The short finding remains on top; this deeper rule history stays inspectable underneath.
+
+### Work queue
+
+Once exact rule evidence has been prepared and the case has an assumption Decision Evidence trace, the queue opens:
+
+`rules:review-applicability`
+
+as a P0 `HUMAN_REVIEW` task.
+
+The task does not appear before the Decision Evidence trace/assumption reviews exist, because there is nothing safe to bind the rule to yet.
+
+### CLI
+
+Review example:
+
+    {
+      "reviewed_by": "CaptureBrief reviewer",
+      "reviewed_at": "2026-09-21T17:15:00Z",
+      "decisions": [
+        {
+          "occurrence_id": "RULEMENTION:...",
+          "assumption_id": "A-1",
+          "applicability": "APPLIES",
+          "basis": "INCORPORATED_EDITION",
+          "incorporated_edition": "Nov 2021",
+          "rationale": "The solicitation explicitly incorporates this edition.",
+          "scope_rationale": "This assumption depends on the cited safeguarding requirement.",
+          "basis_passage": {
+            "snapshot_id": "SNAP:...",
+            "line_start": 42,
+            "line_end": 42,
+            "locator": "Section I, clause list",
+            "quote": "..."
+          }
+        }
+      ]
+    }
+
+Apply:
+
+    python -m capturebrief_core.rule_cli case-review-rule-applicability \
+      case-with-prepared-rule-evidence.json applicability-review.json \
+      -o updated-case.json \
+      --result-output applicability-transition.json
+
+After this stage, the buyer can inspect both the exact official rule version and the separate source passage supporting the reviewer’s pursuit-specific applicability conclusion.
 
 ## v0.18 — Exact Rule Evidence Preparation
 

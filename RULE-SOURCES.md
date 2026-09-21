@@ -147,6 +147,24 @@ Instead every prepared item remains:
 
 The later Decision Evidence reviewer must still bind the rule to a specific assumption and cite the solicitation/incorporation/effective-date basis.
 
+## Human rule applicability binding
+
+Prepared rule text becomes relevant to a buyer assumption only through a separate human applicability review.
+
+For each prepared occurrence the reviewer must identify:
+- the affected assumption;
+- `APPLIES`, `DOES_NOT_APPLY`, or `UNRESOLVED`;
+- a basis class;
+- a rationale;
+- a rule-scope rationale;
+- reviewer identity/time.
+
+For `APPLIES` or `DOES_NOT_APPLY`, the reviewer must also cite an exact **different** pursuit-specific passage from a retained solicitation, amendment, or context snapshot. The official rule passage itself cannot serve as proof that the rule governs the pursuit.
+
+For `INCORPORATED_EDITION`, the named incorporated edition must exactly equal the prepared rule edition. A newer registry edition cannot silently replace it.
+
+The resulting Decision Evidence link keeps the human reviewer/time and pursuit-specific basis passage. The system records the conclusion as human reviewed, not legal authority, and never changes the buyer-facing assumption state automatically.
+
 ## Time model
 
 The following are deliberately distinct:
@@ -177,7 +195,9 @@ The system reports `review_required`, not `newer_version_applies`.
 GSA DITA is parsed as untrusted input.
 
 The parser:
-- rejects DTD/ENTITY declarations;
+- permits only the exact known OASIS DITA external declaration documented above;
+- strips that declaration from the local parse copy without resolving/fetching the DTD;
+- rejects XML ENTITY declarations, arbitrary SYSTEM DTDs, unknown DOCTYPEs, and extra/multiple declarations;
 - uses only local XML parsing;
 - retains original-content and normalized-content hashes;
 - extracts paragraph text/locators without executing embedded instructions.
