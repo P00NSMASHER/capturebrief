@@ -34,7 +34,7 @@ class DeliveryBundleTests(unittest.TestCase):
                 self.assertEqual(names,{
                     "brief.md","decision-evidence.md","decision-evidence.html",
                     "decision-summary.json","source-version-manifest.json",
-                    "delivery-manifest.json",
+                    "watch-baseline.json","delivery-manifest.json",
                 })
                 manifest=json.loads(zf.read("delivery-manifest.json"))
                 self.assertFalse(manifest["contains_raw_case"])
@@ -47,6 +47,10 @@ class DeliveryBundleTests(unittest.TestCase):
                 self.assertEqual(source_manifest["case_id"],case["case_id"])
                 self.assertNotIn("text",source_manifest["snapshots"][0])
                 self.assertNotIn("intake",source_manifest)
+                watch_baseline=json.loads(zf.read("watch-baseline.json"))
+                self.assertEqual(watch_baseline["case_id"],case["case_id"])
+                self.assertFalse(watch_baseline["contains_raw_case"])
+                self.assertFalse(watch_baseline["contains_source_text"])
 
     def test_bundle_is_deterministic_for_same_case_and_time(self):
         case=ready_case()
