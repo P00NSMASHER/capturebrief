@@ -36,7 +36,7 @@ jobs:
         run: python -m unittest tests.test_rule_sync -v
       - name: Missing rule auto-sync contracts
         run: python -m unittest tests.test_rule_auto_sync -v
-      - name: Pinned class-deviation discovery contracts
+      - name: Pinned class-deviation discovery and artifact contracts
         run: python -m unittest tests.test_deviation_sync -v
       - name: Exact rule evidence preparation contracts
         run: python -m unittest tests.test_rule_evidence -v
