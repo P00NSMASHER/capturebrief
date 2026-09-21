@@ -194,6 +194,12 @@ def apply_reference_resolution(
             "byte_state": "BYTES_VERIFIED_HASHED",
             "byte_sha256": byte_sha,
         })
+        artifact_index = next(
+            (i for i, item in enumerate(packet.get("artifacts") or []) if str(item.get("artifact_id")) == rid),
+            None,
+        )
+        if artifact_index is not None:
+            packet["artifacts"][artifact_index]["required_for_analysis"] = True
 
     elif resolution == "SUPERSEDED_BY":
         successor = str(decision.get("successor_resource_id") or "")

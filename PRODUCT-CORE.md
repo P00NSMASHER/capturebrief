@@ -1,4 +1,4 @@
-# CaptureBrief Product Core v0.7 — Reference Case Transitions
+# CaptureBrief Product Core v0.8 — Byte Receipts Into Cases
 
 Updated: September 21, 2026
 
@@ -473,3 +473,48 @@ The end-to-end path is now:
 `intake -> history resolution -> documented current retrieval -> current case transition -> reference proposal -> human reference confirmation -> apply review -> resolve each dependency -> required byte capture -> assumption QA`
 
 The remaining friction is attaching byte-capture receipts to case artifacts without manual JSON editing and proposing likely resource matches for human review. Matching may reduce reviewer effort, but automation must never auto-close a reference.
+
+
+## v0.8 — Apply captured byte receipts to artifacts
+
+An approved current-resource download receipt can now be applied directly to the corresponding case artifact:
+
+    python -m capturebrief_core.cli case-apply-byte-receipt       current-case.json resource-receipt.json       -o byte-case.json --transition-output byte-transition.json
+
+The transition does not trust a SHA-256 value by itself. It verifies that:
+
+- the receipt contract is `SAM_GET_OPPORTUNITIES_RESOURCE_LINK`;
+- the receipt was collected as `APPROVED_API`;
+- the receipt state is `BYTES_VERIFIED_HASHED`;
+- the receipt has a valid observation time, size, and SHA-256;
+- its source URL is an approved SAM API resource link;
+- that exact URL was retained in the case's current API resource-link inventory;
+- the receipt's API payload digest exactly matches the case's retained current API observation;
+- the derived resource ID identifies exactly one verified source-object artifact in the case.
+
+On success the artifact receives:
+
+- SHA-256;
+- `BYTES_VERIFIED_HASHED`;
+- byte size;
+- byte observation time;
+- byte receipt SHA-256;
+- source contract.
+
+The complete receipt is also retained in `packet.byte_receipts`, keyed by a canonical receipt digest.
+
+Reapplying the same verified bytes is idempotent. A later receipt with a different SHA-256 for an already verified artifact is rejected rather than silently replacing evidence.
+
+## Reference closure now binds to retained artifact bytes
+
+For `RESOLVED_TO_RESOURCE`, the closure validator now requires the reference SHA-256 to exactly match the retained case artifact SHA-256. A valid-looking but unrelated digest can no longer satisfy closure.
+
+The explicit reference-resolution transition also marks the matched artifact `required_for_analysis = true`, so the artifact becomes part of the release audit as soon as a reviewer makes it decision-relevant.
+
+This creates an auditable chain:
+
+`documented API observation -> approved resource URL -> byte receipt -> case artifact -> human-confirmed reference -> reference resolution`
+
+## Updated remaining friction
+
+The next operator-time reduction target is a **local reference-to-resource match proposal**. CaptureBrief can use normalized names and retained metadata to suggest likely resource IDs, but the result must remain a proposal only. Ambiguous same-name resources, deleted predecessors, and historical/current replacements must stay visible, and a human must still make the closure decision.
