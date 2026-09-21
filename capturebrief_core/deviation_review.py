@@ -190,7 +190,26 @@ def _trace_snapshot(case: dict[str,Any],snapshot_id: str)->dict[str,Any]:
     ]
     if len(rows)!=1:
         raise ValueError("currentness basis must reference exactly one retained Decision Evidence snapshot")
-    return rows[0]
+    snap=rows[0]
+    body={k:v for k,v in snap.items() if k!="snapshot_id"}
+    if snap.get("snapshot_id")!="SNAP:"+digest(canonical(body)):
+        raise ValueError("currentness basis snapshot is not content-addressed correctly")
+    if snap.get("text_sha256")!=digest(str(snap.get("text") or "")):
+        raise ValueError("currentness basis snapshot text hash mismatch")
+    sources={
+        str(x.get("source_id")):x for x in case.get("sources") or []
+        if isinstance(x,dict) and x.get("source_id")
+    }
+    source=sources.get(str(snap.get("source_id") or ""))
+    if (
+        source is None
+        or source.get("artifact_state")!="PUBLIC"
+        or source.get("content_sha256")!=snap.get("document_sha256")
+        or _dt(source.get("observed_at")) is None
+        or _dt(snap.get("observed_at")) is None
+    ):
+        raise ValueError("currentness basis snapshot is not bound to retained public source evidence")
+    return snap
 
 def current_deviation_authority_reviews(case: dict[str,Any])->dict[str,dict[str,Any]]:
     preps=current_deviation_text_preparations(case)
@@ -251,6 +270,8 @@ def review_deviation_authority(
             raise ValueError("effective_until must be an ISO date or null")
         if start and end and end<start:
             raise ValueError("effective_until cannot precede effective_from")
+        if not effective_from and not effective_until and decision.get("effective_date_passage") is not None:
+            raise ValueError("effective_date_passage cannot create an effective date without an explicit reviewed date")
         effective_passage=_select(
             prep["snapshot"],
             decision.get("effective_date_passage"),
@@ -264,6 +285,9 @@ def review_deviation_authority(
             if not isinstance(basis_spec,dict) or not _text(basis_spec.get("snapshot_id")):
                 raise ValueError("resolved currentness requires a separate retained basis passage")
             basis_snapshot=_trace_snapshot(case,basis_spec["snapshot_id"])
+            basis_observed=_dt(basis_snapshot.get("observed_at"))
+            if basis_observed is None or basis_observed>when:
+                raise ValueError("currentness basis cannot be observed after the authority review")
             if basis_snapshot.get("snapshot_id")==prep["snapshot"].get("snapshot_id"):
                 raise ValueError("deviation memo cannot self-certify its own currentness")
             currentness_basis=_select(
@@ -300,6 +324,8 @@ def review_deviation_authority(
             "reviewed_at":reviewed_at,
             "human_reviewed":True,
             "currentness_authoritative":False,
+            "effective_date_human_reviewed":bool(effective_from or effective_until),
+            "effective_date_authoritative":False,
             "applicability":"UNRESOLVED",
             "applicability_authoritative":False,
             "assumption_state_changed":False,
