@@ -18,6 +18,8 @@ from .rule_registry import canonical, digest, filter_deviation_sources, load_sou
 MANIFEST_CONTRACT="capturebrief-pinned-deviation-manifest-v1"
 PROPOSAL_CONTRACT="capturebrief-deviation-candidate-proposal-v1"
 MAX_MANIFEST_BYTES=2*1024*1024
+MAX_DEVIATION_PDF_BYTES=25*1024*1024
+ARTIFACT_CONTRACT="capturebrief-deviation-artifact-capture-v1"
 _REVISION=re.compile(r"^[0-9a-f]{40}$")
 _ALLOWED_REPO="acqagent/rfo-deviations"
 _ALLOWED_SOURCE_ID="acqagent-rfo-deviations"
@@ -215,21 +217,245 @@ def deviation_candidate_work_item(case: dict[str,Any])->dict[str,Any]|None:
     if not deviation_candidate_proposal_is_current(case):
         return None
     proposal=case["packet"]["deviation_candidate_proposal"]
+    captured=current_deviation_artifact_receipts(case)
+    candidate_ids={str(x.get("deviation_source_id") or "") for x in proposal.get("candidates") or []}
+    missing=sorted(x for x in candidate_ids if x and x not in captured)
+    zero=proposal.get("candidate_count")==0
     return {
         "task_key":"deviations:review-candidates",
-        "priority":"P0",
+        "priority":"P0" if zero or not missing else "P1",
         "title":"Review agency class-deviation candidates",
         "actor":"HUMAN_REVIEW",
         "can_auto_execute":False,
         "status":"OPEN",
-        "reason":"The pinned deviation corpus contains agency/FAR-Part artifacts that may affect this pursuit. Corpus membership does not establish currentness, effective date, incorporation, or applicability.",
-        "evidence_needed":"Open the underlying public deviation artifact, retain/hash the exact artifact, establish currentness/effective date/supersession, then cite pursuit-specific applicability basis in Decision Evidence.",
+        "reason":(
+            "The pinned corpus returned no candidate rows; bounded-corpus absence is not proof that no deviation exists."
+            if zero else
+            "Candidate official PDFs are captured; human review must establish currentness, effective date, supersession, and pursuit-specific applicability."
+            if not missing else
+            "Deviation candidates exist, but official PDF capture should complete before human authority/applicability review."
+        ),
+        "evidence_needed":"Retain/hash candidate official artifacts, establish currentness/effective date/supersession, then cite pursuit-specific applicability basis in Decision Evidence.",
         "metadata":{
             "agency":proposal["agency"],
             "part_numbers":proposal["part_numbers"],
             "candidate_count":proposal["candidate_count"],
+            "captured_candidate_count":len(captured),
+            "missing_artifact_ids":missing,
             "proposal_sha256":proposal["proposal_sha256"],
             "applicability_authoritative":False,
             "can_auto_apply":False,
         },
     }
+
+
+def _candidate_map(case: dict[str,Any])->dict[str,dict[str,Any]]:
+    if not deviation_candidate_proposal_is_current(case):
+        raise ValueError("case does not contain a current deviation candidate proposal")
+    proposal=case["packet"]["deviation_candidate_proposal"]
+    rows={}
+    for row in proposal.get("candidates") or []:
+        ident=str(row.get("deviation_source_id") or "")
+        if not ident or ident in rows:
+            raise ValueError("deviation candidates require unique source IDs")
+        rows[ident]=row
+    return rows
+
+def _safe_official_deviation_url(value: Any)->bool:
+    if not isinstance(value,str):
+        return False
+    try:
+        parsed=urlsplit(value)
+    except ValueError:
+        return False
+    return (
+        parsed.scheme=="https"
+        and parsed.hostname in {"acquisition.gov","www.acquisition.gov"}
+        and not parsed.username
+        and not parsed.password
+        and not parsed.query
+        and not parsed.fragment
+    )
+
+def build_deviation_artifact_request(case: dict[str,Any],deviation_source_id: str)->dict[str,Any]:
+    candidates=_candidate_map(case)
+    candidate=candidates.get(str(deviation_source_id))
+    if candidate is None:
+        raise ValueError("deviation_source_id is not in the current candidate proposal")
+    source_url=str(candidate.get("source_url") or "")
+    if not _safe_official_deviation_url(source_url):
+        raise ValueError("candidate deviation URL is not an approved acquisition.gov HTTPS artifact")
+    expected_url_hash=digest(source_url)[:16]
+    if candidate.get("url_hash")!=expected_url_hash:
+        raise ValueError("candidate URL hash does not match source URL")
+    proposal=case["packet"]["deviation_candidate_proposal"]
+    return {
+        "proposal_sha256":proposal["proposal_sha256"],
+        "deviation_source_id":candidate["deviation_source_id"],
+        "agency":candidate["agency"],
+        "matched_parts":copy.deepcopy(candidate.get("matched_parts") or []),
+        "source_url":source_url,
+        "url_hash":candidate["url_hash"],
+        "declared_pdf_size_bytes":candidate.get("pdf_size_bytes"),
+        "manifest_revision":proposal.get("manifest_revision"),
+        "manifest_sha256":proposal.get("manifest_sha256"),
+        "caller_url_used":False,
+        "mutable_ref_used":False,
+    }
+
+def _default_pdf_fetcher(url: str,max_bytes: int)->tuple[bytes,str]:
+    request=urllib.request.Request(
+        url,
+        headers={"User-Agent":"CaptureBrief-DeviationArtifact/1.0","Accept":"application/pdf"},
+        method="GET",
+    )
+    with urllib.request.urlopen(request,timeout=30) as response:
+        final=response.geturl()
+        length=response.headers.get("Content-Length")
+        if length is not None and int(length)>max_bytes:
+            raise ValueError("deviation PDF exceeds byte limit")
+        data=response.read(max_bytes+1)
+    return data,final
+
+def _validate_official_pdf_final_url(requested: str,final: str)->None:
+    if final!=requested:
+        raise ValueError("deviation PDF fetch redirected or changed URL")
+    if not _safe_official_deviation_url(final):
+        raise ValueError("deviation PDF fetch ended on an unapproved URL")
+
+def capture_deviation_artifact(
+    case: dict[str,Any],deviation_source_id: str,*,observed_at: str,
+    fetcher: Callable[[str,int],tuple[bytes,str]]|None=None,
+)->tuple[dict[str,Any],bytes]:
+    if not _dt(observed_at):
+        raise ValueError("observed_at must be timezone-aware ISO-8601")
+    request=build_deviation_artifact_request(case,deviation_source_id)
+    data,final=(fetcher or _default_pdf_fetcher)(request["source_url"],MAX_DEVIATION_PDF_BYTES)
+    if not isinstance(data,(bytes,bytearray)):
+        raise ValueError("deviation PDF fetcher must return bytes")
+    data=bytes(data)
+    if len(data)>MAX_DEVIATION_PDF_BYTES:
+        raise ValueError("deviation PDF exceeds byte limit")
+    _validate_official_pdf_final_url(request["source_url"],final)
+    if not data.startswith(b"%PDF-"):
+        raise ValueError("deviation artifact is not a PDF")
+    declared=request.get("declared_pdf_size_bytes")
+    size_matches=type(declared) is int and declared==len(data)
+    payload={
+        "contract":ARTIFACT_CONTRACT,
+        "proposal_sha256":request["proposal_sha256"],
+        "deviation_source_id":request["deviation_source_id"],
+        "agency":request["agency"],
+        "matched_parts":request["matched_parts"],
+        "source_url":request["source_url"],
+        "url_hash":request["url_hash"],
+        "manifest_revision":request["manifest_revision"],
+        "manifest_sha256":request["manifest_sha256"],
+        "observed_at":observed_at,
+        "final_url":final,
+        "declared_pdf_size_bytes":declared,
+        "observed_pdf_size_bytes":len(data),
+        "declared_size_matches_observed":size_matches,
+        "pdf_sha256":digest(data),
+        "pdf_header_verified":True,
+        "index_byte_identity_proven":False,
+        "currentness":"UNRESOLVED",
+        "effective_date":None,
+        "supersession":"UNRESOLVED",
+        "applicability":"UNRESOLVED",
+        "caller_url_used":False,
+        "redirect_used":False,
+        "can_auto_apply":False,
+    }
+    return {**payload,"artifact_receipt_id":"DEVART:"+digest(canonical(payload))},data
+
+def _valid_artifact_receipt(case: dict[str,Any],receipt: dict[str,Any],candidate: dict[str,Any])->bool:
+    if not isinstance(receipt,dict) or receipt.get("contract")!=ARTIFACT_CONTRACT:
+        return False
+    body={k:v for k,v in receipt.items() if k!="artifact_receipt_id"}
+    if receipt.get("artifact_receipt_id")!="DEVART:"+digest(canonical(body)):
+        return False
+    proposal=(case.get("packet") or {}).get("deviation_candidate_proposal") or {}
+    if receipt.get("proposal_sha256")!=proposal.get("proposal_sha256"):
+        return False
+    if (
+        receipt.get("deviation_source_id")!=candidate.get("deviation_source_id")
+        or receipt.get("source_url")!=candidate.get("source_url")
+        or receipt.get("url_hash")!=candidate.get("url_hash")
+        or not re.fullmatch(r"[0-9a-f]{64}",str(receipt.get("pdf_sha256") or ""))
+        or receipt.get("pdf_header_verified") is not True
+        or receipt.get("index_byte_identity_proven") is not False
+        or receipt.get("currentness")!="UNRESOLVED"
+        or receipt.get("applicability")!="UNRESOLVED"
+        or receipt.get("can_auto_apply") is not False
+        or not _dt(receipt.get("observed_at"))
+    ):
+        return False
+    return True
+
+def attach_deviation_artifact_receipt(case: dict[str,Any],receipt: dict[str,Any])->dict[str,Any]:
+    candidates=_candidate_map(case)
+    candidate=candidates.get(str(receipt.get("deviation_source_id") or ""))
+    if candidate is None or not _valid_artifact_receipt(case,receipt,candidate):
+        raise ValueError("deviation artifact receipt is invalid for the current proposal")
+    result=copy.deepcopy(case)
+    packet=result.setdefault("packet",{})
+    rows=packet.setdefault("deviation_artifact_receipts",[])
+    if any(x.get("artifact_receipt_id")==receipt["artifact_receipt_id"] for x in rows if isinstance(x,dict)):
+        return result
+    rows.append(copy.deepcopy(receipt))
+    rows.sort(key=lambda x:(str(x.get("deviation_source_id") or ""),str(x.get("observed_at") or ""),str(x.get("artifact_receipt_id") or "")))
+    return result
+
+def current_deviation_artifact_receipts(case: dict[str,Any])->dict[str,dict[str,Any]]:
+    try:
+        candidates=_candidate_map(case)
+    except ValueError:
+        return {}
+    latest={}
+    for receipt in (case.get("packet") or {}).get("deviation_artifact_receipts") or []:
+        ident=str(receipt.get("deviation_source_id") or "") if isinstance(receipt,dict) else ""
+        candidate=candidates.get(ident)
+        if candidate is None or not _valid_artifact_receipt(case,receipt,candidate):
+            continue
+        current=latest.get(ident)
+        if current is None or str(receipt.get("observed_at"))>str(current.get("observed_at")):
+            latest[ident]=receipt
+    return latest
+
+def deviation_artifact_work_items(case: dict[str,Any])->list[dict[str,Any]]:
+    if not deviation_candidate_proposal_is_current(case):
+        return []
+    proposal=case["packet"]["deviation_candidate_proposal"]
+    captured=current_deviation_artifact_receipts(case)
+    tasks=[]
+    for candidate in proposal.get("candidates") or []:
+        ident=str(candidate.get("deviation_source_id") or "")
+        if ident in captured:
+            continue
+        tasks.append({
+            "task_key":"deviation-bytes:"+ident,
+            "priority":"P0",
+            "title":"Capture official deviation PDF bytes",
+            "actor":"AUTOMATED_APPROVED_SOURCE",
+            "can_auto_execute":True,
+            "status":"OPEN",
+            "reason":"A pinned deviation candidate exists, but its underlying acquisition.gov PDF has not been independently captured and hashed for this proposal.",
+            "evidence_needed":"Fetch the exact candidate acquisition.gov URL, verify PDF bytes, record SHA-256/length, and preserve any declared-size mismatch without inferring applicability.",
+            "metadata":{
+                "deviation_source_id":ident,
+                "source_url":candidate.get("source_url"),
+                "agency":candidate.get("agency"),
+                "matched_parts":candidate.get("matched_parts") or [],
+                "proposal_sha256":proposal.get("proposal_sha256"),
+                "can_auto_apply":False,
+            },
+        })
+    return tasks
+
+def capture_and_attach_deviation_artifact(
+    case: dict[str,Any],deviation_source_id: str,*,observed_at: str,fetcher=None,
+)->tuple[dict[str,Any],dict[str,Any],bytes]:
+    receipt,data=capture_deviation_artifact(case,deviation_source_id,observed_at=observed_at,fetcher=fetcher)
+    updated=attach_deviation_artifact_receipt(case,receipt)
+    return updated,receipt,data

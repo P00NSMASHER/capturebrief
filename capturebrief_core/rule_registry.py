@@ -390,6 +390,9 @@ def parse_deviation_manifest(csv_text: str, *, source_repository: str, source_re
             raise ValueError(f"invalid deviation manifest row {n}")
         if not re.fullmatch(r"[0-9a-f]{16}", str(row.get("url_hash") or "")):
             raise ValueError(f"invalid deviation url_hash row {n}")
+        source_url=str(row.get("source_url") or "").strip()
+        if row.get("url_hash") != digest(source_url)[:16]:
+            raise ValueError(f"deviation url_hash/source_url mismatch row {n}")
         try:
             size = int(str(row.get("pdf_size_bytes") or ""))
             part = int(str(row.get("part_number") or ""))

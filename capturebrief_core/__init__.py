@@ -29,7 +29,7 @@ from .render import render_markdown
 from .intake import IntakeError, build_case_from_intake
 from .workqueue import build_work_queue
 from .watch import compare_cases
-from .deviation_sync import build_pinned_manifest_request, fetch_pinned_deviation_manifest, sync_pinned_deviation_manifest, build_deviation_candidate_proposal, attach_deviation_candidate_proposal, deviation_candidate_work_item
+from .deviation_sync import build_pinned_manifest_request, fetch_pinned_deviation_manifest, sync_pinned_deviation_manifest, build_deviation_candidate_proposal, attach_deviation_candidate_proposal, build_deviation_artifact_request, capture_deviation_artifact, attach_deviation_artifact_receipt, current_deviation_artifact_receipts, deviation_artifact_work_items, capture_and_attach_deviation_artifact, deviation_candidate_work_item
 
 __all__=[
     "catalog_snapshot","audit_case","validate_current_action_receipts","make_history_receipt","validate_history_receipts",
@@ -48,5 +48,6 @@ __all__=[
     "ReferenceReviewError","confirm_reference_scan","propose_reference_scan",
     "ReferenceMatchError","attach_reference_match_proposal","propose_reference_matches","reference_match_proposal_is_current",
     "render_markdown","compare_cases",
-    "build_pinned_manifest_request","fetch_pinned_deviation_manifest","sync_pinned_deviation_manifest","build_deviation_candidate_proposal","attach_deviation_candidate_proposal","deviation_candidate_work_item"
+    "build_pinned_manifest_request","fetch_pinned_deviation_manifest","sync_pinned_deviation_manifest","build_deviation_candidate_proposal","attach_deviation_candidate_proposal",
+    "build_deviation_artifact_request","capture_deviation_artifact","attach_deviation_artifact_receipt","current_deviation_artifact_receipts","deviation_artifact_work_items","capture_and_attach_deviation_artifact","deviation_candidate_work_item"
 ]
