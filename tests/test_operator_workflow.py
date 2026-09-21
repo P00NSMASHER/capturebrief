@@ -162,7 +162,12 @@ class OperatorWorkflowTests(unittest.TestCase):
 
         queue = build_work_queue(
             case,
-            api_observation={"resource_links": [link]},
+            api_observation={
+                "source_contract":"SAM_GET_OPPORTUNITIES_V2",
+                "automation_mode":"APPROVED_API",
+                "payload_sha256":"a"*64,
+                "resource_links":[link],
+            },
             now=NOW,
         )
         task = next(x for x in queue["tasks"] if x["task_key"] == "bytes:r1")
