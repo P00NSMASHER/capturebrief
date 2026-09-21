@@ -75,6 +75,27 @@ Example:
 
 The embedded rule edition is preferred for the rule record; the source snapshot label remains separate provenance. Neither one establishes solicitation applicability by itself.
 
+## Pinned public rule retrieval
+
+The preferred operational path for FAR/DFARS ingestion is `rule_cli sync-dita`.
+
+The operator provides a source ID and citation. CaptureBrief constructs the raw GitHub URL itself from the exact repository revision in `RULE-SOURCE-CATALOG.json`.
+
+No caller-supplied URL, branch, tag, credential, or redirect is allowed to become the source of record.
+
+The fetch receipt retains:
+- approved catalog fingerprint;
+- repository and exact 40-character revision;
+- DITA path;
+- requested/final raw URLs;
+- byte count;
+- original source SHA-256;
+- resulting content-addressed rule-source ID.
+
+A redirect or final URL change is a hard failure. The fetch path is intentionally narrower than generic web retrieval.
+
+The sync step establishes **source provenance and exact version retrieval only**. Applicability remains a later human-reviewed claim.
+
 ## Time model
 
 The following are deliberately distinct:
