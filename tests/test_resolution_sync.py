@@ -1,5 +1,6 @@
 import csv
 import tempfile
+from datetime import datetime
 import unittest
 from pathlib import Path
 
@@ -158,7 +159,7 @@ class ResolutionSyncTests(unittest.TestCase):
             result=sync_missing_slots(db,downloads,snapshot_dir=snapshots,fiscal_year=2026,max_slots=None,observed_at=NOW,fetcher=fake_fetcher)
             self.assertTrue(result["complete"],result["remaining_slots"])
             self.assertEqual(result["remaining_count"],0)
-            self.assertTrue(index_status(db,fiscal_year=2026)["complete"])
+            self.assertTrue(index_status(db,fiscal_year=2026,now=datetime.fromisoformat(NOW))["complete"])
 
 
 if __name__=="__main__":
