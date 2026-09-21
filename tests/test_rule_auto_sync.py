@@ -115,7 +115,14 @@ class RuleAutoSyncTests(unittest.TestCase):
         keys = [t["task_key"] for t in queue["tasks"]]
         self.assertIn("rules:sync-missing-pinned-sources", keys)
         self.assertIn("rules:review-candidates", keys)
-        self.assertEqual(queue["next_action"]["task_key"], "rules:sync-missing-pinned-sources")
+        self.assertLess(
+            keys.index("rules:sync-missing-pinned-sources"),
+            keys.index("rules:review-candidates"),
+        )
+        sync = next(t for t in queue["tasks"] if t["task_key"] == "rules:sync-missing-pinned-sources")
+        review = next(t for t in queue["tasks"] if t["task_key"] == "rules:review-candidates")
+        self.assertEqual(sync["priority"], "P0")
+        self.assertEqual(review["priority"], "P1")
 
     def test_sync_refreshes_proposal_and_preserves_old_proposal(self):
         case = self.proposal()
