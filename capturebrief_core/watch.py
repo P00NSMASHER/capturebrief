@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Any
 from .model import parse_dt
 from .packet import diff_manifest_receipts
+from .decision_trace import compare_decision_traces
 
 
 def _artifacts(case):
@@ -77,4 +78,25 @@ def compare_cases(before:dict[str,Any],after:dict[str,Any])->dict[str,Any]:
             "trace_integrity_violations": trace_changes["integrity_violations"],
             "automatic_applicability_change": False,
         }
+    if isinstance(before.get("decision_trace"),dict) and isinstance(after.get("decision_trace"),dict):
+        trace_diff=compare_decision_traces(before,after)
+        for event in trace_diff.get("events") or []:
+            events.append({**event,"key":"TRACE:"+str(event.get("dependency_key") or event.get("type") or "CHANGE")})
+        known={(str(x.get("assumption_id")),tuple(x.get("matched_triggers") or [])) for x in reopened}
+        for item in trace_diff.get("reopened_assumptions") or []:
+            candidate={
+                "assumption_id":item.get("assumption_id"),
+                "matched_triggers":["TRACE:"+str(x) for x in item.get("matched_dependencies") or []],
+                "status":item.get("status"),
+                "previous_decision_preserved":item.get("previous_decision_preserved"),
+            }
+            marker=(str(candidate.get("assumption_id")),tuple(candidate.get("matched_triggers") or []))
+            if marker not in known:
+                reopened.append(candidate)
+                known.add(marker)
+        for violation in trace_diff.get("integrity_violations") or []:
+            events.append({"type":"TRACE_INTEGRITY_VIOLATION","key":"TRACE:INTEGRITY",**violation})
+    elif isinstance(before.get("decision_trace"),dict) != isinstance(after.get("decision_trace"),dict):
+        events.append({"type":"DECISION_TRACE_PRESENCE_CHANGED","key":"TRACE:INTEGRITY"})
+
     return {"events":events,"reopened_assumptions":reopened}
