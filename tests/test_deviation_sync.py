@@ -13,6 +13,7 @@ from capturebrief_core.deviation_sync import (
     fetch_pinned_deviation_manifest,
 )
 from capturebrief_core.rule_registry import digest
+from capturebrief_core.workqueue import build_work_queue
 
 CATALOG={
     "schema_version":"1.0",
@@ -201,6 +202,17 @@ class DeviationSyncTests(unittest.TestCase):
         self.assertEqual(task["priority"],"P0")
         self.assertEqual(task["actor"],"HUMAN_REVIEW")
         self.assertFalse(task["can_auto_execute"])
+
+    def test_work_queue_schedules_official_pdf_capture_before_review(self):
+        case=self.proposal_case([12])
+        queue=build_work_queue(case)
+        keys={x["task_key"] for x in queue["tasks"]}
+        self.assertTrue(any(x.startswith("deviation-bytes:") for x in keys))
+        self.assertIn("deviations:review-candidates",keys)
+        byte_tasks=[x for x in queue["tasks"] if x["task_key"].startswith("deviation-bytes:")]
+        self.assertTrue(all(x["priority"]=="P0" and x["can_auto_execute"] for x in byte_tasks))
+        human=next(x for x in queue["tasks"] if x["task_key"]=="deviations:review-candidates")
+        self.assertEqual(human["priority"],"P1")
 
 if __name__=="__main__":
     unittest.main()
