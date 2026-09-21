@@ -41,7 +41,19 @@ def _trace(case):
         aid=str(x["assumption_id"])
         if aid in reviews: raise ValueError("duplicate Decision Evidence assumption review")
         reviews[aid]=x
-    snaps={str(x.get("snapshot_id")):x for x in t.get("snapshots") or [] if isinstance(x,dict) and x.get("snapshot_id")}
+    sources={str(x.get("source_id")):x for x in case.get("sources") or [] if isinstance(x,dict) and x.get("source_id")}
+    snaps={}
+    for x in t.get("snapshots") or []:
+        if not isinstance(x,dict) or not x.get("snapshot_id"): continue
+        sid=str(x["snapshot_id"])
+        if sid in snaps: raise ValueError("duplicate Decision Evidence snapshot")
+        body={k:v for k,v in x.items() if k!="snapshot_id"}
+        if sid!="SNAP:"+digest(canonical(body)) or x.get("text_sha256")!=digest(str(x.get("text") or "")):
+            raise ValueError("Decision Evidence snapshot integrity failure")
+        source=sources.get(str(x.get("source_id") or ""))
+        if source is None or source.get("artifact_state")!="PUBLIC" or source.get("content_sha256")!=x.get("document_sha256"):
+            raise ValueError("Decision Evidence snapshot is not bound to retained public source")
+        snaps[sid]=x
     return t,assumptions,reviews,snaps
 
 def _basis(spec,snaps,*,forbidden,required,reviewed_at,basis_name):
@@ -69,6 +81,11 @@ def _review_body(x): return {k:v for k,v in x.items() if k!="applicability_revie
 
 def current_deviation_applicability_reviews(case):
     authorities=current_deviation_authority_reviews(case)
+    try:
+        trace,_,trace_reviews,_=_trace(case)
+    except ValueError:
+        return {}
+    rules={str(x.get("rule_version_id")):x for x in trace.get("rule_versions") or [] if isinstance(x,dict) and x.get("rule_version_id")}
     out={}
     for row in (case.get("packet") or {}).get("deviation_applicability_reviews") or []:
         if not isinstance(row,dict) or row.get("contract")!=CONTRACT: continue
@@ -76,6 +93,24 @@ def current_deviation_applicability_reviews(case):
         authority=authorities.get(ident)
         if authority is None or row.get("authority_review_id")!=authority.get("authority_review_id"): continue
         if row.get("applicability_review_id")!="DEVAPP:"+digest(canonical(_review_body(row))): continue
+        rule=rules.get(str(row.get("rule_version_id") or ""))
+        if not isinstance(rule,dict) or rule.get("namespace")!="CLASS_DEVIATION": continue
+        target=trace_reviews.get(str(row.get("assumption_id") or ""))
+        if target is None: continue
+        expected={
+            "rule_version_id":row["rule_version_id"],
+            "family_id":case.get("family_id"),
+            "applicability":row.get("applicability"),
+            "basis":row.get("basis"),
+            "incorporated_edition":None,
+            "rationale":row.get("rationale"),
+            "basis_passage":row.get("basis_passage"),
+            "reviewed_by":row.get("reviewed_by"),
+            "reviewed_at":row.get("reviewed_at"),
+        }
+        links=[x for x in target.get("rule_links") or [] if isinstance(x,dict) and x.get("rule_version_id")==row.get("rule_version_id")]
+        if len(links)!=1 or canonical(links[0])!=canonical(expected): continue
+        if target.get("rule_scope")!={"status":"REQUIRED","rationale":row.get("scope_rationale")}: continue
         out[ident]=row
     return out
 
@@ -105,6 +140,8 @@ def review_deviation_applicability(case: dict[str,Any],review: dict[str,Any])->t
         if app!="UNRESOLVED" and basis_name=="UNRESOLVED": raise ValueError("resolved applicability needs a resolved basis")
         if app!="UNRESOLVED" and authority.get("currentness")=="UNRESOLVED":
             raise ValueError("resolved applicability requires resolved deviation currentness")
+        if app=="UNRESOLVED" and str(assumptions[aid].get("evidence_state") or "").upper() not in {"UNPROVEN","SOURCE_LIMITED"}:
+            raise ValueError("UNRESOLVED deviation applicability requires an unresolved assumption evidence state")
         if app=="APPLIES" and authority.get("currentness")=="SUPERSEDED" and basis_name not in {"SOLICITATION_TEXT","AMENDMENT_TEXT"}:
             raise ValueError("APPLIES for a superseded deviation requires explicit solicitation/amendment basis")
         rationale=row.get("rationale"); scope=row.get("scope_rationale")
