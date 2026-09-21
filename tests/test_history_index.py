@@ -15,6 +15,7 @@ from capturebrief_core.data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD
 from capturebrief_core.history import validate_history_receipts
 from capturebrief_core.history_index import (
     APPROVED_FETCH,
+    HistoryIndexError,
     download_extract_to_file,
     fetch_and_ingest_slot,
     index_status,
@@ -237,13 +238,65 @@ class HistoryIndexTests(unittest.TestCase):
             snapshots.mkdir()
             conflicting=snapshots/f"{digest}.csv"
             conflicting.write_bytes(b"different")
-            with self.assertRaises(Exception) as ctx:
+            with self.assertRaises(HistoryIndexError) as ctx:
                 ingest_extract_file(
                     db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
                     observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH,
                 )
             self.assertIn("content-addressed snapshot retention failed",str(ctx.exception))
             self.assertEqual(conflicting.read_bytes(),b"different")
+
+    def test_data_services_redirect_to_unapproved_host_is_rejected(self):
+        class RedirectResponse(FakeResponse):
+            def geturl(self):
+                return "https://example.com/export.csv"
+
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); dest=root/"active.csv"; dest.write_bytes(b"previous")
+            with self.assertRaises(RuntimeError):
+                download_extract_to_file(
+                    dest,
+                    source_url=ACTIVE_DOWNLOAD,
+                    opener=lambda req,timeout=120: RedirectResponse(b"abc"),
+                )
+            self.assertEqual(dest.read_bytes(),b"previous")
+            self.assertFalse((root/"active.csv.download.lock").exists())
+
+    def test_truncated_content_length_is_rejected_before_publication(self):
+        class TruncatedResponse(FakeResponse):
+            def __init__(self):
+                self._io=io.BytesIO(b"abc")
+                self.headers={"Content-Length":"9"}
+
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); dest=root/"active.csv"; dest.write_bytes(b"previous")
+            with self.assertRaises(HistoryIndexError) as ctx:
+                download_extract_to_file(
+                    dest,
+                    source_url=ACTIVE_DOWNLOAD,
+                    opener=lambda req,timeout=120: TruncatedResponse(),
+                )
+            self.assertIn("does not match Content-Length",str(ctx.exception))
+            self.assertEqual(dest.read_bytes(),b"previous")
+            self.assertEqual(list(root.glob(".active.csv.*.download")),[])
+            self.assertFalse((root/"active.csv.download.lock").exists())
+
+    def test_invalid_content_length_is_rejected_before_publication(self):
+        class InvalidLengthResponse(FakeResponse):
+            def __init__(self):
+                self._io=io.BytesIO(b"abc")
+                self.headers={"Content-Length":"not-an-integer"}
+
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); dest=root/"active.csv"
+            with self.assertRaises(HistoryIndexError):
+                download_extract_to_file(
+                    dest,
+                    source_url=ACTIVE_DOWNLOAD,
+                    opener=lambda req,timeout=120: InvalidLengthResponse(),
+                )
+            self.assertFalse(dest.exists())
+            self.assertEqual(list(root.glob(".active.csv.*.download")),[])
 
     def test_failed_download_preserves_existing_destination_and_cleans_temp(self):
         class FailingResponse(FakeResponse):
