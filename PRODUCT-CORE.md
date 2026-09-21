@@ -1,8 +1,65 @@
-# CaptureBrief Product Core v0.14 — Human Rule Version Review
+# CaptureBrief Product Core v0.15 — Official Rule Ingestion
 
 Updated: September 21, 2026
 
-CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.14 adds a hash-bound human rule-version review transition: every citation candidate is explicitly tracked, left unresolved, or ignored by a named reviewer, while applicability remains unresolved until the later Decision Evidence review cites the solicitation-specific basis.
+CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.15 makes the rule registry usable against real GSA FAR/DFARS DITA: it safely accepts only the known OASIS external DITA declaration, rejects arbitrary DTD/entity constructs, and derives clause/provision edition labels such as “Nov 2021” from the official rule text instead of confusing source-control recency with rule edition.
+
+## v0.15 — Official Rule Ingestion
+
+The FAR/DFARS parser now matches the actual shape of GSA's machine-readable DITA rather than only simplified XML fixtures.
+
+### Known external DITA declaration
+
+Official GSA FAR/DFARS topics include the standard OASIS DITA declaration:
+
+    <!DOCTYPE dita
+      PUBLIC "-//OASIS//DTD DITA Composite//EN" "ditabase.dtd">
+
+CaptureBrief now accepts **only that exact known declaration** for this parser path. It removes the declaration before local `ElementTree` parsing and does not resolve or fetch the external DTD.
+
+The parser still fails closed on:
+
+- any XML `ENTITY` declaration;
+- an arbitrary `SYSTEM` DTD;
+- an unrecognized `DOCTYPE`;
+- multiple/extra DTD declarations.
+
+The original unsanitized DITA bytes/text remain the material hashed by `source_sha256`; stripping occurs only in the local parsing copy.
+
+### Clause/provision edition from the rule text
+
+For clause/provision topics, GSA DITA commonly includes the operative month/year in the rule heading, for example:
+
+    Basic Safeguarding of Covered Contractor Information Systems (Nov 2021)
+
+CaptureBrief extracts that embedded month/year when present.
+
+The normalized rule record now distinguishes:
+
+- `edition` — the embedded rule-text edition when available;
+- `edition_basis = EMBEDDED_RULE_TEXT`;
+- `embedded_edition_locator` — the source paragraph containing the edition;
+- `source_snapshot_label` — an optional repository/publication snapshot label supplied by the operator;
+- `source_revision` — exact Git provenance.
+
+An operator/source-snapshot label can no longer silently replace an embedded clause edition. If the DITA says `Nov 2021` and the repository snapshot is labeled `FAC 2026-01 snapshot`, both facts are preserved separately and the rule edition remains `Nov 2021`.
+
+If the DITA contains no embedded rule edition, an explicit source/edition label may still be supplied as a fallback and is marked `OPERATOR_SOURCE_LABEL`.
+
+### Still not applicability
+
+An embedded rule edition is stronger version evidence than a manually typed edition label, but it still does **not** prove:
+
+- solicitation incorporation;
+- effective applicability to the acquisition;
+- agency-deviation applicability;
+- whether an amendment overrides or modifies the rule.
+
+Those remain human-reviewed Decision Evidence questions.
+
+### Regression boundary
+
+CI now includes an official-shaped GSA DITA fixture with the standard multiline OASIS declaration and embedded clause edition, plus negative fixtures for malicious/internal entities and arbitrary external DTDs.
 
 ## v0.14 — Human Rule Version Review
 

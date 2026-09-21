@@ -31,7 +31,7 @@ def main(argv=None):
     d.add_argument("dita")
     d.add_argument("--namespace", required=True, choices=("FAR", "DFARS"))
     d.add_argument("--agency", required=True)
-    d.add_argument("--edition", required=True)
+    d.add_argument("--edition", help="Fallback/source snapshot label when DITA text has no embedded rule edition")
     d.add_argument("--repository", required=True)
     d.add_argument("--revision", required=True)
     d.add_argument("--source-path", required=True)

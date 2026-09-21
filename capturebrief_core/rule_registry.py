@@ -24,7 +24,16 @@ RULE_NAMESPACES = {"FAR", "DFARS", "AGENCY_SUPPLEMENT", "CLASS_DEVIATION"}
 _SHA_RE = re.compile(r"^[0-9a-f]{64}$")
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _CITATION_RE = re.compile(r"^\d{1,3}\.\d+(?:-\d+)?$")
-_XML_UNSAFE_RE = re.compile(r"<!\s*(?:DOCTYPE|ENTITY)\b", re.I)
+_ENTITY_RE = re.compile(r"<!\s*ENTITY\b", re.I)
+_DOCTYPE_ANY_RE = re.compile(r"<!DOCTYPE\b", re.I)
+_GSA_DITA_DOCTYPE_RE = re.compile(
+    r'<!DOCTYPE\s+dita\s+PUBLIC\s+"-//OASIS//DTD DITA Composite//EN"\s+"ditabase\.dtd"\s*>',
+    re.I | re.S,
+)
+_EDITION_RE = re.compile(
+    r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})\b",
+    re.I,
+)
 
 
 def canonical(value: Any) -> bytes:
@@ -80,6 +89,38 @@ def _clean_text(element: ET.Element) -> str:
     return " ".join("".join(element.itertext()).split())
 
 
+def _prepare_gsa_dita_xml(dita_text: str) -> tuple[str, bool]:
+    """Allow only GSA's known external OASIS DITA declaration, without resolving it."""
+    if _ENTITY_RE.search(dita_text):
+        raise ValueError("XML entity declarations are not accepted")
+    doctypes = list(_DOCTYPE_ANY_RE.finditer(dita_text))
+    if not doctypes:
+        return dita_text, False
+    allowed = _GSA_DITA_DOCTYPE_RE.search(dita_text)
+    if allowed is None or len(doctypes) != 1 or allowed.start() != doctypes[0].start():
+        raise ValueError("unrecognized DTD/DOCTYPE declaration")
+    sanitized = dita_text[:allowed.start()] + dita_text[allowed.end():]
+    if _DOCTYPE_ANY_RE.search(sanitized) or _ENTITY_RE.search(sanitized):
+        raise ValueError("additional DTD/entity declarations are not accepted")
+    return sanitized, True
+
+
+def _embedded_rule_edition(root: ET.Element) -> tuple[str | None, str | None]:
+    """Extract clause/provision month-year label from the rule heading when present."""
+    for el in root.iter():
+        if _local(el.tag) != "p":
+            continue
+        outputclass = str(el.attrib.get("outputclass") or "").lower()
+        if "smcaps" not in outputclass:
+            continue
+        value = _clean_text(el)
+        match = _EDITION_RE.search(value)
+        if match:
+            month = match.group(1).title()
+            return f"{month} {match.group(2)}", str(el.attrib.get("id") or "")
+    return None, None
+
+
 def _validate_effective_dates(start: str | None, end: str | None) -> None:
     a, b = _date(start), _date(end)
     if start not in (None, "") and a is None:
@@ -95,7 +136,7 @@ def parse_gsa_dita(
     *,
     namespace: str,
     agency: str,
-    edition: str,
+    edition: str | None = None,
     source_repository: str,
     source_revision: str,
     source_path: str,
@@ -113,8 +154,8 @@ def parse_gsa_dita(
     namespace = str(namespace or "").upper()
     if namespace not in {"FAR", "DFARS"}:
         raise ValueError("GSA DITA parser accepts FAR or DFARS namespace")
-    if not all(_text(v) for v in (agency, edition, source_repository, source_path, dita_text)):
-        raise ValueError("rule source identity, edition, path, and DITA text are required")
+    if not all(_text(v) for v in (agency, source_repository, source_path, dita_text)):
+        raise ValueError("rule source identity, path, and DITA text are required")
     if not _COMMIT_RE.fullmatch(str(source_revision or "")):
         raise ValueError("source_revision must be a full 40-character Git commit")
     if not _safe_https(source_url):
@@ -122,10 +163,9 @@ def parse_gsa_dita(
     if _dt(observed_at) is None:
         raise ValueError("observed_at must be timezone-aware ISO-8601")
     _validate_effective_dates(effective_from, effective_until)
-    if _XML_UNSAFE_RE.search(dita_text):
-        raise ValueError("DTD/entity declarations are not accepted")
+    parse_text, standard_doctype_stripped = _prepare_gsa_dita_xml(dita_text)
     try:
-        root = ET.fromstring(dita_text)
+        root = ET.fromstring(parse_text)
     except ET.ParseError as exc:
         raise ValueError(f"invalid DITA XML: {exc}") from exc
 
@@ -144,6 +184,18 @@ def parse_gsa_dita(
         autonumber = match.group(1) if match else None
     if autonumber is None or not _CITATION_RE.fullmatch(autonumber):
         raise ValueError("could not derive FAR/DFARS citation from DITA title")
+
+    embedded_edition, embedded_edition_locator = _embedded_rule_edition(root)
+    supplied_edition = edition.strip() if _text(edition) else None
+    resolved_edition = embedded_edition or supplied_edition
+    if resolved_edition is None:
+        raise ValueError("rule edition must be embedded in rule text or supplied as a source label")
+    edition_basis = "EMBEDDED_RULE_TEXT" if embedded_edition else "OPERATOR_SOURCE_LABEL"
+    source_snapshot_label = (
+        supplied_edition
+        if embedded_edition and supplied_edition and supplied_edition != embedded_edition
+        else None
+    )
 
     paragraphs: list[dict[str, Any]] = []
     for el in root.iter():
@@ -171,7 +223,11 @@ def parse_gsa_dita(
         "citation": autonumber,
         "rule_key": f"{namespace}:{agency}:{autonumber}",
         "agency": agency,
-        "edition": edition,
+        "edition": resolved_edition,
+        "edition_basis": edition_basis,
+        "embedded_edition_locator": embedded_edition_locator,
+        "source_snapshot_label": source_snapshot_label,
+        "standard_doctype_stripped": standard_doctype_stripped,
         "title": title,
         "source_kind": "GSA_DITA",
         "source_repository": source_repository,
