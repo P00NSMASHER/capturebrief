@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from capturebrief_core.atomic_io import atomic_write_bytes, atomic_write_text, ensure_exact_bytes
+from capturebrief_core.atomic_io import ArtifactLockedError, atomic_write_bytes, atomic_write_text, ensure_exact_bytes, ensure_exact_file, exclusive_path_lock
 
 
 class AtomicIoTests(unittest.TestCase):
@@ -61,6 +61,47 @@ class AtomicIoTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     ensure_exact_bytes(target,b"abc")
             self.assertEqual(target.read_bytes(),b"other")
+
+    def test_streaming_content_addressed_file_copy_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            source=root/"source.csv"; source.write_bytes(b"a,b\n1,2\n")
+            target=root/"snapshots"/"snapshot.csv"
+            first=ensure_exact_file(source,target)
+            second=ensure_exact_file(source,target)
+            self.assertTrue(first["created"])
+            self.assertFalse(second["created"])
+            self.assertEqual(target.read_bytes(),source.read_bytes())
+
+    def test_streaming_content_addressed_file_copy_rejects_conflict(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            source=root/"source.csv"; source.write_bytes(b"expected")
+            target=root/"snapshot.csv"; target.write_bytes(b"different")
+            with self.assertRaises(ValueError):
+                ensure_exact_file(source,target)
+            self.assertEqual(target.read_bytes(),b"different")
+
+    def test_streaming_copy_rechecks_expected_source_hash(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            source=root/"source.csv"; source.write_bytes(b"changed")
+            with self.assertRaises(ValueError):
+                ensure_exact_file(
+                    source,
+                    root/"snapshot.csv",
+                    expected_sha256=hashlib.sha256(b"earlier").hexdigest(),
+                    expected_size=len(b"earlier"),
+                )
+
+    def test_exclusive_path_lock_fails_closed_when_held(self):
+        with tempfile.TemporaryDirectory() as d:
+            target=Path(d)/"active.csv"
+            with exclusive_path_lock(target,timeout_seconds=0.1,suffix=".download.lock"):
+                with self.assertRaises(ArtifactLockedError):
+                    with exclusive_path_lock(target,timeout_seconds=0.01,suffix=".download.lock"):
+                        pass
+            self.assertFalse(target.with_name(target.name+".download.lock").exists())
 
     def test_symlink_existing_artifact_is_not_trusted(self):
         with tempfile.TemporaryDirectory() as d:
