@@ -347,6 +347,11 @@ def build_work_queue(
                 evidence_needed="Timezone-aware ISO-8601 deadline.",
             ))
 
+    if case.get("decision_trace_required") is True or "decision_trace" in case:
+        from .decision_trace import trace_work_items
+        for task in trace_work_items(case, now=now):
+            add(task)
+
     ordered = sorted(
         tasks.values(),
         key=lambda task: (_PRIORITY[task["priority"]], task["task_key"]),
