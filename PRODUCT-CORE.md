@@ -1,6 +1,108 @@
-# CaptureBrief Product Core v0.19 — Rule-to-Assumption Applicability Review
+# CaptureBrief Product Core v0.23 — Pinned Class-Deviation Discovery
 
 Updated: September 21, 2026
+
+CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.23 adds a controlled class-deviation discovery path on top of the v0.22 Decision Evidence, release bundle, and targeted-watch system. It can now prove which exact pinned deviation index was inspected and surface agency/FAR-Part candidates without turning corpus membership—or corpus absence—into an applicability decision.
+
+## v0.23 — Pinned Class-Deviation Discovery
+
+The new deviation path is:
+
+`pinned corpus revision -> content-addressed manifest receipt -> explicit agency + FAR Part filter -> candidate artifacts -> HUMAN_REVIEW -> underlying official artifact -> reviewed currentness/effective/supersession -> Decision Evidence applicability`
+
+### Immutable discovery source
+
+CaptureBrief retrieves the class-deviation manifest only from the exact `acqagent/rfo-deviations` revision pinned in `RULE-SOURCE-CATALOG.json`.
+
+The sync contract:
+
+- constructs the raw GitHub URL internally;
+- requires a full immutable 40-character revision;
+- accepts no caller-supplied download URL;
+- rejects redirect/final-URL changes;
+- requires `raw.githubusercontent.com` over HTTPS;
+- permits no URL credentials/query/fragment;
+- caps the manifest at 2 MiB;
+- requires UTF-8;
+- hashes the exact downloaded bytes;
+- verifies the parsed manifest digest against those bytes;
+- emits a content-addressed fetch receipt.
+
+This proves which candidate index was inspected. It does **not** prove any deviation is current or applicable.
+
+### Real-corpus sentinel handling
+
+The pinned corpus uses `part_number = -1` for multipart/unparsed material and also contains `part_number = 0` rows. The parser now preserves both values rather than rejecting the real corpus.
+
+A pursuit candidate query remains deliberately narrower: the reviewer must request explicit FAR Parts 1–53. Sentinel rows do not silently attach themselves to a pursuit.
+
+### Agency + Part candidate proposal
+
+A candidate proposal requires:
+
+- an explicit agency;
+- one or more explicit FAR Parts;
+- a named proposer;
+- timezone-aware proposal time;
+- a manifest with a valid pinned fetch receipt.
+
+The proposal deduplicates one PDF that appears under multiple matched FAR Parts while preserving all matched parts.
+
+Every returned artifact remains:
+
+- `CANDIDATE_ONLY`;
+- effective date `UNKNOWN`;
+- currentness `UNRESOLVED`;
+- applicability `UNRESOLVED`;
+- `can_auto_apply = false`.
+
+### Absence is not authority
+
+A zero-candidate result is **not** evidence that no deviation exists.
+
+The manifest itself documents source-link failures and a bounded civilian-agency collection surface. CaptureBrief therefore keeps `review_required = true` even when the pinned corpus has no matching agency/Part row.
+
+That preserves the same core invariant used elsewhere in CaptureBrief:
+
+**a failed, incomplete, bounded, or non-authoritative observation cannot become a clean negative.**
+
+### Human review boundary
+
+When candidates exist—or when the candidate search returns zero—the operator queue opens:
+
+`deviations:review-candidates`
+
+as a P0 `HUMAN_REVIEW` task.
+
+Before a deviation can affect a bid assumption, a reviewer must still:
+
+1. inspect/retain the underlying public deviation artifact;
+2. bind it to immutable bytes;
+3. establish effective date/currentness/supersession from appropriate public authority;
+4. identify the pursuit-specific incorporation/applicability basis;
+5. link that reviewed evidence into Decision Evidence.
+
+Corpus metadata alone can never perform those steps.
+
+### CLI
+
+Sync the pinned candidate index:
+
+    python -m capturebrief_core.rule_cli sync-deviation-manifest \
+      --observed-at 2026-09-21T18:00:00Z \
+      --manifest-output deviation-manifest.json \
+      --receipt-output deviation-manifest-receipt.json
+
+Attach a bounded candidate proposal:
+
+    python -m capturebrief_core.rule_cli case-propose-deviations \
+      case.json deviation-manifest.json deviation-manifest-receipt.json \
+      --agency DHS --part 39 --part 52 \
+      --proposed-by "CaptureBrief reviewer" \
+      --proposed-at 2026-09-21T18:05:00Z \
+      -o case-with-deviation-candidates.json
+
+The next product boundary is exact underlying deviation-PDF capture/hash plus reviewed effective/currentness/supersession evidence. v0.23 deliberately stops before that authority claim.
 
 CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.19 completes the rule-to-assumption evidence chain: a human reviewer binds the exact prepared rule edition/passage to one specific bid assumption and records APPLIES / DOES_NOT_APPLY / UNRESOLVED using a separate exact solicitation/amendment/context passage as the pursuit-specific basis.
 
