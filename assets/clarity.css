@@ -1,0 +1,35 @@
+/* Plain-language, photo-led revision. The shared legacy styles stay untouched. */
+.clarity h1{max-width:16ch;font-size:clamp(2.5rem,4.4vw,4.2rem);line-height:1.08;letter-spacing:-.045em;text-wrap:balance}
+.clarity h2{text-wrap:balance;max-width:22ch}
+.clarity .hero-grid{padding-block:52px;gap:46px}
+.clarity .hero-photo{height:500px}
+.clarity .hero-photo img{width:100%;height:100%;object-fit:cover}
+.clarity .hero-note{font-size:.88rem;line-height:1.55;color:#d3e1ed;max-width:48ch;margin:18px 0 0}
+.clarity .lead{font-size:1.12rem;line-height:1.65}
+.clarity .trust strong{font-size:.95rem}
+.clarity .photo-cards{gap:22px}
+.clarity .photo-cards .card{padding:0;overflow:hidden;box-shadow:0 14px 32px #13263e0b}
+.clarity .photo-cards .card>img{width:100%;height:auto;aspect-ratio:8/5;object-fit:cover;background:#dbe5ed}
+.clarity .card-copy{padding:24px;border-top:4px solid var(--brand)}
+.clarity .card:nth-child(2) .card-copy{border-top-color:#d78058}
+.clarity .card:nth-child(3) .card-copy{border-top-color:#6f6ec7}
+.clarity .card-copy .number{width:32px;height:32px;font-size:.8rem;margin-bottom:14px}
+.clarity .card-copy h3{font-size:1.23rem;line-height:1.2}
+.clarity .card-copy p{font-size:1rem;line-height:1.6}
+.clarity .audience-gallery{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:24px}
+.clarity .audience-gallery .photo{height:280px}
+.clarity .audience-gallery img{width:100%;height:100%;object-fit:cover}
+.clarity .audience-gallery figcaption{font-size:1rem;font-weight:700;max-width:26ch}
+.clarity .section-note{font-size:.86rem;line-height:1.6;color:var(--muted);max-width:76ch;margin:20px 0 0}
+.clarity .sample-row .amount{font-size:2rem;font-variant-numeric:tabular-nums;letter-spacing:-.035em;color:var(--ink);line-height:1.2}
+.clarity .preview-bar{font-size:.76rem;line-height:1.6}
+.clarity .preview h3{line-height:1.25}
+.clarity .offer h2{max-width:20ch}
+.clarity .price{overflow-wrap:normal}
+.clarity .chips span{font-size:.9rem;line-height:1.5}
+.clarity .offer-grid,.clarity .split{gap:48px}
+@media(max-width:1020px){.clarity .hero-grid{gap:30px}.clarity .hero-photo{height:460px}.clarity .card-copy{padding:20px}.clarity .audience-gallery .photo{height:250px}}
+@media(max-width:800px){.clarity .hero-grid{padding-block:36px;gap:26px}.clarity h1{font-size:clamp(2.5rem,7vw,3.7rem);max-width:19ch}.clarity .hero-photo{height:360px}.clarity .offer-grid,.clarity .split{gap:30px}.clarity .photo-cards{gap:12px}.clarity .card-copy{padding:17px}.clarity .card-copy h3{font-size:1.12rem}.clarity .card-copy p{font-size:.95rem}}
+@media(max-width:580px){.clarity .hero-grid{padding-block:30px}.clarity h1{font-size:2.6rem;max-width:17ch;line-height:1.1}.clarity .lead{font-size:1.02rem}.clarity .hero-photo{height:305px}.clarity .hero-note{font-size:.83rem}.clarity .photo-cards{gap:22px}.clarity .card-copy{padding:24px}.clarity .card-copy h3{font-size:1.24rem}.clarity .card-copy p{font-size:1rem}.clarity .photo-cards .card>img{aspect-ratio:16/9}.clarity .audience-gallery{grid-template-columns:1fr;gap:18px}.clarity .audience-gallery .photo{height:235px}.clarity .section{padding-block:50px}.clarity .hero-photo figcaption strong{font-size:1.2rem}.clarity .hero-photo figcaption{font-size:.86rem}.clarity .price{font-size:2rem}.clarity .preview-body{padding:22px}}
+@media(max-width:350px){.clarity h1{font-size:2.22rem}.clarity .hero-photo{height:280px}.clarity .card-copy{padding:20px}.clarity .price{font-size:1.72rem}}
+@media(prefers-reduced-motion:reduce){.clarity *{scroll-behavior:auto!important}}
