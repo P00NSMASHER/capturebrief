@@ -1,6 +1,7 @@
 from __future__ import annotations
 import argparse,json,os
 from pathlib import Path
+from .atomic_io import atomic_write_text, ensure_exact_bytes
 from . import audit_case,compare_cases,render_markdown
 from .ledger import append_record, verify_ledger
 from .manifest import normalize_manifest_payload
@@ -30,9 +31,15 @@ from .calibration import summarize_calibration_review, validate_calibration_revi
 
 
 def load(p): return json.loads(Path(p).read_text())
+
+def _assert_distinct_outputs(*paths):
+    values=[os.path.abspath(os.fspath(Path(p))) for p in paths if p]
+    if len(values)!=len(set(values)):
+        raise SystemExit("output paths must be distinct")
+
 def dump(value,output=None):
     text=json.dumps(value,indent=2,ensure_ascii=False)
-    if output: Path(output).write_text(text+"\n")
+    if output: atomic_write_text(output,text+"\n")
     else: print(text)
 
 def main():
@@ -81,7 +88,7 @@ def main():
         r=audit_case(load(a.case)); dump(r.to_dict()); return 0 if r.release_state=="READY_FOR_HUMAN_RELEASE" else 2
     if a.cmd=="render":
         c=load(a.case); r=audit_case(c); out=render_markdown(c,r)
-        if a.output: Path(a.output).write_text(out)
+        if a.output: atomic_write_text(a.output,out)
         else: print(out)
         return 0 if r.release_state=="READY_FOR_HUMAN_RELEASE" else 2
     if a.cmd=="diff": dump(compare_cases(load(a.before),load(a.after))); return 0
@@ -106,9 +113,15 @@ def main():
         if a.observation_output: dump(observation,a.observation_output)
         return 0
     if a.cmd=="capture-api-resource":
+        _assert_distinct_outputs(a.output,a.receipt_output)
         observation=load(a.api_observation)
         receipt,content=download_resource_from_api_observation(observation,a.resource_url,max_bytes=a.max_bytes)
-        Path(a.output).write_bytes(content); receipt["stored_path"]=str(Path(a.output)); dump(receipt,a.receipt_output)
+        stored=ensure_exact_bytes(a.output,content)
+        if stored["sha256"]!=receipt.get("sha256") or stored["bytes"]!=receipt.get("size"):
+            raise RuntimeError("persisted resource bytes disagree with capture receipt")
+        receipt["stored_path"]=stored["path"]
+        receipt["stored_bytes_created"]=stored["created"]
+        dump(receipt,a.receipt_output)
         if a.ledger: append_record(a.ledger,record_type="SAM_APPROVED_API_BYTE_CAPTURE",payload=receipt)
         return 0
     if a.cmd=="archive-catalog":
@@ -191,10 +204,21 @@ def main():
         if a.transition_output: dump(transition,a.transition_output)
         return 0
     if a.cmd=="case-capture-artifact":
+        _assert_distinct_outputs(a.output,a.bytes_output,a.transition_output)
         updated,transition,content=capture_current_artifact(load(a.case),a.artifact_id,max_bytes=a.max_bytes)
+        if content is not None:
+            if not a.bytes_output:
+                raise SystemExit("--bytes-output is required when fresh artifact bytes are captured")
+            stored=ensure_exact_bytes(a.bytes_output,content)
+            if stored["sha256"]!=transition.get("sha256") or stored["bytes"]!=transition.get("size"):
+                raise RuntimeError("persisted artifact bytes disagree with applied receipt")
+            transition={**transition,
+                "bytes_persisted":True,
+                "stored_path":stored["path"],
+                "stored_bytes_created":stored["created"],
+            }
         dump(updated,a.output)
         if a.transition_output: dump(transition,a.transition_output)
-        if a.bytes_output and content is not None: Path(a.bytes_output).write_bytes(content)
         return 0
     if a.cmd=="current-search-plan":
         dump(build_current_search_plan(load(a.case)),a.output); return 0
