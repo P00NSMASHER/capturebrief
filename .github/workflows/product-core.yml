@@ -1,9 +1,9 @@
 name: Product Core
 on:
   push:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','index.html','sample.html','decision-evidence-sample.html']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','index.html','sample.html','decision-evidence-sample.html']
   pull_request:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','index.html','sample.html','decision-evidence-sample.html']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','index.html','sample.html','decision-evidence-sample.html']
 permissions:
   contents: read
 jobs:
@@ -72,13 +72,17 @@ jobs:
         run: python -m capturebrief_core.cli case-from-intake fixtures/intake.json --submitted-at 2026-09-21T15:00:00+00:00 -o /tmp/intake-case.json
       - name: Build operator work queue
         run: python -m capturebrief_core.cli work-queue /tmp/intake-case.json -o /tmp/work-queue.json
-      - name: Build fulfillment cockpit
+      - name: Verify fulfillment and bundle readiness agree
         run: |
           python -m capturebrief_core.cli fulfillment-plan /tmp/intake-case.json -o /tmp/intake-plan.json
           grep -q '"release_state": "FAIL_CLOSED"' /tmp/intake-plan.json
           grep -q '"automatic_evidence_or_bid_decision": false' /tmp/intake-plan.json
-          python -m capturebrief_core.cli fulfillment-plan fixtures/ready_case.json -o /tmp/ready-plan.json
-          grep -q '"fulfillment_state": "READY_TO_BUILD_DELIVERY"' /tmp/ready-plan.json
+          grep -q '"external_send_authorized": false' /tmp/intake-plan.json
+          python -m capturebrief_core.cli fulfillment-plan fixtures/ready_case.json -o /tmp/legacy-plan.json
+          grep -q '"fulfillment_state": "TRACE_UPGRADE_REQUIRED"' /tmp/legacy-plan.json
+          grep -q '"delivery_bundle_eligible": false' /tmp/legacy-plan.json
+          python -m capturebrief_core.cli fulfillment-plan fixtures/ready_trace_case.json -o /tmp/traced-plan.json
+          grep -q '"delivery_bundle_eligible": true' /tmp/traced-plan.json
       - name: Validate releasable fixture
         run: python -m capturebrief_core.cli validate fixtures/ready_case.json
       - name: Render releasable fixture

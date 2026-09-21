@@ -1,0 +1,59 @@
+name: Public Release Artifact
+on:
+  workflow_dispatch:
+  push:
+    branches: ['main', 'capturebrief-release-*']
+    paths:
+      - '**/*.html'
+      - 'assets/**'
+      - '_headers'
+      - '_redirects'
+      - 'favicon.svg'
+      - 'robots.txt'
+      - 'site.webmanifest'
+      - 'sitemap.xml'
+      - 'netlify-build.sh'
+      - 'netlify.toml'
+      - 'capturebrief_core/**'
+      - 'tests/**'
+      - 'scripts/package_public_release.py'
+      - '.github/workflows/public-release.yml'
+permissions:
+  contents: read
+concurrency:
+  group: public-release-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  tested-public-artifact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run complete regression suite before packaging
+        run: python -m unittest discover -s tests -v
+      - name: Build public files only
+        run: bash netlify-build.sh
+      - name: Package exact checked-out release
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+        run: python scripts/package_public_release.py --source-sha "$RELEASE_SHA" --output-dir release-output
+      - name: Retain deployable public ZIP and evidence receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturebrief-public-${{ github.sha }}
+          path: |
+            release-output/CaptureBrief_Public_Release.zip
+            release-output/release-receipt.json
+            release-output/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30
+      - name: Report build status without claiming deployment
+        run: |
+          echo '## CaptureBrief public release' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Tests passed; public ZIP retained. No site was deployed and no message was sent.' >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat release-output/release-receipt.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
