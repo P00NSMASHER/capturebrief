@@ -12,6 +12,7 @@ from .current_search import build_current_search_plan, fetch_and_apply_current
 from .data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD, collect_history_from_files
 from .packet import diff_manifest_receipts
 from .references import confirm_reference_scan, propose_reference_scan
+from .reference_match import attach_reference_match_proposal
 from .archive_catalog import catalog_snapshot
 from .history_index import (
     fetch_and_ingest_slot, index_status, ingest_extract_file,
@@ -54,6 +55,7 @@ def main():
     x=sub.add_parser("references-confirm"); x.add_argument("proposal"); x.add_argument("review_json"); x.add_argument("--output","-o"); x.add_argument("--scan-output"); x.add_argument("--references-output")
     x=sub.add_parser("case-apply-reference-review"); x.add_argument("case"); x.add_argument("review_result"); x.add_argument("--output","-o",required=True); x.add_argument("--transition-output")
     x=sub.add_parser("case-resolve-reference"); x.add_argument("case"); x.add_argument("reference_id"); x.add_argument("decision_json"); x.add_argument("--output","-o",required=True); x.add_argument("--transition-output")
+    x=sub.add_parser("case-propose-reference-matches"); x.add_argument("case"); x.add_argument("--output","-o",required=True); x.add_argument("--transition-output")
     x=sub.add_parser("case-from-intake"); x.add_argument("intake_json"); x.add_argument("--submitted-at"); x.add_argument("--output","-o")
     x=sub.add_parser("case-apply-current"); x.add_argument("case"); x.add_argument("api_observation"); x.add_argument("--output","-o",required=True); x.add_argument("--transition-output")
     x=sub.add_parser("case-apply-byte-receipt"); x.add_argument("case"); x.add_argument("receipt_json"); x.add_argument("--output","-o",required=True); x.add_argument("--transition-output")
@@ -156,6 +158,11 @@ def main():
         return 0
     if a.cmd=="case-resolve-reference":
         updated,transition=apply_reference_resolution(load(a.case),a.reference_id,load(a.decision_json))
+        dump(updated,a.output)
+        if a.transition_output: dump(transition,a.transition_output)
+        return 0
+    if a.cmd=="case-propose-reference-matches":
+        updated,transition=attach_reference_match_proposal(load(a.case))
         dump(updated,a.output)
         if a.transition_output: dump(transition,a.transition_output)
         return 0

@@ -20,6 +20,10 @@ from .resolver import attach_history_resolution, resolve_reference_from_index
 from .source_policy import SourcePolicyError, classify_sam_url, require_approved_automation
 from .packet import build_resource_union, diff_manifest_receipts, validate_reference_closure
 from .references import ReferenceReviewError, confirm_reference_scan, propose_reference_scan
+from .reference_match import (
+    ReferenceMatchError, attach_reference_match_proposal,
+    propose_reference_matches, reference_match_proposal_is_current,
+)
 from .render import render_markdown
 from .intake import IntakeError, build_case_from_intake
 from .workqueue import build_work_queue
@@ -39,5 +43,6 @@ __all__=[
     "IntakeError","build_case_from_intake","build_work_queue",
     "build_resource_union","diff_manifest_receipts","validate_reference_closure",
     "ReferenceReviewError","confirm_reference_scan","propose_reference_scan",
+    "ReferenceMatchError","attach_reference_match_proposal","propose_reference_matches","reference_match_proposal_is_current",
     "render_markdown","compare_cases"
 ]

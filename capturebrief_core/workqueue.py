@@ -8,6 +8,7 @@ from .history import validate_history_receipts
 from .manifest import validate_manifest_receipts
 from .model import parse_dt
 from .packet import validate_reference_closure
+from .reference_match import reference_match_proposal_is_current
 
 _PRIORITY = {"P0": 0, "P1": 1, "P2": 2}
 
@@ -224,24 +225,50 @@ def build_work_queue(
     if scan_status == "COMPLETE":
         reference_verdict, ref_findings = validate_reference_closure(packet)
         if reference_verdict != "REFERENCE_CLOSURE_COMPLETE":
-            for ref in packet.get("references") or []:
-                resolution = str(ref.get("resolution") or "UNRESOLVED").upper()
-                if resolution == "UNRESOLVED":
+            unresolved_refs = [
+                ref for ref in packet.get("references") or []
+                if str(ref.get("resolution") or "UNRESOLVED").upper() == "UNRESOLVED"
+            ]
+            if unresolved_refs and not reference_match_proposal_is_current(case):
+                add(_task(
+                    "reference-matches:propose",
+                    "Propose likely retained resource matches for unresolved references",
+                    actor="AUTOMATED_LOCAL",
+                    can_auto_execute=True,
+                    reason="The human-confirmed dependency inventory has unresolved references but no current local resource-match proposal.",
+                    evidence_needed="Deterministic local match proposal over retained manifest/resource metadata. Human resolution remains required.",
+                    metadata={"unresolved_reference_ids": [ref.get("reference_id") for ref in unresolved_refs]},
+                ))
+            elif unresolved_refs:
+                match_rows = {
+                    str(row.get("reference_id")): row
+                    for row in (packet.get("reference_match_proposal") or {}).get("matches") or []
+                    if row.get("reference_id")
+                }
+                for ref in unresolved_refs:
                     rid = str(ref.get("reference_id") or ref.get("label") or "unknown")
+                    match = match_rows.get(str(ref.get("reference_id"))) or {}
                     add(_task(
                         f"reference:{rid}",
                         f"Resolve referenced dependency: {ref.get('label') or rid}",
                         actor="HUMAN_REVIEW",
-                        reason="A controlling/named dependency is still unresolved.",
-                        evidence_needed="Verified resource+bytes, source-backed supersession, or explicit external/restricted dependency.",
-                        metadata={"reference_id": ref.get("reference_id")},
+                        reason="A controlling/named dependency is still unresolved. Local match candidates are suggestions only.",
+                        evidence_needed="Human choice of verified resource+bytes, source-backed supersession, or explicit external/restricted dependency.",
+                        metadata={
+                            "reference_id": ref.get("reference_id"),
+                            "candidate_count": match.get("candidate_count", 0),
+                            "ambiguous_top_score": match.get("ambiguous_top_score", False),
+                            "same_name_ambiguity_resource_ids": match.get("same_name_ambiguity_resource_ids", []),
+                            "candidates": (match.get("candidates") or [])[:5],
+                            "can_auto_resolve": False,
+                        },
                     ))
-            if not any(key.startswith("reference:") for key in tasks):
+            if not unresolved_refs:
                 add(_task(
                     "references:closure",
                     "Resolve reference-review or closure blockers",
                     actor="HUMAN_REVIEW",
-                    reason="The human-confirmed reference inventory exists but does not yet satisfy closure rules.",
+                    reason="The human-confirmed reference inventory has no unresolved references but still does not satisfy closure rules.",
                     evidence_needed="Corrected review receipt, reference states, and supporting evidence.",
                     metadata={"finding_codes": sorted({f.code for f in ref_findings})},
                 ))

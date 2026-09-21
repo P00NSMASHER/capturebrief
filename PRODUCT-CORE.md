@@ -1,4 +1,4 @@
-# CaptureBrief Product Core v0.8 — Byte Receipts Into Cases
+# CaptureBrief Product Core v0.9 — Local Reference Matching
 
 Updated: September 21, 2026
 
@@ -518,3 +518,65 @@ This creates an auditable chain:
 ## Updated remaining friction
 
 The next operator-time reduction target is a **local reference-to-resource match proposal**. CaptureBrief can use normalized names and retained metadata to suggest likely resource IDs, but the result must remain a proposal only. Ambiguous same-name resources, deleted predecessors, and historical/current replacements must stay visible, and a human must still make the closure decision.
+
+
+## v0.9 — Local reference-to-resource proposals
+
+After the human-confirmed dependency inventory exists, CaptureBrief can now propose likely retained source objects without changing any reference resolution:
+
+    python -m capturebrief_core.cli case-propose-reference-matches       reviewed-case.json -o matched-case.json       --transition-output match-transition.json
+
+The proposal operates only on evidence already retained in the case:
+- manifest resource IDs;
+- presentation names;
+- action membership;
+- deletion/access state;
+- declared size and MIME type;
+- captured byte state/SHA-256 where available.
+
+It does not browse, scrape, retrieve new sources, or use hidden external data.
+
+### Deterministic matching
+
+The local matcher uses normalized tokens, attachment/amendment number anchors, name containment, and token overlap. It penalizes conflicting numeric anchors, so `Attachment 4` is not casually matched to `Attachment 5`.
+
+The proposal is hash-bound to:
+- the human-confirmed reference scan;
+- the exact confirmed reference set;
+- the retained resource-union digest.
+
+Any change to those inputs makes the proposal stale and the work queue requests a new one.
+
+### Ambiguity is a first-class output
+
+The proposal retains:
+- candidate resource ID;
+- deterministic score and reasons;
+- all observed names;
+- action IDs;
+- artifact states;
+- deletion/tombstone risk;
+- access/unavailable risk;
+- retained byte state/hash.
+
+If two resource IDs share the same filename, both remain visible. A tie at the top score sets `ambiguous_top_score = true`; same-name multi-resource IDs are listed explicitly.
+
+This addresses the real packet-history failure mode where a deleted predecessor and a later replacement share the same presentation name.
+
+### No automatic closure
+
+Every proposal and every per-reference row carries:
+
+`can_auto_resolve = false`
+
+Even an exact normalized name, exact resource URL, verified bytes, and a unique top score do not change the reference. A human must still apply a `case-resolve-reference` decision.
+
+### Work queue sequence
+
+For a complete human-confirmed inventory:
+
+1. unresolved references + no current match proposal → `reference-matches:propose` (`AUTOMATED_LOCAL`);
+2. current match proposal exists → human `reference:<id>` tasks receive up to five top candidates and ambiguity flags;
+3. reviewer chooses/justifies a closure state through the validated reference transition.
+
+This reduces lookup work without weakening the evidence boundary.
