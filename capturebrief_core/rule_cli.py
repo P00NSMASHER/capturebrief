@@ -8,7 +8,7 @@ from .rule_candidates import attach_rule_candidate_proposal, attach_rule_candida
 from .rule_sync import sync_pinned_gsa_rule
 from .rule_evidence import prepare_rule_evidence
 from .rule_applicability import review_rule_applicability
-from .deviation_sync import attach_deviation_candidate_proposal, sync_pinned_deviation_manifest
+from .deviation_sync import attach_deviation_candidate_proposal, capture_and_attach_deviation_artifact, sync_pinned_deviation_manifest
 from .rule_registry import (
     add_rule_version,
     diff_rule_versions,
@@ -85,6 +85,14 @@ def main(argv=None):
     pdv.add_argument("--proposed-at", required=True)
     pdv.add_argument("-o", "--output")
     pdv.add_argument("--result-output")
+
+    cad = s.add_parser("case-capture-deviation-artifact")
+    cad.add_argument("case")
+    cad.add_argument("deviation_source_id")
+    cad.add_argument("--observed-at", required=True)
+    cad.add_argument("--artifact-output", required=True)
+    cad.add_argument("--receipt-output")
+    cad.add_argument("-o", "--output", required=True)
 
     cat = s.add_parser("catalog")
     cat.add_argument("path", nargs="?", default="RULE-SOURCE-CATALOG.json")
@@ -216,6 +224,28 @@ def main(argv=None):
         _write(updated, args.output)
         if args.result_output:
             _write(transition, args.result_output)
+    elif args.cmd == "case-capture-deviation-artifact":
+        case = json.loads(Path(args.case).read_text(encoding="utf-8"))
+        updated, receipt, data = capture_and_attach_deviation_artifact(
+            case,
+            args.deviation_source_id,
+            observed_at=args.observed_at,
+        )
+        Path(args.artifact_output).write_bytes(data)
+        _write(updated, args.output)
+        if args.receipt_output:
+            _write(receipt, args.receipt_output)
+        _write({
+            "status": "DEVIATION_ARTIFACT_CAPTURED",
+            "deviation_source_id": receipt["deviation_source_id"],
+            "pdf_sha256": receipt["pdf_sha256"],
+            "observed_pdf_size_bytes": receipt["observed_pdf_size_bytes"],
+            "declared_size_matches_observed": receipt["declared_size_matches_observed"],
+            "index_byte_identity_proven": False,
+            "currentness": "UNRESOLVED",
+            "applicability": "UNRESOLVED",
+            "can_auto_apply": False,
+        })
     elif args.cmd == "catalog":
         _write(load_source_catalog(args.path), args.output)
     elif args.cmd == "case-propose-citations":
