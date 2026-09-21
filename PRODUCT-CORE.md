@@ -1,4 +1,4 @@
-# CaptureBrief Product Core v0.5 — Current-Action Case Transition
+# CaptureBrief Product Core v0.6 — Planned Current Retrieval
 
 Updated: September 21, 2026
 
@@ -341,3 +341,64 @@ The operator queue is sequential:
 - reviewed inventory exists → individual reference-resolution tasks.
 
 This closes a major failure mode exposed by the packet-integrity research: “the parser did not see a named amendment” can never become evidence that the amendment is safely irrelevant.
+
+
+## v0.6 — Derive documented API search windows from history
+
+Operators no longer need to hand-enter `postedFrom` / `postedTo` ranges for the documented Get Opportunities API.
+
+CaptureBrief derives bounded retrieval windows from the posted-date observations already retained inside a complete Data Services history receipt:
+
+    python -m capturebrief_core.cli current-search-plan resolved-case.json -o current-plan.json
+
+The plan is deliberately non-authoritative:
+- `currentness_authoritative = false`;
+- `ordering_authoritative = false`;
+- every individual window carries `date_basis_authoritative = false`.
+
+The dates only answer: **which documented API requests should we try?** They never answer: **which action is current?**
+
+If any history action lacks a usable posted date, the automated plan is marked incomplete and CaptureBrief refuses automated current retrieval rather than silently searching an incomplete time range.
+
+### One-command documented current retrieval
+
+With a complete history case and a SAM API key:
+
+    SAM_API_KEY=... python -m capturebrief_core.cli case-fetch-current       resolved-case.json -o current-case.json --result-output current-result.json
+
+This operation:
+1. builds the non-authoritative search plan;
+2. queries the documented Opportunities API across the required <=1-year windows;
+3. ignores zero-result windows without treating them as terminal evidence;
+4. rejects multiple conflicting current candidates;
+5. binds the returned Notice ID back to the independent history set;
+6. applies the validated current-action transition to the case.
+
+A zero-match result is explicitly:
+
+`NO_ACTIVE_MATCH`
+
+with the product meaning:
+
+> No active API match was found. This does not prove cancellation, archival, or inactivity.
+
+Terminal state still requires an appropriate first-party terminal source.
+
+## v0.6 + reference-review boundary
+
+The current retrieval layer and the human-confirmed reference inventory intentionally stay separate.
+
+Approved automation may establish:
+- complete history membership;
+- latest-active currentness;
+- current API resource-link discovery.
+
+Only human review may establish that the retained notice/document source set was semantically reviewed for named dependencies. Automated retrieval cannot promote a proposed reference inventory to `COMPLETE`.
+
+## Updated next bottleneck
+
+The approved automated path now covers:
+
+`intake seed -> full history -> planned current API retrieval -> current-action case transition -> current resource discovery`
+
+The highest-value remaining product work is on historical packet review and reference closure: reduce the manual burden of matching human-confirmed references to observed resources and captured bytes without crossing the source-policy boundary into automated SAM UI scraping.

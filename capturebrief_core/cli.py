@@ -6,6 +6,7 @@ from .ledger import append_record, verify_ledger
 from .manifest import normalize_manifest_payload
 from .current_api import download_resource_from_api_observation, fetch_latest_active, make_current_action_receipt
 from .case_current import apply_current_api_observation
+from .current_search import build_current_search_plan, fetch_and_apply_current
 from .data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD, collect_history_from_files
 from .packet import diff_manifest_receipts
 from .references import confirm_reference_scan, propose_reference_scan
@@ -51,6 +52,8 @@ def main():
     x=sub.add_parser("references-confirm"); x.add_argument("proposal"); x.add_argument("review_json"); x.add_argument("--output","-o"); x.add_argument("--scan-output"); x.add_argument("--references-output")
     x=sub.add_parser("case-from-intake"); x.add_argument("intake_json"); x.add_argument("--submitted-at"); x.add_argument("--output","-o")
     x=sub.add_parser("case-apply-current"); x.add_argument("case"); x.add_argument("api_observation"); x.add_argument("--output","-o",required=True); x.add_argument("--transition-output")
+    x=sub.add_parser("current-search-plan"); x.add_argument("case"); x.add_argument("--output","-o")
+    x=sub.add_parser("case-fetch-current"); x.add_argument("case"); x.add_argument("--api-key-env",default="SAM_API_KEY"); x.add_argument("--organization-code"); x.add_argument("--output","-o",required=True); x.add_argument("--result-output")
     x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o")
     x=sub.add_parser("ledger-append"); x.add_argument("ledger"); x.add_argument("record_type"); x.add_argument("payload_json")
     x=sub.add_parser("ledger-verify"); x.add_argument("ledger")
@@ -148,6 +151,15 @@ def main():
         dump(updated,a.output)
         if a.transition_output: dump(transition,a.transition_output)
         return 0
+    if a.cmd=="current-search-plan":
+        dump(build_current_search_plan(load(a.case)),a.output); return 0
+    if a.cmd=="case-fetch-current":
+        api_key=os.environ.get(a.api_key_env,"")
+        if not api_key: raise SystemExit(f"missing API key environment variable: {a.api_key_env}")
+        updated,result=fetch_and_apply_current(load(a.case),api_key=api_key,organization_code=a.organization_code)
+        dump(updated,a.output)
+        if a.result_output: dump(result,a.result_output)
+        return 0 if result["fetch"]["status"]=="CURRENT_OBSERVATION_FOUND" else 2
     if a.cmd=="work-queue":
         observation=load(a.api_observation) if a.api_observation else None
         history_plan=load(a.history_index_plan) if a.history_index_plan else None

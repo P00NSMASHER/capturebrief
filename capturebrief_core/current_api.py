@@ -17,6 +17,12 @@ class CurrentApiError(RuntimeError):
     pass
 
 
+class CurrentApiCardinalityError(CurrentApiError):
+    def __init__(self, count: int):
+        self.count = int(count)
+        super().__init__(f"expected exactly one latest-active family row, found {self.count}")
+
+
 def _date(value: str) -> datetime:
     return datetime.strptime(value, "%m/%d/%Y").replace(tzinfo=timezone.utc)
 
@@ -80,7 +86,7 @@ def fetch_latest_active(
             if str(r.get("fullParentPathCode") or "").endswith(organization_code)
         ]
     if len(exact) != 1:
-        raise CurrentApiError(f"expected exactly one latest-active family row, found {len(exact)}")
+        raise CurrentApiCardinalityError(len(exact))
 
     record = exact[0]
     return {
