@@ -26,6 +26,8 @@ jobs:
         run: python -m unittest tests.test_watch_baseline -v
       - name: Commercial outcome ledger contracts
         run: python -m unittest tests.test_outcomes -v
+      - name: Commercial activation contracts
+        run: python -m unittest tests.test_commercial_activation -v
       - name: Exercise outcome ledger CLI
         run: |
           python -m capturebrief_core.cli outcome-validate fixtures/outcome_event_example.json -o /tmp/outcome-valid.json
@@ -53,6 +55,11 @@ jobs:
         run: python -m unittest tests.test_rule_candidates -v
       - name: Build case from website intake
         run: python -m capturebrief_core.cli case-from-intake fixtures/intake.json --submitted-at 2026-09-21T15:00:00+00:00 -o /tmp/intake-case.json
+      - name: Build pending founding-pilot activation
+        run: |
+          python -m capturebrief_core.cli scope-review /tmp/intake-case.json IN_SCOPE --reason PUBLIC_FEDERAL_IT_CYBER_CLOUD --reviewed-by-role "CI scope reviewer" --reviewed-at 2026-09-21T15:05:00+00:00 -o /tmp/scope-review.json
+          python -m capturebrief_core.cli checkout-packet /tmp/intake-case.json /tmp/scope-review.json --created-at 2026-09-21T15:06:00+00:00 -o /tmp/activation.json
+          grep -q '"AWAITING_VERIFIED_CHECKOUT"' /tmp/activation.json
       - name: Build operator work queue
         run: python -m capturebrief_core.cli work-queue /tmp/intake-case.json -o /tmp/work-queue.json
       - name: Validate releasable fixture
