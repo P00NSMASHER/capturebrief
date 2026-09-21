@@ -1,9 +1,9 @@
 name: Product Core
 on:
   push:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','index.html','sample.html','decision-evidence-sample.html']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','RELEASE-CONSISTENCY.md','index.html','sample.html','decision-evidence-sample.html']
   pull_request:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','index.html','sample.html','decision-evidence-sample.html']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','RELEASE-CONSISTENCY.md','index.html','sample.html','decision-evidence-sample.html']
 permissions:
   contents: read
 jobs:
@@ -24,6 +24,8 @@ jobs:
         run: python -m unittest tests.test_decision_trace -v
       - name: Customer delivery bundle contracts
         run: python -m unittest tests.test_delivery_bundle -v
+      - name: Shared release consistency integration contracts
+        run: python -m unittest tests.test_release_consistency -v
       - name: Targeted watch baseline contracts
         run: python -m unittest tests.test_watch_baseline -v
       - name: Commercial outcome ledger contracts
