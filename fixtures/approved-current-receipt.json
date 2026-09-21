@@ -1,0 +1,20 @@
+{
+  "asserted_action_id": "a2",
+  "semantics": "CURRENT_ACTIVE",
+  "observed_family_status": "ACTIVE",
+  "source_url": "https://api.sam.gov/opportunities/v2/search",
+  "observed_at": "2026-09-21T16:00:00+00:00",
+  "expires_at": "2026-09-22T16:00:00+00:00",
+  "evidence_payload": {
+    "source_contract": "SAM_GET_OPPORTUNITIES_V2",
+    "notice_id": "a2",
+    "solicitation_number": "SOL-1",
+    "posted_date": "2026-09-20",
+    "active": "Yes",
+    "resource_links": ["https://sam.gov/api/prod/opps/v3/opportunities/resources/files/r2/download"],
+    "api_payload_sha256": "27625e5554c1e93fb18108dfd369d72b77eee53cb570702201510f90d287d1ff"
+  },
+  "evidence_payload_sha256": "504f556310dfaa3a18839518a6bf723acac5ea895240e684b7abbe2348719fea",
+  "history_set_sha256": "7e0163940bce5934e57890c8cb890007d478774b78efdb0924dd0937e0d31688",
+  "automation_mode": "APPROVED_API"
+}
