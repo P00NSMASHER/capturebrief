@@ -1,0 +1,330 @@
+{
+  "case_schema_version": "0.2",
+  "case_id": "CB-DEMO-READY",
+  "family_id": "DEMO-FAMILY-001",
+  "current_posture": "GO",
+  "packet": {
+    "family_status": "ACTIVE",
+    "history_action_ids": [
+      "action-001",
+      "action-002"
+    ],
+    "history_receipts": [
+      {
+        "source_surface": "SAM_HISTORY",
+        "source_url": "https://sam.gov/opp/example/view",
+        "observed_at": "2026-09-21T13:00:00+00:00",
+        "status": "COMPLETE",
+        "action_ids": [
+          "action-001",
+          "action-002"
+        ],
+        "history_set_sha256": "4d6a53ca6e9698ba76f0e1ce280001fbca37f25d3768b6e87a57e0dd101fb548",
+        "evidence_payload_sha256": "ca181793a986662dff8a33a33d70d9746d5d16101e2acd6ac61ee7e7ea70ae1d",
+        "evidence_payload": {
+          "surface": "SAM history",
+          "action_ids": [
+            "action-001",
+            "action-002"
+          ]
+        }
+      }
+    ],
+    "manifest_receipts": [
+      {
+        "action_id": "action-001",
+        "source_url": "https://sam.gov/api/prod/opps/v3/opportunities/action-001/resources?excludeDeleted=false&withScanResult=false",
+        "observed_at": "2026-09-21T13:00:00+00:00",
+        "status": "CHECKED",
+        "deletion_inclusive": true,
+        "with_scan_result": false,
+        "parser_version": "capturebrief-sam-manifest-v1",
+        "source_contract": "UNDOCUMENTED_SAM_WEB_UI",
+        "endpoint_version": "v3",
+        "shape_validated": true,
+        "raw_manifest_sha256": "c31aa8819c2c05d3c9b0249506eaa31e97eeb854f52a1293a5a2c73642df0fba",
+        "raw_manifest": {
+          "_embedded": {
+            "opportunityAttachmentList": [
+              {
+                "attachments": [
+                  {
+                    "resourceId": "resource-old",
+                    "name": "Original Solicitation.pdf",
+                    "size": 12345,
+                    "mimeType": "application/pdf",
+                    "accessStatus": "public",
+                    "exportControlled": "0",
+                    "deletedFlag": "0",
+                    "fileExists": "1",
+                    "type": "file"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "normalized_manifest_sha256": "627b5d128474e9392660a82cb1925eefc684b7cbdd51520419358601c7e14245",
+        "items": [
+          {
+            "resource_id": "resource-old",
+            "name": "Original Solicitation.pdf",
+            "kind": "file",
+            "uri": null,
+            "mime_type": "application/pdf",
+            "declared_size": 12345,
+            "posted_at": null,
+            "access_status": "public",
+            "export_controlled": false,
+            "deleted": false,
+            "deleted_at": null,
+            "attachment_id": null,
+            "attachment_order": null,
+            "file_exists": "1",
+            "artifact_state": "PUBLIC",
+            "raw_sha256": "488da5cb587293e92e6f90c90d17f6971aa5a1b9874a6706ae496fa262f5980d"
+          }
+        ]
+      },
+      {
+        "action_id": "action-002",
+        "source_url": "https://sam.gov/api/prod/opps/v3/opportunities/action-002/resources?excludeDeleted=false&withScanResult=false",
+        "observed_at": "2026-09-21T13:00:00+00:00",
+        "status": "CHECKED",
+        "deletion_inclusive": true,
+        "with_scan_result": false,
+        "parser_version": "capturebrief-sam-manifest-v1",
+        "source_contract": "UNDOCUMENTED_SAM_WEB_UI",
+        "endpoint_version": "v3",
+        "shape_validated": true,
+        "raw_manifest_sha256": "b35c4994f97fedd02a49344090f6aa6669157fc8996a6ead026555f5873ea651",
+        "raw_manifest": {
+          "_embedded": {
+            "opportunityAttachmentList": [
+              {
+                "attachments": [
+                  {
+                    "resourceId": "resource-current",
+                    "name": "Current Solicitation.pdf",
+                    "size": 12345,
+                    "mimeType": "application/pdf",
+                    "accessStatus": "public",
+                    "exportControlled": "0",
+                    "deletedFlag": "0",
+                    "fileExists": "1",
+                    "type": "file"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "normalized_manifest_sha256": "065af58416094668b98c301988b7083b0cd278293f9984a82e78b53d868fb3ea",
+        "items": [
+          {
+            "resource_id": "resource-current",
+            "name": "Current Solicitation.pdf",
+            "kind": "file",
+            "uri": null,
+            "mime_type": "application/pdf",
+            "declared_size": 12345,
+            "posted_at": null,
+            "access_status": "public",
+            "export_controlled": false,
+            "deleted": false,
+            "deleted_at": null,
+            "attachment_id": null,
+            "attachment_order": null,
+            "file_exists": "1",
+            "artifact_state": "PUBLIC",
+            "raw_sha256": "635ee3070d2a6c9d0de9680568ed102d2f0545cb5cfcdbd01223954c1c3d17e2"
+          }
+        ]
+      }
+    ],
+    "reference_scan": {
+      "status": "COMPLETE",
+      "scan_sha256": "d9c59cd2e2b4f6bb86e2f2e644ad5afc526e67ff957079071121ec67bfcbb2c6",
+      "parser_version": "capturebrief-reference-review-v1",
+      "review_mode": "HUMAN_CONFIRMED",
+      "reviewer": "CaptureBrief reviewer",
+      "reviewed_at": "2026-09-21T13:00:00+00:00",
+      "coverage_attestation": true,
+      "proposal_sha256": "a1fe8e1000d8e6d43f94b9118a5cc0d5788a2e82efa7895eba32a0763df3bcca",
+      "reference_set_sha256": "58ed5ce73b35a84765067d1c68e985b179438ffa5c3be30331fd9c638b3c1fef",
+      "payload": {
+        "proposal_sha256": "a1fe8e1000d8e6d43f94b9118a5cc0d5788a2e82efa7895eba32a0763df3bcca",
+        "proposal_payload": {
+          "parser_version": "capturebrief-reference-proposal-v1",
+          "sources": [
+            {
+              "source_id": "sam-current",
+              "content_sha256": "e3c9b45283fe7fab69bf6dc0a4ef7c66dbf2e9a5aecc68645cbd5ca1d89a8cc5",
+              "characters": 25
+            }
+          ],
+          "candidates": [],
+          "automatic_completeness_claim": false
+        },
+        "reviewer": "CaptureBrief reviewer",
+        "reviewed_at": "2026-09-21T13:00:00+00:00",
+        "attests_complete": true,
+        "reviewed_source_ids": [
+          "sam-current"
+        ],
+        "candidate_decisions": [],
+        "manual_additions": [
+          {
+            "reference_id": "ref-3199e359bb940d69",
+            "label": "Current solicitation",
+            "kind": "MANUAL",
+            "source_id": "sam-current",
+            "reason": "Reviewer identified the controlling solicitation as a required dependency."
+          }
+        ],
+        "tracked_reference_ids": [
+          "ref-3199e359bb940d69"
+        ]
+      }
+    },
+    "references": [
+      {
+        "reference_id": "ref-3199e359bb940d69",
+        "label": "Current solicitation",
+        "reference_kind": "MANUAL",
+        "origin_source_ids": [
+          "sam-current"
+        ],
+        "manual_addition": true,
+        "manual_reason": "Reviewer identified the controlling solicitation as a required dependency.",
+        "resolution": "RESOLVED_TO_RESOURCE",
+        "source_object_state": "VERIFIED_SOURCE_OBJECT",
+        "resource_id": "resource-current",
+        "byte_state": "BYTES_VERIFIED_HASHED",
+        "byte_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ],
+    "artifacts": [
+      {
+        "artifact_id": "resource-current",
+        "name": "Current Solicitation.pdf",
+        "state": "PUBLIC",
+        "required_for_analysis": true,
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "source_object_state": "VERIFIED_SOURCE_OBJECT",
+        "byte_state": "BYTES_VERIFIED_HASHED"
+      }
+    ],
+    "external_dependencies": []
+  },
+  "current_action_receipts": [
+    {
+      "asserted_action_id": "action-002",
+      "semantics": "CURRENT_ACTIVE",
+      "observed_family_status": "ACTIVE",
+      "source_url": "https://sam.gov/opp/example/view",
+      "observed_at": "2026-09-21T12:59:00+00:00",
+      "expires_at": "2026-10-21T13:00:00+00:00",
+      "evidence_payload": {
+        "status": "ACTIVE",
+        "action": "action-002",
+        "history": [
+          "action-001",
+          "action-002"
+        ]
+      },
+      "evidence_payload_sha256": "d503c169f026509f215018929bac26071ca79ecbd0d45bc9c26c3dcce4450d5f",
+      "history_set_sha256": "4d6a53ca6e9698ba76f0e1ce280001fbca37f25d3768b6e87a57e0dd101fb548"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "sam-current",
+      "url": "https://sam.gov/opp/example/view",
+      "authority": "CONTROLLING_CURRENT",
+      "artifact_state": "PUBLIC",
+      "observed_at": "2026-09-21T13:00:00+00:00",
+      "content_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    {
+      "source_id": "trace-source",
+      "title": "Fixture current solicitation",
+      "url": "https://sam.gov/opp/example/view",
+      "authority": "SUPPORTING",
+      "artifact_state": "PUBLIC",
+      "observed_at": "2026-09-21T13:00:00+00:00",
+      "content_sha256": "c3ab0d8eb4e2784677befef6b06a39c87ccfb8b4e00941fa5b61e28da3cf2613"
+    }
+  ],
+  "assumptions": [
+    {
+      "assumption_id": "A1",
+      "text": "The verified current solicitation controls the working baseline.",
+      "evidence_state": "SUPPORTED",
+      "decision_class": "MONITOR_ONLY",
+      "finding": "Current action, manifest, reference closure, and public bytes are verified in this demonstration case.",
+      "source_ids": [
+        "sam-current",
+        "trace-source"
+      ],
+      "reopen_triggers": [
+        "CURRENT_ACTION_CHANGE",
+        "MANIFEST:action-002",
+        "RESOURCE:resource-current",
+        "REFERENCE:ref-3199e359bb940d69"
+      ]
+    }
+  ],
+  "decision_trace_required": true,
+  "decision_trace": {
+    "schema_version": "1.0",
+    "family_id": "DEMO-FAMILY-001",
+    "decision_at": "2026-09-21T13:05:00+00:00",
+    "snapshots": [
+      {
+        "snapshot_id": "SNAP:ac337e2ddc1778dc187626d514249a7ccc812b608249f2bd3b8a207efc77be18",
+        "source_id": "trace-source",
+        "source_key": "DEMO-FAMILY-001:CURRENT",
+        "kind": "SOLICITATION",
+        "title": "Fixture current solicitation",
+        "url": "https://sam.gov/opp/example/view",
+        "version_label": "Verified current action action-002",
+        "document_sha256": "c3ab0d8eb4e2784677befef6b06a39c87ccfb8b4e00941fa5b61e28da3cf2613",
+        "text_sha256": "c3ab0d8eb4e2784677befef6b06a39c87ccfb8b4e00941fa5b61e28da3cf2613",
+        "text": "Fixture current solicitation controls the working baseline.",
+        "observed_at": "2026-09-21T13:00:00+00:00",
+        "published_at": null,
+        "artifact_state": "PUBLIC",
+        "capture_method": "NATIVE_TEXT",
+        "captured_by": "CaptureBrief reviewer",
+        "mapping_note": "Release-gated delivery bundle regression fixture."
+      }
+    ],
+    "rule_versions": [],
+    "reviews": [
+      {
+        "assumption_id": "A1",
+        "evidence_state": "SUPPORTED",
+        "finding": "Current action, manifest, reference closure, and public bytes are verified in this demonstration case.",
+        "citations": [
+          {
+            "snapshot_id": "SNAP:ac337e2ddc1778dc187626d514249a7ccc812b608249f2bd3b8a207efc77be18",
+            "line_start": 1,
+            "line_end": 1,
+            "locator": "Fixture current solicitation",
+            "quote": "Fixture current solicitation controls the working baseline.",
+            "role": "SUPPORTS"
+          }
+        ],
+        "rule_scope": {
+          "status": "NOT_RELEVANT",
+          "rationale": "This bounded fixture assumption depends only on the retained current solicitation source."
+        },
+        "rule_links": [],
+        "changes": [],
+        "reviewed_by": "CaptureBrief reviewer",
+        "reviewed_at": "2026-09-21T13:05:00+00:00"
+      }
+    ]
+  }
+}
