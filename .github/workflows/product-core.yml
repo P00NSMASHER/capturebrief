@@ -22,8 +22,14 @@ jobs:
         run: python -m unittest tests.test_decision_trace -v
       - name: Customer delivery bundle contracts
         run: python -m unittest tests.test_delivery_bundle -v
+      - name: Targeted watch baseline contracts
+        run: python -m unittest tests.test_watch_baseline -v
       - name: Build release-gated customer bundle
         run: python -m capturebrief_core.trace_cli bundle fixtures/ready_trace_case.json -o /tmp/capturebrief-delivery.zip
+      - name: Build and compare targeted watch baseline
+        run: |
+          python -m capturebrief_core.trace_cli watch-baseline fixtures/ready_trace_case.json -o /tmp/watch-baseline.json
+          python -m capturebrief_core.trace_cli watch-check /tmp/watch-baseline.json fixtures/ready_trace_case.json -o /tmp/watch-check.json
       - name: FAR DFARS rule registry contracts
         run: python -m unittest tests.test_rule_registry -v
       - name: Pinned GSA rule source sync contracts
