@@ -44,6 +44,30 @@ New intake-generated cases require a decision trace. Release remains fail-closed
 
 Older cases that predate this feature remain readable and are not retroactively labeled fully traced.
 
+## Rule-to-assumption evidence
+
+When a FAR/DFARS rule matters, CaptureBrief separates three questions:
+
+1. **What exact rule edition/text was reviewed?**
+2. **What pursuit-specific source says that edition applies or does not apply?**
+3. **What does that mean for the buyer's bounded assumption?**
+
+The rule text cannot prove its own applicability.
+
+For a resolved applicability decision, the reviewer must cite a separate exact passage from a retained solicitation, amendment, or pursuit-context snapshot. The basis quote must match the retained evidence exactly and carries its own locator.
+
+The resulting rule link records:
+- namespace + citation;
+- exact edition;
+- `APPLIES`, `DOES_NOT_APPLY`, or `UNRESOLVED`;
+- basis type;
+- incorporated edition when relevant;
+- reviewer rationale;
+- reviewer identity/time;
+- exact pursuit-specific basis passage.
+
+The applicability conclusion is human-reviewed QA, not legal authority. CaptureBrief records `can_auto_apply = false` and does not change the assumption's evidence state automatically.
+
 ## Change watch
 
 The trace is append-preserving.
@@ -62,7 +86,7 @@ Decision-evidence gaps enter the existing CaptureBrief work queue as `HUMAN_REVI
 
 The intended flow is:
 
-`buyer assumption -> exact public source/version -> exact passage -> optional rule-edition review -> human evidence state -> buyer finding -> next action -> targeted change watch`
+`buyer assumption -> exact public source/version -> exact passage -> pinned rule edition -> exact rule passage -> separate pursuit-specific applicability passage -> human evidence state -> buyer finding -> next action -> targeted change watch`
 
 This sits underneath the existing product controls:
 
