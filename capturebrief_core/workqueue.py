@@ -172,18 +172,20 @@ def build_work_queue(
                 metadata={"finding_codes": sorted({f.code for f in ref_findings})},
             ))
 
-    approved_links = set((api_observation or {}).get("resource_links") or [])
+    api_observation = api_observation or packet.get("current_api_observation") or {}
+    approved_links = set(api_observation.get("resource_links") or [])
     for artifact in packet.get("artifacts") or []:
         if artifact.get("required_for_analysis") is not True:
             continue
         aid = str(artifact.get("artifact_id") or "unknown")
         state = str(artifact.get("state") or "UNKNOWN").upper()
         byte_state = str(artifact.get("byte_state") or "").upper()
-        if state == "PUBLIC" and (
+        url = artifact.get("resource_url")
+        auto = bool(url and url in approved_links)
+        captureable = state == "PUBLIC" or (state == "UNKNOWN" and auto)
+        if captureable and (
             not artifact.get("sha256") or byte_state != "BYTES_VERIFIED_HASHED"
         ):
-            url = artifact.get("resource_url")
-            auto = bool(url and url in approved_links)
             add(_task(
                 f"bytes:{aid}",
                 f"Capture required public bytes for {artifact.get('name') or aid}",
