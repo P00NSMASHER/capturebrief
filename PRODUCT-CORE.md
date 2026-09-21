@@ -1,8 +1,95 @@
-# CaptureBrief Product Core v0.12 — Rule Source Registry
+# CaptureBrief Product Core v0.13 — Rule Citation Candidates
 
 Updated: September 21, 2026
 
-CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.12 adds a content-addressed FAR/DFARS/deviation source registry beneath Decision Evidence so reviewed rule editions can be pinned to exact repository revisions and normalized source text without treating Git recency as effective-date or applicability authority.
+CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.13 reduces rule-review lookup work by finding FAR/DFARS citation candidates in retained public text and showing every matching pinned registry version while preserving a mandatory human choice of edition and applicability.
+
+## v0.13 — Rule Citation Candidates
+
+CaptureBrief can now turn retained solicitation/amendment text into a **rule-review proposal** without turning citation detection into legal applicability.
+
+The operator supplies reviewed/extracted text associated with a public case source. CaptureBrief:
+
+1. binds the text-processing run to the case source ID and retained document SHA-256;
+2. finds explicit `FAR ...` / `DFARS ...` references;
+3. conservatively recognizes regulation-shaped bare citations such as `52.204-21` and `252.204-7012`;
+4. records line, character span, exact mention, surrounding context and text SHA-256;
+5. queries the local append-only rule registry;
+6. returns **all matching pinned editions**, not a selected “latest” edition;
+7. places the proposal into the operator work queue as `HUMAN_REVIEW`.
+
+### Conservative namespace hints
+
+An explicit FAR/DFARS prefix is recorded as an explicit namespace hint.
+
+For a bare citation, number ranges can be used only as a **non-authoritative search hint**:
+
+- FAR-shaped parts ≤ 53 → FAR candidate lookup;
+- 2xx numbering → DFARS candidate lookup.
+
+If a heuristic lookup produces no result, CaptureBrief may fall back to citation-only registry search and exposes that fallback. Namespace inference is never an applicability conclusion.
+
+Bare-citation recognition requires a regulation-shaped three-digit section component to reduce ordinary decimal false positives. Explicitly prefixed citations may still use shorter regulatory forms.
+
+### Candidate proposal semantics
+
+Every matched occurrence records:
+
+- source ID;
+- retained document SHA-256;
+- extracted text SHA-256;
+- line and character span;
+- exact citation mention;
+- surrounding context;
+- namespace hint + hint basis;
+- every pinned matching `rule_source_id`;
+- edition, agency, source repository/revision/path and source SHA-256 for each candidate.
+
+And every proposal explicitly states:
+
+- `can_auto_select_version = false`;
+- `can_auto_apply = false`;
+- `review_required = true`.
+
+A missing registry match stays visible for human review rather than being interpreted as “rule does not exist” or “does not apply.”
+
+### Case binding
+
+`case-propose-citations` refuses to process a source unless:
+
+- its source ID exists in the case;
+- it is retained as `PUBLIC`;
+- the case contains a valid document SHA-256.
+
+The extracted text may help find citations, but it does not become authoritative rule evidence merely because a parser found a number.
+
+### Operator queue
+
+A current citation proposal creates:
+
+`rules:review-candidates`
+
+as a human-only P1 task.
+
+The reviewer must:
+- decide which candidate edition, if any, is relevant;
+- cite the solicitation/incorporation/effective-date basis;
+- preserve unresolved state when the controlling edition cannot be established;
+- record applicability later in Decision Evidence.
+
+The task can never auto-execute.
+
+CLI:
+
+    python -m capturebrief_core.rule_cli case-propose-citations \
+      rules.sqlite case.json \
+      --source sam-current=current-solicitation.txt \
+      --captured-by "CaptureBrief reviewer" \
+      --observed-at 2026-09-21T16:30:00Z \
+      -o case-with-rule-candidates.json \
+      --result-output rule-candidate-transition.json
+
+This closes the lookup gap between retained solicitation text and the v0.12 rule registry while leaving the actual bid/rule judgment with the reviewer.
 
 ## v0.12 — Rule Source Registry
 
