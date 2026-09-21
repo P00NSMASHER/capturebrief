@@ -203,7 +203,7 @@ def review_rule_applicability(
             "rationale": rationale.strip(),
             "scope_rationale": scope_rationale.strip(),
             "basis_passage": basis_passage,
-            "applicability_authoritative": True,
+            "applicability_authoritative": False,
             "human_reviewed": True,
             "can_auto_apply": False,
         })
@@ -383,6 +383,7 @@ def rule_applicability_review_is_current(case: dict[str, Any]) -> bool:
     for occurrence_id, decision in decisions.items():
         if (
             decision.get("human_reviewed") is not True
+            or decision.get("applicability_authoritative") is not False
             or decision.get("can_auto_apply") is not False
             or decision.get("applicability") not in _APPLICABILITY
         ):
@@ -433,6 +434,12 @@ def rule_applicability_work_item(case: dict[str, Any]) -> dict[str, Any] | None:
     if not rule_evidence_preparation_is_current(case):
         return None
     if rule_applicability_review_is_current(case):
+        return None
+    try:
+        _, reviews, _ = _trace_maps(case)
+    except ValueError:
+        return None
+    if not reviews:
         return None
     items = prepared_rule_evidence(case)
     return {
