@@ -225,8 +225,6 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
         )
         self.assertEqual(receipt["asserted_action_id"], "a2")
         self.assertEqual(receipt["automation_mode"], "APPROVED_API")
-        self.assertFalse(receipt["final_url_retained"])
-        self.assertNotIn("final_url", receipt)
 
         with self.assertRaises(CurrentApiError):
             make_current_action_receipt(
@@ -269,6 +267,8 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
         )
         self.assertEqual(content, data)
         self.assertEqual(receipt["automation_mode"], "APPROVED_API")
+        self.assertFalse(receipt["final_url_retained"])
+        self.assertNotIn("final_url", receipt)
 
         with self.assertRaises(CurrentApiError):
             download_resource_from_api_observation(
