@@ -58,6 +58,34 @@ It does not prove:
 - solicitation incorporation;
 - applicability.
 
+### Underlying official deviation artifact capture
+
+A candidate index row is not enough for Decision Evidence. CaptureBrief can now retrieve the exact `acquisition.gov` PDF identified by the current proposal.
+
+The artifact capture is bound to:
+
+- current deviation proposal SHA-256;
+- candidate `deviation_source_id`;
+- exact source URL and its semantic 16-character URL hash;
+- pinned manifest revision/hash;
+- observation time.
+
+The resulting receipt records:
+
+- actual PDF SHA-256;
+- observed byte length;
+- whether observed length matches the manifest declaration;
+- PDF-header verification;
+- exact final URL;
+- explicit `index_byte_identity_proven = false`;
+- unresolved currentness/effective/supersession/applicability state.
+
+A matching file length is not promoted to content identity because the candidate manifest does not carry a PDF hash.
+
+A changed file length is retained as evidence of a possible live-source change, not silently converted into an error-free historical match.
+
+Artifact acquisition can be automated because it is constrained to the exact candidate public URL. Interpretation cannot.
+
 ### Agency/FAR-Part proposal
 
 The operator can filter the pinned index by an explicit civilian agency and explicit FAR Parts 1–53.
