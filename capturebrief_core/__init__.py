@@ -10,6 +10,9 @@ from .history_index import (
     fetch_and_ingest_slot, index_status, ingest_extract_file,
     issue_history_receipt_from_index, sync_plan,
 )
+from .history_sync import sync_missing_slots
+from .opportunity_ref import OpportunityReferenceError, parse_opportunity_reference
+from .resolver import attach_history_resolution, resolve_reference_from_index
 from .source_policy import SourcePolicyError, classify_sam_url, require_approved_automation
 from .packet import build_resource_union, diff_manifest_receipts, validate_reference_closure
 from .render import render_markdown
@@ -22,7 +25,8 @@ __all__=[
     "fetch_manifest","normalize_manifest_payload","validate_manifest_receipts",
     "download_resource_from_api_observation","fetch_latest_active","make_current_action_receipt",
     "collect_history_from_files","issue_history_receipt_from_snapshots","scan_extract_bytes",
-    "fetch_and_ingest_slot","index_status","ingest_extract_file","issue_history_receipt_from_index","sync_plan",
+    "fetch_and_ingest_slot","index_status","ingest_extract_file","issue_history_receipt_from_index","sync_plan","sync_missing_slots",
+    "OpportunityReferenceError","parse_opportunity_reference","attach_history_resolution","resolve_reference_from_index",
     "SourcePolicyError","classify_sam_url","require_approved_automation",
     "IntakeError","build_case_from_intake","build_work_queue",
     "build_resource_union","diff_manifest_receipts","validate_reference_closure","render_markdown","compare_cases"

@@ -1,4 +1,4 @@
-# CaptureBrief Product Core v0.3 — Approved-Source Evidence Pipeline
+# CaptureBrief Product Core v0.4 — Intake Resolution + Resumable History
 
 Updated: September 21, 2026
 
@@ -193,3 +193,61 @@ CLI:
       -o work-queue.json
 
 This reduces the operator workflow from “remember how to establish history” to an explicit executable next action.
+
+
+## v0.4 — Intake resolution without bulk guessing
+
+The reusable full-catalog Data Services index now resolves customer intake references directly.
+
+Supported identity inputs:
+- SAM action URLs such as `https://sam.gov/opp/<ACTION_UUID>/view`;
+- SAM workspace URLs containing `/opp/<ACTION_UUID>/`;
+- a bare 32-character SAM action UUID;
+- a bare solicitation number.
+
+A SAM action URL/UUID is treated only as an **independent seed identity**, not as proof that the action is current. CaptureBrief looks that exact Notice ID up in the current content-addressed Data Services index, resolves its solicitation family/AAC, and issues the history receipt from the full catalog.
+
+A bare solicitation number is intentionally weaker. CaptureBrief returns candidate family/action groups but will not let Data Services choose a seed or current action. The operator must supply an independent Notice ID/currentness source.
+
+Useful commands:
+
+    python -m capturebrief_core.cli parse-opportunity-ref 'https://sam.gov/opp/<ACTION_UUID>/view'
+
+    python -m capturebrief_core.cli history-index-resolve history.sqlite       'https://sam.gov/opp/<ACTION_UUID>/view' -o resolution.json
+
+    python -m capturebrief_core.cli case-resolve-history history.sqlite intake-case.json       -o resolved-case.json --resolution-output resolution.json
+
+The case resolver:
+- preserves the buyer's assumptions as unproven;
+- attaches the source-hashed Data Services history receipt;
+- replaces the unresolved family ID with a SAM family identity;
+- keeps `family_status = UNKNOWN` until a separate approved current/terminal authority source proves status;
+- never links customer assumptions to Data Services history merely because the family was resolved.
+
+Index freshness still controls whether the resolution is `RESOLVED` or `RESOLVED_PARTIAL_COVERAGE`. Missing, stale, or operator-imported/unverified slots cannot be promoted by the resolver.
+
+## Resumable explicit catalog synchronization
+
+The index can now advance its missing/stale/unverified slot plan without one command per archive:
+
+    python -m capturebrief_core.cli history-index-sync history.sqlite evidence/downloads       --snapshot-dir evidence/snapshots
+
+The safe default processes **one** remediation slot. This makes the operation resumable and prevents an accidental multi-gigabyte full-catalog pull.
+
+A whole remaining catalog sync requires an explicit opt-in:
+
+    python -m capturebrief_core.cli history-index-sync history.sqlite evidence/downloads       --snapshot-dir evidence/snapshots --all
+
+Fresh approved slots are skipped. Each requested extract is still streamed, SHA-256 hashed, indexed, and optionally copied into content-addressed evidence storage.
+
+## Updated remaining P0
+
+History membership no longer needs a guessed family start year when the full pinned archive catalog is indexed. The next production bottleneck is **case orchestration after history resolution**:
+
+1. use the documented Opportunities API to verify active currentness without bulk ordering;
+2. preserve current API resource links and capture required current public bytes;
+3. route historical deletion/tombstone gaps to human-supervised review;
+4. complete conservative named-reference extraction/closure;
+5. return only then to the decision-changing assumption review.
+
+The product should continue preferring an explicit unknown/human-review task over a guessed current action or silently incomplete packet.

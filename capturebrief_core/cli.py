@@ -12,6 +12,9 @@ from .history_index import (
     fetch_and_ingest_slot, index_status, ingest_extract_file,
     issue_history_receipt_from_index, sync_plan,
 )
+from .history_sync import sync_missing_slots
+from .opportunity_ref import parse_opportunity_reference
+from .resolver import attach_history_resolution, resolve_reference_from_index
 from .intake import build_case_from_intake
 from .workqueue import build_work_queue
 
@@ -38,6 +41,10 @@ def main():
     x=sub.add_parser("history-index-ingest"); x.add_argument("index_db"); x.add_argument("csv_path"); x.add_argument("--kind",choices=["active","archive"],required=True); x.add_argument("--fiscal-year",type=int); x.add_argument("--snapshot-dir"); x.add_argument("--observed-at"); x.add_argument("--output","-o")
     x=sub.add_parser("history-index-fetch"); x.add_argument("index_db"); x.add_argument("slot"); x.add_argument("destination"); x.add_argument("--snapshot-dir"); x.add_argument("--observed-at"); x.add_argument("--max-bytes",type=int,default=2_000_000_000); x.add_argument("--output","-o")
     x=sub.add_parser("history-from-index"); x.add_argument("index_db"); x.add_argument("solicitation_number"); x.add_argument("--seed-notice-id",required=True); x.add_argument("--fiscal-year",type=int); x.add_argument("--observed-at"); x.add_argument("--output","-o"); x.add_argument("--ledger")
+    x=sub.add_parser("parse-opportunity-ref"); x.add_argument("reference"); x.add_argument("--output","-o")
+    x=sub.add_parser("history-index-resolve"); x.add_argument("index_db"); x.add_argument("reference"); x.add_argument("--fiscal-year",type=int); x.add_argument("--observed-at"); x.add_argument("--output","-o")
+    x=sub.add_parser("case-resolve-history"); x.add_argument("index_db"); x.add_argument("case"); x.add_argument("--fiscal-year",type=int); x.add_argument("--observed-at"); x.add_argument("--output","-o",required=True); x.add_argument("--resolution-output")
+    x=sub.add_parser("history-index-sync"); x.add_argument("index_db"); x.add_argument("download_dir"); x.add_argument("--snapshot-dir"); x.add_argument("--fiscal-year",type=int); x.add_argument("--observed-at"); x.add_argument("--max-slots",type=int,default=1); x.add_argument("--all",action="store_true"); x.add_argument("--max-bytes",type=int,default=2_000_000_000); x.add_argument("--output","-o")
     x=sub.add_parser("case-from-intake"); x.add_argument("intake_json"); x.add_argument("--submitted-at"); x.add_argument("--output","-o")
     x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o")
     x=sub.add_parser("ledger-append"); x.add_argument("ledger"); x.add_argument("record_type"); x.add_argument("payload_json")
@@ -98,6 +105,21 @@ def main():
         dump(receipt,a.output)
         if a.ledger: append_record(a.ledger,record_type="SAM_DATA_SERVICES_HISTORY_INDEX",payload=receipt)
         return 0 if receipt["status"]=="COMPLETE" else 2
+    if a.cmd=="parse-opportunity-ref":
+        dump(parse_opportunity_reference(a.reference),a.output); return 0
+    if a.cmd=="history-index-resolve":
+        result=resolve_reference_from_index(a.index_db,a.reference,fiscal_year=a.fiscal_year,observed_at=a.observed_at)
+        dump(result,a.output)
+        return 0 if result["status"] in {"RESOLVED","RESOLVED_PARTIAL_COVERAGE"} else 2
+    if a.cmd=="case-resolve-history":
+        case,resolution=attach_history_resolution(load(a.case),a.index_db,fiscal_year=a.fiscal_year,observed_at=a.observed_at)
+        dump(case,a.output)
+        if a.resolution_output: dump(resolution,a.resolution_output)
+        return 0 if resolution["status"] in {"RESOLVED","RESOLVED_PARTIAL_COVERAGE"} else 2
+    if a.cmd=="history-index-sync":
+        limit=None if a.all else a.max_slots
+        result=sync_missing_slots(a.index_db,a.download_dir,snapshot_dir=a.snapshot_dir,fiscal_year=a.fiscal_year,max_slots=limit,observed_at=a.observed_at,max_bytes=a.max_bytes)
+        dump(result,a.output); return 0
     if a.cmd=="case-from-intake":
         dump(build_case_from_intake(load(a.intake_json),submitted_at=a.submitted_at),a.output); return 0
     if a.cmd=="work-queue":
