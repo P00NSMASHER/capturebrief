@@ -1,11 +1,12 @@
 from __future__ import annotations
 import html
+from datetime import datetime
 from typing import Any
 from .decision_trace import evaluate_decision_trace
 
 
-def render_trace_markdown(case: dict[str, Any]) -> str:
-    report = evaluate_decision_trace(case)
+def render_trace_markdown(case: dict[str, Any], *, now: datetime | None = None) -> str:
+    report = evaluate_decision_trace(case, now=now)
     lines = ["## Decision evidence", "", "**Exact source / rule / version history behind the assumptions used in this pursuit.**", "",
              f"Trace state: **{report['trace_state']}**", ""]
     for card in report["assumptions"]:
@@ -79,8 +80,8 @@ def render_trace_markdown(case: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def render_trace_html(case: dict[str, Any]) -> str:
-    report = evaluate_decision_trace(case)
+def render_trace_html(case: dict[str, Any], *, now: datetime | None = None) -> str:
+    report = evaluate_decision_trace(case, now=now)
     cards = []
     for card in report["assumptions"]:
         evidence = []
