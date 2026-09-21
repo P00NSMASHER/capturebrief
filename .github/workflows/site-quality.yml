@@ -1,8 +1,8 @@
 name: Website quality
 on:
   push:
-    branches: [gh-pages, site-quality-20260921]
-    paths: ['index.html', 'permitplate/**', 'freightrecovery/**', 'assets/**', '.github/site_qa.py', '.github/workflows/site-quality.yml']
+    branches: [gh-pages, site-quality-20260921, 'pages-buyer-evidence-*']
+    paths: ['index.html', 'decision-evidence.html', 'examples/**', 'permitplate/**', 'freightrecovery/**', 'assets/**', '.github/site_qa.py', '.github/buyer_journey_qa.py', '.github/workflows/site-quality.yml']
   pull_request:
     branches: [gh-pages]
 permissions:
@@ -28,28 +28,42 @@ jobs:
         env:
           SITE_ROOT: .
           QA_OUTPUT: .qa-output/build
-      - name: Wait for GitHub Pages to publish the new release
+      - name: Verify the evidence example and buyer request path
+        run: python .github/buyer_journey_qa.py
+        env:
+          SITE_ROOT: .
+          QA_OUTPUT: .qa-output/buyer-build
+      - name: Verify exact GitHub Pages release bytes, not an old marker
         if: github.ref == 'refs/heads/gh-pages'
         run: |
           python - <<'PY'
-          import os, time, urllib.request
+          import hashlib, json, os, time, urllib.request
+          from pathlib import Path
           base = 'https://p00nsmasher.github.io/capturebrief/'
-          paths = ['', 'permitplate/', 'freightrecovery/']
-          for attempt in range(8):
-              ready = []
+          paths = ['index.html','decision-evidence.html','assets/enterprise.css','assets/enterprise.js','assets/evidence.css','permitplate/index.html','freightrecovery/index.html','examples/manifest.json']
+          paths += [x['path'] for x in json.loads(Path('examples/manifest.json').read_text())['files']]
+          expected = {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths}
+          observed = {}
+          for attempt in range(12):
+              observed = {}
               for path in paths:
                   try:
-                      url = base + path + '?quality=' + os.environ['GITHUB_SHA']
+                      url = base + path + '?release=' + os.environ['GITHUB_SHA']
                       with urllib.request.urlopen(url, timeout=20) as response:
-                          ready.append('2026-09-21-quality-2' in response.read().decode())
+                          observed[path] = hashlib.sha256(response.read()).hexdigest()
                   except Exception:
-                      ready.append(False)
-              if all(ready):
-                  print('All three published pages carry the release marker.')
+                      observed[path] = None
+                  if observed[path] != expected[path]:
+                      break
+              if observed == expected:
                   break
-              time.sleep(20)
-          else:
-              raise SystemExit('Published release not verified within the bounded wait.')
+              time.sleep(15)
+          report = {'commit': os.environ['GITHUB_SHA'], 'base_url': base, 'expected': expected, 'observed': observed, 'passed': observed == expected}
+          out = Path('.qa-output'); out.mkdir(exist_ok=True)
+          (out/'published-bytes.json').write_text(json.dumps(report, indent=2)+'\n')
+          print(json.dumps(report, indent=2))
+          if not report['passed']:
+              raise SystemExit('Published bytes do not match the tested release within the bounded wait.')
           PY
       - name: Verify the public deployment in Chromium
         if: github.ref == 'refs/heads/gh-pages'
@@ -57,6 +71,12 @@ jobs:
         env:
           QA_BASE_URL: https://p00nsmasher.github.io/capturebrief/
           QA_OUTPUT: .qa-output/live
+      - name: Verify the live evidence example and buyer journey
+        if: github.ref == 'refs/heads/gh-pages'
+        run: python .github/buyer_journey_qa.py
+        env:
+          QA_BASE_URL: https://p00nsmasher.github.io/capturebrief/
+          QA_OUTPUT: .qa-output/buyer-live
       - name: Preserve QA reports and rendered screenshots
         if: always()
         uses: actions/upload-artifact@v4

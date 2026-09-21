@@ -1,0 +1,29 @@
+/* CaptureBrief evidence example only; shared project styles remain untouched. */
+.evidence-page .header{position:static}
+.evidence-page .nav{flex-wrap:wrap;padding-block:12px}
+.evidence-intro{background:linear-gradient(120deg,#082a42,#123e58);color:#fff;padding:56px 0 40px}
+.evidence-intro .eyebrow{color:#9af0f0}.evidence-intro h1{max-width:20ch;font-size:clamp(2.2rem,5vw,4rem)}
+.intro-copy{max-width:62ch;color:#e0eaf1;font-size:1.1rem}
+.fiction-label{display:inline-block;padding:10px 14px;border:1px solid #a9cccc;border-radius:8px;background:#effafb;color:#13263e;font-size:.88rem}
+.example-nav{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:18px}.example-nav a{color:#d3f8f8;min-height:44px;display:inline-flex;align-items:center;font-size:.88rem}
+.evidence-body{max-width:1040px;padding-block:28px 52px}
+.example-meta{display:flex;flex-wrap:wrap;gap:8px 24px;color:var(--muted);font-size:.82rem;margin-bottom:22px}.example-meta strong{color:var(--ink)}
+.finding-card{border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 25px #13263e08;padding:30px;margin-bottom:24px;scroll-margin-top:110px}
+.finding-top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}.finding-top .eyebrow{margin:0}
+.finding-card h2{font-size:clamp(1.55rem,3vw,2.25rem);max-width:36ch}.finding-answer{font-size:1.14rem;max-width:68ch;line-height:1.65}
+.action-line{border-left:3px solid var(--brand);padding:12px 16px;background:var(--wash);border-radius:0 8px 8px 0;color:var(--ink)}
+.evidence-trail{border-top:1px solid var(--line);margin-top:20px}.evidence-trail>summary{padding:18px 26px 4px 0;font-weight:750;cursor:pointer;min-height:48px}
+.evidence-trail[open]>summary{padding-bottom:18px}.trail-content{padding-top:8px}
+.version-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-block:12px 20px}
+.version{padding:22px;border:1px solid var(--line);border-radius:12px;background:var(--paper);min-width:0}.version.after{background:#effafb;border-color:#8bc7ce}.version .eyebrow{font-size:.68rem;margin-bottom:12px}.version h3{font-size:1rem;letter-spacing:-.01em}.version a{font-size:.85rem;display:inline-block;min-height:44px;padding-block:10px}
+.evidence-page blockquote{margin:14px 0;padding:14px 16px;border-left:3px solid #668999;background:#fff;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.96rem}
+.fingerprint{font-size:.78rem}.fingerprint summary{cursor:pointer;padding-block:10px;min-height:44px}.fingerprint code{display:block;white-space:normal;overflow-wrap:anywhere;word-break:break-word;font-size:.76rem;line-height:1.6;color:#374b61;padding-bottom:12px}
+.review-note{font-size:.95rem}.trail-content>.small{color:var(--muted)}
+.evidence-facts{margin:0}.evidence-facts>div{display:grid;grid-template-columns:140px minmax(0,1fr);gap:20px;border-top:1px solid var(--line);padding-block:14px}.evidence-facts dt{font-weight:750}.evidence-facts dd{margin:0;color:var(--muted)}
+.missing-evidence{padding:20px;background:#fff5e6;border:1px solid #ead2b0;border-radius:12px;margin-block:12px 20px}.missing-evidence p{margin-bottom:0}
+.watch-explainer{background:var(--wash);border-radius:18px;padding:30px;margin-top:36px}.watch-explainer h2,.evidence-boundary h2{max-width:34ch;font-size:clamp(1.5rem,3vw,2.2rem)}.watch-explainer p{max-width:75ch}.watch-explainer .small{color:var(--muted);margin:0}
+.evidence-boundary{padding:30px 0 0}.evidence-boundary p{max-width:86ch;color:var(--muted)}
+.evidence-cta{display:flex;justify-content:space-between;align-items:center;gap:32px}.evidence-cta h2{max-width:22ch}.evidence-cta>.button{flex-shrink:0}
+@media(max-width:650px){.version-pair{grid-template-columns:minmax(0,1fr)}.finding-card{padding:22px}.version{padding:18px}.evidence-facts>div{grid-template-columns:minmax(0,1fr);gap:4px}.evidence-cta{display:block}.watch-explainer{padding:22px}.evidence-intro{padding-top:36px}.evidence-page .nav>.button{font-size:.85rem;padding-inline:12px}}
+@media(max-width:350px){.finding-card{padding:17px}.example-meta{display:block}.example-meta span{display:block;margin-bottom:5px}.evidence-page .brand{font-size:.96rem}}
+@media print{.header,.skip,.example-nav,.evidence-cta,.footer{display:none}.evidence-intro{background:#fff;color:#13263e;padding:12px 0}.evidence-intro .eyebrow,.intro-copy{color:#13263e}.evidence-body,.wrap{width:100%;max-width:none}.finding-card{box-shadow:none;break-inside:avoid}.finding-card summary{font-weight:bold}.fiction-label{border:1px solid #666}}

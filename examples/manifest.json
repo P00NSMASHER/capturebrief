@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "case_id": "DEMO-001",
+  "fictional": true,
+  "government_source": false,
+  "files": [
+    {
+      "path": "examples/amendment-02.txt",
+      "bytes": 239,
+      "sha256": "152bbe4d432fa3b8f4eb5c354202059e8d7ea5a68ae7b85f087263367526db4f",
+      "fictional": true
+    },
+    {
+      "path": "examples/incorporation.txt",
+      "bytes": 260,
+      "sha256": "98220d8eb7a61e2073b1161d3673ffc2b06a845631556f7929057736548ffccf",
+      "fictional": true
+    },
+    {
+      "path": "examples/original.txt",
+      "bytes": 161,
+      "sha256": "fa9428b83fb7b128c1a4e2796251539cb75681ad3b495a0200f0aa2a0d7d76a7",
+      "fictional": true
+    },
+    {
+      "path": "examples/rule-2025.txt",
+      "bytes": 185,
+      "sha256": "69d687a7734b0283eaa4b04e91488c8de8857e9c87f592c9bfa89146ba2aa959",
+      "fictional": true
+    },
+    {
+      "path": "examples/rule-2026.txt",
+      "bytes": 189,
+      "sha256": "dda6f908c90f2636534b016b9c79aaf0974bebdabf75824c3cc7024af22a4537",
+      "fictional": true
+    }
+  ]
+}
