@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import datetime, timezone
 from typing import Any
 from .audit import audit_case
 from .history import validate_history_receipts
@@ -10,8 +11,11 @@ from .model import AuditResult
 def _e(v): return str(v or "").replace("|","\\|").strip()
 
 
-def render_markdown(case:dict[str,Any],audit:AuditResult|None=None)->str:
-    audit=audit or audit_case(case); rank={"GATE_CHANGING":0,"VERIFY_NOW":1,"MONITOR_ONLY":2}
+def render_markdown(case:dict[str,Any],audit:AuditResult|None=None,*,now:datetime|None=None)->str:
+    now = now if now is not None else datetime.now(timezone.utc)
+    if not isinstance(now, datetime) or now.utcoffset() is None:
+        raise ValueError("now must be timezone-aware")
+    audit=audit or audit_case(case,now=now); rank={"GATE_CHANGING":0,"VERIFY_NOW":1,"MONITOR_ONLY":2}
     packet=case.get("packet") or {}
     history_state,_=validate_history_receipts(packet.get("history_action_ids") or [],packet.get("history_receipts") or [])
     manifest_state,manifest_summary,_=validate_manifest_receipts(packet.get("history_action_ids") or [],packet.get("manifest_receipts") or [])
@@ -57,5 +61,5 @@ def render_markdown(case:dict[str,Any],audit:AuditResult|None=None)->str:
     lines += ["","### Product boundary","","Public-source, human-supervised Pursuit QA only. Final pursuit decisions stay with the customer; no PWin scoring, bid submission, legal advice, or protected-portal authorization.",""]
     if case.get("decision_trace_required") is True or "decision_trace" in case:
         from .trace_render import render_trace_markdown
-        lines += ["", render_trace_markdown(case)]
+        lines += ["", render_trace_markdown(case,now=now)]
     return "\n".join(lines)
