@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .rule_candidates import attach_rule_candidate_proposal, attach_rule_candidate_review, sync_missing_rule_candidates_for_case
 from .rule_sync import sync_pinned_gsa_rule
+from .rule_evidence import prepare_rule_evidence
 from .rule_registry import (
     add_rule_version,
     diff_rule_versions,
@@ -101,6 +102,13 @@ def main(argv=None):
     sm.add_argument("--observed-at", required=True)
     sm.add_argument("-o", "--output")
     sm.add_argument("--result-output")
+
+    pe = s.add_parser("case-prepare-rule-evidence")
+    pe.add_argument("registry")
+    pe.add_argument("case")
+    pe.add_argument("preparation")
+    pe.add_argument("-o", "--output")
+    pe.add_argument("--result-output")
 
     args = p.parse_args(argv)
 
@@ -202,6 +210,17 @@ def main(argv=None):
             args.registry,
             args.catalog,
             observed_at=args.observed_at,
+        )
+        _write(updated, args.output)
+        if args.result_output:
+            _write(result, args.result_output)
+    elif args.cmd == "case-prepare-rule-evidence":
+        case = json.loads(Path(args.case).read_text(encoding="utf-8"))
+        preparation = json.loads(Path(args.preparation).read_text(encoding="utf-8"))
+        updated, result = prepare_rule_evidence(
+            case,
+            args.registry,
+            preparation,
         )
         _write(updated, args.output)
         if args.result_output:
