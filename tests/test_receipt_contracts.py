@@ -64,6 +64,8 @@ def api_receipt():
         "active":"Yes",
         "resource_links":["https://sam.gov/api/prod/opps/v3/opportunities/resources/files/r1/download"],
         "api_payload_sha256":"e"*64,
+        "api_response_sha256":"f"*64,
+        "pagination":{"total_records":1,"returned_records":1,"limit":100,"offset":0,"complete":True},
     }
     return {
         "asserted_action_id":"a2",
@@ -126,6 +128,22 @@ class ReceiptContractTests(unittest.TestCase):
         verdict,action,findings=validate_current_action_receipts(["a1","a2"],"ACTIVE",[r],now=NOW)
         self.assertEqual((verdict,action),("CURRENT_UNKNOWN",None))
         self.assertIn("RECEIPT_APPROVED_API_CONTRACT_INVALID",{f.code for f in findings})
+
+    def test_rehashed_missing_raw_response_proof_is_rejected(self):
+        r=copy.deepcopy(api_receipt())
+        r["evidence_payload"].pop("api_response_sha256")
+        r["evidence_payload_sha256"]=sha256_hex(canonical_json(r["evidence_payload"]))
+        verdict,action,findings=validate_current_action_receipts(["a1","a2"],"ACTIVE",[r],now=NOW)
+        self.assertEqual((verdict,action),("CURRENT_UNKNOWN",None))
+        self.assertIn("RECEIPT_APPROVED_API_RESPONSE_HASH_INVALID",{f.code for f in findings})
+
+    def test_rehashed_incomplete_pagination_is_rejected(self):
+        r=copy.deepcopy(api_receipt())
+        r["evidence_payload"]["pagination"]["total_records"]=2
+        r["evidence_payload_sha256"]=sha256_hex(canonical_json(r["evidence_payload"]))
+        verdict,action,findings=validate_current_action_receipts(["a1","a2"],"ACTIVE",[r],now=NOW)
+        self.assertEqual((verdict,action),("CURRENT_UNKNOWN",None))
+        self.assertIn("RECEIPT_APPROVED_API_PAGINATION_INCOMPLETE",{f.code for f in findings})
 
     def test_rehashed_unapproved_resource_link_is_rejected(self):
         r=copy.deepcopy(api_receipt())
