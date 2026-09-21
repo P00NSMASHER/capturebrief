@@ -9,6 +9,7 @@ from .rule_sync import sync_pinned_gsa_rule
 from .rule_evidence import prepare_rule_evidence
 from .rule_applicability import review_rule_applicability
 from .deviation_sync import attach_deviation_candidate_proposal, capture_and_attach_deviation_artifact, sync_pinned_deviation_manifest
+from .deviation_review import prepare_deviation_text, review_deviation_authority
 from .rule_registry import (
     add_rule_version,
     diff_rule_versions,
@@ -93,6 +94,22 @@ def main(argv=None):
     cad.add_argument("--artifact-output", required=True)
     cad.add_argument("--receipt-output")
     cad.add_argument("-o", "--output", required=True)
+
+    pdt = s.add_parser("case-prepare-deviation-text")
+    pdt.add_argument("case")
+    pdt.add_argument("deviation_source_id")
+    pdt.add_argument("text_file")
+    pdt.add_argument("--prepared-by", required=True)
+    pdt.add_argument("--prepared-at", required=True)
+    pdt.add_argument("--mapping-note", required=True)
+    pdt.add_argument("-o", "--output", required=True)
+    pdt.add_argument("--result-output")
+
+    rda = s.add_parser("case-review-deviation-authority")
+    rda.add_argument("case")
+    rda.add_argument("review")
+    rda.add_argument("-o", "--output", required=True)
+    rda.add_argument("--result-output")
 
     cat = s.add_parser("catalog")
     cat.add_argument("path", nargs="?", default="RULE-SOURCE-CATALOG.json")
@@ -246,6 +263,26 @@ def main(argv=None):
             "applicability": "UNRESOLVED",
             "can_auto_apply": False,
         })
+    elif args.cmd == "case-prepare-deviation-text":
+        case = json.loads(Path(args.case).read_text(encoding="utf-8"))
+        updated, transition = prepare_deviation_text(
+            case,
+            args.deviation_source_id,
+            text=Path(args.text_file).read_text(encoding="utf-8"),
+            prepared_by=args.prepared_by,
+            prepared_at=args.prepared_at,
+            mapping_note=args.mapping_note,
+        )
+        _write(updated, args.output)
+        if args.result_output:
+            _write(transition, args.result_output)
+    elif args.cmd == "case-review-deviation-authority":
+        case = json.loads(Path(args.case).read_text(encoding="utf-8"))
+        review = json.loads(Path(args.review).read_text(encoding="utf-8"))
+        updated, transition = review_deviation_authority(case, review)
+        _write(updated, args.output)
+        if args.result_output:
+            _write(transition, args.result_output)
     elif args.cmd == "catalog":
         _write(load_source_catalog(args.path), args.output)
     elif args.cmd == "case-propose-citations":

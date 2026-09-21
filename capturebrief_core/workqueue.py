@@ -13,6 +13,7 @@ from .rule_candidates import rule_candidate_work_item, rule_sync_work_items
 from .rule_evidence import rule_evidence_work_item
 from .rule_applicability import rule_applicability_work_item
 from .deviation_sync import deviation_artifact_work_items, deviation_candidate_work_item
+from .deviation_review import deviation_authority_work_items
 
 _PRIORITY = {"P0": 0, "P1": 1, "P2": 2}
 
@@ -373,6 +374,9 @@ def build_work_queue(
 
     for deviation_artifact_task in deviation_artifact_work_items(case):
         add(deviation_artifact_task)
+
+    for deviation_authority_task in deviation_authority_work_items(case):
+        add(deviation_authority_task)
 
     deviation_task = deviation_candidate_work_item(case)
     if deviation_task is not None:

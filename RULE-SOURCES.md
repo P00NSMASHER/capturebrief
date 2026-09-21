@@ -86,6 +86,32 @@ A changed file length is retained as evidence of a possible live-source change, 
 
 Artifact acquisition can be automated because it is constrained to the exact candidate public URL. Interpretation cannot.
 
+### Structured deviation authority review
+
+Once official PDF bytes are captured, CaptureBrief still does not accept a free-text statement such as "this deviation is current."
+
+The review proceeds through two controlled stages.
+
+**Reviewed text preparation**
+
+A reviewer binds extracted/native text to the captured PDF SHA-256 and records a mapping note. The resulting `DEVIATION` snapshot is content-addressed and tied to the public source URL/observation.
+
+**Authority-state review**
+
+The reviewer then selects exact passages and records currentness/effective/supersession state.
+
+Rules:
+
+- the memo passage is mandatory;
+- any effective-date claim needs an exact memo passage;
+- `CURRENT` / `SUPERSEDED` needs a different retained public source snapshot as basis;
+- the basis cannot be observed after the review time;
+- the memo cannot self-certify currentness;
+- `SUPERSEDED` needs an explicit superseding reference;
+- unresolved evidence remains `UNRESOLVED`.
+
+The result is human-reviewed evidence, not autonomous legal authority. Applicability remains unresolved until the later assumption-specific Decision Evidence step.
+
 ### Agency/FAR-Part proposal
 
 The operator can filter the pinned index by an explicit civilian agency and explicit FAR Parts 1–53.
