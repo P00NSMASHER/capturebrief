@@ -10,6 +10,7 @@ from .model import parse_dt, valid_sha256
 from .packet import validate_reference_closure
 from .reference_match import reference_match_proposal_is_current
 from .rule_candidates import rule_candidate_work_item, rule_sync_work_items
+from .rule_evidence import rule_evidence_work_item
 
 _PRIORITY = {"P0": 0, "P1": 1, "P2": 2}
 
@@ -359,6 +360,10 @@ def build_work_queue(
     rule_task = rule_candidate_work_item(case)
     if rule_task is not None:
         add(rule_task)
+
+    rule_evidence_task = rule_evidence_work_item(case)
+    if rule_evidence_task is not None:
+        add(rule_evidence_task)
 
     ordered = sorted(
         tasks.values(),
