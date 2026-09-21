@@ -1,11 +1,10 @@
 """Operator planning only: work availability is not execution or send authority."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
-from .audit import audit_case
-from .decision_trace import evaluate_decision_trace
+from .delivery_readiness import evaluate_delivery_readiness
 from .workqueue import build_work_queue
 
 _AUTOMATED_ACTORS = frozenset({"AUTOMATED_APPROVED_SOURCE", "AUTOMATED_LOCAL"})
@@ -43,24 +42,15 @@ def build_fulfillment_plan(
     history_index_plan: dict[str, Any] | None = None,
     now: datetime | None = None,
 ) -> dict[str, Any]:
-    now = now or datetime.now(timezone.utc)
-    if not isinstance(now, datetime) or now.tzinfo is None:
-        raise ValueError("now must be timezone-aware")
+    readiness = evaluate_delivery_readiness(case, now=now)
+    now = readiness.checked_at
     queue = build_work_queue(case, api_observation=api_observation,
                              history_index_plan=history_index_plan, now=now)
-    audit = audit_case(case, now=now)
-    trace = evaluate_decision_trace(case, now=now)
-    blockers = {f.code for f in audit.findings if f.severity == "BLOCK"}
-    blockers.update(f["code"] for f in trace["findings"] if f["severity"] == "BLOCK")
+    audit = readiness.audit
+    trace = readiness.trace
+    blockers = readiness.blocker_codes
     trace_required = case.get("decision_trace_required") is True
-    if not trace_required:
-        blockers.add("DELIVERY_REQUIRES_DECISION_TRACE")
-    bundle_eligible = (
-        trace_required
-        and audit.release_state == "READY_FOR_HUMAN_RELEASE"
-        and trace.get("trace_state") == "TRACE_COMPLETE"
-        and trace.get("synthetic") is not True
-    )
+    bundle_eligible = readiness.eligible
     tasks = []
     for task in queue["tasks"]:
         row = {**task}
@@ -79,7 +69,7 @@ def build_fulfillment_plan(
             "effort_stage": "DELIVERY",
             "reason": "Legacy readability or an empty work queue cannot authorize a customer bundle.",
             "evidence_needed": "Required non-synthetic complete Decision Evidence and a passing full case audit.",
-            "metadata": {"finding_codes": sorted(blockers)},
+            "metadata": {"finding_codes": list(blockers)},
         })
 
     tasks.sort(key=lambda t: (_PRIORITY.get(t["priority"], 0), t["task_key"]))
@@ -109,7 +99,8 @@ def build_fulfillment_plan(
         "fulfillment_state": state, "release_state": audit.release_state,
         "trace_state": trace["trace_state"],
         "delivery_bundle_eligible": bundle_eligible,
-        "release_blocker_codes": sorted(blockers), "next_task": next_task,
+        "delivery_checked_at": now.isoformat().replace("+00:00", "Z"),
+        "release_blocker_codes": list(blockers), "next_task": next_task,
         "safe_automation_batch": p0_auto, "human_review_batch": p0_human,
         "later_work": {"P1": by_priority["P1"], "P2": by_priority["P2"]},
         "summary": {
