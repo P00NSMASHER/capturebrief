@@ -112,6 +112,28 @@ Rules:
 
 The result is human-reviewed evidence, not autonomous legal authority. Applicability remains unresolved until the later assumption-specific Decision Evidence step.
 
+### Deviation applicability in Decision Evidence
+
+A reviewed deviation authority record does not itself alter a bid assumption.
+
+To resolve applicability, a reviewer must bind the memo to one existing Decision Evidence assumption and supply a separate exact pursuit-specific basis passage.
+
+Resolved basis passages may come from:
+
+- solicitation evidence;
+- amendment evidence;
+- retained pursuit context.
+
+The deviation memo cannot be its own applicability basis.
+
+A resolved `APPLIES` / `DOES_NOT_APPLY` decision requires resolved memo currentness. If currentness remains unknown, applicability must remain `UNRESOLVED`.
+
+If a superseded memo is judged to apply, CaptureBrief requires explicit solicitation/amendment evidence rather than a generic rule-review assertion.
+
+The resulting memo is represented in the ordinary Decision Evidence rule model under namespace `CLASS_DEVIATION`. Its exact captured PDF hash, reviewed memo passage, effective-date evidence, authority review, and pursuit-specific basis remain independently inspectable.
+
+Applicability review never updates the assumption's evidence state automatically.
+
 ### Agency/FAR-Part proposal
 
 The operator can filter the pinned index by an explicit civilian agency and explicit FAR Parts 1–53.
