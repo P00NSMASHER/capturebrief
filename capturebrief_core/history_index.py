@@ -5,7 +5,7 @@ import hashlib
 import json
 import shutil
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -26,8 +26,12 @@ from .data_services import (
 from .model import canonical_json, history_set_digest, parse_dt, sha256_hex
 from .source_policy import require_approved_automation
 
-INDEX_SCHEMA_VERSION = 1
+INDEX_SCHEMA_VERSION = 2
 DEFAULT_MAX_EXTRACT_BYTES = 2_000_000_000
+ACTIVE_MAX_AGE = timedelta(hours=48)
+ARCHIVE_MAX_AGE = timedelta(days=9)
+APPROVED_FETCH = "APPROVED_FETCH"
+OPERATOR_FILE = "OPERATOR_FILE"
 
 
 class HistoryIndexError(RuntimeError):
@@ -99,7 +103,11 @@ def init_index(path: str | Path) -> None:
             );
             CREATE TABLE IF NOT EXISTS current_sources (
                 slot TEXT PRIMARY KEY,
-                snapshot_id INTEGER NOT NULL REFERENCES source_snapshots(snapshot_id)
+                snapshot_id INTEGER NOT NULL REFERENCES source_snapshots(snapshot_id),
+                checked_at TEXT,
+                collection_mode TEXT,
+                source_etag TEXT,
+                source_last_modified TEXT
             );
             CREATE TABLE IF NOT EXISTS opportunity_rows (
                 snapshot_id INTEGER NOT NULL REFERENCES source_snapshots(snapshot_id),
@@ -126,6 +134,15 @@ def init_index(path: str | Path) -> None:
             CREATE INDEX IF NOT EXISTS idx_opportunity_aac ON opportunity_rows(solicitation_norm, aac_code);
             """
         )
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(current_sources)").fetchall()}
+        for name, ddl in (
+            ("checked_at", "TEXT"),
+            ("collection_mode", "TEXT"),
+            ("source_etag", "TEXT"),
+            ("source_last_modified", "TEXT"),
+        ):
+            if name not in columns:
+                conn.execute(f"ALTER TABLE current_sources ADD COLUMN {name} {ddl}")
         conn.execute(
             "INSERT INTO metadata(key,value) VALUES('schema_version',?) "
             "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
@@ -166,6 +183,9 @@ def download_extract_to_file(
                     raise HistoryIndexError("extract exceeds max_bytes during download")
                 digest.update(chunk)
                 out.write(chunk)
+        final_url = response.geturl() if hasattr(response, "geturl") else source_url
+        source_etag = response.headers.get("ETag") if getattr(response, "headers", None) else None
+        source_last_modified = response.headers.get("Last-Modified") if getattr(response, "headers", None) else None
         tmp.replace(dest)
     except HTTPError as exc:
         tmp.unlink(missing_ok=True)
@@ -182,6 +202,9 @@ def download_extract_to_file(
         "sha256": digest.hexdigest(),
         "size_bytes": size,
         "observed_at": datetime.now(timezone.utc).isoformat(),
+        "final_url": final_url,
+        "source_etag": source_etag,
+        "source_last_modified": source_last_modified,
     }
 
 
@@ -215,8 +238,11 @@ def fetch_and_ingest_slot(
         source_url=url,
         source_kind=kind,
         fiscal_year=fy,
-        observed_at=observed_at or download["observed_at"],
+        observed_at=download["observed_at"],
         snapshot_dir=snapshot_dir,
+        collection_mode=APPROVED_FETCH,
+        source_etag=download.get("source_etag"),
+        source_last_modified=download.get("source_last_modified"),
     )
     return {"download": download, "ingest": ingested}
 
@@ -230,6 +256,9 @@ def ingest_extract_file(
     fiscal_year: int | None = None,
     observed_at: str | None = None,
     snapshot_dir: str | Path | None = None,
+    collection_mode: str = OPERATOR_FILE,
+    source_etag: str | None = None,
+    source_last_modified: str | None = None,
 ) -> dict[str, Any]:
     """Stream one approved Data Services CSV into a reusable evidence index.
 
@@ -242,6 +271,9 @@ def ingest_extract_file(
     observed_at = observed_at or datetime.now(timezone.utc).isoformat()
     if not parse_dt(observed_at):
         raise ValueError("observed_at must be timezone-aware ISO-8601")
+    collection_mode = str(collection_mode).upper()
+    if collection_mode not in {APPROVED_FETCH, OPERATOR_FILE}:
+        raise ValueError("collection_mode must be APPROVED_FETCH or OPERATOR_FILE")
 
     source_path = Path(csv_path)
     if not source_path.is_file():
@@ -274,9 +306,12 @@ def ingest_extract_file(
         ).fetchone()
         if existing is not None:
             conn.execute(
-                "INSERT INTO current_sources(slot,snapshot_id) VALUES(?,?) "
-                "ON CONFLICT(slot) DO UPDATE SET snapshot_id=excluded.snapshot_id",
-                (slot, int(existing["snapshot_id"])),
+                "INSERT INTO current_sources(slot,snapshot_id,checked_at,collection_mode,source_etag,source_last_modified) "
+                "VALUES(?,?,?,?,?,?) ON CONFLICT(slot) DO UPDATE SET "
+                "snapshot_id=excluded.snapshot_id, checked_at=excluded.checked_at, "
+                "collection_mode=excluded.collection_mode, source_etag=excluded.source_etag, "
+                "source_last_modified=excluded.source_last_modified",
+                (slot, int(existing["snapshot_id"]), observed_at, collection_mode, source_etag, source_last_modified),
             )
             return {
                 "snapshot_id": int(existing["snapshot_id"]),
@@ -347,9 +382,12 @@ def ingest_extract_file(
             (rows_scanned, snapshot_id),
         )
         conn.execute(
-            "INSERT INTO current_sources(slot,snapshot_id) VALUES(?,?) "
-            "ON CONFLICT(slot) DO UPDATE SET snapshot_id=excluded.snapshot_id",
-            (slot, snapshot_id),
+            "INSERT INTO current_sources(slot,snapshot_id,checked_at,collection_mode,source_etag,source_last_modified) "
+            "VALUES(?,?,?,?,?,?) ON CONFLICT(slot) DO UPDATE SET "
+            "snapshot_id=excluded.snapshot_id, checked_at=excluded.checked_at, "
+            "collection_mode=excluded.collection_mode, source_etag=excluded.source_etag, "
+            "source_last_modified=excluded.source_last_modified",
+            (slot, snapshot_id, observed_at, collection_mode, source_etag, source_last_modified),
         )
         return {
             "snapshot_id": snapshot_id,
@@ -362,41 +400,84 @@ def ingest_extract_file(
         }
 
 
-def index_status(index_path: str | Path, *, fiscal_year: int | None = None) -> dict[str, Any]:
+def index_status(
+    index_path: str | Path,
+    *,
+    fiscal_year: int | None = None,
+    now: datetime | None = None,
+) -> dict[str, Any]:
     fiscal_year = fiscal_year or fiscal_year_for_datetime()
+    now = now or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        raise ValueError("now must be timezone-aware")
+    now = now.astimezone(timezone.utc)
     required_years = catalog_years_for_fiscal_year(fiscal_year)
     required_slots = {"ACTIVE", *{f"ARCHIVE:{year}" for year in required_years}}
     init_index(index_path)
     with _connect(index_path) as conn:
         rows = conn.execute(
-            "SELECT c.slot,s.snapshot_id,s.source_kind,s.fiscal_year,s.source_url,s.extract_sha256,"
+            "SELECT c.slot,c.checked_at,c.collection_mode,c.source_etag,c.source_last_modified,"
+            "s.snapshot_id,s.source_kind,s.fiscal_year,s.source_url,s.extract_sha256,"
             "s.size_bytes,s.observed_at,s.local_path,s.rows_scanned "
             "FROM current_sources c JOIN source_snapshots s ON s.snapshot_id=c.snapshot_id"
         ).fetchall()
     snapshots = [dict(row) for row in rows]
     present = {row["slot"] for row in snapshots}
     missing = sorted(required_slots - present)
+    stale: list[str] = []
+    unverified: list[str] = []
+    fresh: list[str] = []
+    for row in snapshots:
+        slot = row["slot"]
+        if slot not in required_slots:
+            continue
+        if row.get("collection_mode") != APPROVED_FETCH:
+            unverified.append(slot)
+            continue
+        checked = parse_dt(row.get("checked_at"))
+        if not checked:
+            unverified.append(slot)
+            continue
+        max_age = ACTIVE_MAX_AGE if slot == "ACTIVE" else ARCHIVE_MAX_AGE
+        if now - checked > max_age or checked > now + timedelta(minutes=5):
+            stale.append(slot)
+        else:
+            fresh.append(slot)
     return {
-        "complete": not missing,
+        "complete": not missing and not stale and not unverified,
         "fiscal_year": fiscal_year,
+        "checked_at": now.isoformat(),
         "catalog": catalog_snapshot(),
         "required_archive_years": required_years,
         "required_slots": sorted(required_slots),
         "present_slots": sorted(present),
+        "fresh_slots": sorted(fresh),
         "missing_slots": missing,
+        "stale_slots": sorted(stale),
+        "unverified_slots": sorted(unverified),
+        "freshness_policy": {
+            "active_max_age_hours": int(ACTIVE_MAX_AGE.total_seconds() // 3600),
+            "archive_max_age_hours": int(ARCHIVE_MAX_AGE.total_seconds() // 3600),
+            "basis": "GSA publishes active notices daily and archived notices weekly; CaptureBrief uses conservative check windows.",
+        },
         "snapshots": snapshots,
     }
 
 
-def sync_plan(index_path: str | Path, *, fiscal_year: int | None = None) -> dict[str, Any]:
-    status = index_status(index_path, fiscal_year=fiscal_year)
+def sync_plan(index_path: str | Path, *, fiscal_year: int | None = None, now: datetime | None = None) -> dict[str, Any]:
+    status = index_status(index_path, fiscal_year=fiscal_year, now=now)
     items: list[dict[str, Any]] = []
-    for slot in status["missing_slots"]:
+    needed = [
+        *(("MISSING", slot) for slot in status["missing_slots"]),
+        *(("STALE", slot) for slot in status["stale_slots"]),
+        *(("UNVERIFIED", slot) for slot in status["unverified_slots"]),
+    ]
+    for reason, slot in needed:
         if slot == "ACTIVE":
-            items.append({"slot": slot, "source_kind": "ACTIVE", "fiscal_year": None, "source_url": ACTIVE_DOWNLOAD})
+            items.append({"slot": slot, "reason": reason, "source_kind": "ACTIVE", "fiscal_year": None, "source_url": ACTIVE_DOWNLOAD})
         else:
             fy = int(slot.split(":", 1)[1])
-            items.append({"slot": slot, "source_kind": "ARCHIVE", "fiscal_year": fy, "source_url": ARCHIVE_DOWNLOAD.format(fy=fy)})
+            items.append({"slot": slot, "reason": reason, "source_kind": "ARCHIVE", "fiscal_year": fy, "source_url": ARCHIVE_DOWNLOAD.format(fy=fy)})
     return {**status, "download_plan": items}
 
 
@@ -427,7 +508,7 @@ def issue_history_receipt_from_index(
     if not parse_dt(observed_at):
         raise ValueError("observed_at must be timezone-aware ISO-8601")
     fiscal_year = fiscal_year or fiscal_year_for_datetime()
-    coverage = index_status(index_path, fiscal_year=fiscal_year)
+    coverage = index_status(index_path, fiscal_year=fiscal_year, now=parse_dt(observed_at))
 
     with _connect(index_path) as conn:
         rows = _current_family_rows(conn, solicitation_number)
@@ -485,8 +566,12 @@ def issue_history_receipt_from_index(
     action_ids = sorted(by_notice)
     if seed_notice_id and seed_notice_id not in action_ids:
         errors.append("SEED_NOTICE_OUTSIDE_FILTERED_FAMILY")
-    if not coverage["complete"]:
+    if coverage["missing_slots"]:
         errors.append("FULL_ARCHIVE_CATALOG_NOT_INDEXED")
+    if coverage["stale_slots"]:
+        errors.append("FULL_ARCHIVE_CATALOG_STALE")
+    if coverage["unverified_slots"]:
+        errors.append("FULL_ARCHIVE_CATALOG_UNVERIFIED")
 
     cat = coverage["catalog"]
     scope = {
@@ -510,6 +595,11 @@ def issue_history_receipt_from_index(
         ],
         "active_extract_present": "ACTIVE" in coverage["present_slots"],
         "catalog_snapshot": cat,
+        "coverage_complete": coverage["complete"],
+        "stale_slots": coverage["stale_slots"],
+        "unverified_slots": coverage["unverified_slots"],
+        "freshness_checked_at": coverage["checked_at"],
+        "freshness_policy": coverage["freshness_policy"],
     }
     payload = {
         "source_contract": "SAM_DATA_SERVICES_EXTRACT",
@@ -526,6 +616,15 @@ def issue_history_receipt_from_index(
                 "source_url": row["source_url"],
                 "extract_sha256": row["extract_sha256"],
                 "rows_scanned": row["rows_scanned"],
+                "checked_at": row["checked_at"],
+                "collection_mode": row["collection_mode"],
+                "source_etag": row["source_etag"],
+                "source_last_modified": row["source_last_modified"],
+                "freshness_status": (
+                    "FRESH" if row["slot"] in coverage["fresh_slots"]
+                    else "STALE" if row["slot"] in coverage["stale_slots"]
+                    else "UNVERIFIED"
+                ),
             }
             for row in coverage["snapshots"]
         ],

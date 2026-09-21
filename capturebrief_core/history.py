@@ -105,6 +105,17 @@ def _validate_data_services_contract(receipt: dict[str, Any], receipt_actions: s
                 expected_required = set(catalog_years_for_fiscal_year(catalog_fy))
             if scope.get("catalog_sha256") != (snapshot or {}).get("catalog_sha256"):
                 findings.append(Finding("HISTORY_DATA_SERVICES_CATALOG_HASH_MISMATCH", "BLOCK", "Full-catalog scope digest does not match the retained catalog snapshot.", path))
+            if scope.get("coverage_complete") is not True:
+                findings.append(Finding("HISTORY_DATA_SERVICES_FULL_CATALOG_INCOMPLETE", "BLOCK", "Full-catalog source coverage is not complete and fresh.", path))
+            if scope.get("stale_slots"):
+                findings.append(Finding("HISTORY_DATA_SERVICES_STALE_SOURCES", "BLOCK", "Full-catalog receipt contains stale Data Services source checks.", path))
+            if scope.get("unverified_slots"):
+                findings.append(Finding("HISTORY_DATA_SERVICES_UNVERIFIED_SOURCES", "BLOCK", "Full-catalog receipt contains operator-imported or otherwise unverified source slots.", path))
+            if not parse_dt(scope.get("freshness_checked_at")):
+                findings.append(Finding("HISTORY_DATA_SERVICES_FRESHNESS_TIME_INVALID", "BLOCK", "Full-catalog receipt lacks a valid freshness evaluation timestamp.", path))
+            policy = scope.get("freshness_policy")
+            if not isinstance(policy, dict) or not isinstance(policy.get("active_max_age_hours"), int) or not isinstance(policy.get("archive_max_age_hours"), int):
+                findings.append(Finding("HISTORY_DATA_SERVICES_FRESHNESS_POLICY_INVALID", "BLOCK", "Full-catalog receipt lacks the source freshness policy used for evaluation.", path))
         elif mode == "DECLARED_RANGE":
             start, end = scope.get("start_fy"), scope.get("end_fy")
             if not isinstance(start, int) or not isinstance(end, int) or start > end:
@@ -144,6 +155,13 @@ def _validate_data_services_contract(receipt: dict[str, Any], receipt_actions: s
                 archive_years.add(int(snapshot["fiscal_year"]))
             else:
                 findings.append(Finding("HISTORY_DATA_SERVICES_SNAPSHOT_KIND_INVALID", "BLOCK", "Data Services snapshot kind/fiscal year is invalid.", spath))
+            if isinstance(scope, dict) and str(scope.get("mode") or "").upper() == "FULL_CATALOG":
+                if snapshot.get("collection_mode") != "APPROVED_FETCH":
+                    findings.append(Finding("HISTORY_DATA_SERVICES_SNAPSHOT_UNVERIFIED", "BLOCK", "Full-catalog snapshot was not collected through an approved first-party fetch.", spath))
+                if snapshot.get("freshness_status") != "FRESH":
+                    findings.append(Finding("HISTORY_DATA_SERVICES_SNAPSHOT_STALE", "BLOCK", "Full-catalog snapshot is not fresh under the recorded cadence policy.", spath))
+                if not parse_dt(snapshot.get("checked_at")):
+                    findings.append(Finding("HISTORY_DATA_SERVICES_SNAPSHOT_CHECK_TIME_INVALID", "BLOCK", "Full-catalog snapshot lacks a valid source-check timestamp.", spath))
         if active_count < 1:
             findings.append(Finding("HISTORY_DATA_SERVICES_ACTIVE_SNAPSHOT_MISSING", "BLOCK", "Data Services receipt retains no active extract snapshot.", path))
         if isinstance(scope, dict):

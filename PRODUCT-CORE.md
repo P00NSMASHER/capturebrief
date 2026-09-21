@@ -144,3 +144,29 @@ Useful commands:
     python -m capturebrief_core.cli history-from-index history.sqlite SOL-123 --seed-notice-id <VERIFIED_ACTION_UUID> -o history.json
 
 `history-index-fetch` downloads exactly one explicitly requested approved source slot. CaptureBrief does not silently initiate a whole-catalog multi-gigabyte sync.
+
+
+## Data Services freshness
+
+GSA's Get Opportunities documentation states that active notices are updated daily and archived notices weekly. CaptureBrief therefore treats source freshness as part of history completeness, not an operator convenience.
+
+Current full-catalog policy:
+- ACTIVE slot: must have an approved first-party source check within 48 hours;
+- ARCHIVE slots: must have an approved first-party source check within 9 days.
+
+The extra margin allows normal publication/check scheduling without silently stretching a daily/weekly source into an indefinite cache.
+
+The index distinguishes:
+- `APPROVED_FETCH` — bytes were fetched by CaptureBrief from the approved SAM Data Services extract URL;
+- `OPERATOR_FILE` — a local file was imported for analysis but its claimed source retrieval was not independently performed by the product.
+
+An operator import may populate the index and accelerate analysis, but it appears in `unverified_slots` and cannot support `HISTORY_COMPLETE`.
+
+`history-index-plan` now identifies three remediation reasons:
+- `MISSING`
+- `STALE`
+- `UNVERIFIED`
+
+A fresh approved fetch of unchanged bytes reuses the existing content-addressed source snapshot while updating that slot's source-check time. Source snapshots remain immutable; freshness is a property of the current slot verification, not a rewrite of historical bytes.
+
+Official cadence reference: https://open.gsa.gov/api/get-opportunities-public-api/
