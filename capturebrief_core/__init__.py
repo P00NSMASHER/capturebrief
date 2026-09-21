@@ -23,6 +23,8 @@ from .render import render_markdown
 from .intake import IntakeError, build_case_from_intake
 from .workqueue import build_work_queue
 from .watch import compare_cases
+from .decision_trace import evaluate_decision_trace, compare_decision_traces, freeze_text_snapshot, freeze_rule_version, passage, trace_work_items
+from .trace_render import render_trace_markdown, render_trace_html
 
 __all__=[
     "catalog_snapshot","audit_case","validate_current_action_receipts","make_history_receipt","validate_history_receipts",
@@ -37,5 +39,7 @@ __all__=[
     "IntakeError","build_case_from_intake","build_work_queue",
     "build_resource_union","diff_manifest_receipts","validate_reference_closure",
     "ReferenceReviewError","confirm_reference_scan","propose_reference_scan",
-    "render_markdown","compare_cases"
+    "render_markdown","compare_cases",
+    "evaluate_decision_trace","compare_decision_traces","freeze_text_snapshot","freeze_rule_version","passage","trace_work_items",
+    "render_trace_markdown","render_trace_html"
 ]
