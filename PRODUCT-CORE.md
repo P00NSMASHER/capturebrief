@@ -1,8 +1,106 @@
-# CaptureBrief Product Core v0.25 — Structured Deviation Authority Review
+# CaptureBrief Product Core v0.26 — Deviation-to-Assumption Decision Evidence
 
 Updated: September 21, 2026
 
 CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.23 adds a controlled class-deviation discovery path on top of the v0.22 Decision Evidence, release bundle, and targeted-watch system. It can now prove which exact pinned deviation index was inspected and surface agency/FAR-Part candidates without turning corpus membership—or corpus absence—into an applicability decision.
+
+## v0.26 — Deviation-to-Assumption Decision Evidence
+
+v0.26 closes the class-deviation chain from public candidate discovery all the way to a specific bid assumption.
+
+The full path is now:
+
+`pinned index -> official PDF SHA-256 -> reviewed memo text -> effective/current/supersession review -> separate pursuit-specific basis -> CLASS_DEVIATION rule version -> assumption rule link`
+
+### A current memo does not automatically apply
+
+A reviewed deviation authority record may say `CURRENT` or `SUPERSEDED`, but that still does not answer whether the memo governs a particular pursuit.
+
+Resolved applicability therefore requires a separate exact Decision Evidence passage from retained:
+
+- solicitation text;
+- amendment text; or
+- other pursuit-specific context.
+
+The deviation memo snapshot itself is forbidden as its own applicability basis.
+
+### Applicability states
+
+The reviewer records:
+
+- `APPLIES`;
+- `DOES_NOT_APPLY`; or
+- `UNRESOLVED`.
+
+Resolved applicability is prohibited while deviation currentness remains `UNRESOLVED`.
+
+An `UNRESOLVED` deviation may be attached only while the buyer-facing assumption itself remains unresolved (`UNPROVEN` or `SOURCE_LIMITED`). This prevents a visibly unresolved rule question from hiding underneath a supposedly resolved assumption.
+
+### Superseded deviations
+
+A superseded memo is not automatically irrelevant.
+
+If a reviewer concludes that a `SUPERSEDED` deviation still `APPLIES`, the applicability basis must be explicit solicitation or amendment text. A generic deviation review cannot resurrect a superseded memo.
+
+### Native Decision Evidence representation
+
+The reviewed memo becomes a normal content-addressed Decision Evidence rule version:
+
+- namespace: `CLASS_DEVIATION`;
+- agency: reviewed agency;
+- citation: retained public memo filename;
+- edition identity: captured PDF SHA-256 prefix;
+- text passage: exact reviewed memo passage;
+- effective interval: only when separately reviewed;
+- revision reference: captured artifact receipt.
+
+The rule version and reviewed memo snapshot are added to the existing Decision Evidence trace, then linked to the specific assumption with:
+
+- family ID;
+- applicability;
+- basis class;
+- exact pursuit-specific basis passage;
+- rationale;
+- reviewer identity and time.
+
+No parallel deviation-only buyer report is created. FAR, DFARS and CLASS_DEVIATION evidence appear through the same inspectable rule-link surface.
+
+### Fail-closed history
+
+If the same deviation rule version already has a different Decision Evidence link, CaptureBrief refuses to rewrite it in place. The reviewer must preserve the prior decision and create a new decision version.
+
+A packet-level applicability record also does not count as complete if its corresponding Decision Evidence rule/link has been removed or altered.
+
+### Assumption state remains independent
+
+This transition explicitly records:
+
+- `human_reviewed = true`;
+- `applicability_authoritative = false`;
+- `assumption_state_changed = false`;
+- `can_auto_apply = false`.
+
+The rule review supplies evidence. It does not autonomously turn `UNPROVEN` into `SUPPORTED`, flip GO/NO-GO, or make a legal determination.
+
+### Work queue
+
+Once deviation authority currentness is resolved and an assumption Decision Evidence trace exists, the queue opens:
+
+`deviation-applicability:<id>`
+
+as P0 `HUMAN_REVIEW`.
+
+It closes only when both the packet-level review and the exact Decision Evidence rule link remain intact.
+
+### CLI
+
+Apply assumption-specific deviation applicability:
+
+    python -m capturebrief_core.rule_cli case-review-deviation-applicability \
+      case-with-deviation-authority.json deviation-applicability-review.json \
+      -o case-with-deviation-decision-evidence.json
+
+This completes the technical deviation-evidence chain. Remaining product validation is commercial: run the complete chain on real public solicitations and measure whether the evidence changes or closes a buyer's actual gate assumptions.
 
 ## v0.25 — Structured Deviation Authority Review
 
