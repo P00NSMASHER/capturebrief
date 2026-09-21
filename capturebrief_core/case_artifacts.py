@@ -43,6 +43,16 @@ def apply_api_byte_receipt(
         raise CaseArtifactError("byte receipt is not marked APPROVED_API")
     if receipt.get("byte_state") != "BYTES_VERIFIED_HASHED":
         raise CaseArtifactError("byte receipt is not BYTES_VERIFIED_HASHED")
+    if "final_url" in receipt:
+        raise CaseArtifactError("byte receipt must not retain a potentially signed final redirect URL")
+    if receipt.get("final_url_retained") is not False:
+        raise CaseArtifactError("byte receipt final redirect retention flag is invalid")
+    if not isinstance(receipt.get("final_delivery_host"), str) or not receipt["final_delivery_host"].strip():
+        raise CaseArtifactError("byte receipt final delivery host is missing")
+    if not valid_sha256(receipt.get("final_url_sha256")):
+        raise CaseArtifactError("byte receipt final URL hash is invalid")
+    if type(receipt.get("redirect_used")) is not bool:
+        raise CaseArtifactError("byte receipt redirect_used is invalid")
     if not valid_sha256(receipt.get("sha256")):
         raise CaseArtifactError("byte receipt lacks a valid SHA-256")
     if not parse_dt(receipt.get("observed_at")):
