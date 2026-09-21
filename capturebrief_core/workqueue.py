@@ -8,6 +8,7 @@ from .history import validate_history_receipts
 from .manifest import validate_manifest_receipts
 from .model import parse_dt
 from .packet import validate_reference_closure
+from .decision_trace import trace_work_items
 
 _PRIORITY = {"P0": 0, "P1": 1, "P2": 2}
 
@@ -309,6 +310,10 @@ def build_work_queue(
         from .decision_trace import trace_work_items
         for task in trace_work_items(case, now=now):
             add(task)
+
+    if case.get("decision_trace_required") is True or isinstance(case.get("decision_trace"),dict):
+        for trace_task in trace_work_items(case,now=now):
+            add(trace_task)
 
     ordered = sorted(
         tasks.values(),
