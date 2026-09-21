@@ -24,14 +24,14 @@ RULE_NAMESPACES = {"FAR", "DFARS", "AGENCY_SUPPLEMENT", "CLASS_DEVIATION"}
 _SHA_RE = re.compile(r"^[0-9a-f]{64}$")
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _CITATION_RE = re.compile(r"^\d{1,3}\.\d+(?:-\d+)?$")
-_ENTITY_RE = re.compile(r"<!\\s*ENTITY\\b", re.I)
-_DOCTYPE_ANY_RE = re.compile(r"<!DOCTYPE\\b", re.I)
+_ENTITY_RE = re.compile(r"<!\s*ENTITY\b", re.I)
+_DOCTYPE_ANY_RE = re.compile(r"<!DOCTYPE\b", re.I)
 _GSA_DITA_DOCTYPE_RE = re.compile(
-    r'<!DOCTYPE\\s+dita\\s+PUBLIC\\s+"-//OASIS//DTD DITA Composite//EN"\\s+"ditabase\\.dtd"\\s*>',
+    r'<!DOCTYPE\s+dita\s+PUBLIC\s+"-//OASIS//DTD DITA Composite//EN"\s+"ditabase\.dtd"\s*>',
     re.I | re.S,
 )
 _EDITION_RE = re.compile(
-    r"\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+(\\d{4})\\b",
+    r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})\b",
     re.I,
 )
 
