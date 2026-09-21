@@ -10,6 +10,9 @@ from .authority import validate_current_action_receipts
 from .decision_trace import canonical, digest, evaluate_decision_trace
 from .history import validate_history_receipts
 from .manifest import validate_manifest_receipts
+from .deviation_sync import deviation_candidate_proposal_is_current, current_deviation_artifact_receipts
+from .deviation_review import current_deviation_authority_reviews
+from .deviation_applicability import current_deviation_applicability_reviews
 from .model import parse_dt
 
 WATCH_SCHEMA="1.0"
@@ -113,11 +116,76 @@ def _public_state(case:dict[str,Any],*,now:datetime)->dict[str,Any]:
     for rows in rule_versions.values():
         rows.sort(key=lambda x:str(x.get("rule_version_id") or ""))
 
+    deviation_proposal=None
+    proposal=(case.get("packet") or {}).get("deviation_candidate_proposal")
+    if deviation_candidate_proposal_is_current(case):
+        candidates=[
+            {
+                "deviation_source_id":str(row.get("deviation_source_id") or ""),
+                "url_hash":row.get("url_hash"),
+                "pdf_size_bytes":row.get("pdf_size_bytes"),
+                "matched_parts":sorted(row.get("matched_parts") or []),
+            }
+            for row in proposal.get("candidates") or []
+            if isinstance(row,dict) and row.get("deviation_source_id")
+        ]
+        candidates.sort(key=lambda x:x["deviation_source_id"])
+        deviation_proposal={
+            "proposal_sha256":proposal.get("proposal_sha256"),
+            "manifest_sha256":proposal.get("manifest_sha256"),
+            "manifest_revision":proposal.get("manifest_revision"),
+            "agency":proposal.get("agency"),
+            "part_numbers":sorted(proposal.get("part_numbers") or []),
+            "candidate_count":proposal.get("candidate_count"),
+            "candidate_ids":[x["deviation_source_id"] for x in candidates],
+            "candidate_fingerprint_sha256":digest(canonical(candidates)),
+        }
+
+    deviation_artifacts={}
+    for ident,row in current_deviation_artifact_receipts(case).items():
+        deviation_artifacts[ident]={
+            "artifact_receipt_id":row.get("artifact_receipt_id"),
+            "proposal_sha256":row.get("proposal_sha256"),
+            "pdf_sha256":row.get("pdf_sha256"),
+            "observed_pdf_size_bytes":row.get("observed_pdf_size_bytes"),
+            "declared_size_matches_observed":row.get("declared_size_matches_observed"),
+            "observed_at":row.get("observed_at"),
+        }
+
+    deviation_authority={}
+    for ident,row in current_deviation_authority_reviews(case).items():
+        deviation_authority[ident]={
+            "authority_review_id":row.get("authority_review_id"),
+            "document_sha256":row.get("document_sha256"),
+            "currentness":row.get("currentness"),
+            "effective_from":row.get("effective_from"),
+            "effective_until":row.get("effective_until"),
+            "reviewed_at":row.get("reviewed_at"),
+        }
+
+    deviation_applicability={}
+    for ident,row in current_deviation_applicability_reviews(case).items():
+        deviation_applicability[ident]={
+            "applicability_review_id":row.get("applicability_review_id"),
+            "authority_review_id":row.get("authority_review_id"),
+            "assumption_id":row.get("assumption_id"),
+            "rule_version_id":row.get("rule_version_id"),
+            "applicability":row.get("applicability"),
+            "basis":row.get("basis"),
+            "reviewed_at":row.get("reviewed_at"),
+        }
+
     assumptions={
         str(row.get("assumption_id")):row
         for row in case.get("assumptions") or []
         if isinstance(row,dict) and row.get("assumption_id")
     }
+    deviation_ids_by_assumption={}
+    for ident,row in deviation_applicability.items():
+        aid=str(row.get("assumption_id") or "")
+        if aid:
+            deviation_ids_by_assumption.setdefault(aid,set()).add(ident)
+
     dependencies=[]
     for review in trace.get("reviews") or []:
         if not isinstance(review,dict) or not review.get("assumption_id"):
@@ -137,6 +205,7 @@ def _public_state(case:dict[str,Any],*,now:datetime)->dict[str,Any]:
             "assumption_id":aid,
             "source_keys":source_keys,
             "rule_keys":rule_keys,
+            "deviation_source_ids":sorted(deviation_ids_by_assumption.get(aid,set())),
             "case_reopen_triggers":sorted({str(x) for x in (assumptions.get(aid) or {}).get("reopen_triggers") or [] if str(x)}),
         })
     dependencies.sort(key=lambda x:x["assumption_id"])
@@ -153,6 +222,10 @@ def _public_state(case:dict[str,Any],*,now:datetime)->dict[str,Any]:
         "references":{k:v for k,v in sorted(references.items())},
         "source_versions":{k:v for k,v in sorted(source_versions.items())},
         "rule_versions":{k:v for k,v in sorted(rule_versions.items())},
+        "deviation_proposal":deviation_proposal,
+        "deviation_artifacts":{k:v for k,v in sorted(deviation_artifacts.items())},
+        "deviation_authority":{k:v for k,v in sorted(deviation_authority.items())},
+        "deviation_applicability":{k:v for k,v in sorted(deviation_applicability.items())},
         "assumption_dependencies":dependencies,
     }
 
@@ -236,6 +309,25 @@ def compare_watch_baseline(
     for key in sorted(set(before.get("rule_versions") or {})|set(after.get("rule_versions") or {})):
         event("RULE_VERSION_CHANGED",f"RULE:{key}",(before.get("rule_versions") or {}).get(key),(after.get("rule_versions") or {}).get(key),rule_key=key)
 
+    before_prop=before.get("deviation_proposal")
+    after_prop=after.get("deviation_proposal")
+    proposal_ids=set((before_prop or {}).get("candidate_ids") or [])|set((after_prop or {}).get("candidate_ids") or [])
+    event(
+        "DEVIATION_PROPOSAL_CHANGED",
+        "DEVIATION_PROPOSAL",
+        before_prop,
+        after_prop,
+        alias_keys=[f"DEVIATION:{x}" for x in proposal_ids],
+    )
+    for field,kind in (
+        ("deviation_artifacts","DEVIATION_ARTIFACT_CHANGED"),
+        ("deviation_authority","DEVIATION_AUTHORITY_CHANGED"),
+        ("deviation_applicability","DEVIATION_APPLICABILITY_CHANGED"),
+    ):
+        bmap=before.get(field) or {}; amap=after.get(field) or {}
+        for ident in sorted(set(bmap)|set(amap)):
+            event(kind,f"DEVIATION:{ident}",bmap.get(ident),amap.get(ident),deviation_source_id=ident)
+
     keys={e["key"] for e in events}
     for e in events:
         keys.update(e.get("alias_keys") or [])
@@ -249,6 +341,10 @@ def compare_watch_baseline(
         matched.update(
             f"RULE:{key}" for key in dep.get("rule_keys") or []
             if f"RULE:{key}" in keys
+        )
+        matched.update(
+            f"DEVIATION:{ident}" for ident in dep.get("deviation_source_ids") or []
+            if f"DEVIATION:{ident}" in keys
         )
         if matched:
             reopened.append({
