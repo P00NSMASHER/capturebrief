@@ -1,6 +1,20 @@
-# CaptureBrief Product Core v0.27 — Deviation-Aware Targeted Watch
+# CaptureBrief Product Core v0.29 — Public Deployment Boundary
 
 Updated: September 21, 2026
+
+## v0.29 — Public Deployment Boundary
+
+CaptureBrief's repository now contains substantially more than the public website: product code, tests, fixtures, evidence machinery, rule-source catalogs, commercial learning records and internal documentation.
+
+The Netlify production configuration therefore no longer publishes the repository root.
+
+The release path is:
+
+`repository -> netlify-build.sh explicit whitelist -> dist/ -> Netlify production`
+
+Only approved public pages/assets enter `dist/`. CI proves that internal product paths such as `capturebrief_core/`, `tests/`, `fixtures/`, rule-source operating files and internal Markdown do not enter the publish directory.
+
+This is a deployment/privacy boundary, not a claim that public website content itself is confidential. It prevents the hosting configuration from unintentionally expanding the public surface as the private product repository grows.
 
 CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.23 adds a controlled class-deviation discovery path on top of the v0.22 Decision Evidence, release bundle, and targeted-watch system. It can now prove which exact pinned deviation index was inspected and surface agency/FAR-Part candidates without turning corpus membership—or corpus absence—into an applicability decision.
 
