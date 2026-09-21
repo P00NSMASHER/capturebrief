@@ -67,6 +67,7 @@ def build_case_from_intake(
 
     return {
         "case_schema_version": "0.2",
+        "decision_trace_required": True,
         "case_id": f"CB-{token}",
         "family_id": f"UNRESOLVED-{token}",
         "current_posture": posture,
