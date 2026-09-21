@@ -1,7 +1,8 @@
 import hashlib, io, json, tempfile, unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from capturebrief_core.ledger import append_record, verify_ledger
+from capturebrief_core.ledger import LedgerLockedError, append_record, verify_ledger
 from capturebrief_core.manifest import download_public_resource
 
 class FakeResponse:
@@ -45,5 +46,53 @@ class LedgerDownloadTests(unittest.TestCase):
             lines=p.read_text().splitlines(); row=json.loads(lines[1]); row['previous_record_sha256']='0'*64; lines[1]=json.dumps(row,separators=(',',':')); p.write_text('\n'.join(lines)+'\n')
             bad=verify_ledger(p)
             self.assertFalse(bad['valid']); self.assertIn('CHAIN_BREAK',{x['code'] for x in bad['errors']})
+
+
+    def test_concurrent_writers_preserve_one_valid_chain(self):
+        with tempfile.TemporaryDirectory() as td:
+            p=Path(td)/'ledger.jsonl'
+            def write(i):
+                return append_record(
+                    p,
+                    record_type='CONCURRENT',
+                    payload={'i':i},
+                    recorded_at=f'2026-09-21T13:{i:02d}:00+00:00',
+                )
+            with ThreadPoolExecutor(max_workers=8) as pool:
+                rows=list(pool.map(write,range(20)))
+            status=verify_ledger(p)
+            self.assertTrue(status['valid'],status['errors'])
+            self.assertEqual(status['records'],20)
+            self.assertEqual(len({x['record_sha256'] for x in rows}),20)
+            self.assertFalse(p.with_name(p.name+'.lock').exists())
+
+    def test_held_lock_times_out_instead_of_guessing_stale(self):
+        with tempfile.TemporaryDirectory() as td:
+            p=Path(td)/'ledger.jsonl'
+            lock=p.with_name(p.name+'.lock')
+            lock.write_text('simulated active writer')
+            with self.assertRaises(LedgerLockedError):
+                append_record(
+                    p,
+                    record_type='LOCKED',
+                    payload={'x':1},
+                    lock_timeout_seconds=0.01,
+                )
+            with self.assertRaises(LedgerLockedError):
+                verify_ledger(p,lock_timeout_seconds=0.01)
+            self.assertEqual(lock.read_text(),'simulated active writer')
+
+    def test_direct_append_refuses_invalid_existing_chain_and_releases_lock(self):
+        with tempfile.TemporaryDirectory() as td:
+            p=Path(td)/'ledger.jsonl'
+            append_record(p,record_type='ONE',payload={'x':1})
+            row=json.loads(p.read_text().splitlines()[0])
+            row['payload']['x']=999
+            p.write_text(json.dumps(row)+'\n')
+            before=p.read_bytes()
+            with self.assertRaises(ValueError):
+                append_record(p,record_type='TWO',payload={'x':2})
+            self.assertEqual(p.read_bytes(),before)
+            self.assertFalse(p.with_name(p.name+'.lock').exists())
 
 if __name__=='__main__': unittest.main()
