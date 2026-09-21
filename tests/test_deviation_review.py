@@ -18,6 +18,7 @@ from capturebrief_core.deviation_sync import (
     fetch_pinned_deviation_manifest,
 )
 from capturebrief_core.rule_registry import digest
+from capturebrief_core.workqueue import build_work_queue
 
 CATALOG={
     "schema_version":"1.0",
@@ -94,14 +95,14 @@ class DeviationAuthorityReviewTests(unittest.TestCase):
         )
         return case,ident,result
 
-    def add_currentness_basis(self,case):
+    def add_currentness_basis(self,case,observed_at="2026-09-21T18:20:00Z"):
         source={
             "source_id":"deviation-guide",
             "title":"Current deviation guide observation",
             "authority":"SUPPORTING",
             "artifact_state":"PUBLIC",
             "url":"https://www.acquisition.gov/far-overhaul/far-part-deviation-guide",
-            "observed_at":"2026-09-21T18:20:00Z",
+            "observed_at":observed_at,
             "content_sha256":digest(GUIDE_TEXT),
         }
         snap=freeze_text_snapshot(
@@ -237,6 +238,61 @@ class DeviationAuthorityReviewTests(unittest.TestCase):
                 }],
             })
 
+    def test_currentness_basis_cannot_look_ahead(self):
+        case,ident,_=self.prepared_case()
+        case,basis=self.add_currentness_basis(case,observed_at="2026-09-21T18:40:00Z")
+        with self.assertRaises(ValueError):
+            review_deviation_authority(case,{
+                "reviewed_by":"Reviewer",
+                "reviewed_at":"2026-09-21T18:25:00Z",
+                "decisions":[{
+                    "deviation_source_id":ident,
+                    "memo_passage":{"line_start":1,"line_end":1,"locator":"Memo title"},
+                    "currentness":"CURRENT",
+                    "currentness_rationale":"Future observation must not support earlier review.",
+                    "currentness_basis_passage":{
+                        "snapshot_id":basis["snapshot_id"],
+                        "line_start":1,"line_end":1,"locator":"Guide"
+                    },
+                }],
+            })
+
+    def test_tampered_currentness_basis_snapshot_is_rejected(self):
+        case,ident,_=self.prepared_case()
+        case,basis=self.add_currentness_basis(case)
+        case=copy.deepcopy(case)
+        case["decision_trace"]["snapshots"][0]["text"]="tampered"
+        with self.assertRaises(ValueError):
+            review_deviation_authority(case,{
+                "reviewed_by":"Reviewer",
+                "reviewed_at":"2026-09-21T18:25:00Z",
+                "decisions":[{
+                    "deviation_source_id":ident,
+                    "memo_passage":{"line_start":1,"line_end":1,"locator":"Memo title"},
+                    "currentness":"CURRENT",
+                    "currentness_rationale":"Tampered evidence must fail.",
+                    "currentness_basis_passage":{
+                        "snapshot_id":basis["snapshot_id"],
+                        "line_start":1,"line_end":1,"locator":"Guide"
+                    },
+                }],
+            })
+
+    def test_effective_passage_without_effective_date_is_rejected(self):
+        case,ident,_=self.prepared_case()
+        with self.assertRaises(ValueError):
+            review_deviation_authority(case,{
+                "reviewed_by":"Reviewer",
+                "reviewed_at":"2026-09-21T18:25:00Z",
+                "decisions":[{
+                    "deviation_source_id":ident,
+                    "memo_passage":{"line_start":1,"line_end":1,"locator":"Memo title"},
+                    "effective_date_passage":{"line_start":2,"line_end":2,"locator":"Effective sentence"},
+                    "currentness":"UNRESOLVED",
+                    "currentness_rationale":"No currentness evidence.",
+                }],
+            })
+
     def test_superseded_requires_reference(self):
         case,ident,_=self.prepared_case()
         case,basis=self.add_currentness_basis(case)
@@ -255,6 +311,17 @@ class DeviationAuthorityReviewTests(unittest.TestCase):
                     },
                 }],
             })
+
+    def test_operator_queue_uses_specific_deviation_authority_tasks(self):
+        case,ident=self.captured_case()
+        keys={x["task_key"] for x in build_work_queue(case)["tasks"]}
+        self.assertIn("deviation-text:"+ident,keys)
+        self.assertNotIn("deviations:review-candidates",keys)
+
+        case,ident,_=self.prepared_case()
+        keys={x["task_key"] for x in build_work_queue(case)["tasks"]}
+        self.assertIn("deviation-authority:"+ident,keys)
+        self.assertNotIn("deviations:review-candidates",keys)
 
     def test_work_items_progress_capture_to_text_to_authority_to_currentness(self):
         case,ident=self.captured_case()
