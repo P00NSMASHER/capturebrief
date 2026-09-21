@@ -291,7 +291,11 @@ def rule_candidate_proposal_is_current(case: dict[str, Any]) -> bool:
 def rule_candidate_work_item(case: dict[str, Any]) -> dict[str, Any] | None:
     if not rule_candidate_proposal_is_current(case):
         return None
+    if rule_candidate_review_is_current(case):
+        return None
     proposal = case["packet"]["rule_candidate_proposal"]
+    if not (proposal.get("matches") or []):
+        return None
     unmatched = sum(row.get("candidate_count", 0) == 0 for row in proposal.get("matches") or [])
     ambiguous = sum(
         row.get("ambiguous_namespace") is True or row.get("candidate_count", 0) > 1
@@ -315,3 +319,198 @@ def rule_candidate_work_item(case: dict[str, Any]) -> dict[str, Any] | None:
         },
         "status": "OPEN",
     }
+
+
+REVIEW_CONTRACT = "capturebrief-rule-candidate-review-v1"
+_REVIEW_DECISIONS = {"TRACK_VERSION", "UNRESOLVED", "IGNORE"}
+
+
+def confirm_rule_candidate_review(
+    proposal: dict[str, Any],
+    review: dict[str, Any],
+) -> dict[str, Any]:
+    """Human-confirm a citation proposal without deciding rule applicability."""
+    if proposal.get("contract") != CONTRACT or proposal.get("status") != "PROPOSED":
+        raise ValueError("rule candidate proposal contract is invalid")
+    proposal_body = {k: v for k, v in proposal.items() if k != "proposal_sha256"}
+    if digest(canonical(proposal_body)) != proposal.get("proposal_sha256"):
+        raise ValueError("rule candidate proposal digest mismatch")
+
+    reviewer = review.get("reviewer")
+    reviewed_at = review.get("reviewed_at")
+    if not isinstance(reviewer, str) or not reviewer.strip():
+        raise ValueError("reviewer is required")
+    if not isinstance(reviewed_at, str):
+        raise ValueError("reviewed_at is required")
+    try:
+        dt = datetime.fromisoformat(reviewed_at.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError("reviewed_at must be ISO-8601") from exc
+    if dt.tzinfo is None:
+        raise ValueError("reviewed_at must be timezone-aware")
+
+    matches = {
+        row["occurrence_id"]: row
+        for row in proposal.get("matches") or []
+        if isinstance(row, dict) and row.get("occurrence_id")
+    }
+    decisions = review.get("decisions")
+    if not isinstance(decisions, list):
+        raise ValueError("decisions must be a list")
+
+    seen: set[str] = set()
+    normalized: list[dict[str, Any]] = []
+    for row in decisions:
+        if not isinstance(row, dict):
+            raise ValueError("review decision must be an object")
+        occurrence_id = str(row.get("occurrence_id") or "")
+        if occurrence_id not in matches:
+            raise ValueError(f"unknown occurrence_id {occurrence_id}")
+        if occurrence_id in seen:
+            raise ValueError(f"duplicate decision for {occurrence_id}")
+        seen.add(occurrence_id)
+
+        decision = str(row.get("decision") or "").upper()
+        if decision not in _REVIEW_DECISIONS:
+            raise ValueError(f"invalid decision for {occurrence_id}")
+        reason = row.get("reason")
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError(f"review reason required for {occurrence_id}")
+
+        match = matches[occurrence_id]
+        candidate_map = {
+            str(candidate.get("rule_source_id")): candidate
+            for candidate in match.get("candidate_versions") or []
+            if candidate.get("rule_source_id")
+        }
+        selected = None
+        if decision == "TRACK_VERSION":
+            selected_id = str(row.get("selected_rule_source_id") or "")
+            if selected_id not in candidate_map:
+                raise ValueError(
+                    f"selected rule version for {occurrence_id} must come from the proposal"
+                )
+            selected = copy.deepcopy(candidate_map[selected_id])
+        elif row.get("selected_rule_source_id") not in (None, ""):
+            raise ValueError(
+                f"{decision} decision for {occurrence_id} cannot select a rule version"
+            )
+
+        normalized.append({
+            "occurrence_id": occurrence_id,
+            "source_id": match.get("source_id"),
+            "line": match.get("line"),
+            "mention": match.get("mention"),
+            "citation": match.get("citation"),
+            "decision": decision,
+            "reason": reason.strip(),
+            "selected_rule": selected,
+            "applicability": "UNRESOLVED",
+            "applicability_authoritative": False,
+            "can_auto_apply": False,
+        })
+
+    missing = sorted(set(matches) - seen)
+    if missing:
+        raise ValueError(
+            "every rule citation occurrence requires a human decision: "
+            + ",".join(missing)
+        )
+
+    normalized.sort(key=lambda x: x["occurrence_id"])
+    payload = {
+        "contract": REVIEW_CONTRACT,
+        "status": "COMPLETE",
+        "review_mode": "HUMAN_CONFIRMED",
+        "proposal_sha256": proposal["proposal_sha256"],
+        "reviewer": reviewer.strip(),
+        "reviewed_at": reviewed_at,
+        "decisions": normalized,
+        "tracked_rule_source_ids": sorted({
+            row["selected_rule"]["rule_source_id"]
+            for row in normalized
+            if row.get("selected_rule")
+        }),
+        "applicability_authoritative": False,
+        "can_auto_apply": False,
+    }
+    return {**payload, "review_sha256": digest(canonical(payload))}
+
+
+def attach_rule_candidate_review(
+    case: dict[str, Any],
+    review: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    if not rule_candidate_proposal_is_current(case):
+        raise ValueError("case does not contain a current rule candidate proposal")
+    proposal = case["packet"]["rule_candidate_proposal"]
+    result_review = confirm_rule_candidate_review(proposal, review)
+    result = copy.deepcopy(case)
+    result.setdefault("packet", {})["rule_candidate_review"] = result_review
+    return result, {
+        "status": "RULE_CANDIDATE_REVIEW_ATTACHED",
+        "review_sha256": result_review["review_sha256"],
+        "tracked_rule_source_ids": result_review["tracked_rule_source_ids"],
+        "applicability_authoritative": False,
+        "can_auto_apply": False,
+    }
+
+
+def rule_candidate_review_is_current(case: dict[str, Any]) -> bool:
+    if not rule_candidate_proposal_is_current(case):
+        return False
+    packet = case.get("packet") or {}
+    proposal = packet.get("rule_candidate_proposal") or {}
+    review = packet.get("rule_candidate_review")
+    if not isinstance(review, dict):
+        return False
+    if (
+        review.get("contract") != REVIEW_CONTRACT
+        or review.get("status") != "COMPLETE"
+        or review.get("review_mode") != "HUMAN_CONFIRMED"
+        or review.get("proposal_sha256") != proposal.get("proposal_sha256")
+        or review.get("applicability_authoritative") is not False
+        or review.get("can_auto_apply") is not False
+    ):
+        return False
+    review_body = {k: v for k, v in review.items() if k != "review_sha256"}
+    if digest(canonical(review_body)) != review.get("review_sha256"):
+        return False
+    expected = {
+        row.get("occurrence_id")
+        for row in proposal.get("matches") or []
+        if row.get("occurrence_id")
+    }
+    actual = {
+        row.get("occurrence_id")
+        for row in review.get("decisions") or []
+        if isinstance(row, dict) and row.get("occurrence_id")
+    }
+    if expected != actual:
+        return False
+    return all(
+        row.get("applicability") == "UNRESOLVED"
+        and row.get("applicability_authoritative") is False
+        and row.get("can_auto_apply") is False
+        for row in review.get("decisions") or []
+        if isinstance(row, dict)
+    )
+
+
+def tracked_rule_versions(case: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return human-selected source versions as context, never applicability."""
+    if not rule_candidate_review_is_current(case):
+        return []
+    out = []
+    for row in case["packet"]["rule_candidate_review"]["decisions"]:
+        if row.get("decision") != "TRACK_VERSION" or not row.get("selected_rule"):
+            continue
+        out.append({
+            "occurrence_id": row["occurrence_id"],
+            "citation": row["citation"],
+            "reason": row["reason"],
+            "selected_rule": copy.deepcopy(row["selected_rule"]),
+            "applicability": "UNRESOLVED",
+            "can_auto_apply": False,
+        })
+    return out

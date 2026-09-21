@@ -1,8 +1,89 @@
-# CaptureBrief Product Core v0.13 — Rule Citation Candidates
+# CaptureBrief Product Core v0.14 — Human Rule Version Review
 
 Updated: September 21, 2026
 
-CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.13 reduces rule-review lookup work by finding FAR/DFARS citation candidates in retained public text and showing every matching pinned registry version while preserving a mandatory human choice of edition and applicability.
+CaptureBrief is a human-supervised, public-source Pursuit QA second pass. v0.14 adds a hash-bound human rule-version review transition: every citation candidate is explicitly tracked, left unresolved, or ignored by a named reviewer, while applicability remains unresolved until the later Decision Evidence review cites the solicitation-specific basis.
+
+## v0.14 — Human Rule Version Review
+
+Citation discovery and rule-version selection are now separate, auditable states.
+
+A current v0.13 proposal cannot disappear into an informal analyst judgment. Every detected occurrence must receive exactly one human decision:
+
+- `TRACK_VERSION` — retain one specific pinned `rule_source_id` from the proposal as the edition/version that should be carried forward for deeper review;
+- `UNRESOLVED` — the reviewer cannot establish which edition should be carried forward yet;
+- `IGNORE` — the citation is not material to the bounded pursuit QA review, with an explicit reason.
+
+### No implicit latest-version behavior
+
+When multiple editions are available, the reviewer may choose an older edition if that is what the solicitation/incorporation evidence supports.
+
+The system does not:
+- sort “newest” into authority;
+- force the most recent observed edition;
+- treat a selected edition as applicable;
+- change a buyer assumption merely because a rule version was selected.
+
+A `TRACK_VERSION` result always carries:
+
+- the exact selected `rule_source_id`;
+- citation, namespace, agency and edition;
+- exact upstream repository/revision/path and source hash;
+- reviewer reason;
+- `applicability = UNRESOLVED`;
+- `applicability_authoritative = false`;
+- `can_auto_apply = false`.
+
+### Complete human coverage
+
+The review is fail-closed:
+
+- every proposal occurrence requires one decision;
+- duplicate decisions are rejected;
+- selecting a rule version not present in that occurrence's proposal is rejected;
+- `IGNORE` and `UNRESOLVED` may not smuggle in a selected version;
+- every decision requires a reason;
+- reviewer identity and timezone-aware review time are required.
+
+The complete review is content-addressed and bound to the exact proposal SHA-256. If the proposal changes, the old review is no longer current.
+
+### Work-queue handoff
+
+Before review, the operator queue contains:
+
+`rules:review-candidates`
+
+After a complete human-confirmed review, that lookup task closes. Any remaining rule-dependent assumption work still appears through the Decision Evidence trace.
+
+This is intentional:
+
+**Rule version selected != rule applies != assumption resolved.**
+
+### CLI
+
+Review input example:
+
+    {
+      "reviewer": "CaptureBrief reviewer",
+      "reviewed_at": "2026-09-21T16:45:00Z",
+      "decisions": [
+        {
+          "occurrence_id": "RULEMENTION:...",
+          "decision": "TRACK_VERSION",
+          "selected_rule_source_id": "RULESRC:...",
+          "reason": "The solicitation cites this edition; applicability still requires trace review."
+        }
+      ]
+    }
+
+Apply the human review:
+
+    python -m capturebrief_core.rule_cli case-review-citations \
+      case-with-rule-candidates.json rule-review.json \
+      -o case-with-rule-review.json \
+      --result-output rule-review-transition.json
+
+The selected version is context for the later Decision Evidence applicability review, not a substitute for it.
 
 ## v0.13 — Rule Citation Candidates
 

@@ -103,6 +103,28 @@ A citation with no current registry match remains an unresolved lookup item. It 
 
 A proposal is routed to a human-only `rules:review-candidates` task. The reviewer must establish the relevant edition and solicitation-specific basis before a rule link can enter Decision Evidence.
 
+## Human rule-version review
+
+A citation proposal must be reviewed before its candidate versions can be carried forward.
+
+The review is bound to the exact proposal SHA-256 and requires one decision for every occurrence:
+
+- `TRACK_VERSION` with one selected rule source that actually appeared in that occurrence's candidate list;
+- `UNRESOLVED` with a reason;
+- `IGNORE` with a reason.
+
+The review records a named reviewer and timezone-aware review time.
+
+Selecting a version does **not** establish applicability. Every tracked rule remains:
+
+- `applicability = UNRESOLVED`;
+- `applicability_authoritative = false`;
+- `can_auto_apply = false`.
+
+This permits an older incorporated edition to be carried forward even when a newer edition exists in the registry. The system never silently upgrades a solicitation to the latest known rule.
+
+The selected rule version becomes context for the later Decision Evidence review, where the reviewer must cite the solicitation/incorporation/effective-date basis for `APPLIES`, `DOES_NOT_APPLY`, or `UNRESOLVED`.
+
 ## Decision Evidence boundary
 
 A normalized rule source may be bridged into Decision Evidence as:

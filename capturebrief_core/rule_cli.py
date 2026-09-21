@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from .rule_candidates import attach_rule_candidate_proposal
+from .rule_candidates import attach_rule_candidate_proposal, attach_rule_candidate_review
 from .rule_registry import (
     add_rule_version,
     diff_rule_versions,
@@ -78,6 +78,12 @@ def main(argv=None):
     pc.add_argument("-o", "--output")
     pc.add_argument("--result-output")
 
+    rv = s.add_parser("case-review-citations")
+    rv.add_argument("case")
+    rv.add_argument("review")
+    rv.add_argument("-o", "--output")
+    rv.add_argument("--result-output")
+
     args = p.parse_args(argv)
 
     if args.cmd == "parse-dita":
@@ -147,6 +153,13 @@ def main(argv=None):
             captured_by=args.captured_by,
             observed_at=args.observed_at,
         )
+        _write(updated, args.output)
+        if args.result_output:
+            _write(result, args.result_output)
+    elif args.cmd == "case-review-citations":
+        case = json.loads(Path(args.case).read_text(encoding="utf-8"))
+        review = json.loads(Path(args.review).read_text(encoding="utf-8"))
+        updated, result = attach_rule_candidate_review(case, review)
         _write(updated, args.output)
         if args.result_output:
             _write(result, args.result_output)
