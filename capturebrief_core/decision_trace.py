@@ -112,11 +112,31 @@ def evaluate_decision_trace(case,*,now=None,allow_synthetic=False):
             if l.get("basis_passage"): _pass(l.get("basis_passage"),snaps,add,lp+".basis_passage")
             checked_rules.append({**l,"rule_key":r.get("rule_key"),"namespace":r.get("namespace"),"citation":r.get("citation"),"edition":r.get("edition")})
         changes=rv.get("changes",[]) if isinstance(rv.get("changes"),list) else []
+        resolved_changes=[]
         for n,c in enumerate(changes):
             cp=path+f".changes[{n}]"; old=snaps.get(c.get("from_snapshot_id")) if isinstance(c,dict) else None; new=snaps.get(c.get("to_snapshot_id")) if isinstance(c,dict) else None
             if not old or not new or old.get("source_key")!=new.get("source_key") or old.get("snapshot_id")==new.get("snapshot_id"): add("TRACE_CHANGE_LINEAGE_INVALID","Change must join distinct versions of same logical source.",cp)
             if not isinstance(c,dict) or c.get("relation") not in {"SUPERSEDES","AMENDS","CORRECTS"} or not _text(c.get("summary")): add("TRACE_CHANGE_RELATION_INVALID","Version change needs sourced relation and summary.",cp)
-        cards.append({"assumption_id":aid,"assumption":a.get("text"),"evidence_state":state,"decision_class":a.get("decision_class"),"finding":rv.get("finding"),"next_action":a.get("next_action"),"owner":a.get("owner"),"evidence_request":rv.get("evidence_request"),"reviewed_by":rv.get("reviewed_by"),"reviewed_at":rv.get("reviewed_at"),"rule_scope":scope,"citations":checked,"rule_links":checked_rules,"changes":copy.deepcopy(changes)})
+            from_passage=c.get("from_passage") if isinstance(c,dict) else None
+            to_passage=c.get("to_passage") if isinstance(c,dict) else None
+            if bool(from_passage) != bool(to_passage):
+                add("TRACE_CHANGE_PASSAGE_PAIR_INCOMPLETE","Version delta must retain both before and after passages when either is supplied.",cp)
+            elif from_passage and to_passage:
+                from_source=_pass(from_passage,snaps,add,cp+".from_passage")
+                to_source=_pass(to_passage,snaps,add,cp+".to_passage")
+                if from_source and old and from_source.get("snapshot_id")!=old.get("snapshot_id"):
+                    add("TRACE_CHANGE_PASSAGE_VERSION_MISMATCH","Before passage must belong to the declared from-version.",cp+".from_passage")
+                if to_source and new and to_source.get("snapshot_id")!=new.get("snapshot_id"):
+                    add("TRACE_CHANGE_PASSAGE_VERSION_MISMATCH","After passage must belong to the declared to-version.",cp+".to_passage")
+            else:
+                add("TRACE_CHANGE_PASSAGES_MISSING","Version relation is retained, but no exact before/after passages are attached.",cp,"WARN")
+            enriched=copy.deepcopy(c) if isinstance(c,dict) else {}
+            if old:
+                enriched["from_source"]={k:old.get(k) for k in ("snapshot_id","source_id","title","url","version_label","document_sha256","observed_at","published_at")}
+            if new:
+                enriched["to_source"]={k:new.get(k) for k in ("snapshot_id","source_id","title","url","version_label","document_sha256","observed_at","published_at")}
+            resolved_changes.append(enriched)
+        cards.append({"assumption_id":aid,"assumption":a.get("text"),"evidence_state":state,"decision_class":a.get("decision_class"),"finding":rv.get("finding"),"next_action":a.get("next_action"),"owner":a.get("owner"),"evidence_request":rv.get("evidence_request"),"reviewed_by":rv.get("reviewed_by"),"reviewed_at":rv.get("reviewed_at"),"rule_scope":scope,"citations":checked,"rule_links":checked_rules,"changes":resolved_changes})
     for aid in sorted(set(assumptions)-seen): add("TRACE_REVIEW_MISSING_FOR_ASSUMPTION",f"Assumption {aid} has no source/rule/version review.",f"decision_trace.reviews.{aid}")
     return _result(case,findings,cards,synthetic)
 
