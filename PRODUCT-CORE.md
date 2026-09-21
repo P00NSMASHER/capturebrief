@@ -2081,3 +2081,50 @@ The commercial-proof summary exposes the factual gates from Business Model v7:
 It never automatically changes price, creates a subscription, claims product-market fit, or decides whether turnaround/retraction levels are acceptable. Those remain human commercial decisions.
 
 See `OUTCOME-LEDGER.md` and `BUSINESS-MODEL-v7.md`.
+
+
+## v0.28 — Fulfillment Effort Evidence
+
+CaptureBrief now measures the human work required to produce the evidence product, not only elapsed delivery time.
+
+A privacy-safe commercial outcome event can record whole operator minutes against a controlled fulfillment stage:
+
+- `INTAKE_SCOPE`
+- `HISTORY_CURRENT`
+- `PACKET_BYTES`
+- `REFERENCE_REVIEW`
+- `ASSUMPTION_REVIEW`
+- `RULE_REVIEW`
+- `DEVIATION_REVIEW`
+- `WATCH`
+- `DELIVERY`
+- `CUSTOMER_COMMS`
+- `OTHER`
+
+Each `EFFORT` event requires an opaque evidence reference and is append-only. It contains no buyer identity, free-text notes, or unsupported ROI claims.
+
+Operators can record effort directly:
+
+    python -m capturebrief_core.cli outcome-effort \
+      outcomes.jsonl CB-CASE <CASE_SHA256> ASSUMPTION_REVIEW 35 timer:CB-CASE:review-1 \
+      --event-at 2026-09-21T18:30:00Z
+
+The commercial summary now reports:
+
+- engagement-level effort hours;
+- total/median/min/max recorded labor;
+- minutes by fulfillment stage;
+- paid-engagement effort coverage;
+- collected cents per recorded effort hour by currency when payment amount and labor are both explicitly evidenced.
+
+This does not auto-reprice the product or decide whether labor is acceptable. It prevents the founding $149 offer from being judged solely by sales or calendar turnaround while hidden founder labor remains unmeasured.
+
+The pre-expansion evidence surface now distinguishes:
+
+`buyers paid`
+
+from:
+
+`buyers paid + delivery was useful + labor was measured + economics can be reviewed`.
+
+The next optimization target should be selected from measured stage minutes rather than intuition.
