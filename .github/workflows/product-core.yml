@@ -1,17 +1,17 @@
 name: Product Core
 on:
   push:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','SOURCE-POLICY.md','ARCHIVE-CATALOG.md']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','DECISION-TRACE.md','index.html','decision-history.html']
   pull_request:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','SOURCE-POLICY.md']
+    paths: ['capturebrief_core/**','tests/**','fixtures/**','.github/workflows/product-core.yml','PRODUCT-CORE.md','SOURCE-POLICY.md','DECISION-TRACE.md','index.html','decision-history.html']
 permissions:
   contents: read
 jobs:
   product-contract:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.11'
       - name: Compile product core
@@ -28,3 +28,23 @@ jobs:
         run: python -m capturebrief_core.cli render fixtures/ready_case.json -o /tmp/capturebrief.md
       - name: Exercise targeted change watch
         run: python -m capturebrief_core.cli diff fixtures/ready_case.json fixtures/changed_case.json > /tmp/change.json
+      - name: Exercise full assumption-history handoff
+        run: |
+          PYTHONPATH=.:tests python - <<'PY'
+          from pathlib import Path
+          from test_decision_trace_integration import traced_packet, NOW
+          from capturebrief_core import audit_case, render_markdown
+          from capturebrief_core.decision_trace import PROFILE
+          from capturebrief_core.cli import load
+          intake = load('/tmp/intake-case.json')
+          assert intake['evidence_profile'] == PROFILE
+          assert all(t['review'] is None for t in intake['decision_trace']['assumption_traces'])
+          case = traced_packet()
+          result = audit_case(case, now=NOW)
+          assert result.release_state == 'READY_FOR_HUMAN_RELEASE', result.findings
+          text = render_markdown(case, result)
+          assert 'Assumption source / rule / version history' in text
+          assert 'June 2025' in text and 'REPLACES' in text
+          Path('/tmp/capturebrief-traced-handoff.md').write_text(text)
+          print('SYNTHETIC full packet + trace -> reviewed handoff PASS; not customer validation')
+          PY
