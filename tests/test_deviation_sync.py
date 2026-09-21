@@ -173,17 +173,14 @@ class DeviationSyncTests(unittest.TestCase):
         self.assertEqual(len(twice["packet"]["deviation_artifact_receipts"]),1)
         self.assertIn(ident,current_deviation_artifact_receipts(twice))
 
-    def test_artifact_capture_is_p0_automatic_then_human_review_remains(self):
+    def test_artifact_capture_is_p0_automatic_without_duplicate_aggregate_review(self):
         case=self.proposal_case()
         tasks=deviation_artifact_work_items(case)
         self.assertEqual(len(tasks),2)
         self.assertTrue(all(x["priority"]=="P0" for x in tasks))
         self.assertTrue(all(x["can_auto_execute"] for x in tasks))
-        human=deviation_candidate_work_item(case)
-        self.assertEqual(human["priority"],"P1")
-        self.assertEqual(human["actor"],"HUMAN_REVIEW")
+        self.assertIsNone(deviation_candidate_work_item(case))
 
-        # Capture both candidate PDFs.
         updated=case
         for candidate in case["packet"]["deviation_candidate_proposal"]["candidates"]:
             receipt,_=capture_deviation_artifact(
@@ -192,9 +189,7 @@ class DeviationSyncTests(unittest.TestCase):
             )
             updated=attach_deviation_artifact_receipt(updated,receipt)
         self.assertEqual(deviation_artifact_work_items(updated),[])
-        human=deviation_candidate_work_item(updated)
-        self.assertEqual(human["priority"],"P0")
-        self.assertEqual(human["metadata"]["captured_candidate_count"],2)
+        self.assertIsNone(deviation_candidate_work_item(updated))
 
     def test_zero_candidate_review_remains_p0_human(self):
         case=self.proposal_case([53])
@@ -203,16 +198,14 @@ class DeviationSyncTests(unittest.TestCase):
         self.assertEqual(task["actor"],"HUMAN_REVIEW")
         self.assertFalse(task["can_auto_execute"])
 
-    def test_work_queue_schedules_official_pdf_capture_before_review(self):
+    def test_work_queue_schedules_official_pdf_capture_without_duplicate_review(self):
         case=self.proposal_case([12])
         queue=build_work_queue(case)
         keys={x["task_key"] for x in queue["tasks"]}
         self.assertTrue(any(x.startswith("deviation-bytes:") for x in keys))
-        self.assertIn("deviations:review-candidates",keys)
+        self.assertNotIn("deviations:review-candidates",keys)
         byte_tasks=[x for x in queue["tasks"] if x["task_key"].startswith("deviation-bytes:")]
         self.assertTrue(all(x["priority"]=="P0" and x["can_auto_execute"] for x in byte_tasks))
-        human=next(x for x in queue["tasks"] if x["task_key"]=="deviations:review-candidates")
-        self.assertEqual(human["priority"],"P1")
 
 if __name__=="__main__":
     unittest.main()
