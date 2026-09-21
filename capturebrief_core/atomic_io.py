@@ -67,14 +67,14 @@ def atomic_write_bytes(
     fd,temp_name=tempfile.mkstemp(prefix=f".{target.name}.",suffix=".tmp",dir=str(target.parent))
     temp=Path(temp_name)
     try:
-        if hasattr(os,"fchmod"):
-            os.fchmod(fd,mode)
-        _write_all(fd,raw)
-        os.fsync(fd)
-    finally:
-        os.close(fd)
+        try:
+            if hasattr(os,"fchmod"):
+                os.fchmod(fd,mode)
+            _write_all(fd,raw)
+            os.fsync(fd)
+        finally:
+            os.close(fd)
 
-    try:
         if overwrite:
             os.replace(temp,target)
         else:
