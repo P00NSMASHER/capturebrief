@@ -108,6 +108,44 @@ class FulfillmentEconomicsRedTeamTests(unittest.TestCase):
         )
         self.assertEqual(summary["paid_delivered_effort_coverage"]["paid_delivered"],1)
 
+    def test_three_paid_delivered_cases_without_amounts_do_not_prove_revenue_economics(self):
+        rows=[
+            ("CB-A",CASE_A,BUNDLE_A),
+            ("CB-B",CASE_B,BUNDLE_B),
+            ("CB-C",CASE_C,BUNDLE_C),
+        ]
+        for i,(cid,case_sha,bundle) in enumerate(rows):
+            self.append(event(
+                "PAYMENT",case_id=cid,case_sha256=case_sha,
+                at=f"2026-09-21T1{i}:00:00Z",state="PAID",
+                payment_evidence_ref=f"stripe:no-amount:{cid}",
+            ))
+            self.effort(cid,case_sha,f"timer:no-amount:{cid}",
+                        at=f"2026-09-21T1{i}:10:00Z",minutes=30)
+            self.delivery(cid,case_sha,bundle,
+                          start=f"2026-09-21T1{i}:00:00Z",
+                          delivered=f"2026-09-21T1{i}:30:00Z",
+                          evidence=f"delivery:no-amount:{cid}")
+        summary=summarize_outcomes(self.ledger)
+        gates=summary["commercial_proof_threshold_evidence"]
+        self.assertEqual(summary["paid_delivered_engagements"],3)
+        self.assertEqual(summary["paid_delivered_engagements_with_amount"],0)
+        self.assertFalse(gates["paid_delivered_engagements_with_amount_at_least_3"])
+        self.assertFalse(gates["commercial_proof_objective_gates_complete"])
+
+    def test_zero_dollar_paid_state_is_not_valid_paid_evidence(self):
+        with self.assertRaises(ValueError):
+            event(
+                "PAYMENT",state="PAID",amount_cents=0,currency="USD",
+                payment_evidence_ref="stripe:zero",
+            )
+
+    def test_same_effort_receipt_cannot_be_counted_twice_in_one_case(self):
+        self.effort("CB-A",CASE_A,"timer:duplicate",at="2026-09-21T10:00:00Z",minutes=10)
+        self.effort("CB-A",CASE_A,"timer:duplicate",at="2026-09-21T10:10:00Z",minutes=10)
+        with self.assertRaisesRegex(ValueError,"effort evidence reference"):
+            summarize_outcomes(self.ledger)
+
     def test_payment_evidence_reference_cannot_fund_multiple_cases(self):
         self.paid("CB-A",CASE_A,"stripe:one-payment",at="2026-09-21T10:00:00Z")
         self.paid("CB-B",CASE_B,"stripe:one-payment",at="2026-09-21T10:01:00Z")
