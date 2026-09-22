@@ -188,3 +188,23 @@ The buyer can expand **Inspect the evidence trail** to see:
 - recorded source-version changes.
 
 The objective is not a longer report. It is a short decision brief with inspectable provenance underneath it.
+
+## Red-team truth constraints — 2026-09-21
+
+Adversarial review added several fail-closed requirements to Decision Evidence.
+
+A buyer-facing resolved finding now requires actual evidence semantics, not merely a structurally valid trace:
+
+- `SUPPORTED` requires at least one exact retained `SUPPORTS` passage.
+- `CONTRADICTED` requires at least one exact retained `CONTRADICTS` passage.
+- `SUPPORTED`, `CONTRADICTED`, and `SUPERSEDED` cannot be complete with zero exact passages.
+- a retained snapshot's URL and observation time must match its bound source record;
+- evidence observed after the declared decision time cannot support that earlier decision;
+- the human review itself cannot occur after the declared decision time;
+- a resolved finding cannot hide `UNRESOLVED` rule scope or rule applicability;
+- resolved rule applicability requires an exact pursuit-specific basis passage;
+- FAR/DFARS/agency-supplement rule text must come from a retained `RULE` snapshot; class-deviation rule text must come from a retained `DEVIATION` snapshot;
+- `AMENDS`, `SUPERSEDES`, and `CORRECTS` relations require an exact retained authority passage. The earlier version cannot self-certify a later change.
+
+These checks validate provenance and internal consistency. They still do not make CaptureBrief a legal authority or replace qualified procurement review.
+
