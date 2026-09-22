@@ -61,7 +61,8 @@ def evaluate_decision_trace(case,*,now=None,allow_synthetic=False):
     if synthetic and not allow_synthetic: add("SYNTHETIC_TRACE_NOT_FOR_RELEASE","Illustrative evidence cannot authorize customer release.")
     if t.get("schema_version")!=SCHEMA: add("TRACE_SCHEMA_UNSUPPORTED","Decision trace schema must be 1.0.")
     if t.get("family_id")!=case.get("family_id"): add("TRACE_FAMILY_MISMATCH","Trace and case must identify the same pursuit family.")
-    if not _dt(t.get("decision_at")) or _dt(t.get("decision_at"))>now: add("TRACE_DECISION_TIME_INVALID","Decision time must be timezone-aware and not in the future.")
+    decision_time=_dt(t.get("decision_at"))
+    if not decision_time or decision_time>now: add("TRACE_DECISION_TIME_INVALID","Decision time must be timezone-aware and not in the future.")
     sources={str(x.get("source_id")):x for x in case.get("sources",[]) if isinstance(x,dict) and x.get("source_id")}; snaps={}
     for i,s in enumerate(t.get("snapshots",[]) if isinstance(t.get("snapshots"),list) else []):
         p=f"decision_trace.snapshots[{i}]"; sid=s.get("snapshot_id") if isinstance(s,dict) else None
