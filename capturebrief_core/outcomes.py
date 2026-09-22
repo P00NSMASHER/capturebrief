@@ -87,6 +87,8 @@ def validate_outcome_event(event:dict[str,Any])->list[str]:
     if not _sha(event.get("case_sha256")): errors.append("case_sha256")
     if event.get("delivery_bundle_sha256") is not None and not _sha(event.get("delivery_bundle_sha256")): errors.append("delivery_bundle_sha256")
     kind=str(event.get("event_type") or "").upper()
+    if kind in {"DELIVERY","FEEDBACK","RETRACTION","REPEAT_REQUEST"} and not _sha(event.get("delivery_bundle_sha256")):
+        errors.append("delivery_bundle_sha256_required")
     if kind not in EVENT_TYPES: errors.append("event_type")
     if _dt(event.get("event_at")) is None: errors.append("event_at")
     data=event.get("data")
@@ -194,17 +196,17 @@ def summarize_outcomes(path:str|Path)->dict[str,Any]:
     finding_counts=Counter()
     for row in records:
         event=row["event"]; cid=event["case_id"]; kind=event["event_type"]
-        state=cases.setdefault(cid,{"events":0,"payments":[],"deliveries":[],"feedback":[],"retractions":[],"repeat":[],"effort":[]})
+        state=cases.setdefault(cid,{"events":0,"case_sha256":event["case_sha256"],"payments":[],"deliveries":[],"feedback":[],"retractions":[],"repeat":[],"effort":[]})
+        if state["case_sha256"]!=event["case_sha256"]:
+            raise ValueError(f"case fingerprint mismatch for {cid}")
         state["events"]+=1
         state[{"PAYMENT":"payments","DELIVERY":"deliveries","FEEDBACK":"feedback","RETRACTION":"retractions","REPEAT_REQUEST":"repeat","EFFORT":"effort"}[kind]].append(row)
-        if kind=="FEEDBACK":
-            finding_counts.update(event["data"]["finding_classes"])
-
     paid=0; paid_cents=0; paid_with_amount=0; delivered=0; turnaround=[]; feedback_cases=0
     useful=not_useful=changed=closed=confirmed=already=false_positive=source_limited=0
     repeat_requested=would_repeat=no_repeat=0; retraction_cases=critical_retractions=0
     paid_amount_by_currency=Counter(); effort_case_minutes=[]; effort_stage_minutes=Counter()
     paid_effort_covered=0; paid_effort_minutes_by_currency=Counter(); paid_effort_amount_by_currency=Counter()
+    unbound_outcome_events=0
     for cid,state in cases.items():
         effort_minutes=sum(x["event"]["data"]["minutes"] for x in state["effort"])
         if effort_minutes:
@@ -226,24 +228,54 @@ def summarize_outcomes(path:str|Path)->dict[str,Any]:
                     paid_effort_amount_by_currency[currency]+=amount
                     paid_effort_minutes_by_currency[currency]+=effort_minutes
         latest_delivery=max(state["deliveries"],key=lambda x:_dt(x["event"]["event_at"])) if state["deliveries"] else None
+        delivered_by_bundle={}
+        for delivery_row in state["deliveries"]:
+            delivery_event=delivery_row["event"]
+            bundle_sha=delivery_event.get("delivery_bundle_sha256")
+            delivered_at=_dt(delivery_event["data"]["delivered_at"])
+            if bundle_sha and delivered_at:
+                prior=delivered_by_bundle.get(bundle_sha)
+                if prior is None or delivered_at>prior:
+                    delivered_by_bundle[bundle_sha]=delivered_at
         if latest_delivery:
             delivered+=1
             data=latest_delivery["event"]["data"]; a,b=_dt(data["started_at"]),_dt(data["delivered_at"])
             turnaround.append((b-a).total_seconds()/3600)
-        latest_feedback=max(state["feedback"],key=lambda x:_dt(x["event"]["event_at"])) if state["feedback"] else None
+
+        def bound(rows):
+            nonlocal unbound_outcome_events
+            valid=[]
+            for row in rows:
+                event=row["event"]
+                bundle_sha=event.get("delivery_bundle_sha256")
+                delivered_at=delivered_by_bundle.get(bundle_sha)
+                event_at=_dt(event.get("event_at"))
+                if delivered_at is None or event_at is None or event_at<delivered_at:
+                    unbound_outcome_events+=1
+                    continue
+                valid.append(row)
+            return valid
+
+        bound_feedback=bound(state["feedback"])
+        latest_feedback=max(bound_feedback,key=lambda x:_dt(x["event"]["event_at"])) if bound_feedback else None
         if latest_feedback:
             feedback_cases+=1; data=latest_feedback["event"]["data"]
+            finding_counts.update(data["finding_classes"])
             useful+=data["usefulness"]=="USEFUL"; not_useful+=data["usefulness"]=="NOT_USEFUL"
             effect=data["action_effect"]
             changed+=effect=="CHANGED_ACTION"; closed+=effect=="CLOSED_COSTLY_UNCERTAINTY"; confirmed+=effect=="CONFIRMED_EXISTING_VIEW"
             already+=effect=="ALREADY_KNEW"; false_positive+=effect=="FALSE_POSITIVE"; source_limited+=bool(data["source_limited"])
-        latest_repeat=max(state["repeat"],key=lambda x:_dt(x["event"]["event_at"])) if state["repeat"] else None
+
+        bound_repeat=bound(state["repeat"])
+        latest_repeat=max(bound_repeat,key=lambda x:_dt(x["event"]["event_at"])) if bound_repeat else None
         if latest_repeat:
             val=latest_repeat["event"]["data"]["state"]
             repeat_requested+=val=="REQUESTED_REPEAT"; would_repeat+=val=="WOULD_REPEAT"; no_repeat+=val=="NO_REPEAT"
-        if state["retractions"]:
+
+        bound_retractions=bound(state["retractions"])
+        if bound_retractions:
             retraction_cases+=1
-            critical_retractions+=sum(x["event"]["data"]["severity"]=="CRITICAL" for x in state["retractions"])
+            critical_retractions+=sum(x["event"]["data"]["severity"]=="CRITICAL" for x in bound_retractions)
 
     threshold={
         "paid_engagements_at_least_3":paid>=3,
@@ -252,6 +284,7 @@ def summarize_outcomes(path:str|Path)->dict[str,Any]:
         "turnaround_evidence_present":bool(turnaround),
         "effort_evidence_present":bool(effort_case_minutes),
         "paid_engagement_effort_coverage_complete":paid>0 and paid_effort_covered==paid,
+        "outcome_binding_complete":unbound_outcome_events==0,
         "retraction_evidence_present":bool(cases),
         "turnaround_acceptability_requires_human_threshold":True,
         "effort_acceptability_requires_human_threshold":True,
@@ -284,6 +317,7 @@ def summarize_outcomes(path:str|Path)->dict[str,Any]:
             if paid_effort_minutes_by_currency[currency]>0
         },
         "buyer_feedback_cases":feedback_cases,
+        "unbound_outcome_events":unbound_outcome_events,
         "feedback":{
             "useful":useful,"not_useful":not_useful,"changed_action":changed,
             "closed_costly_uncertainty":closed,"confirmed_existing_view":confirmed,
