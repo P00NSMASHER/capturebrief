@@ -146,6 +146,40 @@ class TruthLayerRedTeamTests(unittest.TestCase):
         self.assertEqual(result.returncode,3,
                          "watch-check must not look green to unattended automation when review is required")
 
+    def test_watch_cannot_claim_clean_without_a_fresh_observation(self):
+        case=ready_case()
+        baseline=build_watch_baseline(case,now=NOW)
+        later=NOW.replace(day=22)
+        from capturebrief_core.watch_baseline import compare_watch_baseline
+        result=compare_watch_baseline(baseline,case,now=later)
+        self.assertTrue(result["requires_human_review"])
+        self.assertIn("WATCH_NO_FRESH_OBSERVATION",{x["type"] for x in result["events"]})
+        self.assertEqual(result["watch_status"],"REVIEW_REQUIRED")
+
+    def test_expired_currentness_must_be_visible_even_if_ids_do_not_change(self):
+        case=ready_case()
+        case["current_action_receipts"][0]["expires_at"]="2026-09-22T13:00:00+00:00"
+        baseline=build_watch_baseline(case,now=NOW)
+        from capturebrief_core.watch_baseline import compare_watch_baseline
+        result=compare_watch_baseline(
+            baseline,case,now=datetime(2026,9,23,17,30,tzinfo=timezone.utc)
+        )
+        kinds={x["type"] for x in result["events"]}
+        self.assertIn("CURRENTNESS_VERDICT_CHANGED",kinds)
+        self.assertTrue(result["requires_human_review"])
+
+    def test_fourteen_day_watch_cannot_silently_continue_after_scope_ends(self):
+        case=ready_case()
+        baseline=build_watch_baseline(case,now=NOW)
+        self.assertEqual(baseline["watch_until"],"2026-10-05T17:30:00Z")
+        from capturebrief_core.watch_baseline import compare_watch_baseline
+        result=compare_watch_baseline(
+            baseline,case,now=datetime(2026,10,6,17,30,tzinfo=timezone.utc)
+        )
+        self.assertEqual(result["watch_status"],"EXPIRED")
+        self.assertIn("WATCH_WINDOW_EXPIRED",{x["type"] for x in result["events"]})
+        self.assertTrue(result["requires_human_review"])
+
     def test_outcome_case_id_cannot_mix_different_case_fingerprints(self):
         with tempfile.TemporaryDirectory() as directory:
             ledger=Path(directory)/"outcomes.jsonl"
