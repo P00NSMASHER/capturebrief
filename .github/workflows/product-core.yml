@@ -69,8 +69,10 @@ jobs:
           grep -q '"verification_state": "VERIFIED_INTEGRITY"' /tmp/capturebrief-delivery-verification.json
       - name: Build and compare targeted watch baseline
         run: |
-          python -m capturebrief_core.trace_cli watch-baseline fixtures/ready_trace_case.json -o /tmp/watch-baseline.json
-          python -m capturebrief_core.trace_cli watch-check /tmp/watch-baseline.json fixtures/ready_trace_case.json -o /tmp/watch-check.json
+          python -m capturebrief_core.trace_cli watch-baseline fixtures/ready_trace_case.json -o /tmp/watch-baseline.json --as-of 2026-09-21T17:30:00Z
+          python -m capturebrief_core.trace_cli watch-check /tmp/watch-baseline.json fixtures/ready_trace_case.json -o /tmp/watch-check.json --as-of 2026-09-21T17:30:00Z
+          grep -q '"watch_status": "NO_CHANGE_OBSERVED"' /tmp/watch-check.json
+          grep -q '"fresh_observation_evidenced": true' /tmp/watch-check.json
       - name: FAR DFARS rule registry contracts
         run: python -m unittest tests.test_rule_registry -v
       - name: Pinned GSA rule source sync contracts
