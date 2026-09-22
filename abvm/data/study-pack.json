@@ -1,0 +1,302 @@
+{
+  "source": "ABVM Grade 2 sanitized study feed",
+  "syncPolicy": {
+    "intervalHours": 4
+  },
+  "sourceLastSeenAt": "2026-09-17T20:20:00-04:00",
+  "sourceCapturedAt": "2026-09-17T20:20:00-04:00",
+  "freshnessHours": 112.0297075,
+  "pack": {
+    "schemaVersion": 2,
+    "sourceHash": "public-bootstrap-2026-09-17",
+    "sourceCapturedAt": "2026-09-17T20:20:00-04:00",
+    "generatedAt": "2026-09-17T20:20:00-04:00",
+    "weekLabel": "Thursday, September 17, 2026",
+    "summary": "Tonight: Math pg. 9, one Spelling Choice Board activity, reading, and the Reading Log. Spelling/Handwriting and Reading tests are listed for Friday, Sept. 18.",
+    "subjects": [
+      {
+        "subject": "Religion",
+        "topics": [
+          "Jesus is God's Best Gift",
+          "God is the Giver of Gifts",
+          "The Trinity",
+          "God's gifts of creation"
+        ],
+        "studyNotes": [
+          "Jesus is God's greatest gift to us and teaches us about God and how to live.",
+          "Jesus gave us the new life of grace.",
+          "We are made in God's image and likeness; we can think, choose, and love.",
+          "The Trinity is three persons in one God: Father, Son, and Holy Spirit.",
+          "We use our senses to enjoy God's gifts and have a responsibility to care for creation."
+        ]
+      },
+      {
+        "subject": "Reading",
+        "topics": [
+          "Maria Celebrates Brazil",
+          "Big Red Lollipop",
+          "A Look at Families",
+          "Short vowel sounds",
+          "Visualize and plot",
+          "Understanding characters",
+          "Captions",
+          "Plural nouns with -s and -es"
+        ],
+        "studyNotes": [
+          "Sight words include put, why, blue, help, for, yellow, both, there, even, ball, or, green, how, little, one, see, sounds, funny, find, and could.",
+          "Phonics work includes short a, i, e, o, and u.",
+          "Reading comprehension work includes visualizing, plot (beginning, middle, end), understanding characters, and captions.",
+          "Word structure work uses -s and -es to make plural nouns."
+        ]
+      },
+      {
+        "subject": "Spelling",
+        "topics": [
+          "Short e, o, and u"
+        ],
+        "studyNotes": [
+          "Basic words: went, tell, pet, job, fog, not, tug, hut, tub, bun.",
+          "Review words: fix, has.",
+          "High-frequency words: one, or, see."
+        ]
+      },
+      {
+        "subject": "Math",
+        "topics": [
+          "Chapter 1A: addition"
+        ],
+        "studyNotes": [
+          "A Chapter 1A addition test is listed for Tuesday, Sept. 22.",
+          "The current Homework page assigns Math pg. 9."
+        ]
+      }
+    ],
+    "importantDates": [
+      {
+        "label": "Spelling (short e, o, u) / Handwriting test",
+        "date": "Friday, Sept. 18",
+        "kind": "test"
+      },
+      {
+        "label": "Reading test",
+        "date": "Friday, Sept. 18",
+        "kind": "test"
+      },
+      {
+        "label": "Pretzel money due",
+        "date": "Friday, Sept. 18",
+        "kind": "reminder"
+      },
+      {
+        "label": "Chapter 1A (addition) test",
+        "date": "Tuesday, Sept. 22",
+        "kind": "test"
+      },
+      {
+        "label": "STAR reading",
+        "date": "Wednesday, Sept. 23",
+        "kind": "test"
+      },
+      {
+        "label": "Stationary money due ($17)",
+        "date": "Wednesday, Sept. 23",
+        "kind": "reminder"
+      },
+      {
+        "label": "Pretzel delivery",
+        "date": "Thursday, Sept. 24",
+        "kind": "reminder"
+      },
+      {
+        "label": "Picture Day",
+        "date": "Thursday, Oct. 1",
+        "kind": "school event"
+      }
+    ],
+    "vocabulary": [
+      {
+        "subject": "Reading",
+        "term": "language",
+        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+      },
+      {
+        "subject": "Reading",
+        "term": "culture",
+        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+      },
+      {
+        "subject": "Reading",
+        "term": "aside",
+        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+      },
+      {
+        "subject": "Reading",
+        "term": "invited",
+        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+      },
+      {
+        "subject": "Reading",
+        "term": "share",
+        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+      },
+      {
+        "subject": "Reading",
+        "term": "fair",
+        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+      },
+      {
+        "subject": "Reading",
+        "term": "plead",
+        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+      },
+      {
+        "subject": "Reading",
+        "term": "scurries",
+        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+      }
+    ],
+    "homework": [
+      {
+        "day": "Thursday",
+        "subject": "Math",
+        "task": "Math pg. 9",
+        "due": ""
+      },
+      {
+        "day": "Thursday",
+        "subject": "Spelling",
+        "task": "Spelling Choice Board activity",
+        "due": ""
+      },
+      {
+        "day": "Thursday",
+        "subject": "Reading",
+        "task": "Read",
+        "due": ""
+      },
+      {
+        "day": "Thursday",
+        "subject": "Reading",
+        "task": "Reading Log",
+        "due": ""
+      }
+    ],
+    "reminders": [
+      "Parents: complete forms and cover books.",
+      "Keep the Reading Log and Behavior Chart in the homework folder.",
+      "Return everything in the homework folder.",
+      "Pretzel money is due Friday, Sept. 18."
+    ],
+    "questions": [
+      {
+        "id": "bootstrap-religion-1",
+        "subject": "Religion",
+        "format": "true_false",
+        "prompt": "The Trinity means three persons in one God.",
+        "choices": [],
+        "answer": "True",
+        "hint": "Think about Father, Son, and Holy Spirit.",
+        "explanation": "The source says the Trinity is three persons in one God: Father, Son, and Holy Spirit.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "bootstrap-religion-2",
+        "subject": "Religion",
+        "format": "true_false",
+        "prompt": "Jesus is described as God's greatest gift to us.",
+        "choices": [],
+        "answer": "True",
+        "hint": "Look at the title of Religion Chapter 2.",
+        "explanation": "The source says Jesus is God's greatest gift to us.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "bootstrap-reading-1",
+        "subject": "Reading",
+        "format": "multiple_choice",
+        "prompt": "Which word is on the current sight-word list?",
+        "choices": [
+          "blue",
+          "went",
+          "fog"
+        ],
+        "answer": "blue",
+        "hint": "The other two words are on the spelling list.",
+        "explanation": "Blue appears on the current Reading sight-word list.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "bootstrap-reading-2",
+        "subject": "Reading",
+        "format": "multiple_choice",
+        "prompt": "Which word is on the current sight-word list?",
+        "choices": [
+          "could",
+          "tub",
+          "pet"
+        ],
+        "answer": "could",
+        "hint": "The other two words are basic spelling words.",
+        "explanation": "Could appears on the current Reading sight-word list.",
+        "difficulty": "medium"
+      },
+      {
+        "id": "bootstrap-spelling-1",
+        "subject": "Spelling",
+        "format": "multiple_choice",
+        "prompt": "Which word is listed as a review word?",
+        "choices": [
+          "fix",
+          "tug",
+          "bun"
+        ],
+        "answer": "fix",
+        "hint": "Tug and bun are basic words.",
+        "explanation": "Fix is listed under Review Words.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "bootstrap-spelling-2",
+        "subject": "Spelling",
+        "format": "multiple_choice",
+        "prompt": "Which word is listed as a high-frequency spelling word?",
+        "choices": [
+          "one",
+          "went",
+          "job"
+        ],
+        "answer": "one",
+        "hint": "Went and job are basic words.",
+        "explanation": "One is listed under High Frequency Words.",
+        "difficulty": "medium"
+      },
+      {
+        "id": "bootstrap-reading-3",
+        "subject": "Reading",
+        "format": "true_false",
+        "prompt": "The current reading work practices short a and short i.",
+        "choices": [],
+        "answer": "True",
+        "hint": "Check the current phonics skills.",
+        "explanation": "The Reading Work page lists short a and short i.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "bootstrap-spelling-3",
+        "subject": "Spelling",
+        "format": "word_build",
+        "prompt": "Build this spelling word: went",
+        "choices": [],
+        "answer": "went",
+        "hint": "It starts with W.",
+        "explanation": "Went is one of the current basic spelling words.",
+        "difficulty": "easy"
+      }
+    ],
+    "sourceSufficient": true,
+    "gaps": [
+      "The source lists reading vocabulary terms but does not provide definitions, so the game does not invent definitions.",
+      "The source assigns Math pg. 9 but does not reproduce that page, so the game does not invent Math pg. 9 Quest questions."
+    ]
+  }
+}
