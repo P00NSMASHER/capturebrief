@@ -198,3 +198,18 @@ Do not edit an old JSONL line.
 Append a new event.
 
 The hash chain exists specifically so silent historical mutation is detectable.
+
+## Delivery-bound outcome evidence — 2026-09-21
+
+Red-team testing showed that downstream commercial events could otherwise be counted without proving which delivered artifact they followed.
+
+The ledger now enforces:
+
+- one `case_id` cannot silently combine multiple `case_sha256` fingerprints;
+- `DELIVERY`, `FEEDBACK`, `RETRACTION`, and `REPEAT_REQUEST` require a delivery-bundle SHA-256;
+- feedback, retractions, and repeat requests count only when their bundle SHA matches an actual delivery for the same case and their event time is not before that delivery;
+- post-delivery events that cannot be bound are excluded from commercial counts and surfaced as `unbound_outcome_events`;
+- the factual pre-expansion evidence surface includes `outcome_binding_complete`.
+
+This does not authenticate Stripe, an email, or a buyer merely from an opaque evidence reference. Those external records remain separate evidence. It prevents the structured summary from treating an unbound event as if it were proven customer outcome evidence.
+
