@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import copy
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from .audit import audit_case
@@ -22,6 +22,30 @@ def _aware(now:datetime)->datetime:
     if not isinstance(now,datetime) or now.tzinfo is None:
         raise ValueError("now must be timezone-aware")
     return now.astimezone(timezone.utc)
+
+
+def _observation_watermark(case:dict[str,Any])->str|None:
+    """Latest retained observation time across the public evidence planes.
+
+    This is a freshness receipt, not proof that every source was refreshed.
+    The watch still compares each evidence plane independently.
+    """
+    packet=case.get("packet") or {}
+    values=[]
+    for rows in (
+        case.get("current_action_receipts") or [],
+        packet.get("history_receipts") or [],
+        packet.get("manifest_receipts") or [],
+        case.get("sources") or [],
+    ):
+        for row in rows:
+            if isinstance(row,dict):
+                parsed=parse_dt(row.get("observed_at"))
+                if parsed is not None:
+                    values.append(parsed.astimezone(timezone.utc))
+    if not values:
+        return None
+    return max(values).isoformat().replace("+00:00","Z")
 
 
 def _latest_manifests(case:dict[str,Any])->dict[str,dict[str,Any]]:
@@ -211,6 +235,7 @@ def _public_state(case:dict[str,Any],*,now:datetime)->dict[str,Any]:
     dependencies.sort(key=lambda x:x["assumption_id"])
 
     return {
+        "observation_watermark":_observation_watermark(case),
         "currentness_verdict":currentness,
         "current_action_id":current_action,
         "history_verdict":history_verdict,
@@ -246,6 +271,7 @@ def build_watch_baseline(case:dict[str,Any],*,now:datetime|None=None)->dict[str,
         "case_id":case.get("case_id"),
         "family_id":case.get("family_id"),
         "created_at":now.isoformat().replace("+00:00","Z"),
+        "watch_until":(now+timedelta(days=14)).isoformat().replace("+00:00","Z"),
         "case_sha256":digest(canonical(case)),
         "state":state,
         "contains_raw_case":False,
@@ -263,6 +289,10 @@ def _validate_baseline(baseline:dict[str,Any])->None:
         raise ValueError("watch baseline hash mismatch")
     if baseline.get("contains_raw_case") is not False or baseline.get("contains_source_text") is not False:
         raise ValueError("watch baseline privacy contract invalid")
+    created=parse_dt(baseline.get("created_at"))
+    watch_until=parse_dt(baseline.get("watch_until"))
+    if created is None or watch_until is None or watch_until-created!=timedelta(days=14):
+        raise ValueError("watch baseline requires an exact 14-day validity window")
 
 
 def compare_watch_baseline(
@@ -275,6 +305,12 @@ def compare_watch_baseline(
     _validate_baseline(baseline)
     if (baseline.get("case_id"),baseline.get("family_id"))!=(case.get("case_id"),case.get("family_id")):
         raise ValueError("watch baseline and case identify different pursuits")
+    created=parse_dt(baseline.get("created_at"))
+    watch_until=parse_dt(baseline.get("watch_until"))
+    if created is None or watch_until is None:
+        raise ValueError("watch baseline time window invalid")
+    if now<created:
+        raise ValueError("watch observation cannot precede baseline creation")
     before=baseline["state"]; after=_public_state(case,now=now)
     events=[]
 
@@ -288,8 +324,35 @@ def compare_watch_baseline(
                 row["alias_keys"]=sorted({str(x) for x in alias_keys if str(x)})
             events.append(row)
 
+    event("CURRENTNESS_VERDICT_CHANGED","CURRENTNESS_VERDICT",before.get("currentness_verdict"),after.get("currentness_verdict"))
+    event("HISTORY_VERDICT_CHANGED","HISTORY_VERDICT",before.get("history_verdict"),after.get("history_verdict"))
+    event("MANIFEST_VERDICT_CHANGED","MANIFEST_VERDICT",before.get("manifest_verdict"),after.get("manifest_verdict"))
     event("CURRENT_ACTION_CHANGED","CURRENT_ACTION_CHANGE",before.get("current_action_id"),after.get("current_action_id"))
     event("HISTORY_ACTION_SET_CHANGED","HISTORY_ACTION_SET_CHANGE",before.get("history_set_sha256"),after.get("history_set_sha256"))
+
+    baseline_watermark=parse_dt(before.get("observation_watermark"))
+    current_watermark=parse_dt(after.get("observation_watermark"))
+    fresh_observation=(
+        now==created or
+        (baseline_watermark is not None and current_watermark is not None and current_watermark>baseline_watermark)
+    )
+    if now>created and not fresh_observation:
+        events.append({
+            "type":"WATCH_NO_FRESH_OBSERVATION",
+            "key":"WATCH_FRESHNESS",
+            "before":before.get("observation_watermark"),
+            "after":after.get("observation_watermark"),
+            "reason":"No retained public-source observation advanced after the delivered baseline.",
+        })
+    expired=now>watch_until
+    if expired:
+        events.append({
+            "type":"WATCH_WINDOW_EXPIRED",
+            "key":"WATCH_WINDOW",
+            "before":baseline.get("created_at"),
+            "after":now.isoformat().replace("+00:00","Z"),
+            "watch_until":baseline.get("watch_until"),
+        })
 
     for aid in sorted(set(before.get("manifests") or {})|set(after.get("manifests") or {})):
         event("MANIFEST_CHANGED",f"MANIFEST:{aid}",(before.get("manifests") or {}).get(aid),(after.get("manifests") or {}).get(aid),action_id=aid)
@@ -365,6 +428,11 @@ def compare_watch_baseline(
         "family_id":case.get("family_id"),
         "baseline_sha256":baseline.get("baseline_sha256"),
         "observed_at":now.isoformat().replace("+00:00","Z"),
+        "watch_until":baseline.get("watch_until"),
+        "watch_status":"EXPIRED" if expired else "REVIEW_REQUIRED" if (events or integrity_findings) else "NO_CHANGE_OBSERVED",
+        "fresh_observation_evidenced":fresh_observation,
+        "baseline_observation_watermark":before.get("observation_watermark"),
+        "current_observation_watermark":after.get("observation_watermark"),
         "events":events,
         "reopened_assumptions":reopened,
         "integrity_findings":integrity_findings,
