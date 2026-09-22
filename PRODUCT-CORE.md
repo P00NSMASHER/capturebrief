@@ -2361,3 +2361,42 @@ The durable receipt records only:
 The full signed redirect URL is explicitly rejected from durable case evidence.
 
 These controls strengthen current-action and attachment provenance. They do not change the separate rule that Data Services history membership cannot select the controlling current action.
+
+## v0.36 — Adversarial truth and watch hardening
+
+A controlled red-team pass attacked the evidence resolver, 14-day watch, commercial outcome ledger, and automation-facing exit semantics.
+
+### Watch freshness is now evidence
+
+A watch observation may say `NO_CHANGE_OBSERVED` only when it is evaluated at the baseline creation instant or retained public-source observation evidence has advanced beyond the baseline watermark.
+
+Reusing yesterday's unchanged local case is not a clean watch result. It produces `WATCH_NO_FRESH_OBSERVATION`, requires human review, and the watch CLI returns a nonzero review-required status.
+
+The watch also surfaces changes in:
+
+- currentness verdict;
+- history verdict;
+- manifest verdict;
+
+even when resource/action identifiers themselves did not change.
+
+### Fourteen days is an explicit boundary
+
+Every new watch baseline records a hash-bound `watch_until` exactly 14 days after `created_at`.
+
+A check after that instant returns `EXPIRED` and requires review. It does not silently extend the purchased watch period.
+
+For reproducible testing or replay, both watch commands accept an explicit timezone-aware `--as-of` timestamp.
+
+### Automation signal
+
+`watch-check` exit behavior is now intentional:
+
+- exit 0: observation completed without a review-required result;
+- exit 3: observation JSON was produced, but a change, integrity problem, stale observation, or expired watch requires human review;
+- other nonzero failures: the check itself could not be completed.
+
+The JSON remains the evidence record; exit status prevents unattended orchestration from interpreting a review-required observation as green.
+
+This hardening does not authorize automatic changes to a buyer finding and does not authorize any external communication.
+
