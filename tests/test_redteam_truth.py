@@ -146,6 +146,55 @@ class TruthLayerRedTeamTests(unittest.TestCase):
         self.assertEqual(result.returncode,3,
                          "watch-check must not look green to unattended automation when review is required")
 
+    def test_rule_version_text_cannot_be_backed_by_solicitation_text(self):
+        case=ready_case()
+        snapshot=case["decision_trace"]["snapshots"][0]
+        fake_rule=freeze_rule_version(
+            namespace="FAR",citation="52.999-1",edition="2026-01",agency="FAR Council",
+            text_passage=passage(snapshot,1,1,locator="not actually a rule"),
+            effective_from=None,
+        )
+        case["decision_trace"]["rule_versions"].append(fake_rule)
+        report=evaluate_decision_trace(case,now=NOW)
+        self.assertIn("TRACE_RULE_TEXT_SOURCE_KIND_INVALID",
+                      {x["code"] for x in report["findings"]})
+        self.assertEqual(report["trace_state"],"TRACE_INCOMPLETE")
+
+    def test_version_relationship_needs_exact_authority_evidence(self):
+        case=ready_case()
+        old=case["decision_trace"]["snapshots"][0]
+        new_text="Amendment 02 replaces the prior working baseline."
+        source={
+            "source_id":"trace-amendment",
+            "title":"Fixture amendment",
+            "url":"https://sam.gov/opp/example/amendment",
+            "authority":"SUPPORTING",
+            "artifact_state":"PUBLIC",
+            "observed_at":"2026-09-21T13:02:00+00:00",
+            "content_sha256":digest(new_text),
+        }
+        from capturebrief_core.decision_trace import freeze_text_snapshot
+        new=freeze_text_snapshot(
+            source=source,source_key=old["source_key"],kind="AMENDMENT",
+            version_label="Amendment 02",text=new_text,capture_method="NATIVE_TEXT",
+            captured_by="Reviewer",mapping_note="Red-team version relation fixture.",
+        )
+        case["sources"].append(source)
+        case["assumptions"][0]["source_ids"].append(source["source_id"])
+        case["decision_trace"]["snapshots"].append(new)
+        case["decision_trace"]["reviews"][0]["changes"]=[{
+            "from_snapshot_id":old["snapshot_id"],
+            "to_snapshot_id":new["snapshot_id"],
+            "relation":"AMENDS",
+            "summary":"The amendment replaces the prior baseline.",
+            "from_passage":passage(old,1,1,locator="prior baseline"),
+            "to_passage":passage(new,1,1,locator="amendment"),
+        }]
+        report=evaluate_decision_trace(case,now=NOW)
+        self.assertIn("TRACE_CHANGE_AUTHORITY_MISSING",
+                      {x["code"] for x in report["findings"]})
+        self.assertEqual(report["trace_state"],"TRACE_INCOMPLETE")
+
     def test_watch_cannot_claim_clean_without_a_fresh_observation(self):
         case=ready_case()
         baseline=build_watch_baseline(case,now=NOW)
