@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#5b43d6">
+  <meta name="description" content="ABVM Grade 2 weekly planner, study guides, calendar, and School Star World.">
+  <title>ABVM Grade 2 Week</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">ABVM GRADE 2</div>
+      <h1 id="weekTitle">Current school week</h1>
+    </div>
+    <div class="source-badge" id="sourceBadge">Loading…</div>
+  </header>
+
+  <main class="shell">
+    <section class="panel active" data-panel="today">
+      <article class="hero">
+        <div>
+          <div class="eyebrow light">HI, SCHOOL STAR!</div>
+          <h2>One step at a time.</h2>
+          <p>Start with what is due soon. Check off one item, then keep going when you are ready.</p>
+        </div>
+        <div class="hero-star">★</div>
+      </article>
+
+      <article class="card accent-card">
+        <div class="section-head">
+          <div><div class="eyebrow">UP NEXT</div><h3 id="upNextTitle">Loading…</h3></div>
+          <span class="pill" id="upNextWhen">Soon</span>
+        </div>
+        <p id="upNextText" class="muted"></p>
+      </article>
+
+      <article class="card">
+        <div class="section-head"><div><div class="eyebrow">TODAY</div><h3>School day</h3></div></div>
+        <div class="timeline">
+          <div><b>7:40–8:00</b><span>Arrive at school</span></div>
+          <div><b>8:10</b><span>School begins</span></div>
+          <div><b>2:50</b><span>Dismissal</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="section-head">
+          <div><div class="eyebrow">TONIGHT</div><h3>Homework</h3></div>
+          <span class="pill" id="homeworkCount">0 listed</span>
+        </div>
+        <div id="todayHomework" class="task-list"></div>
+      </article>
+
+      <article class="card lunch">
+        <div class="lunch-icon">🍎</div>
+        <div><div class="eyebrow">SCHOOL LUNCH</div><h3>Check the current school menu</h3><p class="muted">Lunch changes by day, so the GitHub version keeps this separate from verified homework data.</p></div>
+      </article>
+    </section>
+
+    <section class="panel" data-panel="week">
+      <div class="page-title"><div class="eyebrow">THIS WEEK</div><h2>Homework & reminders</h2></div>
+      <div id="weekHomework" class="stack"></div>
+      <article class="card"><div class="section-head"><div><div class="eyebrow">DON’T FORGET</div><h3>Reminders</h3></div></div><div id="reminders" class="reminder-list"></div></article>
+    </section>
+
+    <section class="panel" data-panel="calendar">
+      <div class="page-title"><div class="eyebrow">CALENDAR</div><h2>Important dates</h2></div>
+      <div id="calendarList" class="calendar-list"></div>
+    </section>
+
+    <section class="panel" data-panel="study">
+      <div class="page-title"><div class="eyebrow">STUDY GUIDES</div><h2>What to know</h2><p class="muted">Built only from the verified school pack.</p></div>
+      <div id="subjectGuides" class="study-grid"></div>
+      <article class="card">
+        <div class="section-head"><div><div class="eyebrow">WORDS TO KNOW</div><h3>Vocabulary</h3></div></div>
+        <div id="vocabList" class="vocab-grid"></div>
+      </article>
+      <article class="card">
+        <div class="section-head"><div><div class="eyebrow">PRACTICE</div><h3>Try a few</h3></div></div>
+        <div id="practiceList" class="practice-list"></div>
+      </article>
+      <a class="big-link" href="./game/">★ Open School Star World</a>
+    </section>
+
+    <section class="panel" data-panel="family">
+      <div class="page-title"><div class="eyebrow">FAMILY</div><h2>Parent view</h2></div>
+      <article class="card">
+        <div class="section-head"><div><div class="eyebrow">SOURCE STATUS</div><h3 id="familySource">Current school pack</h3></div></div>
+        <p class="muted" id="familySourceDetail"></p>
+        <button id="refreshBtn" class="button">Refresh school data</button>
+      </article>
+      <article class="card">
+        <div class="section-head"><div><div class="eyebrow">QUICK ACTIONS</div><h3>Useful tools</h3></div></div>
+        <div class="family-actions">
+          <button id="printBtn" class="button soft">Print this week</button>
+          <a class="button soft" href="./game/">Open Game Mode</a>
+        </div>
+      </article>
+      <article class="card note">
+        <strong>GitHub Pages migration</strong>
+        <p>This version keeps the weekly parent app at the site root and the child game under <code>/game/</code>. Progress in the game remains browser-local unless exported from the game’s Parent Area.</p>
+      </article>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="ABVM sections">
+    <button class="nav-item active" data-tab="today"><span>★</span><b>Today</b></button>
+    <button class="nav-item" data-tab="week"><span>▦</span><b>Week</b></button>
+    <button class="nav-item" data-tab="calendar"><span>▣</span><b>Calendar</b></button>
+    <button class="nav-item" data-tab="study"><span>✎</span><b>Study Guides</b></button>
+    <button class="nav-item" data-tab="family"><span>⌂</span><b>Family</b></button>
+  </nav>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./app.js"></script>
+</body>
+</html>
