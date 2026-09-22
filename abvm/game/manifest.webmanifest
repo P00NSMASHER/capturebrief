@@ -1,0 +1,10 @@
+{
+  "name":"ABVM School Star World",
+  "short_name":"School Star",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#f7f7fb",
+  "theme_color":"#5138d8",
+  "description":"ABVM Grade 2 source-grounded homework, study guides, avatar, catalog, room, and adaptive learning quests.",
+  "icons":[{"src":"./assets/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
