@@ -90,6 +90,8 @@ def main(argv=None) -> int:
     text = json.dumps(payload, indent=2, ensure_ascii=False) if isinstance(payload, dict) else payload
     if getattr(args, "output", None): atomic_write_text(args.output,text + ("" if text.endswith("\n") else "\n"))
     else: print(text)
+    if args.cmd == "watch-check" and isinstance(payload, dict) and payload.get("requires_human_review") is True:
+        return 3
     return 0
 
 if __name__ == "__main__":
