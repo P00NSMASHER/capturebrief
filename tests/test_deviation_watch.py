@@ -185,6 +185,7 @@ class DeviationWatchTests(unittest.TestCase):
             "schema_version":WATCH_SCHEMA,
             "case_id":case["case_id"],"family_id":case["family_id"],
             "created_at":"2026-09-21T18:40:00Z",
+            "watch_until":"2026-10-05T18:40:00Z",
             "case_sha256":digest(canonical(case)),
             "state":state,
             "contains_raw_case":False,
