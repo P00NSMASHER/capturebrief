@@ -4,7 +4,7 @@ import copy, hashlib, json, re
 from datetime import date, datetime, timezone
 from urllib.parse import urlsplit
 
-SCHEMA="1.0"; STATES={"SUPPORTED","CONTRADICTED","UNPROVEN","SUPERSEDED","SOURCE_LIMITED"}; RULES={"FAR","DFARS","AGENCY_SUPPLEMENT","CLASS_DEVIATION","ILLUSTRATIVE"}
+SCHEMA="1.0"; STATES={"SUPPORTED","CONTRADICTED","UNPROVEN","SUPERSEDED","SOURCE_LIMITED"}; RESOLVED_STATES={"SUPPORTED","CONTRADICTED","SUPERSEDED"}; CITATION_ROLES={"SUPPORTS","CONTRADICTS","CONTEXT"}; RULES={"FAR","DFARS","AGENCY_SUPPLEMENT","CLASS_DEVIATION","ILLUSTRATIVE"}
 
 def canonical(v): return json.dumps(v,sort_keys=True,separators=(",",":"),ensure_ascii=False,allow_nan=False).encode()
 def digest(v): return hashlib.sha256(v.encode() if isinstance(v,str) else v).hexdigest()
@@ -73,7 +73,12 @@ def evaluate_decision_trace(case,*,now=None,allow_synthetic=False):
         if not src: add("TRACE_SOURCE_MISSING","Snapshot source is missing from case manifest.",p); continue
         if src.get("artifact_state")!="PUBLIC": add("TRACE_SOURCE_NOT_PUBLIC","Decision evidence must use public evidence or remain source-limited.",p)
         if src.get("content_sha256")!=s.get("document_sha256"): add("TRACE_SOURCE_BINDING_MISMATCH","Snapshot is not bound to retained source bytes.",p)
-        if not _dt(s.get("observed_at")) or _dt(s.get("observed_at"))>now: add("TRACE_LOOKAHEAD_EVIDENCE","Snapshot time is invalid or after review.",p)
+        if s.get("url")!=src.get("url") or s.get("observed_at")!=src.get("observed_at"):
+            add("TRACE_SOURCE_METADATA_MISMATCH","Snapshot URL and observation time must match the bound source record.",p)
+        observed=_dt(s.get("observed_at"))
+        if not observed or observed>now: add("TRACE_LOOKAHEAD_EVIDENCE","Snapshot time is invalid or after review.",p)
+        if decision_time and observed and observed>decision_time:
+            add("TRACE_LOOKAHEAD_DECISION_EVIDENCE","A decision cannot rely on evidence observed after its declared decision time.",p)
         if not _url(s.get("url"),synthetic): add("TRACE_SOURCE_URL_INVALID","Evidence URL must be safe HTTPS without embedded credentials.",p)
     rules={}
     for i,r in enumerate(t.get("rule_versions",[]) if isinstance(t.get("rule_versions"),list) else []):
@@ -91,14 +96,31 @@ def evaluate_decision_trace(case,*,now=None,allow_synthetic=False):
         seen.add(aid); a=assumptions[aid]; state=str(rv.get("evidence_state") or "")
         if state not in STATES or state!=a.get("evidence_state"): add("TRACE_REVIEW_STATE_MISMATCH","Trace state must match the buyer handoff.",path)
         if rv.get("finding")!=a.get("finding"): add("TRACE_REVIEW_FINDING_MISMATCH","Trace finding must match buyer-facing finding.",path)
-        if not _text(rv.get("reviewed_by")) or not _dt(rv.get("reviewed_at")): add("TRACE_REVIEW_MISSING","Named reviewer and timezone-aware review time required.",path)
-        checked=[]; cited=set()
-        for n,c in enumerate(rv.get("citations",[]) if isinstance(rv.get("citations"),list) else []):
-            s=_pass(c,snaps,add,path+f".citations[{n}]")
-            if s: cited.add(str(s.get("source_id"))); checked.append({**c,"source":{k:s.get(k) for k in ("source_id","title","url","version_label","document_sha256","observed_at")}})
+        reviewed_at=_dt(rv.get("reviewed_at"))
+        if not _text(rv.get("reviewed_by")) or not reviewed_at: add("TRACE_REVIEW_MISSING","Named reviewer and timezone-aware review time required.",path)
+        elif reviewed_at>now: add("TRACE_REVIEW_TIME_INVALID","Review time cannot be in the future.",path)
+        elif decision_time and reviewed_at>decision_time: add("TRACE_REVIEW_AFTER_DECISION","The declared decision time cannot precede the human evidence review.",path)
+        checked=[]; cited=set(); citation_roles=[]
+        for n,citation in enumerate(rv.get("citations",[]) if isinstance(rv.get("citations"),list) else []):
+            cp=path+f".citations[{n}]"
+            if not isinstance(citation,dict) or citation.get("role") not in CITATION_ROLES:
+                add("TRACE_CITATION_ROLE_INVALID","Citation role must be SUPPORTS, CONTRADICTS, or CONTEXT.",cp)
+            else:
+                citation_roles.append(citation.get("role"))
+            s=_pass(citation,snaps,add,cp)
+            if s:
+                cited.add(str(s.get("source_id")))
+                checked.append({**citation,"source":{k:s.get(k) for k in ("source_id","title","url","version_label","document_sha256","observed_at")}})
+        if state in RESOLVED_STATES and not checked:
+            add("TRACE_RESOLVED_EVIDENCE_MISSING","Resolved findings require at least one exact retained evidence passage.",path)
+        required_role={"SUPPORTED":"SUPPORTS","CONTRADICTED":"CONTRADICTS"}.get(state)
+        if required_role and required_role not in citation_roles:
+            add("TRACE_RESOLVED_EVIDENCE_ROLE_MISSING",f"{state} findings require at least one {required_role} citation.",path)
         if not cited.issubset(set(map(str,a.get("source_ids") or []))): add("TRACE_ASSUMPTION_SOURCE_MISMATCH","Every cited source must be linked from the assumption.",path)
         scope=rv.get("rule_scope") if isinstance(rv.get("rule_scope"),dict) else {}
         if scope.get("status") not in {"REQUIRED","NOT_RELEVANT","UNRESOLVED"} or not _text(scope.get("rationale")): add("TRACE_RULE_SCOPE_MISSING","Record rule-review scope and rationale.",path)
+        if state in RESOLVED_STATES and scope.get("status")=="UNRESOLVED":
+            add("TRACE_RESOLVED_RULE_SCOPE_UNRESOLVED","A resolved buyer finding cannot retain unresolved rule scope.",path)
         links=rv.get("rule_links",[]) if isinstance(rv.get("rule_links"),list) else []
         if scope.get("status")=="REQUIRED" and not links: add("TRACE_RULE_REVIEW_MISSING","Rule-dependent assumption lacks applicability review.",path)
         if state in {"UNPROVEN","SOURCE_LIMITED"} and not _text(rv.get("evidence_request")): add("TRACE_EVIDENCE_REQUEST_MISSING","Unresolved assumption needs a concrete evidence request.",path)
@@ -107,9 +129,18 @@ def evaluate_decision_trace(case,*,now=None,allow_synthetic=False):
             lp=path+f".rule_links[{n}]"; r=rules.get(l.get("rule_version_id")) if isinstance(l,dict) else None
             if not r: add("TRACE_RULE_VERSION_MISSING","Applicability review references unknown rule edition.",lp); continue
             if l.get("family_id")!=case.get("family_id"): add("TRACE_RULE_FAMILY_MISMATCH","Rule review is not bound to this pursuit.",lp)
-            if l.get("applicability") not in {"APPLIES","DOES_NOT_APPLY","UNRESOLVED"} or not _text(l.get("rationale")): add("TRACE_RULE_APPLICABILITY_INVALID","Applicability needs reviewed state and rationale.",lp)
+            applicability=l.get("applicability")
+            if applicability not in {"APPLIES","DOES_NOT_APPLY","UNRESOLVED"} or not _text(l.get("rationale")): add("TRACE_RULE_APPLICABILITY_INVALID","Applicability needs reviewed state and rationale.",lp)
+            if state in RESOLVED_STATES and applicability=="UNRESOLVED":
+                add("TRACE_RESOLVED_RULE_APPLICABILITY_UNRESOLVED","A resolved buyer finding cannot depend on unresolved rule applicability.",lp)
             if l.get("basis")=="INCORPORATED_EDITION" and l.get("incorporated_edition")!=r.get("edition"): add("TRACE_INCORPORATED_EDITION_MISMATCH","Do not replace incorporated edition with newest publication.",lp)
-            if l.get("basis_passage"): _pass(l.get("basis_passage"),snaps,add,lp+".basis_passage")
+            basis_passage=l.get("basis_passage")
+            if applicability in {"APPLIES","DOES_NOT_APPLY"} and not isinstance(basis_passage,dict):
+                add("TRACE_RULE_BASIS_PASSAGE_MISSING","Resolved rule applicability requires an exact pursuit-specific basis passage.",lp)
+            elif basis_passage:
+                basis_source=_pass(basis_passage,snaps,add,lp+".basis_passage")
+                if basis_source and basis_source.get("kind") in {"RULE","DEVIATION"}:
+                    add("TRACE_RULE_BASIS_NOT_PURSUIT_SPECIFIC","Rule text cannot serve as its own pursuit-specific applicability basis.",lp+".basis_passage")
             checked_rules.append({**l,"rule_key":r.get("rule_key"),"namespace":r.get("namespace"),"citation":r.get("citation"),"edition":r.get("edition")})
         changes=rv.get("changes",[]) if isinstance(rv.get("changes"),list) else []
         resolved_changes=[]
