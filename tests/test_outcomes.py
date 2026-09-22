@@ -135,6 +135,7 @@ class OutcomeLedgerTests(unittest.TestCase):
         self.assertTrue(any("forbidden_field" in x for x in errors))
 
     def test_retraction_is_counted_without_erasing_prior_feedback(self):
+        self.append(event("DELIVERY",at="2026-09-21T17:00:00Z",started_at="2026-09-21T16:00:00Z",delivered_at="2026-09-21T17:00:00Z",delivery_evidence_ref="bundle:1"))
         self.append(event("FEEDBACK",usefulness="USEFUL",action_effect="CHANGED_ACTION",source_limited=False,finding_classes=["DEADLINE"],feedback_evidence_ref="feedback:1"))
         self.append(event("RETRACTION",at="2026-09-22T10:00:00Z",severity="CRITICAL",reason_code="WRONG_VERSION",retraction_evidence_ref="retraction:1"))
         summary=summarize_outcomes(self.path)
