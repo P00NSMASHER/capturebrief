@@ -1,0 +1,70 @@
+name: ABVM Pages smoke
+
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - 'abvm/**'
+      - '.github/workflows/abvm-pages-smoke.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: abvm-pages-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate scripts and school pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check abvm/app.js
+          node --check abvm/game/app.js
+          node --check abvm/game/catalog.js
+          node --check abvm/game/sw.js
+          python -m json.tool abvm/data/study-pack.json >/dev/null
+          python -m json.tool abvm/game/manifest.webmanifest >/dev/null
+
+      - name: Verify required published files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f abvm/index.html
+          test -f abvm/styles.css
+          test -f abvm/app.js
+          test -f abvm/data/study-pack.json
+          test -f abvm/game/index.html
+          test -f abvm/game/styles.css
+          test -f abvm/game/catalog.js
+          test -f abvm/game/app.js
+          test -f abvm/game/sw.js
+          test -f abvm/game/assets/icon.svg
+          grep -q 'ABVM Grade 2 Week' abvm/index.html
+          grep -q 'School Star World' abvm/game/index.html
+          grep -q "fetch('../data/study-pack.json'" abvm/game/app.js
+
+      - name: Serve and smoke-test static routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 >/tmp/abvm-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8765/abvm/ >/tmp/abvm-home.html; then
+              break
+            fi
+            sleep 0.25
+          done
+          curl --fail --silent http://127.0.0.1:8765/abvm/game/ >/tmp/abvm-game.html
+          curl --fail --silent http://127.0.0.1:8765/abvm/data/study-pack.json >/tmp/abvm-pack.json
+          grep -q 'ABVM Grade 2 Week' /tmp/abvm-home.html
+          grep -q 'School Star World' /tmp/abvm-game.html
+          python -m json.tool /tmp/abvm-pack.json >/dev/null
