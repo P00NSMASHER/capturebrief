@@ -9,7 +9,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from capturebrief_core.decision_trace import evaluate_decision_trace
+from capturebrief_core.decision_trace import canonical, digest, evaluate_decision_trace, freeze_rule_version, passage
 from capturebrief_core.outcomes import append_outcome_event, make_outcome_event, summarize_outcomes
 from capturebrief_core.watch_baseline import build_watch_baseline
 
@@ -48,6 +48,82 @@ class TruthLayerRedTeamTests(unittest.TestCase):
         self.assertEqual(report["trace_state"],"TRACE_INCOMPLETE")
         self.assertIn("TRACE_RESOLVED_EVIDENCE_ROLE_MISSING",
                       {x["code"] for x in report["findings"]})
+
+    def test_snapshot_observed_after_decision_cannot_support_that_decision(self):
+        case=ready_case()
+        snapshot=case["decision_trace"]["snapshots"][0]
+        source=next(x for x in case["sources"] if x["source_id"]==snapshot["source_id"])
+        snapshot["observed_at"]="2026-09-21T13:10:00+00:00"
+        source["observed_at"]="2026-09-21T13:10:00+00:00"
+        snapshot["snapshot_id"]="SNAP:"+digest(canonical({k:v for k,v in snapshot.items() if k!="snapshot_id"}))
+        case["decision_trace"]["reviews"][0]["citations"][0]["snapshot_id"]=snapshot["snapshot_id"]
+        report=evaluate_decision_trace(case,now=NOW)
+        self.assertIn("TRACE_LOOKAHEAD_DECISION_EVIDENCE",{x["code"] for x in report["findings"]})
+        self.assertEqual(report["trace_state"],"TRACE_INCOMPLETE")
+
+    def test_snapshot_url_must_match_its_bound_source_url(self):
+        case=ready_case()
+        snapshot=case["decision_trace"]["snapshots"][0]
+        snapshot["url"]="https://example.org/substituted-source"
+        snapshot["snapshot_id"]="SNAP:"+digest(canonical({k:v for k,v in snapshot.items() if k!="snapshot_id"}))
+        case["decision_trace"]["reviews"][0]["citations"][0]["snapshot_id"]=snapshot["snapshot_id"]
+        report=evaluate_decision_trace(case,now=NOW)
+        self.assertIn("TRACE_SOURCE_METADATA_MISMATCH",{x["code"] for x in report["findings"]})
+        self.assertEqual(report["trace_state"],"TRACE_INCOMPLETE")
+
+    def test_review_after_declared_decision_time_is_not_historical_evidence(self):
+        case=ready_case()
+        case["decision_trace"]["reviews"][0]["reviewed_at"]="2026-09-21T13:10:00+00:00"
+        report=evaluate_decision_trace(case,now=NOW)
+        self.assertIn("TRACE_REVIEW_AFTER_DECISION",{x["code"] for x in report["findings"]})
+        self.assertEqual(report["trace_state"],"TRACE_INCOMPLETE")
+
+    def test_resolved_finding_cannot_hide_unresolved_rule_scope(self):
+        case=ready_case()
+        review=case["decision_trace"]["reviews"][0]
+        review["rule_scope"]={"status":"UNRESOLVED","rationale":"Applicability has not been resolved."}
+        report=evaluate_decision_trace(case,now=NOW)
+        self.assertIn("TRACE_RESOLVED_RULE_SCOPE_UNRESOLVED",{x["code"] for x in report["findings"]})
+        self.assertEqual(report["trace_state"],"TRACE_INCOMPLETE")
+
+    def _add_rule(self,case):
+        snapshot=case["decision_trace"]["snapshots"][0]
+        rule=freeze_rule_version(
+            namespace="FAR",citation="52.204-21",edition="2026-01",agency="FAR Council",
+            text_passage=passage(snapshot,1,1,locator="fixture line 1"),
+            effective_from="2026-01-01",
+        )
+        case["decision_trace"]["rule_versions"].append(rule)
+        case["decision_trace"]["reviews"][0]["rule_scope"]={
+            "status":"REQUIRED","rationale":"Red-team fixture requires a reviewed rule."
+        }
+        return rule
+
+    def test_resolved_finding_cannot_hide_unresolved_rule_applicability(self):
+        case=ready_case()
+        rule=self._add_rule(case)
+        case["decision_trace"]["reviews"][0]["rule_links"]=[{
+            "rule_version_id":rule["rule_version_id"],"family_id":case["family_id"],
+            "applicability":"UNRESOLVED","basis":"PENDING_REVIEW",
+            "rationale":"No applicability conclusion yet."
+        }]
+        report=evaluate_decision_trace(case,now=NOW)
+        self.assertIn("TRACE_RESOLVED_RULE_APPLICABILITY_UNRESOLVED",
+                      {x["code"] for x in report["findings"]})
+        self.assertEqual(report["trace_state"],"TRACE_INCOMPLETE")
+
+    def test_resolved_rule_applicability_requires_exact_pursuit_basis(self):
+        case=ready_case()
+        rule=self._add_rule(case)
+        case["decision_trace"]["reviews"][0]["rule_links"]=[{
+            "rule_version_id":rule["rule_version_id"],"family_id":case["family_id"],
+            "applicability":"APPLIES","basis":"SOLICITATION_REVIEW",
+            "rationale":"Reviewer says it applies, but no exact basis passage is retained."
+        }]
+        report=evaluate_decision_trace(case,now=NOW)
+        self.assertIn("TRACE_RULE_BASIS_PASSAGE_MISSING",
+                      {x["code"] for x in report["findings"]})
+        self.assertEqual(report["trace_state"],"TRACE_INCOMPLETE")
 
     def test_watch_cli_signals_review_required_to_automation(self):
         case=ready_case()
