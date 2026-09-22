@@ -86,9 +86,15 @@ def evaluate_decision_trace(case,*,now=None,allow_synthetic=False):
         p=f"decision_trace.rule_versions[{i}]"; rid=r.get("rule_version_id") if isinstance(r,dict) else None
         if not _text(rid) or rid in rules: add("TRACE_ID_INVALID","Rule-version IDs must be unique.",p); continue
         rules[rid]=r
-        if r.get("namespace") not in RULES or (not synthetic and r.get("namespace")=="ILLUSTRATIVE"): add("TRACE_RULE_NAMESPACE_INVALID","Rule namespace is invalid for this release.",p)
+        namespace=r.get("namespace")
+        if namespace not in RULES or (not synthetic and namespace=="ILLUSTRATIVE"): add("TRACE_RULE_NAMESPACE_INVALID","Rule namespace is invalid for this release.",p)
         if rid!=_seal("RULE:",{k:v for k,v in r.items() if k!="rule_version_id"}): add("TRACE_RULE_TAMPERED","Rule-version identity does not match its content/metadata.",p)
-        _pass(r.get("text_passage"),snaps,add,p+".text_passage")
+        rule_source=_pass(r.get("text_passage"),snaps,add,p+".text_passage")
+        expected_kind="DEVIATION" if namespace=="CLASS_DEVIATION" else "RULE"
+        if rule_source and rule_source.get("kind")!=expected_kind:
+            add("TRACE_RULE_TEXT_SOURCE_KIND_INVALID",f"{namespace or 'Rule'} text must come from a retained {expected_kind} snapshot.",p+".text_passage")
+        if r.get("effective_date_passage"):
+            _pass(r.get("effective_date_passage"),snaps,add,p+".effective_date_passage")
     assumptions={str(a.get("assumption_id")):a for a in case.get("assumptions",[]) if isinstance(a,dict) and a.get("assumption_id")}; seen=set()
     if not assumptions: add("TRACE_ASSUMPTIONS_EMPTY","Trace requires at least one bounded assumption.")
     for i,rv in enumerate(t.get("reviews",[]) if isinstance(t.get("reviews"),list) else []):
@@ -163,6 +169,13 @@ def evaluate_decision_trace(case,*,now=None,allow_synthetic=False):
                     add("TRACE_CHANGE_PASSAGE_VERSION_MISMATCH","After passage must belong to the declared to-version.",cp+".to_passage")
             else:
                 add("TRACE_CHANGE_PASSAGES_MISSING","Version relation is retained, but no exact before/after passages are attached.",cp,"WARN")
+            authority_passage=c.get("authority_passage") if isinstance(c,dict) else None
+            if not isinstance(authority_passage,dict):
+                add("TRACE_CHANGE_AUTHORITY_MISSING","Version relations require an exact retained passage establishing the amend/supersede/correct relationship.",cp)
+            else:
+                authority_source=_pass(authority_passage,snaps,add,cp+".authority_passage")
+                if authority_source and old and authority_source.get("snapshot_id")==old.get("snapshot_id"):
+                    add("TRACE_CHANGE_AUTHORITY_INVALID","The prior version cannot self-certify that it was later amended, superseded, or corrected.",cp+".authority_passage")
             enriched=copy.deepcopy(c) if isinstance(c,dict) else {}
             if old:
                 enriched["from_source"]={k:old.get(k) for k in ("snapshot_id","source_id","title","url","version_label","document_sha256","observed_at","published_at")}
