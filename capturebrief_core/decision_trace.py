@@ -104,10 +104,11 @@ def evaluate_decision_trace(case,*,now=None,allow_synthetic=False):
         checked=[]; cited=set(); citation_roles=[]
         for n,citation in enumerate(rv.get("citations",[]) if isinstance(rv.get("citations"),list) else []):
             cp=path+f".citations[{n}]"
-            if not isinstance(citation,dict) or citation.get("role") not in CITATION_ROLES:
+            role=citation.get("role") if isinstance(citation,dict) else None
+            if role is not None and role not in CITATION_ROLES:
                 add("TRACE_CITATION_ROLE_INVALID","Citation role must be SUPPORTS, CONTRADICTS, or CONTEXT.",cp)
-            else:
-                citation_roles.append(citation.get("role"))
+            elif role in CITATION_ROLES:
+                citation_roles.append(role)
             s=_pass(citation,snaps,add,cp)
             if s:
                 cited.add(str(s.get("source_id")))
