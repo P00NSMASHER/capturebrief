@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#5138d8">
+  <meta name="description" content="ABVM Grade 2 School Star World">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <title>ABVM School Star World</title>
+</head>
+<body>
+  <div id="boot" class="boot-screen">
+    <div class="boot-orb">★</div>
+    <strong>Opening School Star World…</strong>
+    <span>Loading your room and the latest ABVM week.</span>
+  </div>
+
+  <div id="onboarding" class="onboarding hidden" aria-hidden="true">
+    <div class="onboarding-card">
+      <div class="eyebrow">FIRST TIME HERE</div>
+      <h1>Pick your School Star</h1>
+      <p class="muted">Choose a look and a buddy. You can change both later.</p>
+      <div id="starterLooks" class="starter-grid"></div>
+      <div class="onboard-section">
+        <h2>Pick a buddy</h2>
+        <div id="starterBuddies" class="buddy-grid"></div>
+      </div>
+      <button id="finishOnboarding" class="button primary wide" type="button">Enter my room</button>
+    </div>
+  </div>
+
+  <div id="app" class="app hidden">
+    <header class="app-header">
+      <div class="brand-lockup">
+        <div class="brand-mark">★</div>
+        <div class="brand-copy">
+          <span>ABVM GRADE 2</span>
+          <strong>School Star World</strong>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="wallet" aria-label="Rewards">
+          <span><i class="coin-icon">●</i><b id="coinCount">0</b></span>
+          <span><i class="star-icon">★</i><b id="starCount">0</b></span>
+        </div>
+        <button id="parentButton" class="round-button" type="button" aria-label="Parent area">⚙</button>
+      </div>
+    </header>
+
+    <div id="sourceStrip" class="source-strip loading" role="status" aria-live="polite">
+      <span class="source-light"></span>
+      <div class="source-copy">
+        <strong id="sourceHeadline">Checking the latest ABVM school pack…</strong>
+        <span id="sourceSubline">Homework, study material, dates, and reminders.</span>
+      </div>
+      <button id="refreshButton" class="text-button" type="button">Refresh</button>
+    </div>
+
+    <main class="main-shell">
+      <section id="homePanel" class="panel active">
+        <div class="room-hero card-dark">
+          <div class="room-copy">
+            <div class="eyebrow light">YOUR ROOM</div>
+            <h1 id="homeGreeting">Welcome home!</h1>
+            <p id="homeWeek">Your current school week is loading.</p>
+            <div class="dream-strip">
+              <div>
+                <span class="dream-label">DREAM GOAL</span>
+                <strong id="dreamName">Choose something you love</strong>
+              </div>
+              <div class="dream-meter"><span id="dreamFill"></span></div>
+              <span id="dreamProgress">0 / 0</span>
+            </div>
+            <button id="playQuestButton" class="button hero" type="button" disabled>▶ Play 5 Questions</button>
+          </div>
+          <div id="homeScene" class="home-scene" aria-label="Avatar in room"></div>
+        </div>
+
+        <div class="portal-row" id="portalRow"></div>
+
+        <section class="card homework-card">
+          <div class="section-head">
+            <div><div class="eyebrow">TONIGHT</div><h2>Homework</h2></div>
+            <span id="homeworkProgress" class="pill">0 done</span>
+          </div>
+          <div id="homeworkList" class="task-list"></div>
+        </section>
+
+        <div class="home-grid">
+          <section class="card">
+            <div class="section-head compact"><div><div class="eyebrow">DON’T FORGET</div><h2>Reminders</h2></div></div>
+            <div id="reminderList" class="stack-list"></div>
+          </section>
+          <section class="card delivery-card">
+            <div class="section-head compact"><div><div class="eyebrow">HOME DELIVERY</div><h2>Packages</h2></div></div>
+            <div id="deliveryArea"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="questPanel" class="panel">
+        <div id="questLobby" class="quest-lobby">
+          <div class="section-title-row">
+            <div><div class="eyebrow">QUESTS</div><h1>Pick an adventure</h1></div>
+            <span class="pill">5 questions</span>
+          </div>
+          <p class="muted">The learning engine chooses what is most useful. You choose the adventure skin.</p>
+          <div id="questModes" class="quest-mode-grid"></div>
+          <div id="testReadyCard" class="test-ready-card hidden"></div>
+          <div class="quest-resume hidden" id="resumeQuestCard">
+            <div><strong>Paused Quest</strong><span id="resumeQuestText">Continue where you left off.</span></div>
+            <button id="resumeQuestButton" class="button primary" type="button">Resume</button>
+          </div>
+        </div>
+
+        <div id="questStage" class="quest-stage hidden">
+          <div class="quest-topline">
+            <button id="pauseQuestButton" class="icon-text-button" type="button">⏸ Pause</button>
+            <span id="questCounter" class="pill">1 of 5</span>
+            <button id="ttsButton" class="icon-text-button" type="button">🔊 Read</button>
+          </div>
+          <div class="quest-progress"><span id="questProgressFill"></span></div>
+          <article class="question-card">
+            <div id="questionSubject" class="eyebrow">SUBJECT</div>
+            <h2 id="questionPrompt">Question</h2>
+            <div id="interactionHelp" class="interaction-help hidden"></div>
+            <div id="answerArea" class="answer-area"></div>
+            <div class="support-row">
+              <button id="hintButton" class="button soft" type="button">💡 Hint</button>
+              <button id="checkButton" class="button primary hidden" type="button">Check</button>
+            </div>
+            <div id="feedbackBox" class="feedback-box hidden" aria-live="polite">
+              <div id="companionReaction" class="reaction-avatar"></div>
+              <div><strong id="feedbackTitle"></strong><p id="feedbackText"></p></div>
+            </div>
+            <div id="autoAdvanceRow" class="auto-row hidden">
+              <span id="autoAdvanceText">Next in 2…</span>
+              <button id="moreTimeButton" class="text-button" type="button">More time</button>
+              <button id="nextNowButton" class="text-button" type="button">Next now</button>
+            </div>
+          </article>
+          <div class="quest-dream-mini"><span>Dream Goal</span><div><i id="questDreamFill"></i></div><b id="questDreamText">0%</b></div>
+        </div>
+
+        <div id="questComplete" class="quest-complete hidden">
+          <div class="completion-burst">★</div>
+          <div class="eyebrow">QUEST COMPLETE</div>
+          <h1>You moved your world forward!</h1>
+          <p id="questCompleteSummary"></p>
+          <div id="questHighlights" class="highlight-grid"></div>
+          <button id="backHomeAfterQuest" class="button primary wide" type="button">Back Home</button>
+          <button id="anotherQuestButton" class="button soft wide" type="button">Play another Quest</button>
+        </div>
+      </section>
+
+      <section id="studyPanel" class="panel">
+        <div class="section-title-row">
+          <div><div class="eyebrow">STUDY GUIDES</div><h1 id="studyTitle">Current week</h1></div>
+          <span id="studyFreshness" class="pill">Current</span>
+        </div>
+        <section id="assessmentArea" class="assessment-area"></section>
+        <div id="subjectGuides" class="study-grid"></div>
+        <section class="card vocab-card">
+          <div class="section-head compact"><div><div class="eyebrow">WORDS TO KNOW</div><h2>Vocabulary</h2></div></div>
+          <div id="vocabList" class="vocab-grid"></div>
+        </section>
+        <section class="card practice-card">
+          <div class="section-head compact"><div><div class="eyebrow">PRACTICE</div><h2>Try a few</h2></div></div>
+          <div id="studyPractice"></div>
+        </section>
+      </section>
+
+      <section id="avatarPanel" class="panel">
+        <div class="section-title-row">
+          <div><div class="eyebrow">DRESS UP</div><h1>My Avatar</h1></div>
+          <button id="saveLookButton" class="button soft" type="button">Save Look</button>
+        </div>
+        <div class="avatar-workbench">
+          <div class="avatar-stage" id="avatarStage"></div>
+          <div class="avatar-controls">
+            <div class="simple-control"><strong>Hair style</strong><div id="hairChoices" class="choice-strip"></div></div>
+            <div class="simple-control"><strong>Hair color</strong><div id="hairColorChoices" class="swatch-strip"></div></div>
+            <div class="simple-control"><strong>Skin tone</strong><div id="skinChoices" class="swatch-strip"></div></div>
+            <div class="simple-control"><strong>Body shape</strong><div id="bodyChoices" class="choice-strip"></div></div>
+            <div class="simple-control"><strong>Buddy</strong><div id="buddyChoices" class="buddy-strip"></div></div>
+          </div>
+        </div>
+        <section class="card closet-card">
+          <div class="section-head"><div><div class="eyebrow">CLOSET</div><h2>Equipped items</h2></div><button id="clearOutfitButton" class="text-button" type="button">Starter outfit</button></div>
+          <div id="equippedList" class="equipped-grid"></div>
+        </section>
+        <section class="card looks-card">
+          <div class="section-head compact"><div><div class="eyebrow">SAVED</div><h2>My Looks</h2></div></div>
+          <div id="savedLooks" class="looks-grid"></div>
+        </section>
+      </section>
+
+      <section id="catalogPanel" class="panel">
+        <div class="section-title-row">
+          <div><div class="eyebrow">CATALOG</div><h1>Star Shop</h1></div>
+          <span class="pill"><span class="coin-icon">●</span> <b id="catalogCoins">0</b></span>
+        </div>
+        <div class="dream-goal-card" id="dreamGoalCard"></div>
+        <div id="catalogCategories" class="category-strip"></div>
+        <div class="catalog-tools">
+          <button class="filter-chip active" data-filter="all" type="button">All</button>
+          <button class="filter-chip" data-filter="owned" type="button">Owned</button>
+          <button class="filter-chip" data-filter="favorites" type="button">Favorites</button>
+          <button class="filter-chip" data-filter="dream" type="button">Dream Goal</button>
+        </div>
+        <div id="catalogGrid" class="catalog-grid"></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Game sections">
+      <button class="bottom-item active" data-tab="home" type="button"><span>⌂</span><b>Home</b></button>
+      <button class="bottom-item" data-tab="quest" type="button"><span>✦</span><b>Quest</b></button>
+      <button class="bottom-item" data-tab="study" type="button"><span>▤</span><b>Study</b></button>
+      <button class="bottom-item" data-tab="avatar" type="button"><span>☺</span><b>Avatar</b></button>
+      <button class="bottom-item" data-tab="catalog" type="button"><span>▦</span><b>Catalog</b></button>
+    </nav>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <div id="parentGate" class="modal hidden" aria-hidden="true">
+    <div class="modal-card narrow">
+      <button class="modal-close" data-close-modal="parentGate" type="button">×</button>
+      <div class="eyebrow">GROWN-UP CHECK</div>
+      <h2>What is <span id="gateQuestion">7 × 8</span>?</h2>
+      <form id="parentGateForm"><input id="gateAnswer" class="text-input" inputmode="numeric" aria-label="Answer"><button class="button primary wide" type="submit">Open Parent Area</button></form>
+      <p id="gateError" class="form-error"></p>
+    </div>
+  </div>
+
+  <div id="parentModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card parent-card">
+      <button class="modal-close" data-close-modal="parentModal" type="button">×</button>
+      <div class="eyebrow">PARENT AREA</div>
+      <h1>Learning Pulse</h1>
+      <div id="parentPulse" class="pulse-grid"></div>
+      <section class="parent-section"><h2>Settings</h2><div class="settings-grid">
+        <label class="setting-row"><span>Read aloud available</span><input id="settingTts" type="checkbox"></label>
+        <label class="setting-row"><span>Sound effects</span><input id="settingSfx" type="checkbox"></label>
+        <label class="setting-row"><span>Auto-advance feedback</span><input id="settingAuto" type="checkbox"></label>
+      </div></section>
+      <section class="parent-section"><h2>Backup & transfer</h2><p class="muted">Export keeps avatar, rewards, purchases, favorites, Dream Goal, saved looks, room, and learning progress.</p><div class="action-row"><button id="exportButton" class="button soft" type="button">Export Game Backup</button><label class="button soft file-button">Import Backup<input id="importInput" type="file" accept="application/json"></label></div></section>
+      <section class="parent-section"><h2>Legacy progress</h2><p id="legacyStatus" class="muted"></p></section>
+    </div>
+  </div>
+
+  <div id="deliveryModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card narrow">
+      <button class="modal-close" data-close-modal="deliveryModal" type="button">×</button>
+      <div class="package-big">📦</div>
+      <div class="eyebrow">HOME DELIVERY</div>
+      <h2 id="deliveryItemName">New item!</h2>
+      <p class="muted">Choose where it goes. You can move it later.</p>
+      <div id="placementChoices" class="placement-grid"></div>
+    </div>
+  </div>
+
+  <script src="./catalog.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
