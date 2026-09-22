@@ -2,6 +2,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from .atomic_io import atomic_write_text, ensure_exact_bytes
 from .decision_trace import canonical, compare_decision_traces, digest, evaluate_decision_trace
@@ -13,6 +14,18 @@ from .watch_baseline import build_watch_baseline, compare_watch_baseline
 
 def read_case(path: str) -> dict:
     return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def _as_of(value: str | None) -> datetime | None:
+    if value is None:
+        return None
+    try:
+        parsed=datetime.fromisoformat(value.replace("Z","+00:00"))
+    except ValueError as exc:
+        raise ValueError("--as-of must be an ISO-8601 timestamp") from exc
+    if parsed.utcoffset() is None:
+        raise ValueError("--as-of must include a timezone/offset")
+    return parsed.astimezone(timezone.utc)
 
 
 def freeze_case(case: dict, directory: str) -> Path:
@@ -44,8 +57,8 @@ def main(argv=None) -> int:
     verify = sub.add_parser("verify-bundle", help="Read-only integrity check against a separately retained digest")
     verify.add_argument("bundle"); verify.add_argument("--expected-sha256", required=True)
     verify.add_argument("--case-id"); verify.add_argument("--case-sha256")
-    watch = sub.add_parser("watch-baseline"); watch.add_argument("case"); watch.add_argument("-o","--output",required=True)
-    watch_check = sub.add_parser("watch-check"); watch_check.add_argument("baseline"); watch_check.add_argument("case"); watch_check.add_argument("-o","--output")
+    watch = sub.add_parser("watch-baseline"); watch.add_argument("case"); watch.add_argument("-o","--output",required=True); watch.add_argument("--as-of")
+    watch_check = sub.add_parser("watch-check"); watch_check.add_argument("baseline"); watch_check.add_argument("case"); watch_check.add_argument("-o","--output"); watch_check.add_argument("--as-of")
     args = parser.parse_args(argv)
 
     if args.cmd == "verify-bundle":
@@ -80,9 +93,9 @@ def main(argv=None) -> int:
     elif args.cmd == "freeze":
         print(freeze_case(read_case(args.case), args.directory)); return 0
     elif args.cmd == "watch-baseline":
-        payload=build_watch_baseline(read_case(args.case))
+        payload=build_watch_baseline(read_case(args.case),now=_as_of(args.as_of))
     elif args.cmd == "watch-check":
-        payload=compare_watch_baseline(read_case(args.baseline),read_case(args.case))
+        payload=compare_watch_baseline(read_case(args.baseline),read_case(args.case),now=_as_of(args.as_of))
     else:
         case = read_case(args.case); state = evaluate_decision_trace(case, allow_synthetic=args.allow_synthetic)
         if args.cmd == "check": print(json.dumps(state, indent=2)); return 1 if state["trace_state"] == "TRACE_INCOMPLETE" else 0
