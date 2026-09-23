@@ -73,7 +73,7 @@ try:
                 navigate(page, "index.html")
 
                 check(page.locator('a[href="decision-evidence.html"]').count() >= 3, "Home has prominent example links")
-                check(page.locator('a[href="https://book.stripe.com/cNi7sLbRp95BbpR7Pb9sk01"]').count() == 4, "Direct checkout is available without a scope gate")
+                check(page.locator('a[href="https://buy.stripe.com/cNi4gB55KgFPd7ceRtb7y00"]').count() == 4, "Direct checkout is available without a scope gate")
                 check(page.locator('.checkout-link').count() == 4, "Direct checkout placements use the explicit checkout label")
                 check("full refund" in page.locator("main").inner_text().lower(), "Pre-work out-of-scope refund promise is visible")
                 check(page.locator('a[href="privacy.html"]').count() >= 1, "Home links privacy")

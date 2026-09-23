@@ -241,7 +241,7 @@ with sync_playwright() as pw:
             check(not errors, f"{name}: JavaScript errors {errors}")
             if name == "index.html":
                 check("$149" in text and "14-day" in text, "CaptureBrief offer preserved")
-                check(page.locator('a[href="https://book.stripe.com/cNi7sLbRp95BbpR7Pb9sk01"]').count() == 4, "Direct checkout is visible in four intentional placements")
+                check(page.locator('a[href="https://buy.stripe.com/cNi4gB55KgFPd7ceRtb7y00"]').count() == 4, "Direct checkout is visible in four intentional placements")
                 check(page.locator('.checkout-link').count() == 4, "Every direct checkout placement is labeled")
             elif name.startswith("permitplate"):
                 check("$79" in text and "per month" in text, "PermitPlate offer preserved")
