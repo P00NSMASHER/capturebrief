@@ -4,6 +4,7 @@
   if (!form) return;
 
   const recipient = 'jayp19386@gmail.com';
+  const purchaseStatus = document.getElementById('purchase-status');
   const opportunity = document.getElementById('opportunity-url');
   const posture = document.getElementById('current-posture');
   const assumptions = document.getElementById('assumptions');
@@ -22,6 +23,12 @@
     status.textContent = message;
     status.dataset.state = error ? 'error' : 'ok';
   };
+
+  const checkoutReturn = new URLSearchParams(window.location.search).get('checkout') === 'complete';
+  if (checkoutReturn) {
+    purchaseStatus.value = 'PAID';
+    setStatus('Welcome back from Stripe. Complete this intake. Payment is verified separately before work begins.');
+  }
 
   const compose = () => {
     assumptions.setCustomValidity('');
@@ -59,10 +66,12 @@
       return null;
     }
 
-    const subject = 'CaptureBrief scope request';
+    const paid = purchaseStatus.value === 'PAID';
+    const subject = paid ? 'CaptureBrief paid order intake' : 'CaptureBrief scope request';
     const body = [
       'Hello CaptureBrief,',
       '',
+      `Purchase status: ${paid ? 'Already purchased' : 'Scope check before purchase'}`,
       `Public opportunity link: ${opportunity.value.trim()}`,
       `Current posture: ${posture.value}`,
       '',
@@ -71,7 +80,9 @@
       '',
       'I confirm this request contains only public, non-sensitive information.',
       '',
-      'Please confirm fit, source coverage, delivery date, and written terms before payment.'
+      paid
+        ? 'Please confirm fit, source coverage, and the delivery date. I understand an out-of-scope request will be refunded before work begins.'
+        : 'Please confirm fit, source coverage, delivery date, and written terms before purchase.'
     ].join('\r\n');
 
     return {
@@ -82,7 +93,7 @@
     };
   };
 
-  [opportunity, posture, assumptions, publicOnly].forEach(control => {
+  [purchaseStatus, opportunity, posture, assumptions, publicOnly].forEach(control => {
     control.addEventListener('input', () => {
       control.setCustomValidity('');
       status.textContent = '';

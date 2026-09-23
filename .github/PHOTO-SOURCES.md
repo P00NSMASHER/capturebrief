@@ -1,4 +1,23 @@
-# Photography sources — clarity-3
+# Photography sources — glossy release
+
+## CaptureBrief — September 23, 2026
+
+The CaptureBrief homepage uses four original editorial images generated for this
+project with OpenAI's built-in image generation tool. They are illustrative and
+do not depict customers, employees, government personnel, or actual pursuit work:
+
+- `assets/visuals/hero-council.webp`
+- `assets/visuals/evidence-layers.webp`
+- `assets/visuals/reviewer-desk.webp`
+- `assets/visuals/change-watch.webp`
+
+The fifth image is Brandon Mitchell's geometric building photograph,
+https://unsplash.com/photos/gray-and-black-building-mHWS3zsJi-o, selected
+from image search and used under the Unsplash License. Its credit is visible in
+the image caption. The site hosts an optimized local derivative at
+`assets/visuals/architecture-grid.webp`.
+
+## Earlier clarity release
 
 Checked 2026-09-21. New source pages below explicitly labeled these images free under the Unsplash License, https://unsplash.com/license. No Unsplash+ image was selected for this refresh. These photos are illustrative; no customer relationship, employee relationship, endorsement or active sales lead is implied. CDN image sizing is requested through width/height/crop parameters; all placements retain alt text.
 

@@ -73,7 +73,9 @@ try:
                 navigate(page, "index.html")
 
                 check(page.locator('a[href="decision-evidence.html"]').count() >= 3, "Home has prominent example links")
-                check(page.locator('a[href="https://book.stripe.com/cNi7sLbRp95BbpR7Pb9sk01"]').count() == 1, "Approved-work checkout retained once")
+                check(page.locator('a[href="https://book.stripe.com/cNi7sLbRp95BbpR7Pb9sk01"]').count() == 4, "Direct checkout is available without a scope gate")
+                check(page.locator('.checkout-link').count() == 4, "Direct checkout placements use the explicit checkout label")
+                check("full refund" in page.locator("main").inner_text().lower(), "Pre-work out-of-scope refund promise is visible")
                 check(page.locator('a[href="privacy.html"]').count() >= 1, "Home links privacy")
                 check(page.locator('a[href="terms.html"]').count() >= 1, "Home links terms")
                 check(page.locator('a[href="data-handling.html"]').count() >= 1, "Home links data handling")
@@ -90,6 +92,7 @@ try:
                     requests_before = []
                     page.on("request", lambda req: requests_before.append(req.url))
                     page.evaluate("Object.defineProperty(navigator,'clipboard',{value:{writeText:async t=>{window.__qaCopied=t}},configurable:true})")
+                    page.locator("#purchase-status").select_option("PAID")
                     page.locator("#opportunity-url").fill("https://sam.gov/opp/fictional-public-demo")
                     page.locator("#current-posture").select_option("HOLD")
                     page.locator("#assumptions").fill("The deadline has not changed.\nWe can submit 20 pages.\nThe cited edition applies.")
@@ -98,15 +101,21 @@ try:
                     page.locator("#copy-request").click()
                     page.wait_for_function("() => window.__qaCopied && window.__qaCopied.includes('Current posture: HOLD')")
                     copied = page.evaluate("window.__qaCopied")
+                    check("Purchase status: Already purchased" in copied, "Paid order status enters draft")
                     check("Public opportunity link: https://sam.gov/opp/fictional-public-demo" in copied, "Public link enters draft")
                     check("1. The deadline has not changed." in copied and "3. The cited edition applies." in copied, "Assumptions numbered")
                     check("only public, non-sensitive information" in copied, "Safety confirmation enters draft")
+                    check("refunded before work begins" in copied, "Paid intake carries refund boundary")
                     check(len(requests_before) == loaded_requests, "Copying draft makes no network request")
                     check("Nothing was sent" not in page.locator("#request-status").inner_text(), "Copy status does not claim submission")
 
                     page.locator("#assumptions").fill("One\nTwo\nThree\nFour\nFive\nSix")
                     page.locator("#copy-request").click()
                     check("five assumptions or fewer" in page.locator("#request-status").inner_text(), "Sixth assumption is blocked")
+
+                    navigate(page, "index.html?checkout=complete#request")
+                    check(page.locator("#purchase-status").input_value() == "PAID", "Checkout return selects paid intake")
+                    check("verified separately" in page.locator("#request-status").inner_text(), "Checkout return avoids an unverified payment claim")
                 else:
                     check(not page.locator("#request-builder").is_visible(), "No-JS builder is hidden")
                     check(page.locator(".noscript-note").is_visible(), "No-JS fallback is visible")
@@ -158,7 +167,8 @@ try:
                 for path in sorted(expected_paths | {"examples/manifest.json"}):
                     response = context.request.get(base + path)
                     expected = (ROOT / path).read_bytes().replace(b"\r\n", b"\n")
-                    check(response.status == 200 and response.body() == expected, "Served source bytes match " + path)
+                    served = response.body().replace(b"\r\n", b"\n")
+                    check(response.status == 200 and served == expected, "Served source bytes match " + path)
 
                 page.locator(".evidence-cta a").click()
                 check(urlsplit(page.url).fragment == "request", "Example returns buyer to scope request")

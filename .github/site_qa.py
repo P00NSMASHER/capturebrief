@@ -20,8 +20,8 @@ WIDTHS = [1440, 1024, 768, 390, 320]
 PAGES = {
     "index.html": {
         "headline": "Know what your bid decision rests on.",
-        "release": "2026-09-23-sale-ready-1",
-        "images": 0,
+        "release": "2026-09-23-gloss-1",
+        "images": 5,
         "menu_target": "#deliverables",
     },
     "permitplate/index.html": {
@@ -142,7 +142,7 @@ with sync_playwright() as pw:
                 check(page.locator('img:not([alt]),img[alt=""]').count() == 0, f"{name}: image alternative text")
                 check(page.locator("img:not([width]),img:not([height]),img:not([srcset])").count() == 0, f"{name}: responsive image dimensions")
                 check(page.locator('img[fetchpriority="high"]').count() == 1, f"{name}: one prioritized hero")
-                check(page.locator('img[loading="lazy"]').count() == 6, f"{name}: secondary photos lazy loaded")
+                check(page.locator('img[loading="lazy"]').count() == contract["images"] - 1, f"{name}: secondary photos lazy loaded")
             check(page.locator('link[rel="canonical"]').count() == 1, f"{name}: canonical URL")
             missing = page.eval_on_selector_all(
                 'a[href^="#"]',
@@ -208,6 +208,7 @@ with sync_playwright() as pw:
 
             page.evaluate("Object.defineProperty(navigator,'clipboard',{value:{writeText:async t=>{window.__qaCopied=t}},configurable:true})")
             if name == "index.html":
+                page.locator("#purchase-status").select_option("SCOPE_FIRST")
                 page.locator("#opportunity-url").fill("https://sam.gov/opp/demo")
                 page.locator("#current-posture").select_option("GO")
                 page.locator("#assumptions").fill("The deadline has not changed.\nWe can bid as prime.")
@@ -233,7 +234,8 @@ with sync_playwright() as pw:
             check(not errors, f"{name}: JavaScript errors {errors}")
             if name == "index.html":
                 check("$149" in text and "14-day" in text, "CaptureBrief offer preserved")
-                check(page.locator('a[href="https://book.stripe.com/cNi7sLbRp95BbpR7Pb9sk01"]').count() == 1, "Existing checkout retained for approved work")
+                check(page.locator('a[href="https://book.stripe.com/cNi7sLbRp95BbpR7Pb9sk01"]').count() == 4, "Direct checkout is visible in four intentional placements")
+                check(page.locator('.checkout-link').count() == 4, "Every direct checkout placement is labeled")
             elif name.startswith("permitplate"):
                 check("$79" in text and "per month" in text, "PermitPlate offer preserved")
             else:

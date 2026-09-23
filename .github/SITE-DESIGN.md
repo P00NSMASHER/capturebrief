@@ -1,21 +1,26 @@
 # Website quality upgrade — September 21, 2026
 
-## CaptureBrief commercial-readiness revision — September 23, 2026
+## CaptureBrief glossy direct-sale revision — September 23, 2026
 
-CaptureBrief now uses its actual Decision Evidence format as the primary visual
-instead of generic workplace photography. PermitPlate and FreightRecovery keep
-their existing seven-photo layouts and offers unchanged.
+CaptureBrief now uses a custom editorial visual system: deep petroleum, lacquered
+oxblood, acid chartreuse, bone paper and chrome highlights. Newsreader, Familjen
+Grotesk and Azeret Mono replace the generic SaaS typography. Five high-quality
+images are hosted locally: four original project images and one attributed
+Unsplash architecture photograph. PermitPlate and FreightRecovery remain unchanged.
 
 The CaptureBrief buyer path now includes a concrete deliverable preview, five
 plain-language evidence states, the exact $149 scope, a named founder/operator,
 full privacy/data-handling/terms pages, and a browser-local request builder. The
 builder has no network action, storage, or file upload; it only prepares an email
 draft or clipboard copy after the buyer confirms the public/non-sensitive data
-boundary. Checkout remains available only for already approved scopes.
+boundary. Buyers can now use the $149 Stripe checkout directly, while the free
+scope-check route remains available. The purchase-status field distinguishes paid
+order intake from pre-purchase questions, and out-of-scope paid requests are
+promised a full refund before work begins.
 
-Website QA separately enforces the CaptureBrief no-stock-photo contract, local
-request behavior, legal links, no-JavaScript fallback, responsive layout, and
-unchanged PermitPlate/FreightRecovery offers.
+Website QA separately enforces the five-image contract, direct-checkout count,
+local request behavior, legal links, no-JavaScript fallback, responsive layout,
+and unchanged PermitPlate/FreightRecovery offers.
 
 Scope: the existing CaptureBrief, PermitPlate and FreightRecovery GitHub Pages homepages on gh-pages. Product code and the default branch are untouched.
 
