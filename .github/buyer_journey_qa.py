@@ -157,7 +157,8 @@ try:
 
                 for path in sorted(expected_paths | {"examples/manifest.json"}):
                     response = context.request.get(base + path)
-                    check(response.status == 200 and response.body() == (ROOT / path).read_bytes(), "Served source bytes match " + path)
+                    expected = (ROOT / path).read_bytes().replace(b"\r\n", b"\n")
+                    check(response.status == 200 and response.body() == expected, "Served source bytes match " + path)
 
                 page.locator(".evidence-cta a").click()
                 check(urlsplit(page.url).fragment == "request", "Example returns buyer to scope request")
