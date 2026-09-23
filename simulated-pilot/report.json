@@ -1,0 +1,180 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "CAPTUREBRIEF-SIMULATED-PILOT-2026-09-23",
+  "simulated": true,
+  "fictional_customer_numbers": true,
+  "not_customer_evidence": true,
+  "not_revenue_or_conversion_data": true,
+  "generated_at": "2026-09-23T15:00:00+00:00",
+  "passed": true,
+  "failures": [],
+  "customers_tested": 12,
+  "intake_outcomes": {
+    "ACCEPTED_FOR_REVIEW": 6,
+    "REFUND_BEFORE_WORK": 4,
+    "DECLINED_BEFORE_PAYMENT": 2
+  },
+  "route_stress_test": {
+    "direct_checkout": {
+      "customers": 8,
+      "accepted_for_review": 4,
+      "refund_before_work": 4
+    },
+    "scope_first": {
+      "customers": 4,
+      "accepted_for_review": 2,
+      "declined_before_payment": 2
+    },
+    "interpretation": "Deliberately failure-heavy validation mix; not a forecast or funnel benchmark."
+  },
+  "customer_results": [
+    {
+      "customer_number": "SIM-CUST-001",
+      "route": "DIRECT_CHECKOUT",
+      "expected": "ACCEPTED_FOR_REVIEW",
+      "actual": "ACCEPTED_FOR_REVIEW",
+      "case_id": "CB-C7F6FC73C2",
+      "normalized_posture": "GO",
+      "assumptions": 1,
+      "initial_sources": 0,
+      "release_state": "FAIL_CLOSED",
+      "fulfillment_state": "HUMAN_REVIEW_REQUIRED",
+      "external_send_authorized": false
+    },
+    {
+      "customer_number": "SIM-CUST-002",
+      "route": "DIRECT_CHECKOUT",
+      "expected": "ACCEPTED_FOR_REVIEW",
+      "actual": "ACCEPTED_FOR_REVIEW",
+      "case_id": "CB-57837FE03D",
+      "normalized_posture": "HOLD",
+      "assumptions": 2,
+      "initial_sources": 0,
+      "release_state": "FAIL_CLOSED",
+      "fulfillment_state": "HUMAN_REVIEW_REQUIRED",
+      "external_send_authorized": false
+    },
+    {
+      "customer_number": "SIM-CUST-003",
+      "route": "DIRECT_CHECKOUT",
+      "expected": "ACCEPTED_FOR_REVIEW",
+      "actual": "ACCEPTED_FOR_REVIEW",
+      "case_id": "CB-4644731748",
+      "normalized_posture": "PASS",
+      "assumptions": 3,
+      "initial_sources": 0,
+      "release_state": "FAIL_CLOSED",
+      "fulfillment_state": "HUMAN_REVIEW_REQUIRED",
+      "external_send_authorized": false
+    },
+    {
+      "customer_number": "SIM-CUST-004",
+      "route": "DIRECT_CHECKOUT",
+      "expected": "ACCEPTED_FOR_REVIEW",
+      "actual": "ACCEPTED_FOR_REVIEW",
+      "case_id": "CB-0DFFF1201E",
+      "normalized_posture": "PASS",
+      "assumptions": 1,
+      "initial_sources": 0,
+      "release_state": "FAIL_CLOSED",
+      "fulfillment_state": "HUMAN_REVIEW_REQUIRED",
+      "external_send_authorized": false
+    },
+    {
+      "customer_number": "SIM-CUST-005",
+      "route": "SCOPE_FIRST",
+      "expected": "ACCEPTED_FOR_REVIEW",
+      "actual": "ACCEPTED_FOR_REVIEW",
+      "case_id": "CB-7C56357150",
+      "normalized_posture": "UNSURE",
+      "assumptions": 5,
+      "initial_sources": 0,
+      "release_state": "FAIL_CLOSED",
+      "fulfillment_state": "HUMAN_REVIEW_REQUIRED",
+      "external_send_authorized": false
+    },
+    {
+      "customer_number": "SIM-CUST-006",
+      "route": "SCOPE_FIRST",
+      "expected": "ACCEPTED_FOR_REVIEW",
+      "actual": "ACCEPTED_FOR_REVIEW",
+      "case_id": "CB-2E2C67226D",
+      "normalized_posture": "GO",
+      "assumptions": 1,
+      "initial_sources": 0,
+      "release_state": "FAIL_CLOSED",
+      "fulfillment_state": "HUMAN_REVIEW_REQUIRED",
+      "external_send_authorized": false
+    },
+    {
+      "customer_number": "SIM-CUST-007",
+      "route": "DIRECT_CHECKOUT",
+      "expected": "REFUND_BEFORE_WORK",
+      "actual": "REFUND_BEFORE_WORK",
+      "validation_message": "public/non-sensitive information confirmation is required"
+    },
+    {
+      "customer_number": "SIM-CUST-008",
+      "route": "DIRECT_CHECKOUT",
+      "expected": "REFUND_BEFORE_WORK",
+      "actual": "REFUND_BEFORE_WORK",
+      "validation_message": "work email must be a valid email address"
+    },
+    {
+      "customer_number": "SIM-CUST-009",
+      "route": "DIRECT_CHECKOUT",
+      "expected": "REFUND_BEFORE_WORK",
+      "actual": "REFUND_BEFORE_WORK",
+      "validation_message": "public opportunity must be a complete http:// or https:// URL"
+    },
+    {
+      "customer_number": "SIM-CUST-010",
+      "route": "SCOPE_FIRST",
+      "expected": "DECLINED_BEFORE_PAYMENT",
+      "actual": "DECLINED_BEFORE_PAYMENT",
+      "validation_message": "no more than five assumptions may be submitted"
+    },
+    {
+      "customer_number": "SIM-CUST-011",
+      "route": "SCOPE_FIRST",
+      "expected": "DECLINED_BEFORE_PAYMENT",
+      "actual": "DECLINED_BEFORE_PAYMENT",
+      "validation_message": "duplicate assumptions are not allowed"
+    },
+    {
+      "customer_number": "SIM-CUST-012",
+      "route": "DIRECT_CHECKOUT",
+      "expected": "REFUND_BEFORE_WORK",
+      "actual": "REFUND_BEFORE_WORK",
+      "validation_message": "assumption 1 must be 500 characters or fewer"
+    }
+  ],
+  "golden_delivery_check": {
+    "fixture_only": true,
+    "case_id": "CB-DEMO-READY",
+    "release_state": "READY_FOR_HUMAN_RELEASE",
+    "trace_state": "TRACE_COMPLETE",
+    "files": [
+      "brief.md",
+      "decision-evidence.html",
+      "decision-evidence.md",
+      "decision-summary.json",
+      "delivery-manifest.json",
+      "source-version-manifest.json",
+      "watch-baseline.json"
+    ],
+    "file_count": 7,
+    "bundle_sha256": "3fe557c5476e2ed01d57989e745da95a653a0ed7e946cd874862d2fcc2155c00",
+    "bundle_bytes": 7162,
+    "contains_raw_case": false,
+    "contains_restricted_source_bytes": false,
+    "external_send_authorized": false
+  },
+  "release_decisions": [
+    "Expose direct checkout while retaining the free pre-purchase scope check.",
+    "Promise a full refund when a paid request is declined before work begins.",
+    "Require public-only confirmation and no more than five distinct assumptions.",
+    "Accept customer-facing PASS and normalize the legacy NO-GO label.",
+    "Never treat payment, intake, or a built bundle as authority to send or decide for the buyer."
+  ]
+}

@@ -43,6 +43,46 @@ class OperatorWorkflowTests(unittest.TestCase):
         with self.assertRaises(IntakeError):
             build_case_from_intake(data)
 
+    def test_pass_posture_matches_customer_facing_language(self):
+        data = intake()
+        data["current_posture"] = "PASS"
+        case = build_case_from_intake(data, submitted_at="2026-09-21T15:00:00+00:00")
+        self.assertEqual(case["current_posture"], "PASS")
+
+    def test_legacy_no_go_posture_is_normalized_to_pass(self):
+        data = intake()
+        data["current_posture"] = "NO-GO"
+        case = build_case_from_intake(data, submitted_at="2026-09-21T15:00:00+00:00")
+        self.assertEqual(case["current_posture"], "PASS")
+
+    def test_intake_rejects_malformed_email_or_non_web_reference(self):
+        bad_email = intake()
+        bad_email["email"] = "not-an-email"
+        with self.assertRaisesRegex(IntakeError, "valid email"):
+            build_case_from_intake(bad_email)
+
+        bad_reference = intake()
+        bad_reference["public_opportunity"] = "ftp://example.invalid/opportunity"
+        with self.assertRaisesRegex(IntakeError, "http:// or https://"):
+            build_case_from_intake(bad_reference)
+
+    def test_intake_rejects_a_sixth_or_duplicate_assumption(self):
+        too_many = intake()
+        too_many["assumption_6"] = "A sixth promise that would otherwise be ignored."
+        with self.assertRaisesRegex(IntakeError, "no more than five"):
+            build_case_from_intake(too_many)
+
+        duplicate = intake()
+        duplicate["assumption_2"] = "  THE CURRENT DEADLINE IS STILL FRIDAY.  "
+        with self.assertRaisesRegex(IntakeError, "duplicate"):
+            build_case_from_intake(duplicate)
+
+    def test_intake_rejects_oversized_assumption(self):
+        data = intake()
+        data["assumption_1"] = "x" * 501
+        with self.assertRaisesRegex(IntakeError, "500 characters or fewer"):
+            build_case_from_intake(data)
+
     def test_initial_work_queue_is_actionable_and_deduplicated(self):
         case = build_case_from_intake(
             intake(),

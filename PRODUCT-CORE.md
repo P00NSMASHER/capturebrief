@@ -1,6 +1,45 @@
 # CaptureBrief Product Core v0.29 — Public Deployment Boundary
 
-Updated: September 21, 2026
+Updated: September 23, 2026
+
+## v0.30 — Simulated Direct-Sale Pilot and Intake Hardening
+
+Updated: September 23, 2026
+
+CaptureBrief now includes a deterministic sales-to-delivery simulation covering
+12 fictional customer numbers. The simulation is explicitly separated from the
+commercial outcome ledger: it is not customer evidence, revenue, conversion data,
+or a forecast.
+
+The validation matrix exercises both direct-checkout and scope-first routes. It
+proves that valid public-source requests enter the human-review queue without
+invented evidence, while unsafe confirmation, malformed contact/reference data,
+an unsupported sixth assumption, duplicate assumptions, and oversized assumptions
+fail before review. Direct-checkout failures route to a full-refund-before-work
+state; scope-first failures stop before payment.
+
+The pilot caught a customer-language mismatch: the website used `PASS`, while the
+intake engine accepted only the legacy `NO-GO` label. Intake now accepts `PASS`,
+normalizes legacy `NO-GO` to `PASS`, and keeps `GO`, `HOLD`, and `UNSURE` unchanged.
+
+Intake now also enforces:
+
+- a complete public `http://` or `https://` reference without embedded credentials;
+- a bounded, syntactically valid work email and company name;
+- one to five distinct assumptions, each no longer than 500 characters;
+- no silently ignored sixth or later assumption;
+- a bounded optional question; and
+- the existing public/non-sensitive confirmation.
+
+The simulation also builds the golden traced delivery fixture and confirms the
+exact seven-file buyer-safe bundle, no raw case, no restricted source bytes, and
+no automatic external-send authority. Run it with:
+
+    python scripts/run_simulated_pilot.py --output-dir simulated-pilot
+
+The retained results are `simulated-pilot/report.json` and
+`simulated-pilot/report.md`. Real paid customer evidence remains the required next
+step for commercial validation.
 
 ## v0.29 — Public Deployment Boundary
 

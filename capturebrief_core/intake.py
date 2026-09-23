@@ -1,13 +1,50 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import urlparse
 
 from .model import sha256_hex
 
 
 class IntakeError(ValueError):
     pass
+
+
+_EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,189}\.[^@\s]{2,63}$")
+_ASSUMPTION_KEY_RE = re.compile(r"^assumption_(\d+)$")
+
+
+def _bounded_text(value: Any, *, field: str, maximum: int, required: bool = True) -> str:
+    text = str(value or "").strip()
+    if required and not text:
+        raise IntakeError(f"{field} is required")
+    if len(text) > maximum:
+        raise IntakeError(f"{field} must be {maximum} characters or fewer")
+    if any(ord(char) < 32 and char not in "\t\n\r" for char in text):
+        raise IntakeError(f"{field} contains unsupported control characters")
+    return text
+
+
+def _public_web_reference(value: Any) -> str:
+    opportunity = _bounded_text(
+        value,
+        field="public opportunity URL",
+        maximum=2048,
+    )
+    try:
+        parsed = urlparse(opportunity)
+    except ValueError as exc:
+        raise IntakeError("public opportunity must be a complete http:// or https:// URL") from exc
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise IntakeError("public opportunity must be a complete http:// or https:// URL")
+    if parsed.username or parsed.password:
+        raise IntakeError("public opportunity URL must not contain credentials")
+    hostname = parsed.hostname.lower().rstrip(".")
+    if hostname in {"localhost", "127.0.0.1", "::1"} or hostname.endswith(".local"):
+        raise IntakeError("public opportunity URL must reference a public host")
+    return opportunity
 
 
 def _truthy(value: Any) -> bool:
@@ -27,26 +64,46 @@ def build_case_from_intake(
     if not _truthy(intake.get("public_only_confirmation")):
         raise IntakeError("public/non-sensitive information confirmation is required")
 
-    opportunity = str(intake.get("public_opportunity") or "").strip()
+    opportunity = _public_web_reference(intake.get("public_opportunity"))
     posture = str(intake.get("current_posture") or "").strip().upper()
-    company = str(intake.get("company") or "").strip()
-    email = str(intake.get("email") or "").strip()
+    company = _bounded_text(intake.get("company"), field="company", maximum=200)
+    email = _bounded_text(intake.get("email"), field="work email", maximum=254)
 
-    if not opportunity:
-        raise IntakeError("public opportunity URL or notice ID is required")
-    if posture not in {"GO", "HOLD", "NO-GO", "UNSURE"}:
-        raise IntakeError("current posture must be GO, HOLD, NO-GO, or UNSURE")
-    if not company or not email:
-        raise IntakeError("company and work email are required")
+    if posture not in {"GO", "HOLD", "PASS", "NO-GO", "UNSURE"}:
+        raise IntakeError("current posture must be GO, HOLD, PASS, or UNSURE")
+    if posture == "NO-GO":
+        posture = "PASS"
+    if not _EMAIL_RE.fullmatch(email):
+        raise IntakeError("work email must be a valid email address")
 
     submitted_at = submitted_at or datetime.now(timezone.utc).isoformat()
     token = sha256_hex(f"{opportunity}|{company}|{submitted_at}")[:10].upper()
 
+    extra_assumptions = sorted(
+        key
+        for key, value in intake.items()
+        if (match := _ASSUMPTION_KEY_RE.fullmatch(str(key)))
+        and int(match.group(1)) > 5
+        and str(value or "").strip()
+    )
+    if extra_assumptions:
+        raise IntakeError("no more than five assumptions may be submitted")
+
     assumptions = []
+    seen_assumptions: set[str] = set()
     for idx in range(1, 6):
-        text = str(intake.get(f"assumption_{idx}") or "").strip()
+        text = _bounded_text(
+            intake.get(f"assumption_{idx}"),
+            field=f"assumption {idx}",
+            maximum=500,
+            required=False,
+        )
         if not text:
             continue
+        normalized = " ".join(text.casefold().split())
+        if normalized in seen_assumptions:
+            raise IntakeError("duplicate assumptions are not allowed")
+        seen_assumptions.add(normalized)
         assumptions.append({
             "assumption_id": f"A{idx}",
             "text": text,
@@ -76,7 +133,12 @@ def build_case_from_intake(
             "company": company,
             "email": email,
             "public_opportunity": opportunity,
-            "note": str(intake.get("question") or "").strip() or None,
+            "note": _bounded_text(
+                intake.get("question"),
+                field="question",
+                maximum=2000,
+                required=False,
+            ) or None,
             "public_only_confirmation": True,
         },
         "packet": {
