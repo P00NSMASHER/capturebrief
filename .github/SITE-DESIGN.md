@@ -1,5 +1,24 @@
 # Website quality upgrade — September 21, 2026
 
+## CaptureBrief enterprise-polish revision — September 23, 2026
+
+The second art-direction pass keeps the distinctive petroleum, oxblood, bone,
+chrome, and acid-chartreuse identity while making the system more controlled and
+enterprise-grade. The page now uses consistent corner geometry, a disciplined
+1280-pixel grid, calmer utility messaging, a complete brand lockup, stronger image
+framing, more precise surface elevation, and a clearer purchase hierarchy.
+
+Progressive enhancement adds a restrained reading-progress line, a compact
+scrolled header, active navigation feedback, and one-time section reveals. All
+motion is decorative, skips itself when reduced motion is requested, and leaves
+the complete page visible when JavaScript is unavailable. The locally hosted
+image and font set remains unchanged, preserving performance and source records.
+
+The mobile composition uses a simplified two-item utility bar, a compact glass
+purchase dock, and the same product hierarchy without horizontal overflow down to
+320 pixels. Copy was tightened around the customer decision, and the offer now
+uses consistent purchase language while retaining the free scope-check path.
+
 ## CaptureBrief glossy direct-sale revision — September 23, 2026
 
 CaptureBrief now uses a custom editorial visual system: deep petroleum, lacquered

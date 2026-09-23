@@ -1,5 +1,76 @@
 /* Local-only scope-request composer. No field is sent, stored, or fetched here. */
 (() => {
+  const root = document.documentElement;
+  const header = document.querySelector('.header');
+  let chromeFrame = 0;
+
+  const updateChrome = () => {
+    chromeFrame = 0;
+    const scrollRange = Math.max(1, root.scrollHeight - window.innerHeight);
+    root.style.setProperty('--page-progress', Math.min(1, window.scrollY / scrollRange).toFixed(4));
+    if (header) header.classList.toggle('is-scrolled', window.scrollY > 18);
+  };
+
+  const requestChromeUpdate = () => {
+    if (chromeFrame) return;
+    chromeFrame = requestAnimationFrame(updateChrome);
+  };
+
+  updateChrome();
+  window.addEventListener('scroll', requestChromeUpdate, { passive: true });
+  window.addEventListener('resize', requestChromeUpdate, { passive: true });
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reducedMotion && 'IntersectionObserver' in window) {
+    const revealTargets = document.querySelectorAll([
+      '.value-grid > div', '.editorial-grid > *', '.feature-grid > *',
+      '.process-layout > *', '.sample-grid > *', '.watch-grid > *',
+      '.standards-grid > *', '.pricing-grid > *', '.faq-layout > *',
+      '.request-grid > *'
+    ].join(','));
+    const revealObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        revealObserver.unobserve(entry.target);
+      });
+    }, { rootMargin: '0px 0px -9% 0px', threshold: 0.08 });
+
+    revealTargets.forEach((element, index) => {
+      element.dataset.reveal = '';
+      element.style.setProperty('--reveal-delay', `${(index % 4) * 55}ms`);
+      if (element.getBoundingClientRect().top < window.innerHeight * 0.92) {
+        element.classList.add('is-visible');
+      } else {
+        revealObserver.observe(element);
+      }
+    });
+    document.body.classList.add('reveal-ready');
+  }
+
+  if ('IntersectionObserver' in window) {
+    const sectionLinks = new Map();
+    document.querySelectorAll('.desktop a[href^="#"]').forEach(link => {
+      const section = document.querySelector(link.getAttribute('href'));
+      if (section) sectionLinks.set(section, link);
+    });
+    const sectionObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        sectionLinks.forEach(link => {
+          link.classList.remove('is-current');
+          link.removeAttribute('aria-current');
+        });
+        const current = sectionLinks.get(entry.target);
+        if (current) {
+          current.classList.add('is-current');
+          current.setAttribute('aria-current', 'location');
+        }
+      });
+    }, { rootMargin: '-22% 0px -68% 0px', threshold: 0 });
+    sectionLinks.forEach((_link, section) => sectionObserver.observe(section));
+  }
+
   const form = document.getElementById('request-builder');
   if (!form) return;
 

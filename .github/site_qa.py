@@ -20,7 +20,7 @@ WIDTHS = [1440, 1024, 768, 390, 320]
 PAGES = {
     "index.html": {
         "headline": "Know what your bid decision rests on.",
-        "release": "2026-09-23-gloss-1",
+        "release": "2026-09-23-enterprise-1",
         "images": 5,
         "menu_target": "#deliverables",
     },
@@ -162,11 +162,18 @@ with sync_playwright() as pw:
 
             if name == "index.html":
                 check(page.locator(".brief-preview").count() == 1, "CaptureBrief: visible deliverable preview")
+                check(page.locator(".hero-assurance span").count() == 3, "CaptureBrief: concise service assurances")
+                check(page.locator(".brand-lockup").count() >= 2, "CaptureBrief: complete brand lockup")
                 check(page.locator("#request-builder").is_visible(), "CaptureBrief: local request builder is available")
                 check(page.locator('#request-builder[action]').count() == 0, "CaptureBrief: request form has no network action")
                 check(page.locator('a[href="privacy.html"]').count() >= 1, "CaptureBrief: privacy link")
                 check(page.locator('a[href="terms.html"]').count() >= 1, "CaptureBrief: terms link")
                 check(page.locator('a[href="data-handling.html"]').count() >= 1, "CaptureBrief: data-handling link")
+                page.locator("#deliverables").scroll_into_view_if_needed()
+                page.wait_for_timeout(150)
+                check(page.locator(".header").evaluate("e=>e.classList.contains('is-scrolled')"), "CaptureBrief: compact scrolled navigation")
+                check(float(page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--page-progress') || 0")) > 0, "CaptureBrief: reading progress updates")
+                page.evaluate("window.scrollTo(0,0)")
             else:
                 check(page.locator("form").count() == 0, f"{name}: no intake form")
                 check(
