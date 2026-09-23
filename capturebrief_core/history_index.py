@@ -6,6 +6,7 @@ import json
 import os
 import sqlite3
 import tempfile
+from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -88,7 +89,10 @@ def _connect(path: str | Path) -> sqlite3.Connection:
 def init_index(path: str | Path) -> None:
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    with _connect(p) as conn:
+    # sqlite3.Connection commits or rolls back in a context manager, but it
+    # does not close the underlying handle. Explicit closure is required on
+    # Windows before temporary databases can be removed.
+    with closing(_connect(p)) as conn, conn:
         conn.executescript(
             """
             CREATE TABLE IF NOT EXISTS metadata (
@@ -368,7 +372,7 @@ def ingest_extract_file(
         retained_path=Path(str(retained["path"]))
 
     init_index(index_path)
-    with _connect(index_path) as conn:
+    with closing(_connect(index_path)) as conn, conn:
         existing = conn.execute(
             "SELECT snapshot_id, rows_scanned FROM source_snapshots WHERE slot=? AND extract_sha256=?",
             (slot, digest),
@@ -483,7 +487,7 @@ def index_status(
     required_years = catalog_years_for_fiscal_year(fiscal_year)
     required_slots = {"ACTIVE", *{f"ARCHIVE:{year}" for year in required_years}}
     init_index(index_path)
-    with _connect(index_path) as conn:
+    with closing(_connect(index_path)) as conn:
         rows = conn.execute(
             "SELECT c.slot,c.checked_at,c.collection_mode,c.source_etag,c.source_last_modified,"
             "s.snapshot_id,s.source_kind,s.fiscal_year,s.source_url,s.extract_sha256,"
@@ -579,7 +583,7 @@ def issue_history_receipt_from_index(
     fiscal_year = fiscal_year or fiscal_year_for_datetime()
     coverage = index_status(index_path, fiscal_year=fiscal_year, now=parse_dt(observed_at))
 
-    with _connect(index_path) as conn:
+    with closing(_connect(index_path)) as conn:
         rows = _current_family_rows(conn, solicitation_number)
 
     seed = next((row for row in rows if row.get("notice_id") == seed_notice_id), None)

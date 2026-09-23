@@ -1,5 +1,6 @@
 import csv
 import tempfile
+from contextlib import closing
 from datetime import datetime
 import unittest
 from pathlib import Path
@@ -118,7 +119,7 @@ class ResolutionSyncTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db=build_index(root,complete=True)
             import sqlite3
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn, conn:
                 conn.execute("UPDATE current_sources SET checked_at='2026-08-01T00:00:00+00:00' WHERE slot='ACTIVE'")
             result=resolve_reference_from_index(db,A2,fiscal_year=2026,observed_at=NOW)
             self.assertEqual(result["status"],"RESOLVED_PARTIAL_COVERAGE")

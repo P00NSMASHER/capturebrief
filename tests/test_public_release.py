@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -45,6 +46,14 @@ class PublicReleaseTests(unittest.TestCase):
     def package(self):
         return package_release(self.root, self.output, self.sha)
 
+    def symlink_or_skip(self, path, target, *, target_is_directory=False):
+        try:
+            path.symlink_to(target, target_is_directory=target_is_directory)
+        except OSError as exc:
+            if os.name == "nt" and getattr(exc, "winerror", None) == 1314:
+                self.skipTest("symbolic-link creation is not enabled for this Windows session")
+            raise
+
     def test_exact_public_files_and_hashes(self):
         receipt = self.package()
         payload = self.output / receipt["archive"]
@@ -87,13 +96,15 @@ class PublicReleaseTests(unittest.TestCase):
     def test_symlink_file_is_rejected(self):
         path = self.root / "dist" / "index.html"
         path.unlink()
-        path.symlink_to(self.root / "index.html")
+        self.symlink_or_skip(path, self.root / "index.html")
         with self.assertRaises(ValueError):
             self.package()
 
     def test_symlink_dist_is_rejected(self):
         (self.root / "dist").rename(self.root / "staged")
-        (self.root / "dist").symlink_to(self.root / "staged", target_is_directory=True)
+        self.symlink_or_skip(
+            self.root / "dist", self.root / "staged", target_is_directory=True
+        )
         with self.assertRaises(ValueError):
             self.package()
 

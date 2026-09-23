@@ -13,6 +13,7 @@ import io
 import json
 import re
 import sqlite3
+from contextlib import closing
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -281,7 +282,9 @@ def validate_rule_source(record: dict[str, Any]) -> list[str]:
 
 
 def init_registry(path: str | Path) -> None:
-    with sqlite3.connect(path) as db:
+    # sqlite3's own context manager is transactional but does not close the
+    # connection. Pair it with closing for Windows-safe registry cleanup.
+    with closing(sqlite3.connect(path)) as db, db:
         db.execute("""
         CREATE TABLE IF NOT EXISTS rule_versions (
           rule_source_id TEXT PRIMARY KEY,
@@ -307,7 +310,7 @@ def add_rule_version(path: str | Path, record: dict[str, Any]) -> str:
         raise ValueError("invalid rule source: " + ",".join(errors))
     init_registry(path)
     payload = json.dumps(record, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-    with sqlite3.connect(path) as db:
+    with closing(sqlite3.connect(path)) as db, db:
         row = db.execute("SELECT payload_json FROM rule_versions WHERE rule_source_id=?", (record["rule_source_id"],)).fetchone()
         if row:
             if row[0] != payload:
@@ -326,7 +329,7 @@ def get_rule_version(path: str | Path, rule_source_id: str) -> dict[str, Any] | 
     if not isinstance(rule_source_id, str) or not rule_source_id.startswith("RULESRC:"):
         raise ValueError("rule_source_id must be a content-addressed RULESRC identifier")
     init_registry(path)
-    with sqlite3.connect(path) as db:
+    with closing(sqlite3.connect(path)) as db:
         row = db.execute(
             "SELECT payload_json FROM rule_versions WHERE rule_source_id=?",
             (rule_source_id,),
@@ -349,7 +352,7 @@ def list_rule_versions(path: str | Path, *, rule_key: str | None = None, namespa
             clauses.append(f"{column}=?")
             values.append(value)
     where = " WHERE " + " AND ".join(clauses) if clauses else ""
-    with sqlite3.connect(path) as db:
+    with closing(sqlite3.connect(path)) as db:
         rows = db.execute("SELECT payload_json FROM rule_versions" + where + " ORDER BY observed_at, edition, rule_source_id", values).fetchall()
     return [json.loads(row[0]) for row in rows]
 

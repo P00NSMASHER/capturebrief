@@ -228,9 +228,18 @@ class DeliveryVerifyTests(unittest.TestCase):
         source = self.root / "case.json"
         original = (ROOT / "fixtures/ready_trace_case.json").read_bytes()
         source.write_bytes(original)
-        aliases = [self.root / "hardlink.zip", self.root / "symlink.zip"]
+        aliases = [self.root / "hardlink.zip"]
         os.link(source, aliases[0])
-        aliases[1].symlink_to(source)
+        symlink = self.root / "symlink.zip"
+        try:
+            symlink.symlink_to(source)
+        except OSError as exc:
+            # Standard Windows sessions cannot create symbolic links unless
+            # Developer Mode or SeCreateSymbolicLinkPrivilege is enabled.
+            if not (os.name == "nt" and getattr(exc, "winerror", None) == 1314):
+                raise
+        else:
+            aliases.append(symlink)
         for alias in aliases:
             result = subprocess.run([sys.executable, "-m", "capturebrief_core.trace_cli", "bundle",
                 str(source), "-o", str(alias), "--overwrite"], cwd=ROOT,

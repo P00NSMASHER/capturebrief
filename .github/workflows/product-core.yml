@@ -114,3 +114,23 @@ jobs:
         run: python -m capturebrief_core.cli render fixtures/ready_case.json -o /tmp/capturebrief.md
       - name: Exercise targeted change watch
         run: python -m capturebrief_core.cli diff fixtures/ready_case.json fixtures/changed_case.json > /tmp/change.json
+
+  windows-compatibility:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile product core
+        run: python -m py_compile capturebrief_core/*.py
+      - name: Verify Windows file and SQLite lifecycle contracts
+        run: >-
+          python -m unittest
+          tests.test_delivery_command
+          tests.test_rule_registry
+          tests.test_rule_evidence
+          tests.test_rule_sync
+          tests.test_history_index
+          tests.test_resolution_sync
+          -v

@@ -114,7 +114,9 @@ def _write_zip(path: Path, files: dict[str, bytes]) -> None:
             info.external_attr = 0o100644 << 16
             zf.writestr(info, files[name])
     # Ensure the completed archive reaches the filesystem before publication.
-    with path.open("rb") as stream:
+    # Windows requires a writable handle for FlushFileBuffers (os.fsync).
+    # The archive is complete; r+b changes only the handle mode.
+    with path.open("r+b") as stream:
         os.fsync(stream.fileno())
 
 

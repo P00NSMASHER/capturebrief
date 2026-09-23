@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import sqlite3
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -24,7 +25,7 @@ def _connect(path: str | Path) -> sqlite3.Connection:
 
 
 def _rows_for_notice(index_path: str | Path, notice_id: str) -> list[dict[str, Any]]:
-    with _connect(index_path) as conn:
+    with closing(_connect(index_path)) as conn:
         rows = conn.execute(
             """
             SELECT r.notice_id,r.solicitation_norm,r.solicitation_raw,r.aac_code,r.office,
@@ -42,7 +43,7 @@ def _rows_for_notice(index_path: str | Path, notice_id: str) -> list[dict[str, A
 
 
 def _rows_for_solicitation(index_path: str | Path, solicitation_number: str) -> list[dict[str, Any]]:
-    with _connect(index_path) as conn:
+    with closing(_connect(index_path)) as conn:
         rows = conn.execute(
             """
             SELECT r.notice_id,r.solicitation_norm,r.solicitation_raw,r.aac_code,r.office,

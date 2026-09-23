@@ -38,7 +38,10 @@ class NetlifyPublicBoundaryTests(unittest.TestCase):
     def setUpClass(cls):
         if DIST.exists():
             shutil.rmtree(DIST)
-        subprocess.run(["bash","netlify-build.sh"],cwd=ROOT,check=True)
+        bash = shutil.which("bash")
+        if bash is None:
+            raise unittest.SkipTest("Netlify build script requires Bash; Linux CI covers this boundary")
+        subprocess.run([bash,"netlify-build.sh"],cwd=ROOT,check=True)
 
     @classmethod
     def tearDownClass(cls):

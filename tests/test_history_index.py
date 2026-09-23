@@ -3,6 +3,7 @@ import io
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -111,7 +112,7 @@ class HistoryIndexTests(unittest.TestCase):
     def test_missing_archive_slot_blocks_complete_history(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db,_=self.build_complete_index(root)
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn, conn:
                 conn.execute("DELETE FROM current_sources WHERE slot='ARCHIVE:1980'")
             status=index_status(db,fiscal_year=2026)
             self.assertFalse(status["complete"])
@@ -156,7 +157,7 @@ class HistoryIndexTests(unittest.TestCase):
             stored=Path(first["local_path"])
             self.assertTrue(stored.exists())
             self.assertEqual(stored.stem,first["extract_sha256"])
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn:
                 self.assertEqual(conn.execute("SELECT COUNT(*) FROM source_snapshots").fetchone()[0],1)
 
     def test_replacing_slot_preserves_old_snapshot_but_queries_new_current(self):
@@ -165,7 +166,7 @@ class HistoryIndexTests(unittest.TestCase):
             p=root/"active-new.csv"
             write_csv(p,[row("a3"),row("a2")])
             ingest_extract_file(db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH)
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn:
                 active_snapshots=conn.execute("SELECT COUNT(*) FROM source_snapshots WHERE slot='ACTIVE'").fetchone()[0]
             self.assertEqual(active_snapshots,2)
             receipt=issue_history_receipt_from_index(
@@ -179,7 +180,7 @@ class HistoryIndexTests(unittest.TestCase):
     def test_sync_plan_lists_only_missing_catalog_slots(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db,_=self.build_complete_index(root)
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn, conn:
                 conn.execute("DELETE FROM current_sources WHERE slot='ARCHIVE:1970'")
                 conn.execute("DELETE FROM current_sources WHERE slot='ACTIVE'")
             plan=sync_plan(db,fiscal_year=2026,now=NOW_DT)
@@ -222,7 +223,7 @@ class HistoryIndexTests(unittest.TestCase):
             self.assertEqual(retained.stem,result["ingest"]["extract_sha256"])
             self.assertEqual(retained.read_bytes(),data)
             self.assertNotEqual(retained,dest)
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn:
                 stored=conn.execute(
                     "SELECT local_path FROM source_snapshots WHERE snapshot_id=?",
                     (result["ingest"]["snapshot_id"],),
@@ -338,7 +339,7 @@ class HistoryIndexTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db,_=self.build_complete_index(root)
             stale=(NOW_DT-timedelta(days=10)).isoformat()
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn, conn:
                 conn.execute("UPDATE current_sources SET checked_at=? WHERE slot='ARCHIVE:2026'",(stale,))
                 conn.execute("UPDATE current_sources SET checked_at=? WHERE slot='ACTIVE'",(stale,))
             status=index_status(db,fiscal_year=2026,now=NOW_DT)
