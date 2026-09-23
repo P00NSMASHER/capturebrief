@@ -7,8 +7,8 @@ import os
 
 ROOT=Path(os.environ.get('SITE_ROOT','.')).resolve()
 OUT=Path(os.environ.get('QA_OUTPUT','qa-output/brand')).resolve()
-PAGES=['404.html','decision-evidence.html','flagos/index.html','freightrecovery/index.html','index.html','permitplate/index.html','portfolio/index.html','rehabsignal/index.html','scopesignal/index.html','sheetharbor/index.html','starblox/index.html']
-PRIMARY={'index.html','permitplate/index.html','freightrecovery/index.html'}
+PAGES=['404.html','data-handling.html','decision-evidence.html','flagos/index.html','freightrecovery/index.html','index.html','permitplate/index.html','portfolio/index.html','privacy.html','rehabsignal/index.html','scopesignal/index.html','sheetharbor/index.html','starblox/index.html','terms.html']
+PRIMARY_PHOTOS={'index.html':0,'permitplate/index.html':7,'freightrecovery/index.html':7}
 
 class Page(HTMLParser):
     def __init__(self):
@@ -37,11 +37,11 @@ for rel in PAGES:
         if p.marker!='jp-enterprises-1': issues.append('brand release marker missing')
         if 'JP Enterprises' not in ' '.join(p.footer): issues.append('public brand missing from footer')
         if rel!='portfolio/index.html' and any('portfolio/' in a['href'] for a in p.links): issues.append('cross-project navigation must stay removed')
-        if rel in PRIMARY:
+        if rel in PRIMARY_PHOTOS:
             contact=[a for a in p.links if a['id']=='contact-email']
             if len(contact)!=1 or contact[0]['text']!='Email JP Enterprises': issues.append('visible contact label must use the brand')
             if any('@' in a['text'] for a in p.links if a['href'].startswith('mailto:')): issues.append('personal email must not be the default visible label')
-            if p.images!=7: issues.append('seven-photo layout must be retained')
+            if p.images!=PRIMARY_PHOTOS[rel]: issues.append(f'expected {PRIMARY_PHOTOS[rel]} content-image placements')
         report['pages'].append({'path':rel,'sha256':hashlib.sha256(raw).hexdigest(),'brand_verified':not issues})
         report['errors'].extend(rel+': '+issue for issue in issues)
     except Exception as exc:

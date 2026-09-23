@@ -1,5 +1,22 @@
 # Website quality upgrade — September 21, 2026
 
+## CaptureBrief commercial-readiness revision — September 23, 2026
+
+CaptureBrief now uses its actual Decision Evidence format as the primary visual
+instead of generic workplace photography. PermitPlate and FreightRecovery keep
+their existing seven-photo layouts and offers unchanged.
+
+The CaptureBrief buyer path now includes a concrete deliverable preview, five
+plain-language evidence states, the exact $149 scope, a named founder/operator,
+full privacy/data-handling/terms pages, and a browser-local request builder. The
+builder has no network action, storage, or file upload; it only prepares an email
+draft or clipboard copy after the buyer confirms the public/non-sensitive data
+boundary. Checkout remains available only for already approved scopes.
+
+Website QA separately enforces the CaptureBrief no-stock-photo contract, local
+request behavior, legal links, no-JavaScript fallback, responsive layout, and
+unchanged PermitPlate/FreightRecovery offers.
+
 Scope: the existing CaptureBrief, PermitPlate and FreightRecovery GitHub Pages homepages on gh-pages. Product code and the default branch are untouched.
 
 ## Changes

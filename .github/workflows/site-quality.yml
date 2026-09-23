@@ -50,7 +50,7 @@ jobs:
           import hashlib, json, os, time, urllib.request
           from pathlib import Path
           base = 'https://p00nsmasher.github.io/capturebrief/'
-          paths = ['index.html','permitplate/index.html','freightrecovery/index.html','assets/clarity.css','decision-evidence.html','assets/evidence.css','assets/enterprise.css','assets/enterprise.js','examples/manifest.json']
+          paths = ['index.html','permitplate/index.html','freightrecovery/index.html','assets/clarity.css','decision-evidence.html','assets/evidence.css','assets/enterprise.css','assets/enterprise.js','assets/capturebrief.css','assets/capturebrief.js','assets/og-capturebrief.png','favicon.svg','examples/manifest.json']
           paths += [x['path'] for x in json.loads(Path('examples/manifest.json').read_text())['files']]
           paths += [p.as_posix() for p in Path('.').rglob('*.html') if not p.as_posix().startswith(('.github/', 'qa-output/', '.git/')) and p.as_posix() not in paths]
           expected = {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths}
