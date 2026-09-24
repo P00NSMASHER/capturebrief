@@ -1,4 +1,4 @@
-"""Read-only rendered checks: never send email, submit external data, or activate checkout."""
+"""Read-only rendered checks: never send email, submit external data, or initiate external action."""
 import functools
 import hashlib
 import json
@@ -26,12 +26,6 @@ PAGES = {
     },
     "permitplate/index.html": {
         "headline": "Sell to restaurants?",
-        "release": "2026-09-21-clarity-3",
-        "images": 7,
-        "menu_target": "#sample",
-    },
-    "freightrecovery/index.html": {
-        "headline": "Check your freight bills.",
         "release": "2026-09-21-clarity-3",
         "images": 7,
         "menu_target": "#sample",
@@ -112,6 +106,11 @@ if legacy.exists():
     check(digest == "d61e21c4edae7a741a5c7abf015aa1af4b4090f8", "Keep the legacy stylesheet unchanged")
 else:
     check(False, "Legacy stylesheet missing")
+
+canonical_freight_url = "https://p00nsmasher.github.io/github-value-hunt-ledger/"
+check(not (ROOT / "freightrecovery/index.html").exists(), "Retired Freight Recovery page stays deleted")
+portfolio_page = (ROOT / "portfolio/index.html").read_text(encoding="utf-8")
+check(canonical_freight_url in portfolio_page, "Portfolio routes Freight Recovery to its canonical site")
 
 with sync_playwright() as pw:
     launch_options = {"headless": True}

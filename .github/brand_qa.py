@@ -1,4 +1,4 @@
-"""Static public-brand regression checks; do not send email or alter payment routes."""
+"""Static public-brand regression checks; do not send email or initiate external action."""
 from html.parser import HTMLParser
 from pathlib import Path
 import hashlib
@@ -7,8 +7,8 @@ import os
 
 ROOT=Path(os.environ.get('SITE_ROOT','.')).resolve()
 OUT=Path(os.environ.get('QA_OUTPUT','qa-output/brand')).resolve()
-PAGES=['404.html','data-handling.html','decision-evidence.html','flagos/index.html','freightrecovery/index.html','index.html','permitplate/index.html','portfolio/index.html','privacy.html','rehabsignal/index.html','scopesignal/index.html','sheetharbor/index.html','starblox/index.html','terms.html']
-PRIMARY_PHOTOS={'index.html':5,'permitplate/index.html':7,'freightrecovery/index.html':7}
+PAGES=['404.html','data-handling.html','decision-evidence.html','flagos/index.html','index.html','permitplate/index.html','portfolio/index.html','privacy.html','rehabsignal/index.html','scopesignal/index.html','sheetharbor/index.html','starblox/index.html','terms.html']
+PRIMARY_PHOTOS={'index.html':5,'permitplate/index.html':7}
 
 class Page(HTMLParser):
     def __init__(self):
