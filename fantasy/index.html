@@ -63,7 +63,7 @@ h1{font-size:27px;line-height:1.02;letter-spacing:-.04em;margin:8px 0 6px}
 .panel-head h2{font-size:17px;letter-spacing:-.025em;margin:0}
 .panel-head p{font-size:11px;color:var(--muted);line-height:1.35;margin:4px 0 0}
 .pill{flex:0 0 auto;padding:6px 8px;border-radius:999px;border:1px solid rgba(92,231,255,.22);background:rgba(92,231,255,.07);color:var(--cyan);font-size:9px;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
-.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+.decision-strip{margin-bottom:10px;padding:12px 13px;border-radius:16px;background:linear-gradient(135deg,rgba(88,242,164,.10),rgba(92,231,255,.06));border:1px solid rgba(88,242,164,.16)}.decision-kicker{font-size:8px;font-weight:950;letter-spacing:.12em;color:var(--green);text-transform:uppercase}.decision-main{font-size:13px;font-weight:950;line-height:1.35;margin-top:4px}.decision-sub{font-size:9px;color:#8fa6c2;line-height:1.4;margin-top:3px}.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
 .metric{padding:11px;border-radius:15px;background:rgba(255,255,255,.032);border:1px solid rgba(255,255,255,.055)}
 .metric-label{font-size:9px;color:var(--muted);font-weight:850;text-transform:uppercase;letter-spacing:.08em}
 .metric-value{font-size:18px;font-weight:950;letter-spacing:-.035em;margin-top:4px}
@@ -194,7 +194,7 @@ h1{font-size:27px;line-height:1.02;letter-spacing:-.04em;margin:8px 0 6px}
       <div><h2>1. Current status + problems</h2><p>Highest-impact decisions first. Prompts stay hidden until you need them.</p></div>
       <span class="pill" id="statusPill">3 TEAMS</span>
     </div>
-    <div class="metrics" id="metrics"></div>
+    <div class="decision-strip" id="decisionStrip"></div><div class="metrics" id="metrics"></div>
     <div id="teamCards"></div>
     <div class="action-list" id="issues"></div>
   </section>
@@ -258,7 +258,7 @@ h1{font-size:27px;line-height:1.02;letter-spacing:-.04em;margin:8px 0 6px}
 <script>
 const DATA = {
 all:{
-  pill:"3 TEAMS",context:"ALL TEAMS",yahoo:"https://football.fantasysports.yahoo.com/",
+  pill:"3 TEAMS",context:"ALL TEAMS",yahoo:"https://football.fantasysports.yahoo.com/",decision:["DO THIS NEXT","Brock: Addison → drop Andrews • Quick: Denzel Boston → drop Andrews • Highlight: Worthy → drop Coker","These are the current highest-value waiver actions from the separately scanned Yahoo pools."],
   metrics:[["Records","2 × 1–0","Brock is 0–2"],["Best priority","#1","Brock Hard"],["Immediate moves","3","One per team"],["Main theme","WR / FLEX","plus injury cover"]],
   cards:[
     {name:"Brock Hard",meta:"0–2 • 7th of 8 • waiver #1",score:"144.80–136.06",sub:"currently ahead",team:"brock"},
@@ -288,7 +288,7 @@ all:{
   ]
 },
 brock:{
-  pill:"BROCK",context:"BROCK HARD",yahoo:"https://football.fantasysports.yahoo.com/f1/290846",
+  pill:"BROCK",context:"BROCK HARD",yahoo:"https://football.fantasysports.yahoo.com/f1/290846",decision:["DO THIS NEXT","Claim Jordan Addison with waiver #1 → drop Mark Andrews","Best combination of roster need, Jefferson insurance and expendable duplicate TE depth."],
   metrics:[["Record","0–2","7th of 8"],["Waiver","#1","maximum leverage"],["Points for","281.98","not a dead roster"],["Week 3","144.80–136.06","ahead"]],
   issues:[
     {n:1,state:"now",title:"Top waiver decision: Jordan Addison",body:"Addison is verified available in this 8-team league. Your roster has Bowers at TE, making Mark Andrews a clean expendable piece.",prompt:"Re-scan Brock Hard & Tee Baggin's live waiver pool and injuries. If Jordan Addison is still available and Jefferson remains a meaningful concern, confirm Addison as my #1 claim and Mark Andrews as the drop. Otherwise give me the best #1-priority alternative or HOLD."},
@@ -317,7 +317,7 @@ brock:{
   ]
 },
 quick:{
-  pill:"QUICK",context:"QUICK SNAP",yahoo:"https://football.fantasysports.yahoo.com/f1/1651669",
+  pill:"QUICK",context:"QUICK SNAP",yahoo:"https://football.fantasysports.yahoo.com/f1/1651669",decision:["DO THIS NEXT","Claim Denzel Boston with waiver #3 → drop Mark Andrews","This directly addresses the WR shortage while preserving Kelce as the starting TE."],
   metrics:[["Record","1–0","3rd of 10"],["Waiver","#3","strong leverage"],["Week 3","82.30–87.36","down 5.06"],["Main need","WR","A.J. Brown on IR"]],
   issues:[
     {n:1,state:"now",title:"Claim Denzel Boston if the pool holds",body:"Boston is verified available here and directly addresses the roster's biggest need. Mark Andrews is duplicate TE depth behind Kelce.",prompt:"Re-scan Quick Snap Jamison now. If Denzel Boston is still available, compare him with Quentin Johnston and Harold Fannin Jr. If Boston remains the best roster fit, set the exact claim using waiver priority #3 and choose the drop."},
@@ -346,7 +346,7 @@ quick:{
   ]
 },
 highlight:{
-  pill:"HIGHLIGHT",context:"HIGHLIGHT REEL",yahoo:"https://football.fantasysports.yahoo.com/f1/1651679",
+  pill:"HIGHLIGHT",context:"HIGHLIGHT REEL",yahoo:"https://football.fantasysports.yahoo.com/f1/1651679",decision:["DO THIS NEXT","Start Brock Bowers by default; submit Xavier Worthy claim at #6","Fix the obvious TE leak first, then attack WR/FLEX ceiling."],
   metrics:[["Record","1–0","4th of 10"],["Waiver","#6","middle leverage"],["Week 3","106.58–71.74","ahead 34.84"],["Main leak","TE","Bowers on bench"]],
   issues:[
     {n:1,state:"now",title:"Brock Bowers should be the TE default",body:"Bowers scored 22.6 on the bench while Dalton Kincaid scored 2.8 as the starter. This is the clearest lineup leak on any of the three teams.",prompt:"Set Highlight Reel's Week 4 lineup using the live roster. Make Brock Bowers the default TE unless current health or matchup evidence gives a strong reason not to. Decide whether Dalton Kincaid is better held, traded or used only as insurance."},
@@ -413,7 +413,7 @@ function switchTeam(key){
   localStorage.setItem('fantasyTeam',key);
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.team===key));
   document.getElementById('teamContext').textContent=d.context;
-  document.getElementById('statusPill').textContent=d.pill;
+  document.getElementById('statusPill').textContent=d.pill;document.getElementById('decisionStrip').innerHTML='<div class="decision-kicker">'+d.decision[0]+'</div><div class="decision-main">'+d.decision[1]+'</div><div class="decision-sub">'+d.decision[2]+'</div>';
   document.getElementById('metrics').innerHTML=d.metrics.map(metricHTML).join('');
   document.getElementById('teamCards').innerHTML=teamCardsHTML(d.cards);
   document.getElementById('issues').innerHTML=d.issues.map(actionHTML).join('');
