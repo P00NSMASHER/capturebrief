@@ -162,6 +162,40 @@ h1{font-size:27px;line-height:1.02;letter-spacing:-.04em;margin:8px 0 6px}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .empty-score{font-size:12px;color:var(--muted);line-height:1.45}
 .footer{font-size:9px;color:#607594;text-align:center;line-height:1.4;padding:10px 6px 0}
+.mode-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
+.mode-label{font-size:9px;color:#7d91ad}.mode-label b{color:#dceaff}
+.mode-button{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);color:#bcd0e9;border-radius:999px;padding:7px 10px;font-size:9px;font-weight:900}
+.decision-copy{width:100%;min-height:40px;margin-top:9px;border:0;border-radius:11px;background:linear-gradient(135deg,var(--green),#9dffd0);color:#04120b;font-size:10px;font-weight:950;letter-spacing:.03em}
+.action-dock{
+  position:fixed;z-index:60;left:50%;transform:translateX(-50%);
+  bottom:max(8px,env(safe-area-inset-bottom));width:min(calc(100% - 24px),416px);
+  display:grid;grid-template-columns:1.25fr 1fr .8fr;gap:6px;padding:6px;border-radius:18px;
+  border:1px solid var(--line);background:rgba(3,7,18,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 16px 40px rgba(0,0,0,.45)
+}
+.action-dock button,.action-dock a{min-height:44px;border-radius:11px;border:0;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:950}
+.dock-next{background:linear-gradient(135deg,var(--cyan),#8db8ff);color:#04101a}
+.dock-yahoo,.dock-mode{background:rgba(255,255,255,.045);color:#d6e6fa;border:1px solid rgba(255,255,255,.07)!important}
+body.simple .metrics .metric:nth-child(n+3){display:none}
+body.simple #issues .action-card:nth-child(n+2){display:none}
+body.simple #upgrades .action-card:nth-child(n+2){display:none}
+body.simple #waiverList .waiver:nth-child(n+4){display:none}
+body.simple #matchup,body.simple #rosterPanel,body.simple #tools{display:none}
+body.simple #waivers .note{display:none}
+body.simple .hero-copy{display:none}
+body.simple .hero{padding:13px 15px}
+body.simple h1{font-size:23px;margin:7px 0 3px}
+body.simple .freshness{margin-top:7px}
+body.simple .panel{padding:13px;margin:8px 0}
+body.simple .panel-head p{display:none}
+body.simple .panel-head{margin-bottom:8px}
+body.simple .team-card{padding:10px}
+body.simple #status .team-cards{margin-bottom:8px}
+body.simple .card-body{font-size:10px;line-height:1.4}
+body.simple #improvements .card-actions .reveal{display:none}
+body.simple #improvements .prompt-box{display:none!important}
+body.simple #issues .card-actions .reveal{display:none}
+body.simple #issues .prompt-box{display:none!important}
 @media(min-width:700px){
   .app{width:min(100%,840px)}.metrics{grid-template-columns:repeat(4,1fr)}
   .desktop-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bottom-nav{width:430px}
@@ -174,11 +208,11 @@ h1{font-size:27px;line-height:1.02;letter-spacing:-.04em;margin:8px 0 6px}
   <header class="hero">
     <div class="eyebrow"><span class="live-dot"></span> Fantasy Football Command Center</div>
     <h1>3-Team HQ</h1>
-    <div class="hero-copy">Fast answers first. Problems, moves and waiver leverage are prioritized for your three Yahoo teams.</div>
+    <div class="hero-copy">One next action first. Details only when you want them.</div>
     <div class="freshness"><span>Yahoo snapshot <b>Sep 28 • 12:30 AM ET</b></span><span id="teamContext">ALL TEAMS</span></div>
-    <div class="hero-actions">
-      <button class="action-btn copy" data-prompt="Refresh my Fantasy Football HQ using live Yahoo data for Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison. Re-scan standings, current matchups, rosters, injury/status flags and each league's available-player pool. Then update the dashboard's status, problems, waiver queues and roster alerts without changing its mobile-first structure.">REFRESH WITH CHATGPT</button>
-      <a class="yahoo-link" id="yahooLink" href="https://football.fantasysports.yahoo.com/" target="_blank" rel="noopener">OPEN YAHOO</a>
+    <div class="mode-row">
+      <div class="mode-label">View: <b id="modeLabel">Simple</b></div>
+      <button class="mode-button copy" data-prompt="Refresh my Fantasy Football HQ using live Yahoo data for Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison. Re-scan standings, current matchups, rosters, injury/status flags and each league's available-player pool. Then update the dashboard's status, problems, waiver queues and roster alerts without changing its mobile-first structure.">COPY REFRESH PROMPT</button>
     </div>
   </header>
 
@@ -191,7 +225,7 @@ h1{font-size:27px;line-height:1.02;letter-spacing:-.04em;margin:8px 0 6px}
 
   <section class="panel" id="status">
     <div class="panel-head">
-      <div><h2>1. Current status + problems</h2><p>Highest-impact decisions first. Prompts stay hidden until you need them.</p></div>
+      <div><h2>1. Current status + problems</h2><p>One action first.</p></div>
       <span class="pill" id="statusPill">3 TEAMS</span>
     </div>
     <div class="decision-strip" id="decisionStrip"></div><div class="metrics" id="metrics"></div>
@@ -201,7 +235,7 @@ h1{font-size:27px;line-height:1.02;letter-spacing:-.04em;margin:8px 0 6px}
 
   <section class="panel" id="improvements">
     <div class="panel-head">
-      <div><h2>2. Suggested improvements</h2><p>Moves that improve the roster or your weekly decision process.</p></div>
+      <div><h2>2. Suggested improvements</h2><p>Best next upgrade.</p></div>
       <span class="pill">UPGRADES</span>
     </div>
     <div class="action-list" id="upgrades"></div>
@@ -250,8 +284,10 @@ h1{font-size:27px;line-height:1.02;letter-spacing:-.04em;margin:8px 0 6px}
   <div class="footer">Static Yahoo snapshot • use “Refresh with ChatGPT” when you want the dashboard rebuilt from fresh league data.</div>
 </main>
 
-<nav class="bottom-nav" aria-label="Dashboard sections">
-  <a href="#status">STATUS</a><a href="#improvements">UPGRADES</a><a href="#waivers">WAIVERS</a><a href="#rosterPanel">ROSTER</a>
+<nav class="action-dock" aria-label="Fantasy actions">
+  <button class="dock-next" id="nextPromptBtn">COPY NEXT</button>
+  <a class="dock-yahoo" id="dockYahoo" href="https://football.fantasysports.yahoo.com/" target="_blank" rel="noopener">OPEN YAHOO</a>
+  <button class="dock-mode" id="modeToggle">DETAILS</button>
 </nav>
 <div class="toast" id="toast">PROMPT COPIED</div>
 
@@ -413,7 +449,10 @@ function switchTeam(key){
   localStorage.setItem('fantasyTeam',key);
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.team===key));
   document.getElementById('teamContext').textContent=d.context;
-  document.getElementById('statusPill').textContent=d.pill;document.getElementById('decisionStrip').innerHTML='<div class="decision-kicker">'+d.decision[0]+'</div><div class="decision-main">'+d.decision[1]+'</div><div class="decision-sub">'+d.decision[2]+'</div>';
+  document.getElementById('statusPill').textContent=d.pill;
+  document.getElementById('decisionStrip').innerHTML='<div class="decision-kicker">'+d.decision[0]+'</div><div class="decision-main">'+d.decision[1]+'</div><div class="decision-sub">'+d.decision[2]+'</div><button class="decision-copy copy" data-prompt="'+encodeURIComponent(d.issues[0].prompt)+'">COPY THIS ACTION</button>';
+  document.getElementById('nextPromptBtn').dataset.prompt=encodeURIComponent(d.issues[0].prompt);
+  document.getElementById('dockYahoo').href=d.yahoo;
   document.getElementById('metrics').innerHTML=d.metrics.map(metricHTML).join('');
   document.getElementById('teamCards').innerHTML=teamCardsHTML(d.cards);
   document.getElementById('issues').innerHTML=d.issues.map(actionHTML).join('');
@@ -421,10 +460,23 @@ function switchTeam(key){
   document.getElementById('waiverList').innerHTML=d.waivers.map(waiverHTML).join('');
   document.getElementById('match').innerHTML=matchHTML(d.match);
   document.getElementById('roster').innerHTML=rosterHTML(d.roster);
-  document.getElementById('yahooLink').href=d.yahoo;
   document.getElementById('matchNote').textContent=key==='all'?'Choose a team above for matchup detail.':'Current Yahoo score and projection snapshot.';
   bindDynamic()
 }
+function setMode(mode){
+  const simple=mode!=='full';
+  document.body.classList.toggle('simple',simple);
+  localStorage.setItem('fantasyMode',simple?'simple':'full');
+  document.getElementById('modeLabel').textContent=simple?'Simple':'Full';
+  document.getElementById('modeToggle').textContent=simple?'DETAILS':'SIMPLE';
+}
+document.getElementById('modeToggle').onclick=()=>setMode(document.body.classList.contains('simple')?'full':'simple');
+document.getElementById('nextPromptBtn').onclick=async function(){
+  const p=decodeURIComponent(this.dataset.prompt||'');
+  try{await navigator.clipboard.writeText(p)}catch(e){const ta=document.createElement('textarea');ta.value=p;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}
+  showToast()
+};
+setMode(localStorage.getItem('fantasyMode')||'simple');
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchTeam(t.dataset.team));
 document.querySelectorAll('.copy').forEach(bindCopy);
 switchTeam(localStorage.getItem('fantasyTeam')||'all');
