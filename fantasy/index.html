@@ -28,9 +28,9 @@ a,button{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:manip
 </style></head><body class=""><main class="app">
 <header class="hero">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px"><div><div class="kicker">Fantasy Football HQ</div>
-  <div class="title">Choose a team</div></div><button class="refresh-btn" id="hardRefreshBtn" aria-label="Refresh page">↻</button></div>
+  <div class="title">Choose a team</div></div><button class="refresh-btn" id="liveSyncBtn" aria-label="Sync live Yahoo data" data-run="Refresh%20and%20republish%20my%20Fantasy%20Football%20HQ%20now.%20Pull%20fresh%20Yahoo%20data%20separately%20for%20Brock%20Hard%20%26%20Tee%20Baggin%2C%20Quick%20Snap%20Jamison%2C%20and%20Highlight%20Reel%20Jamison%3A%20standings%2C%20current%20matchup%20scores%2Fprojections%2C%20roster%2Fstatus%20flags%2C%20waiver%20priority%2C%20and%20available%20players.%20Update%20the%20GitHub%20Pages%20team%20pages%20and%20home%20page%20with%20the%20new%20snapshot%20and%20timestamp.%20Do%20not%20reuse%20stale%20values.">↻</button></div>
   <div class="sub">Each team now has its own page, its own actions, its own waiver board, and a direct Yahoo link.</div>
-  <div class="meta"><span>Yahoo snapshot <b>Sep 28 • 12:30 AM</b></span><span>3 teams</span></div><div class="refresh-note" id="refreshNote">↻ reloads the newest published dashboard version</div>
+  <div class="meta"><span>Yahoo snapshot <b>Sep 28 • refreshed</b></span><span>3 teams</span></div><div class="refresh-note" id="refreshNote">↻ starts a fresh Yahoo sync in ChatGPT</div>
 </header>
 <section class="card">
   <div class="card-head"><h2>Your teams</h2><span class="pill">SELECT</span></div>
@@ -47,7 +47,7 @@ a,button{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:manip
 </section>
 <div class="footer">Fantasy HQ home • tap a team to enter its page.</div></main><div class="toast" id="toast">OPENING CHATGPT…</div>
 <script>
-function hardRefreshPage(){
+function legacyHardRefreshPage(){
   const btn=document.getElementById('hardRefreshBtn');
   const note=document.getElementById('refreshNote');
   if(btn){btn.classList.add('spinning');btn.disabled=true}
@@ -61,7 +61,7 @@ function openChat(prompt){
   window.location.href='https://chatgpt.com/?prompt='+encodeURIComponent(prompt)
 }
 document.addEventListener('click',e=>{
-  if(e.target.closest('#hardRefreshBtn')){hardRefreshPage();return}
+  
   const b=e.target.closest('[data-run]');
   if(b){openChat(decodeURIComponent(b.dataset.run||''))}
 });
