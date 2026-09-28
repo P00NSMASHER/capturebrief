@@ -20,11 +20,16 @@ a,button{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:manip
 .team-card{display:block;text-decoration:none;color:inherit;padding:14px;border:1px solid var(--line);border-radius:18px;background:var(--surface);margin:8px 0;box-shadow:0 8px 24px rgba(0,0,0,.18)}.team-card:active{transform:translateY(1px)}.team-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.team-name{font-size:16px;font-weight:950}.team-meta{font-size:9px;color:var(--muted);margin-top:3px}.arrow{width:34px;height:34px;border-radius:11px;background:#12223a;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:16px;font-weight:900}
 .footer{text-align:center;color:#60738c;font-size:8px;padding-top:10px}.toast{position:fixed;left:50%;transform:translateX(-50%) translateY(10px);bottom:calc(12px + env(safe-area-inset-bottom));opacity:0;pointer-events:none;padding:8px 11px;border-radius:999px;background:#edf8ff;color:#06101a;font-size:9px;font-weight:900;transition:.15s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 @media(min-width:700px){.app{width:min(100%,760px)}.teams{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.team-card{margin:0}.stats{grid-template-columns:repeat(4,1fr)}}
+.refresh-btn{width:42px;height:42px;flex:0 0 42px;border-radius:12px;border:1px solid var(--line);background:#101c2e;color:var(--text);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900}
+.refresh-btn.spinning{animation:spin .65s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.refresh-note{font-size:8px;color:var(--muted);margin-top:6px}
+@media(prefers-reduced-motion:reduce){.refresh-btn.spinning{animation:none}}
 </style></head><body class="highlight"><main class="app">
-  <div class="top"><a class="home-link" href="../">← Fantasy HQ</a><a class="home-link" href="https://football.fantasysports.yahoo.com/f1/1651679" target="_blank" rel="noopener">Yahoo ↗</a></div>
+  <div class="top"><a class="home-link" href="../">← Fantasy HQ</a><div style="display:flex;gap:6px"><button class="refresh-btn" id="hardRefreshBtn" aria-label="Refresh page">↻</button><a class="home-link" href="https://football.fantasysports.yahoo.com/f1/1651679" target="_blank" rel="noopener">Yahoo ↗</a></div></div>
   <header class="hero">
     <div class="kicker">Highlight Reel Jamison</div><div class="title">Highlight Reel</div>
-    <div class="sub">Dedicated team page • Yahoo snapshot Sep 28 • 12:30 AM ET</div>
+    <div class="sub">Dedicated team page • Yahoo snapshot Sep 28 • 12:30 AM ET</div><div class="refresh-note" id="refreshNote">↻ reloads the newest published version</div>
     <div class="meta"><span>1–0 • <b>4th of 10</b></span><span>Waiver <b>#6</b></span></div>
   </header>
   <section class="card">
@@ -38,11 +43,21 @@ a,button{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:manip
   <div class="btn-grid"><a class="btn btn-secondary" href="../">← CHOOSE TEAM</a><a class="btn btn-secondary" href="https://football.fantasysports.yahoo.com/f1/1651679" target="_blank" rel="noopener">OPEN YAHOO</a></div>
   <div class="footer">Highlight Reel Jamison • dedicated Fantasy HQ page</div></main><div class="toast" id="toast">OPENING CHATGPT…</div>
 <script>
+function hardRefreshPage(){
+  const btn=document.getElementById('hardRefreshBtn');
+  const note=document.getElementById('refreshNote');
+  if(btn){btn.classList.add('spinning');btn.disabled=true}
+  if(note)note.textContent='Checking for newest published version…';
+  const u=new URL(window.location.href);
+  u.searchParams.set('_refresh',Date.now().toString());
+  setTimeout(()=>window.location.replace(u.toString()),120);
+}
 function openChat(prompt){
   const t=document.getElementById('toast');if(t){t.classList.add('show');setTimeout(()=>t.classList.remove('show'),800)}
   window.location.href='https://chatgpt.com/?prompt='+encodeURIComponent(prompt)
 }
 document.addEventListener('click',e=>{
+  if(e.target.closest('#hardRefreshBtn')){hardRefreshPage();return}
   const b=e.target.closest('[data-run]');
   if(b){openChat(decodeURIComponent(b.dataset.run||''))}
 });
