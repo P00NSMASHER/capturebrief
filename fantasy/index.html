@@ -84,11 +84,11 @@ h1{font-size:27px;line-height:1.02;letter-spacing:-.04em;margin:8px 0 6px}
 .status.info{color:#91efff;background:rgba(92,231,255,.08);border:1px solid rgba(92,231,255,.18)}
 .card-body{font-size:11px;color:#a6b9d0;line-height:1.45;margin:8px 0 0}
 .card-actions{display:flex;gap:7px;margin-top:9px}
-.copy{
+.run-chat{
   flex:1;min-height:40px;border:0;border-radius:11px;background:linear-gradient(135deg,var(--cyan),#8db8ff);
   color:#04101a;font-size:10px;font-weight:950;letter-spacing:.04em
 }
-.copy.copied{background:linear-gradient(135deg,var(--green),#b3ffd4)}
+.run-chat:active{transform:translateY(1px);filter:brightness(.96)}
 .reveal{
   min-height:40px;padding:0 11px;border-radius:11px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);
   color:#a9bdd9;font-size:10px;font-weight:850
@@ -165,7 +165,7 @@ h1{font-size:27px;line-height:1.02;letter-spacing:-.04em;margin:8px 0 6px}
 .mode-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
 .mode-label{font-size:9px;color:#7d91ad}.mode-label b{color:#dceaff}
 .mode-button{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);color:#bcd0e9;border-radius:999px;padding:7px 10px;font-size:9px;font-weight:900}
-.decision-copy{width:100%;min-height:40px;margin-top:9px;border:0;border-radius:11px;background:linear-gradient(135deg,var(--green),#9dffd0);color:#04120b;font-size:10px;font-weight:950;letter-spacing:.03em}
+.decision-copy{width:100%;min-height:42px;margin-top:9px;border:0;border-radius:11px;background:linear-gradient(135deg,var(--green),#9dffd0);color:#04120b!important;font-size:10px;font-weight:950;letter-spacing:.03em}
 .action-dock{
   position:fixed;z-index:60;left:50%;transform:translateX(-50%);
   bottom:max(8px,env(safe-area-inset-bottom));width:min(calc(100% - 24px),416px);
@@ -212,7 +212,7 @@ body.simple #issues .prompt-box{display:none!important}
     <div class="freshness"><span>Yahoo snapshot <b>Sep 28 • 12:30 AM ET</b></span><span id="teamContext">ALL TEAMS</span></div>
     <div class="mode-row">
       <div class="mode-label">View: <b id="modeLabel">Simple</b></div>
-      <button class="mode-button copy" data-prompt="Refresh my Fantasy Football HQ using live Yahoo data for Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison. Re-scan standings, current matchups, rosters, injury/status flags and each league's available-player pool. Then update the dashboard's status, problems, waiver queues and roster alerts without changing its mobile-first structure.">COPY REFRESH PROMPT</button>
+      <button class="mode-button run-chat" data-prompt="Refresh my Fantasy Football HQ using live Yahoo data for Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison. Re-scan standings, current matchups, rosters, injury/status flags and each league's available-player pool. Then update the dashboard's status, problems, waiver queues and roster alerts without changing its mobile-first structure.">REFRESH DATA</button>
     </div>
   </header>
 
@@ -274,10 +274,10 @@ body.simple #issues .prompt-box{display:none!important}
       <span class="pill">TOOLS</span>
     </div>
     <div class="quick-grid">
-      <button class="quick copy" data-prompt="Scan the live waiver wire separately for Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison. Rank the best available adds by expected rest-of-season impact, roster need, drop candidate and waiver-priority cost. Do not assume cross-league availability.">WAIVER SCAN<span>All 3 leagues</span></button>
-      <button class="quick copy" data-prompt="Optimize the current starting lineup separately for Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison using live rosters, opponent matchups, injuries and role changes. Flag only changes that are materially better than the current starter.">LINEUP OPTIMIZER<span>All 3 teams</span></button>
-      <button class="quick copy" data-prompt="Analyze all three of my fantasy rosters for tradeable surplus and positional weakness. For each team, identify realistic players to shop, the position to target and 2-for-1 or 1-for-1 trade constructions that improve weekly starters.">TRADE FINDER<span>Consolidate depth</span></button>
-      <button class="quick copy" data-prompt="Run an injury and status audit for every player on Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison. Separate urgent lineup threats, players to monitor, IR decisions and harmless statuses.">INJURY AUDIT<span>Risk check</span></button>
+      <button class="quick run-chat" data-prompt="Scan the live waiver wire separately for Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison. Rank the best available adds by expected rest-of-season impact, roster need, drop candidate and waiver-priority cost. Do not assume cross-league availability.">WAIVER SCAN<span>All 3 leagues</span></button>
+      <button class="quick run-chat" data-prompt="Optimize the current starting lineup separately for Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison using live rosters, opponent matchups, injuries and role changes. Flag only changes that are materially better than the current starter.">LINEUP OPTIMIZER<span>All 3 teams</span></button>
+      <button class="quick run-chat" data-prompt="Analyze all three of my fantasy rosters for tradeable surplus and positional weakness. For each team, identify realistic players to shop, the position to target and 2-for-1 or 1-for-1 trade constructions that improve weekly starters.">TRADE FINDER<span>Consolidate depth</span></button>
+      <button class="quick run-chat" data-prompt="Run an injury and status audit for every player on Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison. Separate urgent lineup threats, players to monitor, IR decisions and harmless statuses.">INJURY AUDIT<span>Risk check</span></button>
     </div>
   </section>
 
@@ -285,11 +285,11 @@ body.simple #issues .prompt-box{display:none!important}
 </main>
 
 <nav class="action-dock" aria-label="Fantasy actions">
-  <button class="dock-next" id="nextPromptBtn">COPY NEXT</button>
+  <button class="dock-next" id="nextPromptBtn">RUN NEXT</button>
   <a class="dock-yahoo" id="dockYahoo" href="https://football.fantasysports.yahoo.com/" target="_blank" rel="noopener">OPEN YAHOO</a>
   <button class="dock-mode" id="modeToggle">DETAILS</button>
 </nav>
-<div class="toast" id="toast">PROMPT COPIED</div>
+<div class="toast" id="toast">OPENING CHATGPT…</div>
 
 <script>
 const DATA = {
@@ -415,7 +415,7 @@ highlight:{
 function metricHTML(m){return '<div class="metric"><div class="metric-label">'+m[0]+'</div><div class="metric-value">'+m[1]+'</div><div class="metric-sub">'+m[2]+'</div></div>'}
 function actionHTML(x){
   const id='p'+Math.random().toString(36).slice(2);
-  return '<article class="action-card"><div class="card-top"><div class="priority">'+x.n+'</div><div class="card-title">'+x.title+'</div><div class="status '+x.state+'">'+x.state+'</div></div><div class="card-body">'+x.body+'</div><div class="card-actions"><button class="copy" data-prompt="'+encodeURIComponent(x.prompt)+'">COPY PROMPT</button><button class="reveal" data-target="'+id+'">VIEW</button></div><div class="prompt-box" id="'+id+'">'+x.prompt+'</div></article>'
+  return '<article class="action-card"><div class="card-top"><div class="priority">'+x.n+'</div><div class="card-title">'+x.title+'</div><div class="status '+x.state+'">'+x.state+'</div></div><div class="card-body">'+x.body+'</div><div class="card-actions"><button class="run-chat" data-prompt="'+encodeURIComponent(x.prompt)+'">RUN IN CHATGPT</button><button class="reveal" data-target="'+id+'">VIEW</button></div><div class="prompt-box" id="'+id+'">'+x.prompt+'</div></article>'
 }
 function waiverHTML(w){return '<div class="waiver"><div class="rank">'+w.r+'</div><div><div class="waiver-name">'+w.name+'</div><div class="waiver-meta">'+w.meta+'</div><div class="waiver-why">'+w.why+'</div></div><div class="claim '+w.c+'">'+w.claim+'</div></div>'}
 function teamCardsHTML(cards){
@@ -432,25 +432,31 @@ function rosterHTML(rows){
 function bindDynamic(){
   document.querySelectorAll('.reveal').forEach(b=>b.onclick=()=>{const el=document.getElementById(b.dataset.target);el.classList.toggle('open');b.textContent=el.classList.contains('open')?'HIDE':'VIEW'});
   document.querySelectorAll('[data-switch]').forEach(b=>b.onclick=()=>switchTeam(b.dataset.switch));
-  document.querySelectorAll('.copy').forEach(bindCopy);
+  document.querySelectorAll('.run-chat').forEach(bindRun);
 }
-function bindCopy(btn){
+function openChatGPT(prompt){
+  const encoded=encodeURIComponent(prompt);
+  const app='com.openai.chat://chatgpt.com/?prompt='+encoded;
+  const web='https://chatgpt.com/?prompt='+encoded;
+  showToast();
+  let hidden=false;
+  const vis=()=>{if(document.visibilityState==='hidden')hidden=true};
+  document.addEventListener('visibilitychange',vis,{once:true});
+  window.location.href=app;
+  setTimeout(()=>{if(!hidden && document.visibilityState==='visible')window.location.href=web},850);
+}
+function bindRun(btn){
   if(btn.dataset.bound)return;btn.dataset.bound='1';
-  btn.onclick=async()=>{
-    const p=decodeURIComponent(btn.dataset.prompt||'');
-    try{await navigator.clipboard.writeText(p)}catch(e){const ta=document.createElement('textarea');ta.value=p;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}
-    const old=btn.textContent;btn.textContent='COPIED';btn.classList.add('copied');showToast();
-    setTimeout(()=>{btn.textContent=old;btn.classList.remove('copied')},1100)
-  }
+  btn.onclick=()=>openChatGPT(decodeURIComponent(btn.dataset.prompt||''));
 }
-function showToast(){const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1100)}
+function showToast(){const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1000)}
 function switchTeam(key){
   const d=DATA[key]||DATA.all;
   localStorage.setItem('fantasyTeam',key);
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.team===key));
   document.getElementById('teamContext').textContent=d.context;
   document.getElementById('statusPill').textContent=d.pill;
-  document.getElementById('decisionStrip').innerHTML='<div class="decision-kicker">'+d.decision[0]+'</div><div class="decision-main">'+d.decision[1]+'</div><div class="decision-sub">'+d.decision[2]+'</div><button class="decision-copy copy" data-prompt="'+encodeURIComponent(d.issues[0].prompt)+'">COPY THIS ACTION</button>';
+  document.getElementById('decisionStrip').innerHTML='<div class="decision-kicker">'+d.decision[0]+'</div><div class="decision-main">'+d.decision[1]+'</div><div class="decision-sub">'+d.decision[2]+'</div><button class="decision-copy run-chat" data-prompt="'+encodeURIComponent(d.issues[0].prompt)+'">RUN THIS</button>';
   document.getElementById('nextPromptBtn').dataset.prompt=encodeURIComponent(d.issues[0].prompt);
   document.getElementById('dockYahoo').href=d.yahoo;
   document.getElementById('metrics').innerHTML=d.metrics.map(metricHTML).join('');
@@ -471,14 +477,12 @@ function setMode(mode){
   document.getElementById('modeToggle').textContent=simple?'DETAILS':'SIMPLE';
 }
 document.getElementById('modeToggle').onclick=()=>setMode(document.body.classList.contains('simple')?'full':'simple');
-document.getElementById('nextPromptBtn').onclick=async function(){
-  const p=decodeURIComponent(this.dataset.prompt||'');
-  try{await navigator.clipboard.writeText(p)}catch(e){const ta=document.createElement('textarea');ta.value=p;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}
-  showToast()
+document.getElementById('nextPromptBtn').onclick=function(){
+  openChatGPT(decodeURIComponent(this.dataset.prompt||''))
 };
 setMode(localStorage.getItem('fantasyMode')||'simple');
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchTeam(t.dataset.team));
-document.querySelectorAll('.copy').forEach(bindCopy);
+document.querySelectorAll('.run-chat').forEach(bindRun);
 switchTeam(localStorage.getItem('fantasyTeam')||'all');
 </script>
 </body>
