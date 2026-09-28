@@ -1,377 +1,53 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#030712">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Fantasy HQ">
-<title>Fantasy Football HQ</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050914"><meta name="apple-mobile-web-app-capable" content="yes"><title>Fantasy Football HQ</title>
 <style>
-:root{
-  color-scheme:dark;--bg:#050914;--surface:#0b1322;--surface2:#0e192b;--line:#1a2940;
-  --text:#f5f8ff;--muted:#8fa3bd;--accent:#63e5ff;--green:#61e9a6;--amber:#ffd36e;--red:#ff7d89;
-  --radius:18px
-}
-*{box-sizing:border-box}
-html{background:var(--bg)}
-body{
-  margin:0;min-height:100vh;background:linear-gradient(180deg,#091322 0,#050914 42%,#03060c 100%);
-  color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;
-  -webkit-font-smoothing:antialiased;padding:max(10px,env(safe-area-inset-top)) 12px calc(76px + env(safe-area-inset-bottom))
-}
-body[data-team="brock"]{--accent:#63e5ff}
-body[data-team="quick"]{--accent:#b9a1ff}
-body[data-team="highlight"]{--accent:#61e9a6}
-button,a{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-button{cursor:pointer}
-.app{width:min(100%,430px);margin:0 auto}
-.top{
-  padding:14px;border:1px solid var(--line);border-radius:20px;background:var(--surface);
-  box-shadow:0 10px 28px rgba(0,0,0,.24)
-}
-.top-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.kicker{font-size:9px;font-weight:900;letter-spacing:.15em;color:var(--accent)}
-h1{margin:4px 0 0;font-size:22px;line-height:1.05;letter-spacing:-.035em}
-.refresh{
-  width:44px;height:44px;border-radius:13px;border:1px solid var(--line);background:#101d31;color:var(--text);
-  font-size:19px;font-weight:800
-}
-.meta{display:flex;justify-content:space-between;gap:12px;margin-top:9px;color:var(--muted);font-size:9px}
-.meta strong{color:#c8d7e9}
-.tabs{
-  position:sticky;top:max(6px,env(safe-area-inset-top));z-index:20;display:grid;grid-template-columns:repeat(4,1fr);
-  gap:5px;margin:9px 0;padding:5px;border:1px solid var(--line);border-radius:15px;background:#070d18;
-  box-shadow:0 8px 22px rgba(0,0,0,.24)
-}
-.tab{min-height:42px;border:0;border-radius:10px;background:transparent;color:#758aa6;font-size:10px;font-weight:900}
-.tab.active{background:#13223a;color:#fff;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
-.panel{
-  margin:9px 0;padding:13px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
-  box-shadow:0 8px 24px rgba(0,0,0,.2)
-}
-.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
-.panel-head h2{margin:0;font-size:15px;letter-spacing:-.02em}
-.pill{padding:5px 7px;border-radius:999px;background:#101d31;color:var(--accent);font-size:8px;font-weight:900;letter-spacing:.08em}
-.decision{
-  padding:12px;border-radius:15px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 10%,#0b1627),#0b1627);
-  border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line))
-}
-.decision-label{font-size:8px;font-weight:900;letter-spacing:.12em;color:var(--accent)}
-.decision-main{font-size:14px;font-weight:900;line-height:1.3;margin-top:4px}
-.decision-sub{font-size:9px;line-height:1.4;color:var(--muted);margin-top:4px}
-.primary-run{
-  width:100%;min-height:44px;margin-top:10px;border:0;border-radius:11px;background:var(--accent);color:#041019;
-  font-size:10px;font-weight:950;letter-spacing:.03em
-}
-.metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
-.metric{padding:9px 10px;border-radius:13px;background:#0d192a;border:1px solid #16263d}
-.metric-label{font-size:8px;color:var(--muted);font-weight:850;text-transform:uppercase;letter-spacing:.07em}
-.metric-value{font-size:17px;font-weight:950;letter-spacing:-.035em;margin-top:3px}
-.metric-sub{font-size:8px;color:#7388a3;margin-top:2px}
-.team-grid{display:grid;gap:6px;margin-top:8px}
-.team-switch{
-  width:100%;min-height:50px;border:1px solid #16263d;border-radius:13px;background:#0d192a;color:inherit;
-  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;text-align:left
-}
-.team-switch strong{display:block;font-size:11px}.team-switch span{display:block;font-size:8px;color:var(--muted);margin-top:2px}
-.team-switch b{font-size:11px;text-align:right}
-.action-list{display:grid;gap:7px}
-.action-card{padding:10px;border-radius:14px;background:#0d192a;border:1px solid #16263d}
-.action-top{display:flex;align-items:center;gap:7px}
-.action-num{width:22px;height:22px;border-radius:8px;background:#14233a;color:#c6d7eb;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900}
-.action-title{flex:1;font-size:11px;font-weight:900;line-height:1.25}
-.badge{font-size:7px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;padding:4px 6px;border-radius:999px}
-.badge.now{color:#ff9da7;background:#321820}.badge.watch{color:#ffe29a;background:#2f2916}.badge.good{color:#91f3bb;background:#123020}.badge.info{color:#a9effa;background:#12303a}
-.action-body{font-size:9px;line-height:1.4;color:var(--muted);margin:7px 0 0}
-.run{
-  width:100%;min-height:42px;margin-top:8px;border:0;border-radius:10px;background:#152945;color:#e9f4ff;
-  font-size:9px;font-weight:900
-}
-.waiver-list{display:grid;gap:6px}
-.waiver{
-  display:grid;grid-template-columns:24px 1fr auto;align-items:start;gap:8px;padding:9px;border-radius:13px;background:#0d192a;border:1px solid #16263d
-}
-.rank{width:24px;height:24px;border-radius:8px;background:#14243b;color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:950}
-.waiver-name{font-size:11px;font-weight:900}.waiver-meta{font-size:8px;color:var(--muted);margin-top:2px}.waiver-why{font-size:9px;color:#a3b5ca;line-height:1.35;margin-top:4px}
-.claim{font-size:7px;font-weight:900;white-space:nowrap;padding:4px 6px;border-radius:999px}.claim.use{color:#ff9da7;background:#321820}.claim.submit{color:#ffe29a;background:#2f2916}.claim.hold{color:#a9effa;background:#12303a}
-.full-only{content-visibility:auto;contain-intrinsic-size:420px}
-body.simple .full-only{display:none}
-body.simple #issues{display:none}
-body.simple #upgrades .action-card:nth-child(n+2){display:none}
-body.simple #waiverList .waiver:nth-child(n+4){display:none}
-body.simple .panel{margin:7px 0}
-body.simple #status{padding-bottom:11px}
-.match{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:11px;border-radius:13px;background:#0d192a;border:1px solid #16263d}
-.side.right{text-align:right}.match-team{font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.match-score{font-size:21px;font-weight:950;letter-spacing:-.04em}.match-proj{font-size:8px;color:var(--muted)}.vs{font-size:8px;color:#60748f;font-weight:900}
-.roster{display:grid;gap:5px}.player{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:7px;padding:7px 8px;border-radius:11px;background:#0d192a;border:1px solid #16263d}
-.slot{text-align:center;padding:5px 3px;border-radius:8px;background:#14233a;color:#aebfda;font-size:7px;font-weight:900}.player.bench{opacity:.75}.player.alert{border-color:#4a3e19;background:#17170d}.pname{font-size:10px;font-weight:900}.pmeta{font-size:8px;color:var(--muted)}.pts{font-size:11px;font-weight:900}
-.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.quick{min-height:48px;border:1px solid #16263d;border-radius:11px;background:#0d192a;color:#e3eefc;font-size:9px;font-weight:900;padding:7px}.quick span{display:block;color:var(--muted);font-size:7px;margin-top:3px}
-.footer{text-align:center;color:#5f728b;font-size:8px;line-height:1.4;padding:8px 4px 0}
-.dock{
-  position:fixed;left:50%;transform:translateX(-50%);bottom:max(7px,env(safe-area-inset-bottom));z-index:40;
-  width:min(calc(100% - 24px),406px);display:grid;grid-template-columns:1.2fr 1fr .72fr;gap:5px;padding:5px;
-  border:1px solid #1b2b43;border-radius:16px;background:#070d18;box-shadow:0 10px 28px rgba(0,0,0,.42)
-}
-.dock button,.dock a{min-height:44px;border-radius:10px;border:0;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:9px;font-weight:950}
-.dock-run{background:var(--accent);color:#041019}.dock-yahoo,.dock-mode{background:#111e31;color:#dce9f8;border:1px solid #1a2a41!important}
-.toast{position:fixed;left:50%;transform:translateX(-50%) translateY(10px);bottom:calc(68px + env(safe-area-inset-bottom));opacity:0;pointer-events:none;z-index:60;padding:8px 11px;border-radius:999px;background:#edf8ff;color:#06101a;font-size:9px;font-weight:900;transition:.15s}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(min-width:700px){.app{width:min(100%,820px)}.desktop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dock{width:406px}.metrics{grid-template-columns:repeat(4,1fr)}}
-@media(prefers-reduced-motion:reduce){.toast{transition:none}}
-</style>
-</head>
-<body class="simple" data-team="all">
-<main class="app">
-  <header class="top">
-    <div class="top-row">
-      <div><div class="kicker">FANTASY HQ</div><h1>3 teams. One next move.</h1></div>
-      <button class="refresh" id="refreshBtn" aria-label="Refresh data">↻</button>
-    </div>
-    <div class="meta"><span id="teamContext">ALL TEAMS</span><span>Yahoo snapshot <strong>Sep 28 • 12:30 AM</strong></span></div>
-  </header>
-
-  <nav class="tabs" aria-label="Team selector">
-    <button class="tab active" data-team="all">ALL</button>
-    <button class="tab" data-team="brock">BROCK</button>
-    <button class="tab" data-team="quick">QUICK</button>
-    <button class="tab" data-team="highlight">HIGHLIGHT</button>
-  </nav>
-
-  <section class="panel" id="status">
-    <div class="panel-head"><h2>1. Now</h2><span class="pill" id="statusPill">3 TEAMS</span></div>
-    <div id="decisionStrip"></div>
-    <div class="metrics" id="metrics"></div>
-    <div id="teamCards"></div>
-    <div class="action-list" id="issues"></div>
-  </section>
-
-  <section class="panel" id="improvements">
-    <div class="panel-head"><h2>2. Best improvement</h2><span class="pill">UPGRADE</span></div>
-    <div class="action-list" id="upgrades"></div>
-  </section>
-
-  <section class="panel" id="waivers">
-    <div class="panel-head"><h2>Waivers</h2><span class="pill" id="waiverPill">TOP TARGETS</span></div>
-    <div class="waiver-list" id="waiverList"></div>
-  </section>
-
-  <div class="desktop-grid full-only">
-    <section class="panel" id="matchup">
-      <div class="panel-head"><h2>Matchup</h2><span class="pill">WEEK 3</span></div>
-      <div id="match"></div>
-    </section>
-    <section class="panel" id="rosterPanel">
-      <div class="panel-head"><h2>Roster</h2><span class="pill">LINEUP</span></div>
-      <div class="roster" id="roster"></div>
-    </section>
+:root{color-scheme:dark;--bg:#050914;--surface:#0b1322;--surface2:#0f1b2d;--line:#1b2a40;--text:#f5f8ff;--muted:#8da2bd;--accent:#63e5ff;--green:#63e8a8;--amber:#ffd36e;--red:#ff7c88}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;min-height:100vh;background:linear-gradient(180deg,#091321 0,#050914 48%,#03060c 100%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding:max(12px,env(safe-area-inset-top)) 12px calc(30px + env(safe-area-inset-bottom))}
+body.brock{--accent:#63e5ff}body.quick{--accent:#b8a2ff}body.highlight{--accent:#63e8a8}
+a,button{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}.app{width:min(100%,430px);margin:0 auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.home-link{min-height:42px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:#101c2e;color:#dbe9f8;text-decoration:none;display:flex;align-items:center;font-size:10px;font-weight:900}
+.kicker{font-size:9px;font-weight:900;letter-spacing:.14em;color:var(--accent);text-transform:uppercase}.title{font-size:24px;line-height:1.03;letter-spacing:-.035em;margin:4px 0 0}.sub{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.45}
+.card{margin:9px 0;padding:13px;border:1px solid var(--line);border-radius:18px;background:var(--surface);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.card h2{margin:0;font-size:15px;letter-spacing:-.02em}.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.pill{padding:5px 7px;border-radius:999px;background:#101d31;color:var(--accent);font-size:8px;font-weight:900;letter-spacing:.07em}
+.hero{padding:15px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,#0c1728,#08101d);box-shadow:0 10px 28px rgba(0,0,0,.24)}
+.hero .meta{display:flex;justify-content:space-between;gap:10px;margin-top:10px;color:var(--muted);font-size:9px}.hero .meta b{color:#d6e3f2}
+.decision{padding:12px;border-radius:15px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 12%,#0c1727),#0c1727);border:1px solid color-mix(in srgb,var(--accent) 28%,var(--line))}
+.decision-label{font-size:8px;font-weight:900;letter-spacing:.12em;color:var(--accent)}.decision-main{font-size:14px;font-weight:950;line-height:1.3;margin-top:4px}.decision-sub{font-size:9px;color:var(--muted);line-height:1.4;margin-top:4px}
+.btn-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:7px;margin-top:10px}.btn{min-height:44px;border-radius:11px;border:0;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:9px;font-weight:950}.btn-primary{background:var(--accent);color:#041019}.btn-secondary{background:#111f33;color:#dce9f8;border:1px solid var(--line)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:7px}.stat{padding:10px;border-radius:13px;background:#0e1a2c;border:1px solid #172840}.stat span{display:block;font-size:8px;color:var(--muted);font-weight:850;text-transform:uppercase;letter-spacing:.06em}.stat b{display:block;font-size:17px;margin-top:3px}.stat small{display:block;font-size:8px;color:#7489a5;margin-top:2px}
+.issue{padding:10px;border-radius:13px;background:#0e1a2c;border:1px solid #172840;margin-top:6px}.issue-top{display:flex;align-items:center;gap:7px}.num{width:23px;height:23px;border-radius:8px;background:#14243b;color:#c6d7eb;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900}.issue-title{font-size:11px;font-weight:900}.issue p{font-size:9px;color:var(--muted);line-height:1.4;margin:6px 0 0}.run{width:100%;min-height:42px;margin-top:8px;border:0;border-radius:10px;background:#152945;color:#edf6ff;font-size:9px;font-weight:900}
+.waiver{display:grid;grid-template-columns:25px 1fr auto;gap:8px;align-items:start;padding:9px;border-radius:13px;background:#0e1a2c;border:1px solid #172840;margin-top:6px}.rank{width:25px;height:25px;border-radius:8px;background:#14243b;color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:950}.waiver-name{font-size:11px;font-weight:900}.waiver-meta{font-size:8px;color:var(--muted);margin-top:2px}.waiver-why{font-size:9px;color:#a2b4c9;line-height:1.35;margin-top:4px}.claim{font-size:7px;font-weight:900;white-space:nowrap;padding:4px 6px;border-radius:999px;color:#ffe29a;background:#2f2916}
+.roster{display:grid;gap:5px}.player{display:grid;grid-template-columns:40px 1fr auto;gap:7px;align-items:center;padding:7px 8px;border-radius:11px;background:#0e1a2c;border:1px solid #172840}.slot{text-align:center;padding:5px 3px;border-radius:8px;background:#14233a;color:#acbfd8;font-size:7px;font-weight:900}.pname{font-size:10px;font-weight:900}.pmeta{font-size:8px;color:var(--muted)}.pts{font-size:11px;font-weight:900}.alert{border-color:#493d18;background:#17170d}
+.team-card{display:block;text-decoration:none;color:inherit;padding:14px;border:1px solid var(--line);border-radius:18px;background:var(--surface);margin:8px 0;box-shadow:0 8px 24px rgba(0,0,0,.18)}.team-card:active{transform:translateY(1px)}.team-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.team-name{font-size:16px;font-weight:950}.team-meta{font-size:9px;color:var(--muted);margin-top:3px}.arrow{width:34px;height:34px;border-radius:11px;background:#12223a;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:16px;font-weight:900}
+.footer{text-align:center;color:#60738c;font-size:8px;padding-top:10px}.toast{position:fixed;left:50%;transform:translateX(-50%) translateY(10px);bottom:calc(12px + env(safe-area-inset-bottom));opacity:0;pointer-events:none;padding:8px 11px;border-radius:999px;background:#edf8ff;color:#06101a;font-size:9px;font-weight:900;transition:.15s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(min-width:700px){.app{width:min(100%,760px)}.teams{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.team-card{margin:0}.stats{grid-template-columns:repeat(4,1fr)}}
+</style></head><body class=""><main class="app">
+<header class="hero">
+  <div class="kicker">Fantasy Football HQ</div>
+  <div class="title">Choose a team</div>
+  <div class="sub">Each team now has its own page, its own actions, its own waiver board, and a direct Yahoo link.</div>
+  <div class="meta"><span>Yahoo snapshot <b>Sep 28 • 12:30 AM</b></span><span>3 teams</span></div>
+</header>
+<section class="card">
+  <div class="card-head"><h2>Your teams</h2><span class="pill">SELECT</span></div>
+  <div class="teams">
+    <a class="team-card" href="./brock/"><div class="team-row"><div><div class="team-name">Brock Hard</div><div class="team-meta">0–2 • 7th of 8 • waiver #1</div></div><div class="arrow">›</div></div></a>
+    <a class="team-card" href="./quick/"><div class="team-row"><div><div class="team-name">Quick Snap</div><div class="team-meta">1–0 • 3rd of 10 • waiver #3</div></div><div class="arrow">›</div></div></a>
+    <a class="team-card" href="./highlight/"><div class="team-row"><div><div class="team-name">Highlight Reel</div><div class="team-meta">1–0 • 4th of 10 • waiver #6</div></div><div class="arrow">›</div></div></a>
   </div>
-
-  <section class="panel full-only" id="tools">
-    <div class="panel-head"><h2>Tools</h2><span class="pill">ONE TAP</span></div>
-    <div class="quick-grid">
-      <button class="quick" data-run="Scan%20the%20live%20waiver%20wire%20separately%20for%20Brock%20Hard%20%26%20Tee%20Baggin%2C%20Quick%20Snap%20Jamison%20and%20Highlight%20Reel%20Jamison.%20Rank%20the%20best%20available%20adds%20by%20expected%20rest-of-season%20impact%2C%20roster%20need%2C%20drop%20candidate%20and%20waiver-priority%20cost.%20Do%20not%20assume%20cross-league%20availability.">WAIVER SCAN<span>All 3 leagues</span></button>
-      <button class="quick" data-run="Optimize%20the%20current%20starting%20lineup%20separately%20for%20Brock%20Hard%20%26%20Tee%20Baggin%2C%20Quick%20Snap%20Jamison%20and%20Highlight%20Reel%20Jamison%20using%20live%20rosters%2C%20opponent%20matchups%2C%20injuries%20and%20role%20changes.%20Flag%20only%20changes%20that%20are%20materially%20better%20than%20the%20current%20starter.">LINEUP<span>All 3 teams</span></button>
-      <button class="quick" data-run="Analyze%20all%20three%20of%20my%20fantasy%20rosters%20for%20tradeable%20surplus%20and%20positional%20weakness.%20For%20each%20team%2C%20identify%20realistic%20players%20to%20shop%2C%20the%20position%20to%20target%20and%202-for-1%20or%201-for-1%20trade%20constructions%20that%20improve%20weekly%20starters.">TRADES<span>Consolidate depth</span></button>
-      <button class="quick" data-run="Run%20an%20injury%20and%20status%20audit%20for%20every%20player%20on%20Brock%20Hard%20%26%20Tee%20Baggin%2C%20Quick%20Snap%20Jamison%20and%20Highlight%20Reel%20Jamison.%20Separate%20urgent%20lineup%20threats%2C%20players%20to%20monitor%2C%20IR%20decisions%20and%20harmless%20statuses.">INJURIES<span>Risk check</span></button>
-    </div>
-  </section>
-  <div class="footer">Tap ↻ for fresh Yahoo analysis • Details stays hidden until you ask for it.</div>
-</main>
-
-<nav class="dock" aria-label="Fantasy actions">
-  <button class="dock-run" id="nextPromptBtn">RUN NEXT</button>
-  <a class="dock-yahoo" id="dockYahoo" href="https://football.fantasysports.yahoo.com/" target="_blank" rel="noopener">YAHOO</a>
-  <button class="dock-mode" id="modeToggle">MORE</button>
-</nav>
-<div class="toast" id="toast">OPENING CHATGPT…</div>
+</section>
+<section class="card">
+  <div class="card-head"><h2>All-team actions</h2><span class="pill">ONE TAP</span></div>
+  <button class="run" data-run="Scan%20the%20live%20waiver%20wire%20separately%20for%20Brock%20Hard%20%26%20Tee%20Baggin%2C%20Quick%20Snap%20Jamison%20and%20Highlight%20Reel%20Jamison.%20Rank%20the%20best%20available%20adds%20by%20expected%20rest-of-season%20impact%2C%20roster%20need%2C%20drop%20candidate%20and%20waiver-priority%20cost.%20Do%20not%20assume%20cross-league%20availability.">RUN 3-TEAM WAIVER SCAN</button>
+  <button class="run" data-run="Optimize%20the%20current%20starting%20lineup%20separately%20for%20Brock%20Hard%20%26%20Tee%20Baggin%2C%20Quick%20Snap%20Jamison%20and%20Highlight%20Reel%20Jamison%20using%20live%20rosters%2C%20opponent%20matchups%2C%20injuries%20and%20role%20changes.%20Flag%20only%20materially%20better%20changes.">OPTIMIZE ALL 3 LINEUPS</button>
+</section>
+<div class="footer">Fantasy HQ home • tap a team to enter its page.</div></main><div class="toast" id="toast">OPENING CHATGPT…</div>
 <script>
-const DATA = {
-all:{
-  pill:"3 TEAMS",context:"ALL TEAMS",yahoo:"https://football.fantasysports.yahoo.com/",decision:["DO THIS NEXT","Brock: Addison → drop Andrews • Quick: Denzel Boston → drop Andrews • Highlight: Worthy → drop Coker","These are the current highest-value waiver actions from the separately scanned Yahoo pools."],
-  metrics:[["Records","2 × 1–0","Brock is 0–2"],["Best priority","#1","Brock Hard"],["Immediate moves","3","One per team"],["Main theme","WR / FLEX","plus injury cover"]],
-  cards:[
-    {name:"Brock Hard",meta:"0–2 • 7th of 8 • waiver #1",score:"144.80–136.06",sub:"currently ahead",team:"brock"},
-    {name:"Quick Snap",meta:"1–0 • 3rd of 10 • waiver #3",score:"82.30–87.36",sub:"currently behind",team:"quick"},
-    {name:"Highlight Reel",meta:"1–0 • 4th of 10 • waiver #6",score:"106.58–71.74",sub:"currently ahead",team:"highlight"}
-  ],
-  issues:[
-    {n:1,state:"now",title:"Brock: use #1 waiver leverage intelligently",body:"Jordan Addison is available in this league and fits the Jefferson injury risk. Mark Andrews is expendable behind Brock Bowers.",prompt:"Re-scan Brock Hard & Tee Baggin's live Yahoo waiver wire and current injuries. Decide whether Jordan Addison still deserves waiver priority #1. If yes, confirm the best drop candidate; if no, rank the alternatives and tell me to HOLD #1."},
-    {n:2,state:"now",title:"Quick Snap: solve WR depth first",body:"Denzel Boston is available here, A.J. Brown is on IR, and Quick has waiver priority #3. This is a direct roster-need match.",prompt:"Re-scan Quick Snap Jamison's live Yahoo waiver wire and roster. Decide whether Denzel Boston is worth waiver priority #3, compare him with Quentin Johnston and Harold Fannin Jr., and give me one exact add/drop claim plus fallbacks."},
-    {n:3,state:"now",title:"Highlight: stop benching Brock Bowers",body:"Bowers scored 22.6 on the bench while Dalton Kincaid scored 2.8 as the starting TE. Fix the TE default before chasing smaller upgrades.",prompt:"Set Highlight Reel Jamison's Week 4 lineup using the live roster. Treat Brock Bowers as the default TE unless current injury/matchup evidence strongly argues otherwise. Then optimize WR2 and FLEX."}
-  ],
-  upgrades:[
-    {n:1,state:"info",title:"Run waivers separately every Tuesday",body:"Your three leagues have materially different available players. One generic waiver list is misleading.",prompt:"Every time I ask for waivers, scan each of my three Yahoo leagues separately and return a claim queue with add, drop, roster fit and waiver-priority cost."},
-    {n:2,state:"info",title:"Add a Friday injury gate",body:"A short late-week audit prevents questionable players from turning into emergency Sunday decisions.",prompt:"Run a Friday injury gate across all three fantasy teams. Show only players whose status could change my lineup, waiver plan or IR usage, with an exact contingency for each."},
-    {n:3,state:"info",title:"Turn surplus into starter upgrades",body:"Multiple teams are carrying useful bench depth and duplicate TE value. Consolidation trades can increase weekly starter quality.",prompt:"Find realistic consolidation trades separately for Brock Hard, Quick Snap and Highlight Reel. Protect core stars; turn duplicate TE or bench depth into stronger weekly WR/RB/FLEX starters."}
-  ],
-  waivers:[
-    {r:1,name:"Brock → Jordan Addison",meta:"WR • MIN • available only in Brock league",why:"Best immediate fit for Jefferson uncertainty. Suggested drop: Mark Andrews.",claim:"USE #1",c:"use"},
-    {r:2,name:"Quick → Denzel Boston",meta:"WR • CLE • available only in Quick league",why:"Direct WR need with A.J. Brown on IR. Suggested drop: Mark Andrews.",claim:"USE #3",c:"use"},
-    {r:3,name:"Highlight → Xavier Worthy",meta:"WR • KC • available only in Highlight league",why:"Adds ceiling at WR/FLEX. Suggested drop: Jalen Coker if current role remains weak.",claim:"SUBMIT #6",c:"submit"}
-  ],
-  match:null,
-  roster:[
-    ["BROCK","Brock Hard","0–2 • 7/8 • waiver #1","",false],
-    ["QUICK","Quick Snap","1–0 • 3/10 • waiver #3","",false],
-    ["HIGH","Highlight Reel","1–0 • 4/10 • waiver #6","",false]
-  ]
-},
-brock:{
-  pill:"BROCK",context:"BROCK HARD",yahoo:"https://football.fantasysports.yahoo.com/f1/290846",decision:["DO THIS NEXT","Claim Jordan Addison with waiver #1 → drop Mark Andrews","Best combination of roster need, Jefferson insurance and expendable duplicate TE depth."],
-  metrics:[["Record","0–2","7th of 8"],["Waiver","#1","maximum leverage"],["Points for","281.98","not a dead roster"],["Week 3","144.80–136.06","ahead"]],
-  issues:[
-    {n:1,state:"now",title:"Top waiver decision: Jordan Addison",body:"Addison is verified available in this 8-team league. Your roster has Bowers at TE, making Mark Andrews a clean expendable piece.",prompt:"Re-scan Brock Hard & Tee Baggin's live waiver pool and injuries. If Jordan Addison is still available and Jefferson remains a meaningful concern, confirm Addison as my #1 claim and Mark Andrews as the drop. Otherwise give me the best #1-priority alternative or HOLD."},
-    {n:2,state:"watch",title:"Breece Hall + Justin Jefferson status",body:"Yahoo currently carries injury flags on both core starters. The roster has enough depth to avoid a panic trade.",prompt:"Update Breece Hall and Justin Jefferson using current injury information and Brock Hard's roster. Build Plan A, B and C for Week 4 without sacrificing elite long-term value."},
-    {n:3,state:"good",title:"Do not overreact to 0–2",body:"281.98 points for is competitive, and Week 3 is currently trending your way. Fix leverage points instead of rebuilding the roster.",prompt:"Diagnose Brock Hard's 0–2 start. Separate schedule luck, lineup mistakes and actual roster weaknesses, then give me only the changes justified by the evidence."}
-  ],
-  upgrades:[
-    {n:1,state:"info",title:"Trade the redundant TE, not the star TE",body:"Brock Bowers should remain the core. Mark Andrews can be moved or dropped depending on market value.",prompt:"Search Brock Hard's league rosters for teams that need TE help. Build realistic offers using Mark Andrews plus one bench piece to target a better RB/WR starter. Keep Brock Bowers protected."},
-    {n:2,state:"info",title:"Create an injury-proof Week 4 flex tree",body:"Hall/Jefferson uncertainty can be handled with a prebuilt order instead of Sunday scrambling.",prompt:"Build Brock Hard's Week 4 starter and flex hierarchy with explicit replacements if Breece Hall or Justin Jefferson are inactive or limited."}
-  ],
-  waivers:[
-    {r:1,name:"Jordan Addison",meta:"WR • MIN • Yahoo-wide roster rate 73%",why:"Best mix of talent, need and Jefferson contingency. Drop: Mark Andrews.",claim:"USE #1",c:"use"},
-    {r:2,name:"Kyle Monangai",meta:"RB • CHI • Yahoo-wide 82%",why:"High-upside RB depth and useful Hall insurance.",claim:"#1 FALLBACK",c:"submit"},
-    {r:3,name:"Josh Jacobs",meta:"RB • GB • Yahoo-wide 78%",why:"Big ceiling but current status makes the timing less clean.",claim:"WATCH",c:"hold"},
-    {r:4,name:"Michael Pittman Jr.",meta:"WR • PIT • Yahoo-wide 69%",why:"Useful WR depth if Addison is gone.",claim:"FALLBACK",c:"submit"},
-    {r:5,name:"Woody Marks",meta:"RB • HOU • Yahoo-wide 52%",why:"Upside stash; not enough to burn #1 ahead of the top names.",claim:"HOLD #1",c:"hold"}
-  ],
-  match:{a:"Brock Hard",as:"144.80",ap:"142.45",b:"Josh ❤️creampies",bs:"136.06",bp:"148.14"},
-  roster:[
-    ["QB","Jalen Hurts","PHI • starter","0.0",false],["RB","Javonte Williams","DAL • starter","18.3",false],
-    ["RB","Breece Hall","NYJ • Q","8.5",true],["WR","Ja'Marr Chase","CIN • starter","24.8",false],
-    ["WR","Justin Jefferson","MIN • Q","5.2",true],["TE","Brock Bowers","LV • starter","27.6",false],
-    ["FLEX","Tee Higgins","CIN • starter","21.0",false],["FLEX","Zay Flowers","BAL • starter","15.4",false],
-    ["BN","Mark Andrews","BAL • drop/trade candidate","5.4",true],["BN","Tony Pollard","TEN • bench","13.6",false],
-    ["BN","RJ Harvey","DEN • bench","10.7",false],["BN","Marvin Harrison Jr.","ARI • bench","7.0",false]
-  ]
-},
-quick:{
-  pill:"QUICK",context:"QUICK SNAP",yahoo:"https://football.fantasysports.yahoo.com/f1/1651669",decision:["DO THIS NEXT","Claim Denzel Boston with waiver #3 → drop Mark Andrews","This directly addresses the WR shortage while preserving Kelce as the starting TE."],
-  metrics:[["Record","1–0","3rd of 10"],["Waiver","#3","strong leverage"],["Week 3","82.30–87.36","down 5.06"],["Main need","WR","A.J. Brown on IR"]],
-  issues:[
-    {n:1,state:"now",title:"Claim Denzel Boston if the pool holds",body:"Boston is verified available here and directly addresses the roster's biggest need. Mark Andrews is duplicate TE depth behind Kelce.",prompt:"Re-scan Quick Snap Jamison now. If Denzel Boston is still available, compare him with Quentin Johnston and Harold Fannin Jr. If Boston remains the best roster fit, set the exact claim using waiver priority #3 and choose the drop."},
-    {n:2,state:"watch",title:"WR starter quality is the pressure point",body:"A.J. Brown is on IR and Week 3 produced weak starting WR output while multiple bench options scored better.",prompt:"Build Quick Snap's Week 4 WR and FLEX hierarchy using the live roster, player roles and current injuries. Separate automatic starts from matchup-dependent options."},
-    {n:3,state:"info",title:"Bench depth creates decision noise",body:"Addison, Tuten, Downs and other usable options make weekly process more important than adding another random depth player.",prompt:"Audit Quick Snap's lineup efficiency using information available before kickoff. Identify preventable mistakes and write three simple start/sit rules for Week 4."}
-  ],
-  upgrades:[
-    {n:1,state:"info",title:"Consolidate depth into WR",body:"The roster can afford to package bench value for a more stable weekly receiver.",prompt:"Find realistic WR trade targets for Quick Snap. Use bench RB/WR/TE depth as currency while protecting Jalen Hurts and Jonathan Taylor unless the return is exceptional."},
-    {n:2,state:"info",title:"Preserve waiver priority after the real upgrade",body:"If Boston is gone, don't burn #3 on a marginal depth move.",prompt:"If Denzel Boston is unavailable, rank Quick Snap's remaining waiver options and tell me which are genuinely worth waiver priority #3 versus players I should wait to add as free agents."}
-  ],
-  waivers:[
-    {r:1,name:"Denzel Boston",meta:"WR • CLE • Yahoo-wide roster rate 76%",why:"Best fit for A.J. Brown IR / WR need. Drop: Mark Andrews.",claim:"USE #3",c:"use"},
-    {r:2,name:"Quentin Johnston",meta:"WR • LAC • Yahoo-wide 71%",why:"More WR upside; less clean than Boston.",claim:"FALLBACK",c:"submit"},
-    {r:3,name:"Harold Fannin Jr.",meta:"TE • CLE • Yahoo-wide 92%",why:"Strong player value, but Kelce means roster need is lower.",claim:"VALUE",c:"hold"},
-    {r:4,name:"Tank Bigsby",meta:"RB • PHI • Yahoo-wide 37%",why:"Bench RB upside; not the urgent problem.",claim:"WAIT",c:"hold"},
-    {r:5,name:"Tyler Allgeier",meta:"RB • ARI • Yahoo-wide 43%",why:"Contingent value only. Preserve #3.",claim:"WAIT",c:"hold"}
-  ],
-  match:{a:"Quick Snap",as:"82.30",ap:"112.49",b:"Ground & Pound",bs:"87.36",bp:"110.99"},
-  roster:[
-    ["QB","Jalen Hurts","PHI • starter","0.0",false],["RB","Jonathan Taylor","IND • starter","8.2",false],
-    ["RB","Kenneth Walker III","KC • starter","20.3",false],["WR","Jalen Coker","CAR • Q","2.8",true],
-    ["WR","Tetairoa McMillan","CAR • starter","2.7",true],["TE","Travis Kelce","KC • starter","12.9",false],
-    ["FLEX","Jeremiyah Love","ARI • starter","19.4",false],["BN","Jordan Addison","MIN • bench","17.5",true],
-    ["BN","Bhayshul Tuten","JAX • bench","16.0",true],["BN","Josh Downs","IND • bench","10.2",false],
-    ["BN","Mark Andrews","BAL • drop/trade candidate","3.9",true],["IR","A.J. Brown","NE • IR","0.0",true]
-  ]
-},
-highlight:{
-  pill:"HIGHLIGHT",context:"HIGHLIGHT REEL",yahoo:"https://football.fantasysports.yahoo.com/f1/1651679",decision:["DO THIS NEXT","Start Brock Bowers by default; submit Xavier Worthy claim at #6","Fix the obvious TE leak first, then attack WR/FLEX ceiling."],
-  metrics:[["Record","1–0","4th of 10"],["Waiver","#6","middle leverage"],["Week 3","106.58–71.74","ahead 34.84"],["Main leak","TE","Bowers on bench"]],
-  issues:[
-    {n:1,state:"now",title:"Brock Bowers should be the TE default",body:"Bowers scored 22.6 on the bench while Dalton Kincaid scored 2.8 as the starter. This is the clearest lineup leak on any of the three teams.",prompt:"Set Highlight Reel's Week 4 lineup using the live roster. Make Brock Bowers the default TE unless current health or matchup evidence gives a strong reason not to. Decide whether Dalton Kincaid is better held, traded or used only as insurance."},
-    {n:2,state:"now",title:"Xavier Worthy is the best available ceiling add",body:"Worthy is verified available in this league and addresses WR/FLEX volatility. Waiver priority #6 lowers the opportunity cost.",prompt:"Re-scan Highlight Reel Jamison's available players. If Xavier Worthy is still available, compare him with Woody Marks and Khalil Shakir, then give me the best claim and exact drop candidate."},
-    {n:3,state:"watch",title:"WR2/FLEX is carrying too much variance",body:"Coker, Waddle and Kincaid gave little production while Gibbs and Garrett Wilson carried the scoring.",prompt:"Optimize Highlight Reel's Week 4 WR2 and FLEX choices from the live roster. Compare Jaylen Waddle, Jalen Coker, Brian Thomas Jr., Denzel Boston, Bhayshul Tuten and any better waiver add."}
-  ],
-  upgrades:[
-    {n:1,state:"info",title:"Trade Kincaid before dropping value",body:"Bowers can lock down TE. Kincaid is more useful as trade currency than as a weekly lineup dilemma.",prompt:"Search Highlight Reel's league for teams weak at TE and build realistic Dalton Kincaid trade packages that improve WR/FLEX or RB depth. Do not trade Brock Bowers."},
-    {n:2,state:"info",title:"Use backup-QB slot efficiently",body:"Caleb Williams is currently out while Bo Nix is healthy. In a 1-QB format that slot can become flexibility.",prompt:"Audit Highlight Reel's backup-QB roster spot. Decide whether Caleb Williams is worth holding versus using that spot on a high-upside WR/RB waiver add, factoring in Bo Nix's bye and schedule."}
-  ],
-  waivers:[
-    {r:1,name:"Xavier Worthy",meta:"WR • KC • Yahoo-wide roster rate 67%",why:"Best ceiling fit for the unstable WR/FLEX group. Drop: Coker if role remains weak.",claim:"SUBMIT #6",c:"use"},
-    {r:2,name:"Woody Marks",meta:"RB • HOU • Yahoo-wide 52%",why:"Upside RB stash; strong fallback if Worthy is claimed.",claim:"FALLBACK",c:"submit"},
-    {r:3,name:"Khalil Shakir",meta:"WR • BUF • Yahoo-wide 49%",why:"Useful WR depth, but lower ceiling than Worthy.",claim:"WAIT",c:"hold"},
-    {r:4,name:"Kenny Gainwell",meta:"RB • TB • Yahoo-wide 64%",why:"Contingent backfield value; not a priority claim.",claim:"WAIT",c:"hold"},
-    {r:5,name:"Colston Loveland",meta:"TE • CHI • Yahoo-wide 96%",why:"Excellent player value but redundant with Bowers + Kincaid.",claim:"NO NEED",c:"hold"}
-  ],
-  match:{a:"Highlight Reel",as:"106.58",ap:"116.11",b:"Crashee Rice",bs:"71.74",bp:"105.48"},
-  roster:[
-    ["QB","Bo Nix","DEN • starter","25.14",false],["RB","Jahmyr Gibbs","DET • starter","37.9",false],
-    ["RB","Ashton Jeanty","LV • starter","10.8",false],["WR","Garrett Wilson","NYJ • starter","21.7",false],
-    ["WR","Jalen Coker","CAR • Q","2.8",true],["TE","Dalton Kincaid","BUF • starter","2.8",true],
-    ["FLEX","Jaylen Waddle","DEN • starter","5.4",true],["BN","Brock Bowers","LV • START CANDIDATE","22.6",true],
-    ["BN","Bhayshul Tuten","JAX • bench","16.0",true],["BN","Brian Thomas Jr.","JAX • bench","1.3",false],
-    ["BN","Denzel Boston","CLE • bench","7.1",false],["BN","Caleb Williams","CHI • O","0.0",true]
-  ]
-}
-};
-
-const state={
-  team:localStorage.getItem('fantasyTeam')||'all',
-  mode:localStorage.getItem('fantasyMode')||'simple'
-};
-const REFRESH_PROMPT="Refresh my Fantasy Football HQ using live Yahoo data for Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison. Re-scan standings, current matchups, rosters, injury/status flags and each league's available-player pool. Then update the dashboard's status, problems, waiver queues and roster alerts.";
-
-function metricHTML(m){return '<div class="metric"><div class="metric-label">'+m[0]+'</div><div class="metric-value">'+m[1]+'</div><div class="metric-sub">'+m[2]+'</div></div>'}
-function actionHTML(x){return '<article class="action-card"><div class="action-top"><div class="action-num">'+x.n+'</div><div class="action-title">'+x.title+'</div><div class="badge '+x.state+'">'+x.state+'</div></div><div class="action-body">'+x.body+'</div><button class="run" data-run="'+encodeURIComponent(x.prompt)+'">RUN IN CHATGPT</button></article>'}
-function waiverHTML(w){return '<div class="waiver"><div class="rank">'+w.r+'</div><div><div class="waiver-name">'+w.name+'</div><div class="waiver-meta">'+w.meta+'</div><div class="waiver-why">'+w.why+'</div></div><div class="claim '+w.c+'">'+w.claim+'</div></div>'}
-function teamCardsHTML(cards){
-  if(!cards||!cards.length)return '';
-  return '<div class="team-grid">'+cards.map(c=>'<button class="team-switch" data-team="'+c.team+'"><span><strong>'+c.name+'</strong><span>'+c.meta+'</span></span><b>'+c.score+'</b></button>').join('')+'</div>'
-}
-function matchHTML(m){
-  if(!m)return '<div class="action-body">Choose a team for matchup detail.</div>';
-  return '<div class="match"><div class="side"><div class="match-team">'+m.a+'</div><div class="match-score">'+m.as+'</div><div class="match-proj">proj '+m.ap+'</div></div><div class="vs">VS</div><div class="side right"><div class="match-team">'+m.b+'</div><div class="match-score">'+m.bs+'</div><div class="match-proj">proj '+m.bp+'</div></div></div>'
-}
-function rosterHTML(rows){return rows.map(r=>'<div class="player '+(r[0]==='BN'?'bench ':'')+(r[4]?'alert':'')+'"><div class="slot">'+r[0]+'</div><div><div class="pname">'+r[1]+'</div><div class="pmeta">'+r[2]+'</div></div><div class="pts">'+r[3]+'</div></div>').join('')}
-
-function render(){
-  const d=DATA[state.team]||DATA.all;
-  const simple=state.mode==='simple';
-  document.body.classList.toggle('simple',simple);
-  document.body.dataset.team=state.team;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.team===state.team));
-  document.getElementById('teamContext').textContent=d.context;
-  document.getElementById('statusPill').textContent=d.pill;
-  document.getElementById('decisionStrip').innerHTML=
-    '<div class="decision"><div class="decision-label">'+d.decision[0]+'</div><div class="decision-main">'+d.decision[1]+'</div><div class="decision-sub">'+d.decision[2]+'</div><button class="primary-run" data-run="'+encodeURIComponent(d.issues[0].prompt)+'">RUN THIS</button></div>';
-  document.getElementById('metrics').innerHTML=(simple?d.metrics.slice(0,2):d.metrics).map(metricHTML).join('');
-  document.getElementById('teamCards').innerHTML=state.team==='all'?teamCardsHTML(d.cards):'';
-  document.getElementById('issues').innerHTML=simple?'':d.issues.slice(1).map(actionHTML).join('');
-  document.getElementById('upgrades').innerHTML=(simple?d.upgrades.slice(0,1):d.upgrades).map(actionHTML).join('');
-  document.getElementById('waiverList').innerHTML=(simple?d.waivers.slice(0,3):d.waivers).map(waiverHTML).join('');
-  if(!simple){
-    document.getElementById('match').innerHTML=matchHTML(d.match);
-    document.getElementById('roster').innerHTML=rosterHTML(d.roster);
-  }else{
-    document.getElementById('match').textContent='';
-    document.getElementById('roster').textContent='';
-  }
-  document.getElementById('nextPromptBtn').dataset.run=encodeURIComponent(d.issues[0].prompt);
-  document.getElementById('dockYahoo').href=d.yahoo;
-  document.getElementById('modeToggle').textContent=simple?'MORE':'LESS';
-}
 function openChat(prompt){
-  showToast();
-  window.location.href='https://chatgpt.com/?prompt='+encodeURIComponent(prompt);
-}
-function showToast(){
-  const t=document.getElementById('toast');t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),850)
+  const t=document.getElementById('toast');if(t){t.classList.add('show');setTimeout(()=>t.classList.remove('show'),800)}
+  window.location.href='https://chatgpt.com/?prompt='+encodeURIComponent(prompt)
 }
 document.addEventListener('click',e=>{
-  const team=e.target.closest('[data-team]');
-  if(team){state.team=team.dataset.team;localStorage.setItem('fantasyTeam',state.team);render();return}
-  const run=e.target.closest('[data-run]');
-  if(run){openChat(decodeURIComponent(run.dataset.run||''));return}
-  if(e.target.closest('#refreshBtn')){openChat(REFRESH_PROMPT);return}
-  if(e.target.closest('#modeToggle')){
-    state.mode=state.mode==='simple'?'full':'simple';
-    localStorage.setItem('fantasyMode',state.mode);render();return
-  }
+  const b=e.target.closest('[data-run]');
+  if(b){openChat(decodeURIComponent(b.dataset.run||''))}
 });
-render();
-</script>
-</body>
-</html>
+</script></body></html>
