@@ -26,16 +26,16 @@ a,button{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:manip
 .refresh-note{font-size:8px;color:var(--muted);margin-top:6px}
 @media(prefers-reduced-motion:reduce){.refresh-btn.spinning{animation:none}}
 </style></head><body class="quick"><main class="app">
-  <div class="top"><a class="home-link" href="../">← Fantasy HQ</a><div style="display:flex;gap:6px"><button class="refresh-btn" id="hardRefreshBtn" aria-label="Refresh page">↻</button><a class="home-link" href="https://football.fantasysports.yahoo.com/f1/1651669" target="_blank" rel="noopener">Yahoo ↗</a></div></div>
+  <div class="top"><a class="home-link" href="../">← Fantasy HQ</a><div style="display:flex;gap:6px"><button class="refresh-btn" id="liveSyncBtn" aria-label="Sync live Yahoo data" data-run="Refresh%20and%20republish%20my%20Fantasy%20Football%20HQ%20now.%20Pull%20fresh%20Yahoo%20data%20separately%20for%20Brock%20Hard%20%26%20Tee%20Baggin%2C%20Quick%20Snap%20Jamison%2C%20and%20Highlight%20Reel%20Jamison%3A%20standings%2C%20current%20matchup%20scores%2Fprojections%2C%20roster%2Fstatus%20flags%2C%20waiver%20priority%2C%20and%20available%20players.%20Update%20the%20GitHub%20Pages%20team%20pages%20and%20home%20page%20with%20the%20new%20snapshot%20and%20timestamp.%20Do%20not%20reuse%20stale%20values.">↻</button><a class="home-link" href="https://football.fantasysports.yahoo.com/f1/1651669" target="_blank" rel="noopener">Yahoo ↗</a></div></div>
   <header class="hero">
     <div class="kicker">Quick Snap Jamison</div><div class="title">Quick Snap</div>
-    <div class="sub">Dedicated team page • Yahoo snapshot Sep 28 • 12:30 AM ET</div><div class="refresh-note" id="refreshNote">↻ reloads the newest published version</div>
+    <div class="sub">Dedicated team page • Yahoo snapshot Sep 28 • refreshed</div><div class="refresh-note" id="refreshNote">↻ starts a fresh Yahoo sync in ChatGPT</div>
     <div class="meta"><span>1–0 • <b>3rd of 10</b></span><span>Waiver <b>#3</b></span></div>
   </header>
   <section class="card">
     <div class="card-head"><h2>Do this next</h2><span class="pill">#1</span></div>
     <div class="decision"><div class="decision-label">NEXT MOVE</div><div class="decision-main">Claim Denzel Boston with waiver #3 → drop Mark Andrews</div><div class="decision-sub">Directly attacks the WR shortage while Kelce already covers TE.</div><button class="primary-run btn btn-primary" data-run="Re-scan%20Quick%20Snap%20Jamison%20now.%20If%20Denzel%20Boston%20is%20still%20available%2C%20compare%20him%20with%20Quentin%20Johnston%20and%20Harold%20Fannin%20Jr.%20If%20Boston%20remains%20the%20best%20roster%20fit%2C%20set%20the%20exact%20claim%20using%20waiver%20priority%20%233%20and%20choose%20the%20drop.">RUN THIS</button></div>
-    <div class="stats"><div class="stat"><span>Record</span><b>1–0</b><small>3rd of 10</small></div><div class="stat"><span>Waiver</span><b>#3</b><small>current priority</small></div><div class="stat"><span>Week 3</span><b>82.30–87.36</b><small>score snapshot</small></div><div class="stat"><span>Page</span><b>Quick Snap</b><small>team-specific</small></div></div>
+    <div class="stats"><div class="stat"><span>Record</span><b>1–0</b><small>3rd of 10</small></div><div class="stat"><span>Waiver</span><b>#3</b><small>current priority</small></div><div class="stat"><span>Week 3</span><b>82.30–95.46</b><small>score snapshot</small></div><div class="stat"><span>Page</span><b>Quick Snap</b><small>team-specific</small></div></div>
   </section>
   <section class="card"><div class="card-head"><h2>Problems to fix</h2><span class="pill">PRIORITY</span></div><div class="issue"><div class="issue-top"><div class="num">1</div><div class="issue-title">WR starter quality is the pressure point</div></div><p>A.J. Brown is on IR and the starting WR production was weak while the bench had usable points.</p><button class="run" data-run="Build%20Quick%20Snap's%20Week%204%20WR%20and%20FLEX%20hierarchy%20using%20the%20live%20roster%2C%20player%20roles%20and%20current%20injuries.%20Separate%20automatic%20starts%20from%20matchup-dependent%20options.">RUN IN CHATGPT</button></div><div class="issue"><div class="issue-top"><div class="num">2</div><div class="issue-title">Bench depth creates decision noise</div></div><p>Addison, Tuten and Downs give you choices; the bigger gain may come from a better weekly process.</p><button class="run" data-run="Audit%20Quick%20Snap's%20lineup%20efficiency%20using%20information%20available%20before%20kickoff.%20Identify%20preventable%20mistakes%20and%20write%20three%20simple%20start%2Fsit%20rules%20for%20Week%204.">RUN IN CHATGPT</button></div></section>
   <section class="card"><div class="card-head"><h2>Waiver targets</h2><span class="pill">TOP 3</span></div><div class="waiver"><div class="rank">1</div><div><div class="waiver-name">Denzel Boston</div><div class="waiver-meta">WR • CLE</div><div class="waiver-why">Best fit for A.J. Brown IR / WR need. Drop: Mark Andrews.</div></div><div class="claim">USE #3</div></div><div class="waiver"><div class="rank">2</div><div><div class="waiver-name">Quentin Johnston</div><div class="waiver-meta">WR • LAC</div><div class="waiver-why">More WR upside; less clean than Boston.</div></div><div class="claim">FALLBACK</div></div><div class="waiver"><div class="rank">3</div><div><div class="waiver-name">Harold Fannin Jr.</div><div class="waiver-meta">TE • CLE</div><div class="waiver-why">Strong value, but lower roster need with Kelce.</div></div><div class="claim">VALUE</div></div></section>
@@ -43,7 +43,7 @@ a,button{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:manip
   <div class="btn-grid"><a class="btn btn-secondary" href="../">← CHOOSE TEAM</a><a class="btn btn-secondary" href="https://football.fantasysports.yahoo.com/f1/1651669" target="_blank" rel="noopener">OPEN YAHOO</a></div>
   <div class="footer">Quick Snap Jamison • dedicated Fantasy HQ page</div></main><div class="toast" id="toast">OPENING CHATGPT…</div>
 <script>
-function hardRefreshPage(){
+function legacyHardRefreshPage(){
   const btn=document.getElementById('hardRefreshBtn');
   const note=document.getElementById('refreshNote');
   if(btn){btn.classList.add('spinning');btn.disabled=true}
@@ -57,7 +57,7 @@ function openChat(prompt){
   window.location.href='https://chatgpt.com/?prompt='+encodeURIComponent(prompt)
 }
 document.addEventListener('click',e=>{
-  if(e.target.closest('#hardRefreshBtn')){hardRefreshPage();return}
+  
   const b=e.target.closest('[data-run]');
   if(b){openChat(decodeURIComponent(b.dataset.run||''))}
 });
