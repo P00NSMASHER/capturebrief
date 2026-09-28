@@ -10,210 +10,126 @@
 <title>Fantasy Football HQ</title>
 <style>
 :root{
-  color-scheme:dark;--bg:#030712;--card:#091426;--card2:#0d1a2d;--line:rgba(130,178,255,.16);
-  --text:#f3f7ff;--muted:#8ea3c0;--cyan:#5ce7ff;--blue:#7b8dff;--green:#58f2a4;
-  --yellow:#ffd166;--red:#ff6f7d;--purple:#c09aff;--shadow:0 18px 50px rgba(0,0,0,.34)
+  color-scheme:dark;--bg:#050914;--surface:#0b1322;--surface2:#0e192b;--line:#1a2940;
+  --text:#f5f8ff;--muted:#8fa3bd;--accent:#63e5ff;--green:#61e9a6;--amber:#ffd36e;--red:#ff7d89;
+  --radius:18px
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;background:var(--bg)}
+html{background:var(--bg)}
 body{
-  margin:0;min-height:100vh;color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,system-ui,sans-serif;
-  -webkit-font-smoothing:antialiased;
-  background:
-    radial-gradient(circle at 10% -8%,rgba(92,231,255,.15),transparent 34%),
-    radial-gradient(circle at 105% 8%,rgba(123,141,255,.14),transparent 32%),
-    linear-gradient(180deg,#071120 0,#030712 55%,#02040a 100%);
-  padding:max(10px,env(safe-area-inset-top)) 12px calc(90px + env(safe-area-inset-bottom))
+  margin:0;min-height:100vh;background:linear-gradient(180deg,#091322 0,#050914 42%,#03060c 100%);
+  color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;padding:max(10px,env(safe-area-inset-top)) 12px calc(76px + env(safe-area-inset-bottom))
 }
-button,a{font:inherit;-webkit-tap-highlight-color:transparent}
+body[data-team="brock"]{--accent:#63e5ff}
+body[data-team="quick"]{--accent:#b9a1ff}
+body[data-team="highlight"]{--accent:#61e9a6}
+button,a{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 button{cursor:pointer}
-.app{width:min(100%,440px);margin:0 auto}
-.hero{
-  padding:16px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,rgba(12,29,51,.96),rgba(5,14,28,.93));
-  box-shadow:var(--shadow);position:relative;overflow:hidden
+.app{width:min(100%,430px);margin:0 auto}
+.top{
+  padding:14px;border:1px solid var(--line);border-radius:20px;background:var(--surface);
+  box-shadow:0 10px 28px rgba(0,0,0,.24)
 }
-.hero:after{content:"";position:absolute;width:170px;height:170px;border-radius:50%;right:-84px;top:-104px;background:radial-gradient(circle,rgba(92,231,255,.24),transparent 67%)}
-.eyebrow{display:flex;align-items:center;gap:8px;color:var(--cyan);font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
-.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 15px rgba(88,242,164,.9)}
-h1{font-size:27px;line-height:1.02;letter-spacing:-.04em;margin:8px 0 6px}
-.hero-copy{font-size:12px;color:var(--muted);line-height:1.45;max-width:320px}
-.freshness{margin-top:11px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:10px;color:#7187a7}
-.freshness b{color:#a9bdd7}
-.hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.action-btn,.yahoo-link{
-  min-height:44px;border-radius:13px;border:1px solid rgba(113,185,255,.18);display:flex;align-items:center;justify-content:center;
-  text-decoration:none;font-size:11px;font-weight:900
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.kicker{font-size:9px;font-weight:900;letter-spacing:.15em;color:var(--accent)}
+h1{margin:4px 0 0;font-size:22px;line-height:1.05;letter-spacing:-.035em}
+.refresh{
+  width:44px;height:44px;border-radius:13px;border:1px solid var(--line);background:#101d31;color:var(--text);
+  font-size:19px;font-weight:800
 }
-.action-btn{background:linear-gradient(135deg,var(--cyan),#8eb6ff);color:#04101a;border:0}
-.yahoo-link{background:rgba(255,255,255,.035);color:#d9e8ff}
+.meta{display:flex;justify-content:space-between;gap:12px;margin-top:9px;color:var(--muted);font-size:9px}
+.meta strong{color:#c8d7e9}
 .tabs{
-  position:sticky;z-index:30;top:max(7px,env(safe-area-inset-top));margin:10px 0;padding:6px;
-  display:grid;grid-template-columns:repeat(4,1fr);gap:5px;background:rgba(3,7,18,.84);
-  border:1px solid var(--line);border-radius:17px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  box-shadow:0 12px 30px rgba(0,0,0,.28)
+  position:sticky;top:max(6px,env(safe-area-inset-top));z-index:20;display:grid;grid-template-columns:repeat(4,1fr);
+  gap:5px;margin:9px 0;padding:5px;border:1px solid var(--line);border-radius:15px;background:#070d18;
+  box-shadow:0 8px 22px rgba(0,0,0,.24)
 }
-.tab{min-height:42px;border:0;border-radius:11px;background:transparent;color:#8196b4;font-weight:900;font-size:10px;padding:0 3px}
-.tab.active{color:#fff;background:linear-gradient(135deg,rgba(92,231,255,.15),rgba(123,141,255,.2));box-shadow:inset 0 0 0 1px rgba(122,202,255,.18)}
+.tab{min-height:42px;border:0;border-radius:10px;background:transparent;color:#758aa6;font-size:10px;font-weight:900}
+.tab.active{background:#13223a;color:#fff;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
 .panel{
-  scroll-margin-top:74px;margin:10px 0;padding:15px;border-radius:22px;border:1px solid var(--line);
-  background:linear-gradient(150deg,rgba(10,24,43,.97),rgba(5,13,25,.95));box-shadow:var(--shadow)
+  margin:9px 0;padding:13px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+  box-shadow:0 8px 24px rgba(0,0,0,.2)
 }
-.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:11px}
-.panel-head h2{font-size:17px;letter-spacing:-.025em;margin:0}
-.panel-head p{font-size:11px;color:var(--muted);line-height:1.35;margin:4px 0 0}
-.pill{flex:0 0 auto;padding:6px 8px;border-radius:999px;border:1px solid rgba(92,231,255,.22);background:rgba(92,231,255,.07);color:var(--cyan);font-size:9px;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
-.decision-strip{margin-bottom:10px;padding:12px 13px;border-radius:16px;background:linear-gradient(135deg,rgba(88,242,164,.10),rgba(92,231,255,.06));border:1px solid rgba(88,242,164,.16)}.decision-kicker{font-size:8px;font-weight:950;letter-spacing:.12em;color:var(--green);text-transform:uppercase}.decision-main{font-size:13px;font-weight:950;line-height:1.35;margin-top:4px}.decision-sub{font-size:9px;color:#8fa6c2;line-height:1.4;margin-top:3px}.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
-.metric{padding:11px;border-radius:15px;background:rgba(255,255,255,.032);border:1px solid rgba(255,255,255,.055)}
-.metric-label{font-size:9px;color:var(--muted);font-weight:850;text-transform:uppercase;letter-spacing:.08em}
-.metric-value{font-size:18px;font-weight:950;letter-spacing:-.035em;margin-top:4px}
-.metric-sub{font-size:9px;color:#7489a6;margin-top:2px}
-.action-list{display:grid;gap:8px}
-.action-card{
-  padding:12px;border-radius:17px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025)
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
+.panel-head h2{margin:0;font-size:15px;letter-spacing:-.02em}
+.pill{padding:5px 7px;border-radius:999px;background:#101d31;color:var(--accent);font-size:8px;font-weight:900;letter-spacing:.08em}
+.decision{
+  padding:12px;border-radius:15px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 10%,#0b1627),#0b1627);
+  border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line))
 }
-.card-top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px}
-.priority{width:25px;height:25px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:950;background:rgba(255,255,255,.06);color:#b8cae4}
-.card-title{font-size:12px;font-weight:950;line-height:1.25}
-.status{
-  font-size:8px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;padding:5px 7px;border-radius:999px
+.decision-label{font-size:8px;font-weight:900;letter-spacing:.12em;color:var(--accent)}
+.decision-main{font-size:14px;font-weight:900;line-height:1.3;margin-top:4px}
+.decision-sub{font-size:9px;line-height:1.4;color:var(--muted);margin-top:4px}
+.primary-run{
+  width:100%;min-height:44px;margin-top:10px;border:0;border-radius:11px;background:var(--accent);color:#041019;
+  font-size:10px;font-weight:950;letter-spacing:.03em
 }
-.status.now{color:#ff9ba6;background:rgba(255,111,125,.10);border:1px solid rgba(255,111,125,.2)}
-.status.watch{color:#ffe098;background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.18)}
-.status.good{color:#8cf7bc;background:rgba(88,242,164,.08);border:1px solid rgba(88,242,164,.18)}
-.status.info{color:#91efff;background:rgba(92,231,255,.08);border:1px solid rgba(92,231,255,.18)}
-.card-body{font-size:11px;color:#a6b9d0;line-height:1.45;margin:8px 0 0}
-.card-actions{display:flex;gap:7px;margin-top:9px}
-.run-chat{
-  flex:1;min-height:40px;border:0;border-radius:11px;background:linear-gradient(135deg,var(--cyan),#8db8ff);
-  color:#04101a;font-size:10px;font-weight:950;letter-spacing:.04em
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.metric{padding:9px 10px;border-radius:13px;background:#0d192a;border:1px solid #16263d}
+.metric-label{font-size:8px;color:var(--muted);font-weight:850;text-transform:uppercase;letter-spacing:.07em}
+.metric-value{font-size:17px;font-weight:950;letter-spacing:-.035em;margin-top:3px}
+.metric-sub{font-size:8px;color:#7388a3;margin-top:2px}
+.team-grid{display:grid;gap:6px;margin-top:8px}
+.team-switch{
+  width:100%;min-height:50px;border:1px solid #16263d;border-radius:13px;background:#0d192a;color:inherit;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;text-align:left
 }
-.run-chat:active{transform:translateY(1px);filter:brightness(.96)}
-.reveal{
-  min-height:40px;padding:0 11px;border-radius:11px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);
-  color:#a9bdd9;font-size:10px;font-weight:850
+.team-switch strong{display:block;font-size:11px}.team-switch span{display:block;font-size:8px;color:var(--muted);margin-top:2px}
+.team-switch b{font-size:11px;text-align:right}
+.action-list{display:grid;gap:7px}
+.action-card{padding:10px;border-radius:14px;background:#0d192a;border:1px solid #16263d}
+.action-top{display:flex;align-items:center;gap:7px}
+.action-num{width:22px;height:22px;border-radius:8px;background:#14233a;color:#c6d7eb;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900}
+.action-title{flex:1;font-size:11px;font-weight:900;line-height:1.25}
+.badge{font-size:7px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;padding:4px 6px;border-radius:999px}
+.badge.now{color:#ff9da7;background:#321820}.badge.watch{color:#ffe29a;background:#2f2916}.badge.good{color:#91f3bb;background:#123020}.badge.info{color:#a9effa;background:#12303a}
+.action-body{font-size:9px;line-height:1.4;color:var(--muted);margin:7px 0 0}
+.run{
+  width:100%;min-height:42px;margin-top:8px;border:0;border-radius:10px;background:#152945;color:#e9f4ff;
+  font-size:9px;font-weight:900
 }
-.prompt-box{display:none;margin-top:8px;padding:10px;border-radius:12px;background:#040a14;border:1px solid rgba(118,163,255,.13);color:#a8bbd8;font-size:10px;line-height:1.45}
-.prompt-box.open{display:block}
-.team-cards{display:grid;gap:8px}
-.team-card{
-  border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025);border-radius:17px;padding:12px
-}
-.team-line{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.team-name{font-size:13px;font-weight:950}
-.team-meta{font-size:10px;color:var(--muted);margin-top:3px}
-.team-score{font-size:15px;font-weight:950;text-align:right}
-.team-score small{display:block;font-size:9px;color:var(--muted);font-weight:700;margin-top:2px}
-.team-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
-.team-mini div{padding:7px;border-radius:10px;background:rgba(255,255,255,.025);font-size:9px;color:var(--muted)}
-.team-mini b{display:block;color:#edf5ff;font-size:11px;margin-top:2px}
-.waiver-list{display:grid;gap:7px}
+.waiver-list{display:grid;gap:6px}
 .waiver{
-  display:grid;grid-template-columns:26px 1fr auto;gap:9px;align-items:start;padding:10px;border-radius:14px;
-  background:rgba(255,255,255,.026);border:1px solid rgba(255,255,255,.055)
+  display:grid;grid-template-columns:24px 1fr auto;align-items:start;gap:8px;padding:9px;border-radius:13px;background:#0d192a;border:1px solid #16263d
 }
-.rank{width:26px;height:26px;border-radius:9px;background:rgba(92,231,255,.1);color:var(--cyan);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:950}
-.waiver-name{font-size:12px;font-weight:950}
-.waiver-meta{font-size:9px;color:var(--muted);margin-top:2px}
-.waiver-why{font-size:10px;color:#a6b9d0;line-height:1.4;margin-top:5px}
-.claim{font-size:8px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;border-radius:999px;padding:5px 6px;white-space:nowrap}
-.claim.use{color:#ff9ba6;background:rgba(255,111,125,.09)}
-.claim.submit{color:#ffe098;background:rgba(255,209,102,.08)}
-.claim.hold{color:#91efff;background:rgba(92,231,255,.08)}
-.note{margin-top:8px;padding:9px 10px;border-radius:12px;background:rgba(255,209,102,.055);border:1px solid rgba(255,209,102,.12);font-size:9px;color:#cbbd94;line-height:1.4}
-.match{
-  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:13px;border-radius:16px;
-  background:rgba(255,255,255,.028);border:1px solid rgba(255,255,255,.055)
-}
-.side{min-width:0}.side.right{text-align:right}
-.match-team{font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.match-score{font-size:23px;font-weight:950;letter-spacing:-.045em;margin-top:2px}
-.match-proj{font-size:9px;color:var(--muted);margin-top:2px}.vs{font-size:9px;color:#617696;font-weight:900}
-.roster{display:grid;gap:6px}
-.player{
-  display:grid;grid-template-columns:43px 1fr auto;align-items:center;gap:8px;padding:8px 9px;border-radius:13px;
-  background:rgba(255,255,255,.024);border:1px solid rgba(255,255,255,.045)
-}
-.slot{padding:6px 3px;border-radius:9px;text-align:center;background:rgba(123,141,255,.10);color:#aebcff;font-size:8px;font-weight:950}
-.player.bench{opacity:.78}.player.bench .slot{background:rgba(255,255,255,.05);color:#879ab5}
-.player.alert{border-color:rgba(255,209,102,.18);background:rgba(255,209,102,.035)}
-.pname{font-size:11px;font-weight:900}.pmeta{font-size:9px;color:var(--muted);margin-top:2px}
-.pts{font-size:12px;font-weight:950;text-align:right}.pts small{display:block;color:var(--muted);font-size:8px;font-weight:700;margin-top:2px}
-.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.quick{
-  min-height:52px;border-radius:13px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.027);
-  color:#d8e5f8;padding:8px;font-size:10px;font-weight:900;line-height:1.2
-}
-.quick span{display:block;color:#7288a7;font-size:8px;margin-top:4px;font-weight:700}
-.bottom-nav{
-  position:fixed;z-index:50;left:50%;transform:translateX(-50%);
-  bottom:max(8px,env(safe-area-inset-bottom));width:min(calc(100% - 24px),416px);
-  display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:6px;border-radius:18px;
-  border:1px solid var(--line);background:rgba(3,7,18,.89);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  box-shadow:0 16px 40px rgba(0,0,0,.42)
-}
-.bottom-nav a{min-height:44px;border-radius:11px;color:#8fa3c0;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900}
-.bottom-nav a:active{background:rgba(92,231,255,.08);color:#fff}
-.toast{
-  position:fixed;z-index:100;left:50%;transform:translateX(-50%) translateY(14px);bottom:calc(75px + env(safe-area-inset-bottom));
-  opacity:0;pointer-events:none;padding:9px 13px;border-radius:999px;background:#eaf8ff;color:#06101b;font-size:10px;font-weight:950;
-  transition:.18s ease
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.empty-score{font-size:12px;color:var(--muted);line-height:1.45}
-.footer{font-size:9px;color:#607594;text-align:center;line-height:1.4;padding:10px 6px 0}
-.mode-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
-.mode-label{font-size:9px;color:#7d91ad}.mode-label b{color:#dceaff}
-.mode-button{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);color:#bcd0e9;border-radius:999px;padding:7px 10px;font-size:9px;font-weight:900}
-.decision-copy{width:100%;min-height:42px;margin-top:9px;border:0;border-radius:11px;background:linear-gradient(135deg,var(--green),#9dffd0);color:#04120b!important;font-size:10px;font-weight:950;letter-spacing:.03em}
-.action-dock{
-  position:fixed;z-index:60;left:50%;transform:translateX(-50%);
-  bottom:max(8px,env(safe-area-inset-bottom));width:min(calc(100% - 24px),416px);
-  display:grid;grid-template-columns:1.25fr 1fr .8fr;gap:6px;padding:6px;border-radius:18px;
-  border:1px solid var(--line);background:rgba(3,7,18,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  box-shadow:0 16px 40px rgba(0,0,0,.45)
-}
-.action-dock button,.action-dock a{min-height:44px;border-radius:11px;border:0;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:950}
-.dock-next{background:linear-gradient(135deg,var(--cyan),#8db8ff);color:#04101a}
-.dock-yahoo,.dock-mode{background:rgba(255,255,255,.045);color:#d6e6fa;border:1px solid rgba(255,255,255,.07)!important}
-body.simple .metrics .metric:nth-child(n+3){display:none}
-body.simple #issues .action-card:nth-child(n+2){display:none}
+.rank{width:24px;height:24px;border-radius:8px;background:#14243b;color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:950}
+.waiver-name{font-size:11px;font-weight:900}.waiver-meta{font-size:8px;color:var(--muted);margin-top:2px}.waiver-why{font-size:9px;color:#a3b5ca;line-height:1.35;margin-top:4px}
+.claim{font-size:7px;font-weight:900;white-space:nowrap;padding:4px 6px;border-radius:999px}.claim.use{color:#ff9da7;background:#321820}.claim.submit{color:#ffe29a;background:#2f2916}.claim.hold{color:#a9effa;background:#12303a}
+.full-only{content-visibility:auto;contain-intrinsic-size:420px}
+body.simple .full-only{display:none}
+body.simple #issues{display:none}
 body.simple #upgrades .action-card:nth-child(n+2){display:none}
 body.simple #waiverList .waiver:nth-child(n+4){display:none}
-body.simple #matchup,body.simple #rosterPanel,body.simple #tools{display:none}
-body.simple #waivers .note{display:none}
-body.simple .hero-copy{display:none}
-body.simple .hero{padding:13px 15px}
-body.simple h1{font-size:23px;margin:7px 0 3px}
-body.simple .freshness{margin-top:7px}
-body.simple .panel{padding:13px;margin:8px 0}
-body.simple .panel-head p{display:none}
-body.simple .panel-head{margin-bottom:8px}
-body.simple .team-card{padding:10px}
-body.simple #status .team-cards{margin-bottom:8px}
-body.simple .card-body{font-size:10px;line-height:1.4}
-body.simple #improvements .card-actions .reveal{display:none}
-body.simple #improvements .prompt-box{display:none!important}
-body.simple #issues .card-actions .reveal{display:none}
-body.simple #issues .prompt-box{display:none!important}
-@media(min-width:700px){
-  .app{width:min(100%,840px)}.metrics{grid-template-columns:repeat(4,1fr)}
-  .desktop-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bottom-nav{width:430px}
+body.simple .panel{margin:7px 0}
+body.simple #status{padding-bottom:11px}
+.match{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:11px;border-radius:13px;background:#0d192a;border:1px solid #16263d}
+.side.right{text-align:right}.match-team{font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.match-score{font-size:21px;font-weight:950;letter-spacing:-.04em}.match-proj{font-size:8px;color:var(--muted)}.vs{font-size:8px;color:#60748f;font-weight:900}
+.roster{display:grid;gap:5px}.player{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:7px;padding:7px 8px;border-radius:11px;background:#0d192a;border:1px solid #16263d}
+.slot{text-align:center;padding:5px 3px;border-radius:8px;background:#14233a;color:#aebfda;font-size:7px;font-weight:900}.player.bench{opacity:.75}.player.alert{border-color:#4a3e19;background:#17170d}.pname{font-size:10px;font-weight:900}.pmeta{font-size:8px;color:var(--muted)}.pts{font-size:11px;font-weight:900}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.quick{min-height:48px;border:1px solid #16263d;border-radius:11px;background:#0d192a;color:#e3eefc;font-size:9px;font-weight:900;padding:7px}.quick span{display:block;color:var(--muted);font-size:7px;margin-top:3px}
+.footer{text-align:center;color:#5f728b;font-size:8px;line-height:1.4;padding:8px 4px 0}
+.dock{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:max(7px,env(safe-area-inset-bottom));z-index:40;
+  width:min(calc(100% - 24px),406px);display:grid;grid-template-columns:1.2fr 1fr .72fr;gap:5px;padding:5px;
+  border:1px solid #1b2b43;border-radius:16px;background:#070d18;box-shadow:0 10px 28px rgba(0,0,0,.42)
 }
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.toast{transition:none}}
+.dock button,.dock a{min-height:44px;border-radius:10px;border:0;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:9px;font-weight:950}
+.dock-run{background:var(--accent);color:#041019}.dock-yahoo,.dock-mode{background:#111e31;color:#dce9f8;border:1px solid #1a2a41!important}
+.toast{position:fixed;left:50%;transform:translateX(-50%) translateY(10px);bottom:calc(68px + env(safe-area-inset-bottom));opacity:0;pointer-events:none;z-index:60;padding:8px 11px;border-radius:999px;background:#edf8ff;color:#06101a;font-size:9px;font-weight:900;transition:.15s}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(min-width:700px){.app{width:min(100%,820px)}.desktop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dock{width:406px}.metrics{grid-template-columns:repeat(4,1fr)}}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
 </head>
-<body>
+<body class="simple" data-team="all">
 <main class="app">
-  <header class="hero">
-    <div class="eyebrow"><span class="live-dot"></span> Fantasy Football Command Center</div>
-    <h1>3-Team HQ</h1>
-    <div class="hero-copy">One next action first. Details only when you want them.</div>
-    <div class="freshness"><span>Yahoo snapshot <b>Sep 28 • 12:30 AM ET</b></span><span id="teamContext">ALL TEAMS</span></div>
-    <div class="mode-row">
-      <div class="mode-label">View: <b id="modeLabel">Simple</b></div>
-      <button class="mode-button run-chat" data-prompt="Refresh my Fantasy Football HQ using live Yahoo data for Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison. Re-scan standings, current matchups, rosters, injury/status flags and each league's available-player pool. Then update the dashboard's status, problems, waiver queues and roster alerts without changing its mobile-first structure.">REFRESH DATA</button>
+  <header class="top">
+    <div class="top-row">
+      <div><div class="kicker">FANTASY HQ</div><h1>3 teams. One next move.</h1></div>
+      <button class="refresh" id="refreshBtn" aria-label="Refresh data">↻</button>
     </div>
+    <div class="meta"><span id="teamContext">ALL TEAMS</span><span>Yahoo snapshot <strong>Sep 28 • 12:30 AM</strong></span></div>
   </header>
 
   <nav class="tabs" aria-label="Team selector">
@@ -224,73 +140,52 @@ body.simple #issues .prompt-box{display:none!important}
   </nav>
 
   <section class="panel" id="status">
-    <div class="panel-head">
-      <div><h2>1. Current status + problems</h2><p>One action first.</p></div>
-      <span class="pill" id="statusPill">3 TEAMS</span>
-    </div>
-    <div class="decision-strip" id="decisionStrip"></div><div class="metrics" id="metrics"></div>
+    <div class="panel-head"><h2>1. Now</h2><span class="pill" id="statusPill">3 TEAMS</span></div>
+    <div id="decisionStrip"></div>
+    <div class="metrics" id="metrics"></div>
     <div id="teamCards"></div>
     <div class="action-list" id="issues"></div>
   </section>
 
   <section class="panel" id="improvements">
-    <div class="panel-head">
-      <div><h2>2. Suggested improvements</h2><p>Best next upgrade.</p></div>
-      <span class="pill">UPGRADES</span>
-    </div>
+    <div class="panel-head"><h2>2. Best improvement</h2><span class="pill">UPGRADE</span></div>
     <div class="action-list" id="upgrades"></div>
   </section>
 
   <section class="panel" id="waivers">
-    <div class="panel-head">
-      <div><h2>Waiver command board</h2><p>Availability is verified separately by league. Claim logic reflects your current priority.</p></div>
-      <span class="pill" id="waiverPill">LIVE POOL</span>
-    </div>
+    <div class="panel-head"><h2>Waivers</h2><span class="pill" id="waiverPill">TOP TARGETS</span></div>
     <div class="waiver-list" id="waiverList"></div>
-    <div class="note">Yahoo confirms these players are available in the selected league, but this feed does not expose whether each player is currently a waiver claim or immediate free-agent add. Check Yahoo before submitting.</div>
   </section>
 
-  <div class="desktop-grid">
+  <div class="desktop-grid full-only">
     <section class="panel" id="matchup">
-      <div class="panel-head">
-        <div><h2>Week 3 matchup</h2><p id="matchNote">Current Yahoo score snapshot.</p></div>
-        <span class="pill">WEEK 3</span>
-      </div>
+      <div class="panel-head"><h2>Matchup</h2><span class="pill">WEEK 3</span></div>
       <div id="match"></div>
     </section>
-
     <section class="panel" id="rosterPanel">
-      <div class="panel-head">
-        <div><h2>Roster pulse</h2><p>Starters, bench signals and lineup mistakes worth noticing.</p></div>
-        <span class="pill">LINEUP</span>
-      </div>
+      <div class="panel-head"><h2>Roster</h2><span class="pill">LINEUP</span></div>
       <div class="roster" id="roster"></div>
     </section>
   </div>
 
-  <section class="panel" id="tools">
-    <div class="panel-head">
-      <div><h2>Quick tools</h2><p>One-tap prompts for the jobs you will actually repeat.</p></div>
-      <span class="pill">TOOLS</span>
-    </div>
+  <section class="panel full-only" id="tools">
+    <div class="panel-head"><h2>Tools</h2><span class="pill">ONE TAP</span></div>
     <div class="quick-grid">
-      <button class="quick run-chat" data-prompt="Scan the live waiver wire separately for Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison. Rank the best available adds by expected rest-of-season impact, roster need, drop candidate and waiver-priority cost. Do not assume cross-league availability.">WAIVER SCAN<span>All 3 leagues</span></button>
-      <button class="quick run-chat" data-prompt="Optimize the current starting lineup separately for Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison using live rosters, opponent matchups, injuries and role changes. Flag only changes that are materially better than the current starter.">LINEUP OPTIMIZER<span>All 3 teams</span></button>
-      <button class="quick run-chat" data-prompt="Analyze all three of my fantasy rosters for tradeable surplus and positional weakness. For each team, identify realistic players to shop, the position to target and 2-for-1 or 1-for-1 trade constructions that improve weekly starters.">TRADE FINDER<span>Consolidate depth</span></button>
-      <button class="quick run-chat" data-prompt="Run an injury and status audit for every player on Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison. Separate urgent lineup threats, players to monitor, IR decisions and harmless statuses.">INJURY AUDIT<span>Risk check</span></button>
+      <button class="quick" data-run="Scan%20the%20live%20waiver%20wire%20separately%20for%20Brock%20Hard%20%26%20Tee%20Baggin%2C%20Quick%20Snap%20Jamison%20and%20Highlight%20Reel%20Jamison.%20Rank%20the%20best%20available%20adds%20by%20expected%20rest-of-season%20impact%2C%20roster%20need%2C%20drop%20candidate%20and%20waiver-priority%20cost.%20Do%20not%20assume%20cross-league%20availability.">WAIVER SCAN<span>All 3 leagues</span></button>
+      <button class="quick" data-run="Optimize%20the%20current%20starting%20lineup%20separately%20for%20Brock%20Hard%20%26%20Tee%20Baggin%2C%20Quick%20Snap%20Jamison%20and%20Highlight%20Reel%20Jamison%20using%20live%20rosters%2C%20opponent%20matchups%2C%20injuries%20and%20role%20changes.%20Flag%20only%20changes%20that%20are%20materially%20better%20than%20the%20current%20starter.">LINEUP<span>All 3 teams</span></button>
+      <button class="quick" data-run="Analyze%20all%20three%20of%20my%20fantasy%20rosters%20for%20tradeable%20surplus%20and%20positional%20weakness.%20For%20each%20team%2C%20identify%20realistic%20players%20to%20shop%2C%20the%20position%20to%20target%20and%202-for-1%20or%201-for-1%20trade%20constructions%20that%20improve%20weekly%20starters.">TRADES<span>Consolidate depth</span></button>
+      <button class="quick" data-run="Run%20an%20injury%20and%20status%20audit%20for%20every%20player%20on%20Brock%20Hard%20%26%20Tee%20Baggin%2C%20Quick%20Snap%20Jamison%20and%20Highlight%20Reel%20Jamison.%20Separate%20urgent%20lineup%20threats%2C%20players%20to%20monitor%2C%20IR%20decisions%20and%20harmless%20statuses.">INJURIES<span>Risk check</span></button>
     </div>
   </section>
-
-  <div class="footer">Static Yahoo snapshot • use “Refresh with ChatGPT” when you want the dashboard rebuilt from fresh league data.</div>
+  <div class="footer">Tap ↻ for fresh Yahoo analysis • Details stays hidden until you ask for it.</div>
 </main>
 
-<nav class="action-dock" aria-label="Fantasy actions">
-  <button class="dock-next" id="nextPromptBtn">RUN NEXT</button>
-  <a class="dock-yahoo" id="dockYahoo" href="https://football.fantasysports.yahoo.com/" target="_blank" rel="noopener">OPEN YAHOO</a>
-  <button class="dock-mode" id="modeToggle">DETAILS</button>
+<nav class="dock" aria-label="Fantasy actions">
+  <button class="dock-run" id="nextPromptBtn">RUN NEXT</button>
+  <a class="dock-yahoo" id="dockYahoo" href="https://football.fantasysports.yahoo.com/" target="_blank" rel="noopener">YAHOO</a>
+  <button class="dock-mode" id="modeToggle">MORE</button>
 </nav>
 <div class="toast" id="toast">OPENING CHATGPT…</div>
-
 <script>
 const DATA = {
 all:{
@@ -412,78 +307,71 @@ highlight:{
 }
 };
 
+const state={
+  team:localStorage.getItem('fantasyTeam')||'all',
+  mode:localStorage.getItem('fantasyMode')||'simple'
+};
+const REFRESH_PROMPT="Refresh my Fantasy Football HQ using live Yahoo data for Brock Hard & Tee Baggin, Quick Snap Jamison and Highlight Reel Jamison. Re-scan standings, current matchups, rosters, injury/status flags and each league's available-player pool. Then update the dashboard's status, problems, waiver queues and roster alerts.";
+
 function metricHTML(m){return '<div class="metric"><div class="metric-label">'+m[0]+'</div><div class="metric-value">'+m[1]+'</div><div class="metric-sub">'+m[2]+'</div></div>'}
-function actionHTML(x){
-  const id='p'+Math.random().toString(36).slice(2);
-  return '<article class="action-card"><div class="card-top"><div class="priority">'+x.n+'</div><div class="card-title">'+x.title+'</div><div class="status '+x.state+'">'+x.state+'</div></div><div class="card-body">'+x.body+'</div><div class="card-actions"><button class="run-chat" data-prompt="'+encodeURIComponent(x.prompt)+'">RUN IN CHATGPT</button><button class="reveal" data-target="'+id+'">VIEW</button></div><div class="prompt-box" id="'+id+'">'+x.prompt+'</div></article>'
-}
+function actionHTML(x){return '<article class="action-card"><div class="action-top"><div class="action-num">'+x.n+'</div><div class="action-title">'+x.title+'</div><div class="badge '+x.state+'">'+x.state+'</div></div><div class="action-body">'+x.body+'</div><button class="run" data-run="'+encodeURIComponent(x.prompt)+'">RUN IN CHATGPT</button></article>'}
 function waiverHTML(w){return '<div class="waiver"><div class="rank">'+w.r+'</div><div><div class="waiver-name">'+w.name+'</div><div class="waiver-meta">'+w.meta+'</div><div class="waiver-why">'+w.why+'</div></div><div class="claim '+w.c+'">'+w.claim+'</div></div>'}
 function teamCardsHTML(cards){
   if(!cards||!cards.length)return '';
-  return '<div class="team-cards">'+cards.map(c=>'<button class="team-card" data-switch="'+c.team+'" style="color:inherit;text-align:left;width:100%"><div class="team-line"><div><div class="team-name">'+c.name+'</div><div class="team-meta">'+c.meta+'</div></div><div class="team-score">'+c.score+'<small>'+c.sub+'</small></div></div></button>').join('')+'</div>'
+  return '<div class="team-grid">'+cards.map(c=>'<button class="team-switch" data-team="'+c.team+'"><span><strong>'+c.name+'</strong><span>'+c.meta+'</span></span><b>'+c.score+'</b></button>').join('')+'</div>'
 }
 function matchHTML(m){
-  if(!m)return '<div class="empty-score">Choose a team above for its current matchup.</div>';
+  if(!m)return '<div class="action-body">Choose a team for matchup detail.</div>';
   return '<div class="match"><div class="side"><div class="match-team">'+m.a+'</div><div class="match-score">'+m.as+'</div><div class="match-proj">proj '+m.ap+'</div></div><div class="vs">VS</div><div class="side right"><div class="match-team">'+m.b+'</div><div class="match-score">'+m.bs+'</div><div class="match-proj">proj '+m.bp+'</div></div></div>'
 }
-function rosterHTML(rows){
-  return rows.map(r=>'<div class="player '+(r[0]==='BN'?'bench ':'')+(r[4]?'alert':'')+'"><div class="slot">'+r[0]+'</div><div><div class="pname">'+r[1]+'</div><div class="pmeta">'+r[2]+'</div></div><div class="pts">'+r[3]+'</div></div>').join('')
-}
-function bindDynamic(){
-  document.querySelectorAll('.reveal').forEach(b=>b.onclick=()=>{const el=document.getElementById(b.dataset.target);el.classList.toggle('open');b.textContent=el.classList.contains('open')?'HIDE':'VIEW'});
-  document.querySelectorAll('[data-switch]').forEach(b=>b.onclick=()=>switchTeam(b.dataset.switch));
-  document.querySelectorAll('.run-chat').forEach(bindRun);
-}
-function openChatGPT(prompt){
-  const encoded=encodeURIComponent(prompt);
-  const app='com.openai.chat://chatgpt.com/?prompt='+encoded;
-  const web='https://chatgpt.com/?prompt='+encoded;
-  showToast();
-  let hidden=false;
-  const vis=()=>{if(document.visibilityState==='hidden')hidden=true};
-  document.addEventListener('visibilitychange',vis,{once:true});
-  window.location.href=app;
-  setTimeout(()=>{if(!hidden && document.visibilityState==='visible')window.location.href=web},850);
-}
-function bindRun(btn){
-  if(btn.dataset.bound)return;btn.dataset.bound='1';
-  btn.onclick=()=>openChatGPT(decodeURIComponent(btn.dataset.prompt||''));
-}
-function showToast(){const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1000)}
-function switchTeam(key){
-  const d=DATA[key]||DATA.all;
-  localStorage.setItem('fantasyTeam',key);
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.team===key));
+function rosterHTML(rows){return rows.map(r=>'<div class="player '+(r[0]==='BN'?'bench ':'')+(r[4]?'alert':'')+'"><div class="slot">'+r[0]+'</div><div><div class="pname">'+r[1]+'</div><div class="pmeta">'+r[2]+'</div></div><div class="pts">'+r[3]+'</div></div>').join('')}
+
+function render(){
+  const d=DATA[state.team]||DATA.all;
+  const simple=state.mode==='simple';
+  document.body.classList.toggle('simple',simple);
+  document.body.dataset.team=state.team;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.team===state.team));
   document.getElementById('teamContext').textContent=d.context;
   document.getElementById('statusPill').textContent=d.pill;
-  document.getElementById('decisionStrip').innerHTML='<div class="decision-kicker">'+d.decision[0]+'</div><div class="decision-main">'+d.decision[1]+'</div><div class="decision-sub">'+d.decision[2]+'</div><button class="decision-copy run-chat" data-prompt="'+encodeURIComponent(d.issues[0].prompt)+'">RUN THIS</button>';
-  document.getElementById('nextPromptBtn').dataset.prompt=encodeURIComponent(d.issues[0].prompt);
+  document.getElementById('decisionStrip').innerHTML=
+    '<div class="decision"><div class="decision-label">'+d.decision[0]+'</div><div class="decision-main">'+d.decision[1]+'</div><div class="decision-sub">'+d.decision[2]+'</div><button class="primary-run" data-run="'+encodeURIComponent(d.issues[0].prompt)+'">RUN THIS</button></div>';
+  document.getElementById('metrics').innerHTML=(simple?d.metrics.slice(0,2):d.metrics).map(metricHTML).join('');
+  document.getElementById('teamCards').innerHTML=state.team==='all'?teamCardsHTML(d.cards):'';
+  document.getElementById('issues').innerHTML=simple?'':d.issues.slice(1).map(actionHTML).join('');
+  document.getElementById('upgrades').innerHTML=(simple?d.upgrades.slice(0,1):d.upgrades).map(actionHTML).join('');
+  document.getElementById('waiverList').innerHTML=(simple?d.waivers.slice(0,3):d.waivers).map(waiverHTML).join('');
+  if(!simple){
+    document.getElementById('match').innerHTML=matchHTML(d.match);
+    document.getElementById('roster').innerHTML=rosterHTML(d.roster);
+  }else{
+    document.getElementById('match').textContent='';
+    document.getElementById('roster').textContent='';
+  }
+  document.getElementById('nextPromptBtn').dataset.run=encodeURIComponent(d.issues[0].prompt);
   document.getElementById('dockYahoo').href=d.yahoo;
-  document.getElementById('metrics').innerHTML=d.metrics.map(metricHTML).join('');
-  document.getElementById('teamCards').innerHTML=teamCardsHTML(d.cards);
-  document.getElementById('issues').innerHTML=d.issues.map(actionHTML).join('');
-  document.getElementById('upgrades').innerHTML=d.upgrades.map(actionHTML).join('');
-  document.getElementById('waiverList').innerHTML=d.waivers.map(waiverHTML).join('');
-  document.getElementById('match').innerHTML=matchHTML(d.match);
-  document.getElementById('roster').innerHTML=rosterHTML(d.roster);
-  document.getElementById('matchNote').textContent=key==='all'?'Choose a team above for matchup detail.':'Current Yahoo score and projection snapshot.';
-  bindDynamic()
+  document.getElementById('modeToggle').textContent=simple?'MORE':'LESS';
 }
-function setMode(mode){
-  const simple=mode!=='full';
-  document.body.classList.toggle('simple',simple);
-  localStorage.setItem('fantasyMode',simple?'simple':'full');
-  document.getElementById('modeLabel').textContent=simple?'Simple':'Full';
-  document.getElementById('modeToggle').textContent=simple?'DETAILS':'SIMPLE';
+function openChat(prompt){
+  showToast();
+  window.location.href='https://chatgpt.com/?prompt='+encodeURIComponent(prompt);
 }
-document.getElementById('modeToggle').onclick=()=>setMode(document.body.classList.contains('simple')?'full':'simple');
-document.getElementById('nextPromptBtn').onclick=function(){
-  openChatGPT(decodeURIComponent(this.dataset.prompt||''))
-};
-setMode(localStorage.getItem('fantasyMode')||'simple');
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchTeam(t.dataset.team));
-document.querySelectorAll('.run-chat').forEach(bindRun);
-switchTeam(localStorage.getItem('fantasyTeam')||'all');
+function showToast(){
+  const t=document.getElementById('toast');t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),850)
+}
+document.addEventListener('click',e=>{
+  const team=e.target.closest('[data-team]');
+  if(team){state.team=team.dataset.team;localStorage.setItem('fantasyTeam',state.team);render();return}
+  const run=e.target.closest('[data-run]');
+  if(run){openChat(decodeURIComponent(run.dataset.run||''));return}
+  if(e.target.closest('#refreshBtn')){openChat(REFRESH_PROMPT);return}
+  if(e.target.closest('#modeToggle')){
+    state.mode=state.mode==='simple'?'full':'simple';
+    localStorage.setItem('fantasyMode',state.mode);render();return
+  }
+});
+render();
 </script>
 </body>
 </html>
