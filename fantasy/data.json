@@ -1,0 +1,435 @@
+{
+  "syncedAt": "Sep 28 • 8:51 AM ET",
+  "refreshPrompt": "Refresh and republish my Fantasy Football HQ now. Pull fresh Yahoo data separately for Brock Hard & Tee Baggin, Quick Snap Jamison, and Highlight Reel Jamison: standings, current matchup scores/projections, roster/status flags, waiver priority, available players, and recent league transactions. Re-evaluate the best move for each roster, update /fantasy/data.json and the published GitHub Pages snapshot, and keep the interface simple and iPhone-first.",
+  "teams": {
+    "brock": {
+      "short": "Brock Hard",
+      "full": "Brock Hard & Tee Baggin",
+      "accent": "cyan",
+      "leagueUrl": "https://football.fantasysports.yahoo.com/f1/290846",
+      "record": "0–2",
+      "rank": "7th of 8",
+      "waiver": "#1",
+      "score": "144.80–136.06",
+      "scoreState": "ahead",
+      "weekNote": "Jalen Hurts still pending Monday night",
+      "priority": "HIGH",
+      "health": "2 watches",
+      "nextMove": "Claim Jordan Addison with waiver #1",
+      "nextDetail": "Drop Mark Andrews. Addison is verified available and directly protects the Justin Jefferson uncertainty without sacrificing a weekly starter.",
+      "confidence": "HIGH",
+      "cost": "Waiver #1",
+      "nextPrompt": "Re-scan Brock Hard & Tee Baggin's current Yahoo waiver pool and injury news. If Jordan Addison is still available and Justin Jefferson remains a meaningful availability concern, confirm Addison as my waiver #1 claim and Mark Andrews as the drop. If that is no longer optimal, give me the single best alternative or tell me to HOLD #1.",
+      "alerts": [
+        {
+          "level": "watch",
+          "title": "Breece Hall",
+          "text": "Questionable — build a Week 4 contingency before waivers clear."
+        },
+        {
+          "level": "watch",
+          "title": "Justin Jefferson",
+          "text": "Questionable — Addison's value rises if Jefferson is limited or out."
+        },
+        {
+          "level": "info",
+          "title": "Mark Andrews",
+          "text": "Redundant behind Brock Bowers; best expendable roster spot."
+        }
+      ],
+      "waivers": [
+        {
+          "name": "Jordan Addison",
+          "pos": "WR • MIN",
+          "why": "Best roster-specific add; Jefferson insurance plus standalone WR value.",
+          "tag": "USE #1"
+        },
+        {
+          "name": "Kyle Monangai",
+          "pos": "RB • CHI",
+          "why": "Strong upside depth if you decide WR is already deep enough.",
+          "tag": "FALLBACK"
+        },
+        {
+          "name": "Xavier Worthy",
+          "pos": "WR • KC",
+          "why": "Ceiling play, but less direct need than Addison.",
+          "tag": "FALLBACK"
+        }
+      ],
+      "lineup": [
+        {
+          "slot": "QB",
+          "name": "Jalen Hurts",
+          "meta": "PHI • MNF pending",
+          "points": "0.0",
+          "flag": "watch"
+        },
+        {
+          "slot": "RB",
+          "name": "Javonte Williams",
+          "meta": "DAL",
+          "points": "18.3"
+        },
+        {
+          "slot": "RB",
+          "name": "Breece Hall",
+          "meta": "NYJ • Q",
+          "points": "8.5",
+          "flag": "watch"
+        },
+        {
+          "slot": "WR",
+          "name": "Ja'Marr Chase",
+          "meta": "CIN",
+          "points": "24.8",
+          "flag": "lock"
+        },
+        {
+          "slot": "WR",
+          "name": "Justin Jefferson",
+          "meta": "MIN • Q",
+          "points": "5.2",
+          "flag": "watch"
+        },
+        {
+          "slot": "TE",
+          "name": "Brock Bowers",
+          "meta": "LV • automatic start",
+          "points": "27.6",
+          "flag": "lock"
+        },
+        {
+          "slot": "FLEX",
+          "name": "Tee Higgins",
+          "meta": "CIN",
+          "points": "21.0",
+          "flag": "lock"
+        },
+        {
+          "slot": "FLEX",
+          "name": "Zay Flowers",
+          "meta": "BAL",
+          "points": "15.4",
+          "flag": "lock"
+        },
+        {
+          "slot": "BN",
+          "name": "Mark Andrews",
+          "meta": "drop / trade candidate",
+          "points": "5.4",
+          "flag": "move"
+        }
+      ],
+      "actions": [
+        {
+          "label": "SET WEEK 4 LINEUP",
+          "prompt": "Set Brock Hard & Tee Baggin's optimal Week 4 lineup using the live Yahoo roster, current opponents, and injury news. Give me the locked starters plus exact replacements if Breece Hall or Justin Jefferson are limited or out."
+        },
+        {
+          "label": "SCAN WAIVERS",
+          "prompt": "Scan Brock Hard & Tee Baggin's live Yahoo waiver wire only. Rank adds by rest-of-season impact, immediate roster fit, exact drop candidate, and whether each player is worth spending waiver priority #1."
+        },
+        {
+          "label": "FIND TRADE",
+          "prompt": "Analyze Brock Hard & Tee Baggin for realistic consolidation trades. Keep Brock Bowers protected. Use Mark Andrews and bench depth to target one stronger weekly RB or WR starter."
+        },
+        {
+          "label": "INJURY CHECK",
+          "prompt": "Run a current injury/status audit for Brock Hard & Tee Baggin. Focus on Breece Hall and Justin Jefferson and tell me exactly what changes if either is limited or inactive."
+        }
+      ]
+    },
+    "quick": {
+      "short": "Quick Snap",
+      "full": "Quick Snap Jamison",
+      "accent": "purple",
+      "leagueUrl": "https://football.fantasysports.yahoo.com/f1/1651669",
+      "record": "1–0",
+      "rank": "3rd of 10",
+      "waiver": "#3",
+      "score": "82.30–95.46",
+      "scoreState": "behind",
+      "weekNote": "Projected 112.47–110.87 with Jalen Hurts still pending",
+      "priority": "MED-HIGH",
+      "health": "A.J. Brown IR",
+      "nextMove": "Claim Denzel Boston with waiver #3",
+      "nextDetail": "Drop Mark Andrews. The roster needs another usable WR more than a second veteran TE behind Travis Kelce.",
+      "confidence": "MED-HIGH",
+      "cost": "Waiver #3",
+      "nextPrompt": "Re-scan Quick Snap Jamison's current Yahoo waiver pool. If Denzel Boston is still available, decide whether he is worth waiver priority #3 versus Quentin Johnston and the best other available WR. If Boston remains the best fit, confirm Boston in and Mark Andrews out. If not, tell me to HOLD #3.",
+      "alerts": [
+        {
+          "level": "bad",
+          "title": "A.J. Brown",
+          "text": "IR — WR depth matters until he returns."
+        },
+        {
+          "level": "watch",
+          "title": "Jalen Coker",
+          "text": "Questionable and produced 2.8 this week."
+        },
+        {
+          "level": "info",
+          "title": "Bench competition",
+          "text": "Jordan Addison, Bhayshul Tuten and Josh Downs all deserve Week 4 flex consideration."
+        }
+      ],
+      "waivers": [
+        {
+          "name": "Denzel Boston",
+          "pos": "WR • CLE",
+          "why": "Best fit for the current WR shortage; verified available.",
+          "tag": "USE #3"
+        },
+        {
+          "name": "Quentin Johnston",
+          "pos": "WR • LAC",
+          "why": "Higher-variance WR fallback if Boston is claimed.",
+          "tag": "FALLBACK"
+        },
+        {
+          "name": "Devaughn Vele",
+          "pos": "WR • NO",
+          "why": "WR depth option without adding another redundant TE.",
+          "tag": "WAIT"
+        }
+      ],
+      "lineup": [
+        {
+          "slot": "QB",
+          "name": "Jalen Hurts",
+          "meta": "PHI • MNF pending",
+          "points": "0.0",
+          "flag": "watch"
+        },
+        {
+          "slot": "RB",
+          "name": "Jonathan Taylor",
+          "meta": "IND",
+          "points": "8.2",
+          "flag": "lock"
+        },
+        {
+          "slot": "RB",
+          "name": "Kenneth Walker III",
+          "meta": "KC",
+          "points": "20.3",
+          "flag": "lock"
+        },
+        {
+          "slot": "WR",
+          "name": "Jalen Coker",
+          "meta": "CAR • Q",
+          "points": "2.8",
+          "flag": "watch"
+        },
+        {
+          "slot": "WR",
+          "name": "Tetairoa McMillan",
+          "meta": "CAR",
+          "points": "2.7",
+          "flag": "watch"
+        },
+        {
+          "slot": "TE",
+          "name": "Travis Kelce",
+          "meta": "KC • automatic start",
+          "points": "12.9",
+          "flag": "lock"
+        },
+        {
+          "slot": "FLEX",
+          "name": "Jeremiyah Love",
+          "meta": "ARI",
+          "points": "19.4",
+          "flag": "lock"
+        },
+        {
+          "slot": "BN",
+          "name": "Jordan Addison",
+          "meta": "MIN • strong Week 4 candidate",
+          "points": "17.5",
+          "flag": "move"
+        },
+        {
+          "slot": "BN",
+          "name": "Bhayshul Tuten",
+          "meta": "JAX • strong Week 4 candidate",
+          "points": "16.0",
+          "flag": "move"
+        },
+        {
+          "slot": "IR",
+          "name": "A.J. Brown",
+          "meta": "IR",
+          "points": "0.0",
+          "flag": "bad"
+        }
+      ],
+      "actions": [
+        {
+          "label": "SET WEEK 4 LINEUP",
+          "prompt": "Set Quick Snap Jamison's optimal Week 4 lineup from the live Yahoo roster. Build a clear WR and FLEX hierarchy using Jordan Addison, Bhayshul Tuten, Josh Downs, Jalen Coker, Tetairoa McMillan and Jeremiyah Love."
+        },
+        {
+          "label": "SCAN WAIVERS",
+          "prompt": "Scan Quick Snap Jamison's live Yahoo waiver wire only. Prioritize wide receivers because A.J. Brown is on IR. Rank the best adds and tell me which, if any, are worth spending waiver priority #3."
+        },
+        {
+          "label": "FIND TRADE",
+          "prompt": "Find realistic WR upgrades for Quick Snap Jamison using surplus bench depth or Mark Andrews as trade currency. Protect Jalen Hurts, Jonathan Taylor and Travis Kelce unless the return is clearly exceptional."
+        },
+        {
+          "label": "INJURY CHECK",
+          "prompt": "Run a current injury/status audit for Quick Snap Jamison, focusing on A.J. Brown and Jalen Coker. Give me only statuses that change a lineup, waiver or IR decision."
+        }
+      ]
+    },
+    "highlight": {
+      "short": "Highlight Reel",
+      "full": "Highlight Reel Jamison",
+      "accent": "green",
+      "leagueUrl": "https://football.fantasysports.yahoo.com/f1/1651679",
+      "record": "1–0",
+      "rank": "4th of 10",
+      "waiver": "#6",
+      "score": "123.54–71.74",
+      "scoreState": "ahead",
+      "weekNote": "Comfortable Week 3 lead",
+      "priority": "HIGH",
+      "health": "1 lineup leak",
+      "nextMove": "Start Brock Bowers + claim Xavier Worthy",
+      "nextDetail": "Bowers should replace Dalton Kincaid at TE. For the waiver claim, drop injured backup QB Caleb Williams before cutting a usable WR.",
+      "confidence": "HIGH",
+      "cost": "Waiver #6",
+      "nextPrompt": "Optimize Highlight Reel Jamison now. Make Brock Bowers the default starting TE over Dalton Kincaid unless current health says otherwise. Re-scan the Yahoo waiver pool; if Xavier Worthy is still available, decide whether to claim him with waiver priority #6 and use Caleb Williams as the first drop candidate in this 1-QB roster.",
+      "alerts": [
+        {
+          "level": "bad",
+          "title": "Brock Bowers on bench",
+          "text": "22.6 points on the bench while Dalton Kincaid scored 2.8. Fix this first."
+        },
+        {
+          "level": "watch",
+          "title": "Jalen Coker",
+          "text": "Questionable with only 2.8 points this week."
+        },
+        {
+          "level": "info",
+          "title": "Caleb Williams",
+          "text": "Injured backup QB; expendable before cutting useful WR/RB depth in a 1-QB league."
+        }
+      ],
+      "waivers": [
+        {
+          "name": "Xavier Worthy",
+          "pos": "WR • KC",
+          "why": "Best ceiling addition for WR/FLEX volatility; verified available.",
+          "tag": "SUBMIT #6"
+        },
+        {
+          "name": "Woody Marks",
+          "pos": "RB • HOU",
+          "why": "Best upside RB stash if Worthy is claimed.",
+          "tag": "FALLBACK"
+        },
+        {
+          "name": "Khalil Shakir",
+          "pos": "WR • BUF",
+          "why": "Useful floor depth, lower ceiling than Worthy.",
+          "tag": "WAIT"
+        }
+      ],
+      "lineup": [
+        {
+          "slot": "QB",
+          "name": "Bo Nix",
+          "meta": "DEN",
+          "points": "25.14",
+          "flag": "lock"
+        },
+        {
+          "slot": "RB",
+          "name": "Jahmyr Gibbs",
+          "meta": "DET",
+          "points": "37.9",
+          "flag": "lock"
+        },
+        {
+          "slot": "RB",
+          "name": "Ashton Jeanty",
+          "meta": "LV",
+          "points": "10.8",
+          "flag": "lock"
+        },
+        {
+          "slot": "WR",
+          "name": "Garrett Wilson",
+          "meta": "NYJ",
+          "points": "21.7",
+          "flag": "lock"
+        },
+        {
+          "slot": "WR",
+          "name": "Jalen Coker",
+          "meta": "CAR • Q",
+          "points": "2.8",
+          "flag": "watch"
+        },
+        {
+          "slot": "TE",
+          "name": "Dalton Kincaid",
+          "meta": "BUF • replace with Bowers",
+          "points": "2.8",
+          "flag": "bad"
+        },
+        {
+          "slot": "FLEX",
+          "name": "Jaylen Waddle",
+          "meta": "DEN",
+          "points": "5.4",
+          "flag": "watch"
+        },
+        {
+          "slot": "BN",
+          "name": "Brock Bowers",
+          "meta": "LV • START",
+          "points": "22.6",
+          "flag": "move"
+        },
+        {
+          "slot": "BN",
+          "name": "Denzel Boston",
+          "meta": "CLE",
+          "points": "5.1"
+        },
+        {
+          "slot": "BN",
+          "name": "Caleb Williams",
+          "meta": "CHI • O • drop candidate",
+          "points": "0.0",
+          "flag": "move"
+        }
+      ],
+      "actions": [
+        {
+          "label": "SET WEEK 4 LINEUP",
+          "prompt": "Set Highlight Reel Jamison's optimal Week 4 lineup from the live Yahoo roster. Make Brock Bowers the default TE and optimize WR2/FLEX among Jaylen Waddle, Jalen Coker, Brian Thomas Jr., Denzel Boston and Bhayshul Tuten."
+        },
+        {
+          "label": "SCAN WAIVERS",
+          "prompt": "Scan Highlight Reel Jamison's live Yahoo waiver wire only. Decide whether Xavier Worthy is worth waiver priority #6, with Caleb Williams as the first drop candidate. Rank the top three alternatives if Worthy is gone."
+        },
+        {
+          "label": "FIND TRADE",
+          "prompt": "Find realistic trades for Highlight Reel Jamison that use Dalton Kincaid or other bench depth to improve WR/FLEX or RB depth. Do not trade Brock Bowers."
+        },
+        {
+          "label": "INJURY CHECK",
+          "prompt": "Run a current injury/status audit for Highlight Reel Jamison. Focus on Caleb Williams and Jalen Coker and tell me what changes the Week 4 lineup or roster spot usage."
+        }
+      ]
+    }
+  }
+}
