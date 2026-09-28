@@ -1,5 +1,5 @@
 {
-  "syncedAt": "Sep 28 • 8:51 AM ET",
+  "syncedAt": "Sep 28 • research-upgraded",
   "refreshPrompt": "Refresh and republish my Fantasy Football HQ now. Pull fresh Yahoo data separately for Brock Hard & Tee Baggin, Quick Snap Jamison, and Highlight Reel Jamison: standings, current matchup scores/projections, roster/status flags, waiver priority, available players, and recent league transactions. Re-evaluate the best move for each roster, update /fantasy/data.json and the published GitHub Pages snapshot, and keep the interface simple and iPhone-first.",
   "teams": {
     "brock": {
@@ -13,48 +13,65 @@
       "score": "144.80–136.06",
       "scoreState": "ahead",
       "weekNote": "Jalen Hurts still pending Monday night",
-      "priority": "HIGH",
-      "health": "2 watches",
-      "nextMove": "Claim Jordan Addison with waiver #1",
-      "nextDetail": "Drop Mark Andrews. Addison is verified available and directly protects the Justin Jefferson uncertainty without sacrificing a weekly starter.",
+      "priority": "HOLD",
+      "health": "2 injury watches",
+      "nextMove": "HOLD waiver #1 — do not burn it on Addison",
+      "nextDetail": "Brock is already loaded at WR and TE. In this 8-team league, replacement WRs are plentiful, while waiver #1 can buy a true weekly starter if an injury-created RB1/WR1 or breakout role appears. Addison is useful, but not valuable enough to justify spending the top priority today.",
       "confidence": "HIGH",
-      "cost": "Waiver #1",
-      "nextPrompt": "Re-scan Brock Hard & Tee Baggin's current Yahoo waiver pool and injury news. If Jordan Addison is still available and Justin Jefferson remains a meaningful availability concern, confirm Addison as my waiver #1 claim and Mark Andrews as the drop. If that is no longer optimal, give me the single best alternative or tell me to HOLD #1.",
+      "cost": "Preserve waiver #1",
+      "nextPrompt": "Re-scan Brock Hard & Tee Baggin's live Yahoo roster, waiver wire, and current injury news. Use an 8-team replacement-value lens. Do NOT recommend spending waiver priority #1 unless the target projects as a durable weekly starter or league-winning upside. Compare Addison, Kyle Monangai, Xavier Worthy, Josh Jacobs and any newly available player, then return exactly one verdict: HOLD #1 or BURN #1, with the specific add/drop only if the threshold is met.",
       "alerts": [
         {
-          "level": "watch",
-          "title": "Breece Hall",
-          "text": "Questionable — build a Week 4 contingency before waivers clear."
+          "level": "info",
+          "title": "0–2 is mostly schedule pain",
+          "text": "Brock is 4th of 8 in points for, but has allowed the 2nd-most points against. Avoid treating the record as proof the roster is weak."
         },
         {
           "level": "watch",
-          "title": "Justin Jefferson",
-          "text": "Questionable — Addison's value rises if Jefferson is limited or out."
+          "title": "Breece Hall + Justin Jefferson",
+          "text": "Monitor both injuries, but do not let short-term insurance force a bad use of waiver #1."
         },
         {
           "level": "info",
           "title": "Mark Andrews",
-          "text": "Redundant behind Brock Bowers; best expendable roster spot."
+          "text": "Redundant behind Bowers, but better used as trade currency before being cut outright."
+        },
+        {
+          "level": "info",
+          "title": "RB is the upgrade lane",
+          "text": "If you spend major capital, target a player who can displace Javonte/Hall or become a true every-week RB starter."
         }
       ],
       "waivers": [
         {
+          "name": "HOLD waiver #1",
+          "pos": "Strategy",
+          "why": "Best current move. Preserve priority for a durable every-week starter or true breakout.",
+          "tag": "HOLD #1"
+        },
+        {
           "name": "Jordan Addison",
           "pos": "WR • MIN",
-          "why": "Best roster-specific add; Jefferson insurance plus standalone WR value.",
-          "tag": "USE #1"
+          "why": "Useful if Jefferson misses time, but Brock already has elite WR depth. Add only if the cost drops or Jefferson's absence becomes extended.",
+          "tag": "DO NOT BURN #1"
         },
         {
           "name": "Kyle Monangai",
           "pos": "RB • CHI",
-          "why": "Strong upside depth if you decide WR is already deep enough.",
-          "tag": "FALLBACK"
+          "why": "More interesting fit than another WR because RB is the weaker position group, but still needs a role strong enough to justify #1.",
+          "tag": "WATCH ROLE"
         },
         {
           "name": "Xavier Worthy",
           "pos": "WR • KC",
-          "why": "Ceiling play, but less direct need than Addison.",
-          "tag": "FALLBACK"
+          "why": "Ceiling is attractive, but he still does not solve a structural need on this roster.",
+          "tag": "WATCH"
+        },
+        {
+          "name": "Josh Jacobs",
+          "pos": "RB • GB",
+          "why": "Only becomes a #1-priority candidate if his status clears and he projects as a durable weekly starter.",
+          "tag": "STATUS GATE"
         }
       ],
       "lineup": [
@@ -123,22 +140,58 @@
       ],
       "actions": [
         {
-          "label": "SET WEEK 4 LINEUP",
-          "prompt": "Set Brock Hard & Tee Baggin's optimal Week 4 lineup using the live Yahoo roster, current opponents, and injury news. Give me the locked starters plus exact replacements if Breece Hall or Justin Jefferson are limited or out."
+          "label": "WAIVER #1 DECISION",
+          "prompt": "Audit Brock Hard & Tee Baggin's live Yahoo waiver wire with an 8-team replacement-value model. Preserve waiver priority #1 unless a target has a durable path to my weekly starting lineup. Rank only candidates who could actually displace one of my starters, and return HOLD #1 or BURN #1."
         },
         {
-          "label": "SCAN WAIVERS",
-          "prompt": "Scan Brock Hard & Tee Baggin's live Yahoo waiver wire only. Rank adds by rest-of-season impact, immediate roster fit, exact drop candidate, and whether each player is worth spending waiver priority #1."
-        },
-        {
-          "label": "FIND TRADE",
-          "prompt": "Analyze Brock Hard & Tee Baggin for realistic consolidation trades. Keep Brock Bowers protected. Use Mark Andrews and bench depth to target one stronger weekly RB or WR starter."
+          "label": "CONSOLIDATE FOR RB",
+          "prompt": "Analyze Brock Hard & Tee Baggin for 2-for-1 consolidation trades. Use Mark Andrews plus one bench RB/WR as trade currency to target a stronger every-week RB starter. Keep Hurts, Chase, Jefferson and Bowers protected."
         },
         {
           "label": "INJURY CHECK",
-          "prompt": "Run a current injury/status audit for Brock Hard & Tee Baggin. Focus on Breece Hall and Justin Jefferson and tell me exactly what changes if either is limited or inactive."
+          "prompt": "Update Breece Hall and Justin Jefferson using current injury news and Brock Hard's live Yahoo roster. Tell me whether either injury materially changes the waiver #1 decision. Do not recommend short-term insurance unless it improves my expected starting lineup."
+        },
+        {
+          "label": "BENCH CHURN",
+          "prompt": "Rank Brock Hard's bench players from most expendable to most valuable using rest-of-season upside and 8-team replacement value. Identify which roster spot should be used for speculative upside rather than floor."
         }
-      ]
+      ],
+      "strategy": {
+        "verdict": "HOLD #1",
+        "summary": "The 0–2 record is misleading. Brock is 4th of 8 in points scored (281.98) but has faced the 2nd-most points against (316.48). This is not a roster that needs a panic waiver move.",
+        "bullets": [
+          {
+            "label": "8-team replacement value",
+            "text": "WR is already a strength: Ja'Marr Chase, Justin Jefferson, Tee Higgins, Zay Flowers and Marvin Harrison Jr. Addison is depth, not a lineup-changing need."
+          },
+          {
+            "label": "Waiver burn threshold",
+            "text": "Spend #1 only on a player with a durable path to your weekly starting lineup — ideally an injury-created bellcow RB, breakout feature back, or clear every-week WR."
+          },
+          {
+            "label": "Mark Andrews",
+            "text": "Brock Bowers makes Andrews nonessential, but not worthless. Shop Andrews in a 2-for-1 consolidation before dropping him for a marginal upgrade."
+          },
+          {
+            "label": "True roster need",
+            "text": "The best path to improvement is turning bench depth into a stronger RB starter, not adding another mid-tier WR."
+          }
+        ]
+      },
+      "waiverPolicy": {
+        "burnOnlyIf": [
+          "Likely to become an every-week starter on Brock Hard",
+          "Role is durable beyond one injury window or one hot game",
+          "Materially upgrades RB2/FLEX or adds league-winning upside",
+          "Expected value clearly exceeds what is normally available in an 8-team free-agent pool"
+        ],
+        "holdIf": [
+          "Target is merely injury insurance",
+          "Target is another WR4/WR5 on this roster",
+          "Breakout depends primarily on a teammate missing 1–2 weeks",
+          "The add does not clearly displace a current starter"
+        ]
+      }
     },
     "quick": {
       "short": "Quick Snap",
