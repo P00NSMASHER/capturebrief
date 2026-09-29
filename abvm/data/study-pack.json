@@ -3,300 +3,451 @@
   "syncPolicy": {
     "intervalHours": 4
   },
-  "sourceLastSeenAt": "2026-09-17T20:20:00-04:00",
-  "sourceCapturedAt": "2026-09-17T20:20:00-04:00",
-  "freshnessHours": 264.06753583333335,
+  "sourceLastSeenAt": "2026-09-18T00:40:20.395Z",
+  "sourceCapturedAt": "2026-09-18T00:37:35.100Z",
+  "freshnessHours": 274.0771916666667,
   "pack": {
-    "schemaVersion": 2,
-    "sourceHash": "public-bootstrap-2026-09-17",
-    "sourceCapturedAt": "2026-09-17T20:20:00-04:00",
-    "generatedAt": "2026-09-17T20:20:00-04:00",
-    "weekLabel": "Thursday, September 17, 2026",
-    "summary": "Tonight: Math pg. 9, one Spelling Choice Board activity, reading, and the Reading Log. Spelling/Handwriting and Reading tests are listed for Friday, Sept. 18.",
+    "weekLabel": "Thursday September 17, 2026",
     "subjects": [
       {
+        "studyNotes": [
+          "Jesus is God's greatest gift who teaches us how to live.",
+          "Jesus gave us the new life of grace.",
+          "We are made in God's image and likeness with the ability to think, choose, and love.",
+          "The Trinity consists of three persons in one God: Father, Son, and Holy Spirit.",
+          "It is our responsibility to take care of God's gifts of creation."
+        ],
         "subject": "Religion",
         "topics": [
-          "Jesus is God's Best Gift",
           "God is the Giver of Gifts",
-          "The Trinity",
-          "God's gifts of creation"
-        ],
-        "studyNotes": [
-          "Jesus is God's greatest gift to us and teaches us about God and how to live.",
-          "Jesus gave us the new life of grace.",
-          "We are made in God's image and likeness; we can think, choose, and love.",
-          "The Trinity is three persons in one God: Father, Son, and Holy Spirit.",
-          "We use our senses to enjoy God's gifts and have a responsibility to care for creation."
+          "Jesus is God's Best Gift",
+          "The Holy Trinity",
+          "Creation and Stewardship"
         ]
       },
       {
-        "subject": "Reading",
         "topics": [
           "Maria Celebrates Brazil",
           "Big Red Lollipop",
           "A Look at Families",
-          "Short vowel sounds",
-          "Visualize and plot",
-          "Understanding characters",
+          "Visualizing and Plot",
+          "Understanding Characters",
           "Captions",
-          "Plural nouns with -s and -es"
+          "Plural Nouns (-s, -es)"
+        ],
+        "subject": "Reading",
+        "studyNotes": [
+          "Plot includes the beginning, middle, and end of a story.",
+          "Use -s or -es to make nouns plural.",
+          "Visualizing helps with reading comprehension."
+        ]
+      },
+      {
+        "subject": "Phonics and Spelling",
+        "topics": [
+          "Short vowel sounds: a, i, e, o, u",
+          "Two-letter blends"
         ],
         "studyNotes": [
-          "Sight words include put, why, blue, help, for, yellow, both, there, even, ball, or, green, how, little, one, see, sounds, funny, find, and could.",
-          "Phonics work includes short a, i, e, o, and u.",
-          "Reading comprehension work includes visualizing, plot (beginning, middle, end), understanding characters, and captions.",
-          "Word structure work uses -s and -es to make plural nouns."
+          "Current spelling focus: short e, o, and u sounds.",
+          "Review words include: went, tell, pet, job, fog, not, tug, hut, tub, bun."
         ]
+      }
+    ],
+    "generatedAt": "2026-09-29T05:16:43.278Z",
+    "reminders": [
+      "Parents: complete forms and cover books",
+      "Keep Reading log and Behavior chart in the HW folder",
+      "Return everything in the HW folder",
+      "Stationary money ($17) due Wednesday Sept. 23",
+      "Pretzel money due Friday Sept. 18"
+    ],
+    "questions": [
+      {
+        "prompt": "Who is God's greatest gift to us?",
+        "format": "multiple_choice",
+        "choices": [
+          "Jesus",
+          "The Angels",
+          "The Saints"
+        ],
+        "hint": "He tells us about God and teaches us how to live.",
+        "answer": "Jesus",
+        "id": "q1",
+        "explanation": "The source states that Jesus is God's greatest gift to us.",
+        "subject": "Religion",
+        "difficulty": "easy"
+      },
+      {
+        "choices": [
+          "One",
+          "Two",
+          "Three"
+        ],
+        "format": "multiple_choice",
+        "subject": "Religion",
+        "answer": "Three",
+        "difficulty": "easy",
+        "id": "q2",
+        "hint": "Think of the Father, Son, and Holy Spirit.",
+        "explanation": "The Trinity is defined as 3 persons in one God.",
+        "prompt": "How many persons are in the Trinity?"
+      },
+      {
+        "answer": "true",
+        "subject": "Religion",
+        "format": "true_false",
+        "explanation": "The source notes that we are made in God's image and likeness.",
+        "choices": [],
+        "id": "q3",
+        "difficulty": "easy",
+        "prompt": "We are made in God's image and likeness.",
+        "hint": "This means we can think, choose, and love."
+      },
+      {
+        "difficulty": "medium",
+        "answer": "Grace",
+        "id": "q4",
+        "hint": "It is a special gift of new life.",
+        "choices": [
+          "Grace",
+          "Money",
+          "Toys"
+        ],
+        "explanation": "Jesus gave us the new life of grace.",
+        "prompt": "What did Jesus give us to have a new life?",
+        "subject": "Religion",
+        "format": "multiple_choice"
+      },
+      {
+        "subject": "Religion",
+        "answer": "true",
+        "hint": "We must look after the world God made.",
+        "format": "true_false",
+        "id": "q5",
+        "explanation": "The source states it is our responsibility to take care of creation.",
+        "prompt": "It is our responsibility to take care of God's gifts of creation.",
+        "choices": [],
+        "difficulty": "easy"
+      },
+      {
+        "explanation": "Reading comprehension includes understanding the plot as beginning, middle, and end.",
+        "choices": [
+          "Beginning, middle, end",
+          "Title, author, page",
+          "Words, pictures, cover"
+        ],
+        "id": "q6",
+        "hint": "It describes the order of events in a story.",
+        "subject": "Reading",
+        "prompt": "What are the three parts of a plot?",
+        "answer": "Beginning, middle, end",
+        "difficulty": "easy",
+        "format": "multiple_choice"
+      },
+      {
+        "explanation": "Word structure lessons cover using -s and -es to make plural nouns.",
+        "answer": "-s or -es",
+        "choices": [
+          "-s or -es",
+          "-ing",
+          "-ed"
+        ],
+        "hint": "Think about how you change 'cat' to 'cats'.",
+        "format": "multiple_choice",
+        "subject": "Reading",
+        "prompt": "Which ending is added to make a noun plural?",
+        "id": "q7",
+        "difficulty": "medium"
+      },
+      {
+        "hint": "h-u-t",
+        "choices": [],
+        "subject": "Spelling",
+        "format": "word_build",
+        "prompt": "Build the word that means a small house or shelter.",
+        "explanation": "Hut is a basic spelling word for the short 'u' sound.",
+        "difficulty": "easy",
+        "id": "q8",
+        "answer": "hut"
+      },
+      {
+        "prompt": "Build the word for a task or work you do.",
+        "choices": [],
+        "id": "q9",
+        "format": "word_build",
+        "answer": "job",
+        "difficulty": "easy",
+        "hint": "j-o-b",
+        "explanation": "Job is a basic spelling word for the short 'o' sound.",
+        "subject": "Spelling"
       },
       {
         "subject": "Spelling",
-        "topics": [
-          "Short e, o, and u"
-        ],
-        "studyNotes": [
-          "Basic words: went, tell, pet, job, fog, not, tug, hut, tub, bun.",
-          "Review words: fix, has.",
-          "High-frequency words: one, or, see."
-        ]
+        "format": "word_build",
+        "prompt": "Build the word that means to move something toward you.",
+        "explanation": "Tug is a basic spelling word for the short 'u' sound.",
+        "difficulty": "easy",
+        "id": "q10",
+        "choices": [],
+        "answer": "tug",
+        "hint": "t-u-g"
       },
       {
-        "subject": "Math",
-        "topics": [
-          "Chapter 1A: addition"
+        "format": "short_answer",
+        "difficulty": "medium",
+        "subject": "Reading",
+        "explanation": "Scurries is defined in the vocabulary list.",
+        "prompt": "What word means to move hurriedly with short quick steps?",
+        "answer": "scurries",
+        "hint": "It starts with 's'.",
+        "choices": [],
+        "id": "q11"
+      },
+      {
+        "subject": "Reading",
+        "choices": [
+          "plead",
+          "share",
+          "aside"
         ],
-        "studyNotes": [
-          "A Chapter 1A addition test is listed for Tuesday, Sept. 22.",
-          "The current Homework page assigns Math pg. 9."
-        ]
+        "id": "q12",
+        "format": "multiple_choice",
+        "hint": "It is one of your vocabulary words.",
+        "difficulty": "medium",
+        "prompt": "Which word means to beg or make an emotional appeal?",
+        "answer": "plead",
+        "explanation": "Plead is defined as making an emotional appeal."
+      },
+      {
+        "hint": "Maria celebrates this in one of our stories.",
+        "format": "multiple_choice",
+        "choices": [
+          "culture",
+          "language",
+          "fair"
+        ],
+        "answer": "culture",
+        "id": "q13",
+        "prompt": "Which word describes the customs and arts of a group of people?",
+        "subject": "Reading",
+        "explanation": "Culture refers to the customs and arts of a group.",
+        "difficulty": "medium"
+      },
+      {
+        "explanation": "The Trinity consists of the Father, Son, and Holy Spirit.",
+        "choices": [
+          "Moses",
+          "Father",
+          "Holy Spirit"
+        ],
+        "difficulty": "medium",
+        "prompt": "Which of these is NOT one of the three persons in the Trinity?",
+        "format": "multiple_choice",
+        "id": "q14",
+        "answer": "Moses",
+        "subject": "Religion",
+        "hint": "The Trinity is Father, Son, and Holy Spirit."
+      },
+      {
+        "choices": [],
+        "prompt": "Captions are a part of reading comprehension.",
+        "hint": "They are the words under pictures.",
+        "difficulty": "easy",
+        "answer": "true",
+        "id": "q15",
+        "explanation": "Captions are listed under the Reading Work section.",
+        "format": "true_false",
+        "subject": "Reading"
+      },
+      {
+        "id": "q16",
+        "format": "word_build",
+        "subject": "Spelling",
+        "prompt": "Build the word that means the number 1.",
+        "difficulty": "easy",
+        "explanation": "One is a high frequency word on the spelling list.",
+        "hint": "o-n-e",
+        "choices": [],
+        "answer": "one"
+      },
+      {
+        "hint": "f-o-g",
+        "subject": "Spelling",
+        "id": "q17",
+        "explanation": "Fog is a basic spelling word for the short 'o' sound.",
+        "format": "word_build",
+        "answer": "fog",
+        "difficulty": "easy",
+        "choices": [],
+        "prompt": "Build the word for a thick mist that makes it hard to see."
+      },
+      {
+        "prompt": "Build the word that is the past tense of 'go'.",
+        "answer": "went",
+        "subject": "Spelling",
+        "id": "q18",
+        "format": "word_build",
+        "choices": [],
+        "difficulty": "easy",
+        "hint": "w-e-n-t",
+        "explanation": "Went is a basic spelling word for the short 'e' sound."
+      },
+      {
+        "subject": "Reading",
+        "hint": "It is the color of the sky.",
+        "difficulty": "easy",
+        "prompt": "Which sight word is a color?",
+        "format": "multiple_choice",
+        "explanation": "Blue is listed as a sight word.",
+        "choices": [
+          "blue",
+          "why",
+          "both"
+        ],
+        "answer": "blue",
+        "id": "q19"
+      },
+      {
+        "id": "q20",
+        "hint": "It is the color of the sun.",
+        "choices": [
+          "yellow",
+          "put",
+          "help"
+        ],
+        "subject": "Reading",
+        "difficulty": "easy",
+        "explanation": "Yellow is listed as a sight word.",
+        "format": "multiple_choice",
+        "prompt": "Which sight word is another color?",
+        "answer": "yellow"
       }
     ],
-    "importantDates": [
-      {
-        "label": "Spelling (short e, o, u) / Handwriting test",
-        "date": "Friday, Sept. 18",
-        "kind": "test"
-      },
-      {
-        "label": "Reading test",
-        "date": "Friday, Sept. 18",
-        "kind": "test"
-      },
-      {
-        "label": "Pretzel money due",
-        "date": "Friday, Sept. 18",
-        "kind": "reminder"
-      },
-      {
-        "label": "Chapter 1A (addition) test",
-        "date": "Tuesday, Sept. 22",
-        "kind": "test"
-      },
-      {
-        "label": "STAR reading",
-        "date": "Wednesday, Sept. 23",
-        "kind": "test"
-      },
-      {
-        "label": "Stationary money due ($17)",
-        "date": "Wednesday, Sept. 23",
-        "kind": "reminder"
-      },
-      {
-        "label": "Pretzel delivery",
-        "date": "Thursday, Sept. 24",
-        "kind": "reminder"
-      },
-      {
-        "label": "Picture Day",
-        "date": "Thursday, Oct. 1",
-        "kind": "school event"
-      }
-    ],
+    "sourceSufficient": true,
+    "gaps": [],
     "vocabulary": [
       {
-        "subject": "Reading",
         "term": "language",
-        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+        "meaning": "A system of communication used by a particular country or community",
+        "subject": "Reading"
       },
       {
-        "subject": "Reading",
         "term": "culture",
-        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+        "meaning": "The customs, arts, and social institutions of a particular group",
+        "subject": "Reading"
       },
       {
         "subject": "Reading",
-        "term": "aside",
-        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+        "meaning": "To one side; out of the way",
+        "term": "aside"
       },
       {
-        "subject": "Reading",
         "term": "invited",
-        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+        "meaning": "Asked to go somewhere or to do something",
+        "subject": "Reading"
       },
       {
         "subject": "Reading",
         "term": "share",
-        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+        "meaning": "To give a portion of something to others"
       },
       {
         "subject": "Reading",
         "term": "fair",
-        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+        "meaning": "Treating people equally or right"
       },
       {
-        "subject": "Reading",
         "term": "plead",
-        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+        "meaning": "To make an emotional appeal or beg",
+        "subject": "Reading"
       },
       {
         "subject": "Reading",
-        "term": "scurries",
-        "meaning": "Current reading vocabulary word; the school source does not provide a definition."
+        "meaning": "Moves hurriedly with short quick steps",
+        "term": "scurries"
       }
     ],
     "homework": [
       {
-        "day": "Thursday",
+        "due": "Unspecified",
         "subject": "Math",
-        "task": "Math pg. 9",
-        "due": ""
+        "task": "Complete page 9",
+        "day": "Unspecified"
       },
       {
-        "day": "Thursday",
+        "due": "Unspecified",
+        "task": "Complete Spelling Choice Board activity",
         "subject": "Spelling",
-        "task": "Spelling Choice Board activity",
-        "due": ""
+        "day": "Unspecified"
       },
       {
-        "day": "Thursday",
+        "due": "Unspecified",
+        "day": "Unspecified",
         "subject": "Reading",
-        "task": "Read",
-        "due": ""
-      },
-      {
-        "day": "Thursday",
-        "subject": "Reading",
-        "task": "Reading Log",
-        "due": ""
+        "task": "Read and update Reading log"
       }
     ],
-    "reminders": [
-      "Parents: complete forms and cover books.",
-      "Keep the Reading Log and Behavior Chart in the homework folder.",
-      "Return everything in the homework folder.",
-      "Pretzel money is due Friday, Sept. 18."
-    ],
-    "questions": [
+    "sourceHash": "2812470a598cab26e44d6b45c2497dd758f3539a55f45e14ab470d18b6bc6aa1",
+    "importantDates": [
       {
-        "id": "bootstrap-religion-1",
-        "subject": "Religion",
-        "format": "true_false",
-        "prompt": "The Trinity means three persons in one God.",
-        "choices": [],
-        "answer": "True",
-        "hint": "Think about Father, Son, and Holy Spirit.",
-        "explanation": "The source says the Trinity is three persons in one God: Father, Son, and Holy Spirit.",
-        "difficulty": "easy"
+        "kind": "deadline",
+        "date": "Thursday Sept. 17",
+        "label": "Scholastic orders due"
       },
       {
-        "id": "bootstrap-religion-2",
-        "subject": "Religion",
-        "format": "true_false",
-        "prompt": "Jesus is described as God's greatest gift to us.",
-        "choices": [],
-        "answer": "True",
-        "hint": "Look at the title of Religion Chapter 2.",
-        "explanation": "The source says Jesus is God's greatest gift to us.",
-        "difficulty": "easy"
+        "date": "Thursday Sept. 17",
+        "label": "Math STAR test",
+        "kind": "test"
       },
       {
-        "id": "bootstrap-reading-1",
-        "subject": "Reading",
-        "format": "multiple_choice",
-        "prompt": "Which word is on the current sight-word list?",
-        "choices": [
-          "blue",
-          "went",
-          "fog"
-        ],
-        "answer": "blue",
-        "hint": "The other two words are on the spelling list.",
-        "explanation": "Blue appears on the current Reading sight-word list.",
-        "difficulty": "easy"
+        "date": "Friday Sept. 18",
+        "label": "Pretzel money due",
+        "kind": "deadline"
       },
       {
-        "id": "bootstrap-reading-2",
-        "subject": "Reading",
-        "format": "multiple_choice",
-        "prompt": "Which word is on the current sight-word list?",
-        "choices": [
-          "could",
-          "tub",
-          "pet"
-        ],
-        "answer": "could",
-        "hint": "The other two words are basic spelling words.",
-        "explanation": "Could appears on the current Reading sight-word list.",
-        "difficulty": "medium"
+        "date": "Friday Sept. 18",
+        "label": "Spelling (short e, o, u) and Handwriting Test",
+        "kind": "test"
       },
       {
-        "id": "bootstrap-spelling-1",
-        "subject": "Spelling",
-        "format": "multiple_choice",
-        "prompt": "Which word is listed as a review word?",
-        "choices": [
-          "fix",
-          "tug",
-          "bun"
-        ],
-        "answer": "fix",
-        "hint": "Tug and bun are basic words.",
-        "explanation": "Fix is listed under Review Words.",
-        "difficulty": "easy"
+        "kind": "test",
+        "label": "Reading Test",
+        "date": "Friday Sept. 18"
       },
       {
-        "id": "bootstrap-spelling-2",
-        "subject": "Spelling",
-        "format": "multiple_choice",
-        "prompt": "Which word is listed as a high-frequency spelling word?",
-        "choices": [
-          "one",
-          "went",
-          "job"
-        ],
-        "answer": "one",
-        "hint": "Went and job are basic words.",
-        "explanation": "One is listed under High Frequency Words.",
-        "difficulty": "medium"
+        "label": "Chapter 1A (addition) Test",
+        "kind": "test",
+        "date": "Tuesday Sept. 22"
       },
       {
-        "id": "bootstrap-reading-3",
-        "subject": "Reading",
-        "format": "true_false",
-        "prompt": "The current reading work practices short a and short i.",
-        "choices": [],
-        "answer": "True",
-        "hint": "Check the current phonics skills.",
-        "explanation": "The Reading Work page lists short a and short i.",
-        "difficulty": "easy"
+        "label": "Stationary money due ($17)",
+        "date": "Wednesday Sept. 23",
+        "kind": "deadline"
       },
       {
-        "id": "bootstrap-spelling-3",
-        "subject": "Spelling",
-        "format": "word_build",
-        "prompt": "Build this spelling word: went",
-        "choices": [],
-        "answer": "went",
-        "hint": "It starts with W.",
-        "explanation": "Went is one of the current basic spelling words.",
-        "difficulty": "easy"
+        "label": "STAR reading test",
+        "kind": "test",
+        "date": "Wednesday Sept. 23"
+      },
+      {
+        "kind": "event",
+        "label": "Pretzel delivery",
+        "date": "Thursday Sept. 24"
+      },
+      {
+        "kind": "event",
+        "label": "Lego Club",
+        "date": "Friday Sept. 25"
+      },
+      {
+        "label": "Spelling (2 letter blends) and Handwriting Test",
+        "date": "Friday Sept. 25",
+        "kind": "test"
       }
     ],
-    "sourceSufficient": true,
-    "gaps": [
-      "The source lists reading vocabulary terms but does not provide definitions, so the game does not invent definitions.",
-      "The source assigns Math pg. 9 but does not reproduce that page, so the game does not invent Math pg. 9 Quest questions."
-    ]
+    "schemaVersion": 2,
+    "summary": "This week, students are exploring the gifts of God in Religion, focusing on Jesus as God's best gift and the Holy Trinity. In Reading, the class is studying stories about families and culture while practicing short vowel sounds and plural noun structures. Students are also preparing for assessments in Religion, Math, and Spelling.",
+    "sourceCapturedAt": "2026-09-18T00:37:35.100Z"
   }
 }
