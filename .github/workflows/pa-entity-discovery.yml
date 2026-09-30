@@ -150,6 +150,7 @@ jobs:
             "proxy must preserve the upstream payment resource verbatim");
           console.log("Live proxy/upstream x402 contract parity: PASS");
           NODE
+
       - name: Register verified canonical origin with Agent402
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
