@@ -1,0 +1,31 @@
+name: PA x402 discovery regression
+
+on:
+  pull_request:
+    paths:
+      - ".nojekyll"
+      - "x402/pa-entity/**"
+      - "tests/pa-entity-discovery.test.mjs"
+      - ".github/workflows/pa-entity-discovery.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - ".nojekyll"
+      - "x402/pa-entity/**"
+      - "tests/pa-entity-discovery.test.mjs"
+      - ".github/workflows/pa-entity-discovery.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Validate PA x402 discovery contract
+        run: node tests/pa-entity-discovery.test.mjs
