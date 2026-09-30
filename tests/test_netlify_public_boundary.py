@@ -9,6 +9,7 @@ ROOT=Path(__file__).resolve().parents[1]
 DIST=ROOT/"dist"
 
 PUBLIC_ROOT={
+    ".well-known",
     "404.html",
     "_headers",
     "_redirects",
@@ -16,6 +17,7 @@ PUBLIC_ROOT={
     "decision-evidence-sample.html",
     "favicon.svg",
     "index.html",
+    "openapi.json",
     "privacy.html",
     "robots.txt",
     "sample.html",
@@ -24,6 +26,7 @@ PUBLIC_ROOT={
     "terms.html",
     "thanks.html",
     "assets",
+    "x402",
 }
 FORBIDDEN={
     "capturebrief_core","tests","fixtures",".github",
