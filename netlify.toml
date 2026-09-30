@@ -2,6 +2,16 @@
   command = "bash netlify-build.sh"
   publish = "dist"
 
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/pa-business"
+  to = "/.netlify/functions/pa-business"
+  status = 200
+  force = true
+
 [[headers]]
   for = "/*"
   [headers.values]
