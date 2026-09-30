@@ -1,0 +1,69 @@
+{
+  "x402Version": 2,
+  "name": "PA Entity Lookup x402",
+  "description": "Pay-per-call Pennsylvania business-registry lookup for autonomous agents using official Pennsylvania Department of State public data.",
+  "resources": [
+    {
+      "resource": "https://capturebrief.netlify.app/api/pa-business",
+      "method": "GET",
+      "description": "Search Pennsylvania registered business entities by business name. Returns filing number, registration type, registered address, city, ZIP, and county.",
+      "price": "$0.005",
+      "tags": [
+        "data",
+        "business",
+        "pennsylvania",
+        "registry",
+        "entity"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "q": {
+            "type": "string",
+            "description": "Business name or distinctive search text",
+            "minLength": 2
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum results, 1-25",
+            "minimum": 1,
+            "maximum": 25,
+            "default": 10
+          }
+        },
+        "required": [
+          "q"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "results": {
+            "type": "array"
+          }
+        }
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ]
+    }
+  ]
+}

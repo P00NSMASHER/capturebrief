@@ -1,0 +1,152 @@
+name: PA x402 discovery regression
+
+on:
+  pull_request:
+    paths:
+      - ".nojekyll"
+      - "netlify-build.sh"
+      - "netlify.toml"
+      - "netlify/functions/**"
+      - "x402/pa-entity/**"
+      - "tests/pa-entity-discovery.test.mjs"
+      - "tests/pa-entity-proxy.test.mjs"
+      - ".github/workflows/pa-entity-discovery.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - ".nojekyll"
+      - "netlify-build.sh"
+      - "netlify.toml"
+      - "netlify/functions/**"
+      - "x402/pa-entity/**"
+      - "tests/pa-entity-discovery.test.mjs"
+      - "tests/pa-entity-proxy.test.mjs"
+      - ".github/workflows/pa-entity-discovery.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-static-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Validate PA x402 discovery contract
+        run: |
+          node tests/pa-entity-discovery.test.mjs
+          node tests/pa-entity-proxy.test.mjs
+
+  verify-live-discovery:
+    needs: validate-static-contract
+    runs-on: ubuntu-latest
+    env:
+      CANONICAL_ORIGIN: https://capturebrief.netlify.app
+      UPSTREAM_ROUTE: https://pa-entity-x402.floot.app/_api/pa-business
+      EXPECTED_NETWORK: eip155:8453
+      EXPECTED_AMOUNT: "5000"
+      EXPECTED_ASSET: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+      EXPECTED_PAY_TO: 0x708f7b52b56eafd7fc1de65fc7752ed732914021
+    steps:
+      - name: Select deployed discovery origin
+        shell: bash
+        run: |
+          if [[ "\${{ github.event_name }}" == "pull_request" ]]; then
+            echo "DISCOVERY_ORIGIN=https://deploy-preview-\${{ github.event.pull_request.number }}--capturebrief.netlify.app" >> "$GITHUB_ENV"
+          else
+            echo "DISCOVERY_ORIGIN=https://capturebrief.netlify.app" >> "$GITHUB_ENV"
+          fi
+
+      - name: Wait for anonymous discovery and proxy challenge
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifest_status=""
+          openapi_status=""
+          proxy_status=""
+          for attempt in {1..60}; do
+            manifest_status="$(curl -sS -o /tmp/x402.json -w '%{http_code}' "$DISCOVERY_ORIGIN/.well-known/x402" || true)"
+            openapi_status="$(curl -sS -o /tmp/openapi.json -w '%{http_code}' "$DISCOVERY_ORIGIN/openapi.json" || true)"
+            proxy_status="$(curl -sS -D /tmp/proxy.headers -o /tmp/proxy.body -w '%{http_code}' "$DISCOVERY_ORIGIN/api/pa-business?q=OpenAI&limit=1" || true)"
+            if [[ "$manifest_status" == "200" && "$openapi_status" == "200" && "$proxy_status" == "402" ]]; then
+              break
+            fi
+            echo "attempt=$attempt manifest=$manifest_status openapi=$openapi_status proxy=$proxy_status"
+            sleep 5
+          done
+          [[ "$manifest_status" == "200" ]]
+          [[ "$openapi_status" == "200" ]]
+          [[ "$proxy_status" == "402" ]]
+
+          manifest_type="$(curl -sSI "$DISCOVERY_ORIGIN/.well-known/x402" | tr -d '\r' | awk 'BEGIN{IGNORECASE=1} /^content-type:/{sub(/^[^:]+:[[:space:]]*/, ""); print; exit}')"
+          openapi_type="$(curl -sSI "$DISCOVERY_ORIGIN/openapi.json" | tr -d '\r' | awk 'BEGIN{IGNORECASE=1} /^content-type:/{sub(/^[^:]+:[[:space:]]*/, ""); print; exit}')"
+          [[ "$manifest_type" == application/json* ]]
+          [[ "$openapi_type" == application/json* ]]
+
+      - name: Validate deployed discovery JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e --arg route "$CANONICAL_ORIGIN/api/pa-business" --arg network "$EXPECTED_NETWORK" --arg amount "$EXPECTED_AMOUNT" --arg asset "$EXPECTED_ASSET" --arg payTo "$EXPECTED_PAY_TO" '
+            .x402Version == 2 and
+            (.resources | length) == 1 and
+            .resources[0].resource == $route and
+            .resources[0].method == "GET" and
+            .resources[0].price == "$0.005" and
+            .resources[0].accepts[0].scheme == "exact" and
+            .resources[0].accepts[0].network == $network and
+            .resources[0].accepts[0].amount == $amount and
+            .resources[0].accepts[0].asset == $asset and
+            .resources[0].accepts[0].payTo == $payTo and
+            .resources[0].accepts[0].maxTimeoutSeconds == 60
+          ' /tmp/x402.json
+
+          jq -e --arg server "$CANONICAL_ORIGIN/api" '
+            .openapi == "3.1.0" and
+            .servers[0].url == $server and
+            .paths["/pa-business"].get.operationId == "searchPennsylvaniaBusinesses" and
+            .paths["/pa-business"].get["x-payment-info"].price.amount == "0.005000" and
+            .paths["/pa-business"].get["x-payment-info"].price.currency == "USD"
+          ' /tmp/openapi.json
+
+      - name: Compare proxy and upstream payment contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          upstream_status="$(curl -sS -D /tmp/upstream.headers -o /tmp/upstream.body -w '%{http_code}' "$UPSTREAM_ROUTE?q=OpenAI&limit=1")"
+          [[ "$upstream_status" == "402" ]]
+
+          node <<'NODE'
+          const fs = require("fs");
+          const assert = require("assert/strict");
+
+          const decode = (path) => {
+            const headers = fs.readFileSync(path, "utf8");
+            const line = headers.split(/\r?\n/).find(v => /^payment-required:/i.test(v));
+            assert.ok(line, \`PAYMENT-REQUIRED header missing from \${path}\`);
+            const encoded = line.replace(/^payment-required:\s*/i, "").trim();
+            return JSON.parse(Buffer.from(encoded, "base64").toString("utf8"));
+          };
+
+          const proxy = decode("/tmp/proxy.headers");
+          const upstream = decode("/tmp/upstream.headers");
+          for (const challenge of [proxy, upstream]) {
+            assert.equal(challenge.x402Version, 2);
+            assert.equal(challenge.accepts.length, 1);
+            const p = challenge.accepts[0];
+            assert.equal(p.scheme, "exact");
+            assert.equal(p.network, process.env.EXPECTED_NETWORK);
+            assert.equal(p.amount, process.env.EXPECTED_AMOUNT);
+            assert.equal(p.asset, process.env.EXPECTED_ASSET);
+            assert.equal(p.payTo, process.env.EXPECTED_PAY_TO);
+            assert.equal(p.maxTimeoutSeconds, 60);
+          }
+          assert.deepEqual(proxy.accepts, upstream.accepts,
+            "proxy must preserve the upstream settlement contract verbatim");
+          assert.deepEqual(proxy.resource, upstream.resource,
+            "proxy must preserve the upstream payment resource verbatim");
+          console.log("Live proxy/upstream x402 contract parity: PASS");
+          NODE
