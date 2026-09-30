@@ -4,7 +4,7 @@
   "description": "Pay-per-call Pennsylvania business-registry lookup for autonomous agents using official Pennsylvania Department of State public data.",
   "resources": [
     {
-      "resource": "https://pa-entity-x402.floot.app/_api/pa-business",
+      "resource": "https://capturebrief.netlify.app/api/pa-business",
       "method": "GET",
       "description": "Search Pennsylvania registered business entities by business name. Returns filing number, registration type, registered address, city, ZIP, and county.",
       "price": "$0.005",
