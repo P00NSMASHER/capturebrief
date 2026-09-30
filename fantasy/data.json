@@ -1,6 +1,6 @@
 {
   "syncedAt": "Sep 30 • live Yahoo refresh",
-  "syncedAtIso": "2026-09-30T13:58:45.778Z",
+  "syncedAtIso": "2026-09-30T14:10:03.819Z",
   "week": 4,
   "refreshPrompt": "Refresh and republish my Fantasy Football HQ now. Pull fresh Yahoo data separately for Brock Hard & Tee Baggin, Quick Snap Jamison, and Highlight Reel Jamison: standings, current matchup scores/projections, roster/status flags, waiver priority, available players, and recent league transactions. Re-evaluate the best move for each roster, update /fantasy/data.json and the published GitHub Pages snapshot, and keep the interface simple and iPhone-first.",
   "teams": {
@@ -16,57 +16,57 @@
       "scoreState": "projected ahead",
       "weekNote": "Week 4 vs BEEFS GAY • projected 141.74–124.82",
       "priority": "HOLD",
-      "health": "2 Q • 2 IR",
-      "nextMove": "HOLD waiver #1 — wait on Hall/Jefferson",
-      "nextDetail": "Breece Hall is week-to-week with a quad injury and Justin Jefferson's ankle issue is not expected to be long-term. In this 8-team league, the current wire does not offer a player who clearly displaces your healthy weekly core, so keep the top priority for a true every-week starter.",
+      "health": "2 Q • 1 IR • 1 IR-R",
+      "nextMove": "HOLD waiver #1 — do not claim Achane",
+      "nextDetail": "De'Von Achane is a verified free agent in this league, but his Week 3 torn ACL ended his 2026 season. Breece Hall remains questionable and Braelon Allen has already been added by another team, so preserve the #1 priority for the next healthy player who can become a durable weekly starter.",
       "confidence": "HIGH",
       "cost": "Preserve waiver #1",
-      "nextPrompt": "Re-scan Brock Hard & Tee Baggin's live Yahoo roster and waiver pool. Preserve waiver priority #1 unless a target has a durable path to my weekly lineup. Re-check Breece Hall and Justin Jefferson, compare the best available RB/WR options, and return exactly HOLD #1 or BURN #1 with the exact add/drop if the threshold is met.",
+      "nextPrompt": "Re-scan Brock Hard & Tee Baggin's live Yahoo league. Preserve waiver priority #1 unless a verified healthy available player has a durable path to my weekly lineup. Explicitly reject De'Von Achane because of the season-ending ACL injury, re-check Breece Hall and Justin Jefferson, and return HOLD #1 or the exact add/drop only if the threshold is clearly met.",
       "alerts": [
+        {
+          "level": "bad",
+          "title": "De'Von Achane • FREE AGENT",
+          "text": "Do not claim. He was dropped after a season-ending torn ACL."
+        },
         {
           "level": "watch",
           "title": "Breece Hall • Q",
-          "text": "Quad injury is considered week-to-week. Do not panic-drop; use bench depth while his Week 4 status develops."
+          "text": "Week-to-week with a quadriceps injury. Keep him rostered and monitor practice status."
         },
         {
           "level": "watch",
           "title": "Justin Jefferson • Q",
-          "text": "Ankle injury received reassuring early news; monitor practice participation before changing the WR plan."
-        },
-        {
-          "level": "bad",
-          "title": "Jonathon Brooks + Jordyn Tyson",
-          "text": "Brooks remains on IR and Tyson is IR-return designated, so both reserve slots are occupied."
+          "text": "Ankle issue is not expected to be long-term; monitor Week 4 practice participation."
         },
         {
           "level": "info",
-          "title": "Mark Andrews",
-          "text": "Redundant behind Brock Bowers. Shop him as trade currency before cutting him for a marginal 8-team waiver add."
+          "title": "Waiver leverage",
+          "text": "You still hold priority #1. Braelon Allen and Ollie Gordon II were already added elsewhere, so there is no reason to force a claim."
         }
       ],
       "waivers": [
         {
           "name": "HOLD waiver #1",
           "pos": "Strategy",
-          "why": "No currently available player clearly upgrades your healthy weekly starters enough to justify spending the league's top priority.",
+          "why": "The premium Week 4 injury replacements have already been claimed, and the newly dropped Achane is out for the season.",
           "tag": "BEST MOVE"
         },
         {
-          "name": "Jordan Addison",
-          "pos": "WR • MIN • 77% Yahoo-wide",
-          "why": "Useful Jefferson insurance, but temporary WR depth is not worth burning #1 on this roster.",
-          "tag": "HOLD #1"
+          "name": "De'Von Achane",
+          "pos": "RB • MIA • verified free agent",
+          "why": "Season-ending ACL injury. Leave him on the wire even though the name value is tempting.",
+          "tag": "PASS"
         },
         {
           "name": "Kyle Monangai",
           "pos": "RB • CHI • 82% Yahoo-wide",
-          "why": "RB is the better upgrade lane, but his stock fell after Week 3 and the role is not strong enough yet for the #1 claim.",
+          "why": "Best healthy RB near the top of the current availability list, but not enough to justify spending #1 in this 8-team roster.",
           "tag": "WATCH"
         },
         {
-          "name": "Xavier Worthy",
-          "pos": "WR • KC • 65% Yahoo-wide",
-          "why": "Available upside, but he is a luxury behind Chase, Jefferson, Higgins, Flowers and Harrison rather than a structural fix.",
+          "name": "Jordan Addison",
+          "pos": "WR • MIN • 77% Yahoo-wide",
+          "why": "Useful Jefferson insurance, but your WR room is already deep enough to preserve the claim.",
           "tag": "WATCH"
         }
       ],
@@ -97,7 +97,7 @@
           "name": "Ja'Marr Chase",
           "meta": "CIN",
           "points": "0.0",
-          "flag": "lock"
+          "flag": ""
         },
         {
           "slot": "WR",
@@ -111,21 +111,21 @@
           "name": "Brock Bowers",
           "meta": "LV",
           "points": "0.0",
-          "flag": "lock"
+          "flag": ""
         },
         {
           "slot": "FLEX",
           "name": "Tee Higgins",
           "meta": "CIN",
           "points": "0.0",
-          "flag": "lock"
+          "flag": ""
         },
         {
           "slot": "FLEX",
           "name": "Zay Flowers",
           "meta": "BAL",
           "points": "0.0",
-          "flag": "lock"
+          "flag": ""
         },
         {
           "slot": "K",
@@ -142,11 +142,18 @@
           "flag": ""
         },
         {
-          "slot": "BN",
-          "name": "Mark Andrews",
-          "meta": "BAL",
-          "points": "—",
-          "flag": ""
+          "slot": "IR",
+          "name": "Jonathon Brooks",
+          "meta": "CAR • IR",
+          "points": "0.0",
+          "flag": "bad"
+        },
+        {
+          "slot": "IR",
+          "name": "Jordyn Tyson",
+          "meta": "NO • IR-R",
+          "points": "0.0",
+          "flag": "bad"
         }
       ],
       "actions": [
@@ -168,23 +175,23 @@
         }
       ],
       "strategy": {
-        "summary": "The 1–2 record is not a reason to burn the best waiver position. Brock has scored 440.40 points through three games, and the highest-value decision is preserving #1 while the Hall and Jefferson injuries clarify.",
+        "summary": "Brock is 1–2 but still has strong scoring volume and the most valuable waiver position in the league. The key is avoiding the Achane name-value trap and keeping #1 for a healthy difference-maker.",
         "bullets": [
           {
+            "label": "Hard pass",
+            "text": "Achane is a verified free agent because of a season-ending ACL tear, not because the league missed an opportunity."
+          },
+          {
+            "label": "RB injury",
+            "text": "Hall is week-to-week, but Allen was already claimed. Your bench depth can cover the short window."
+          },
+          {
             "label": "Waiver leverage",
-            "text": "Priority #1 is most valuable when an injury creates a durable starter. The current pool is mostly depth or role-dependent upside."
+            "text": "Do not convert #1 priority into a marginal depth add just because the roster is 1–2."
           },
           {
-            "label": "Roster construction",
-            "text": "Wide receiver and tight end are already strengths. The meaningful upgrade lane is RB, not another WR."
-          },
-          {
-            "label": "Injury context",
-            "text": "Hall is week-to-week; Jefferson received reassuring early news. Neither justifies a panic claim today."
-          },
-          {
-            "label": "Trade chip",
-            "text": "Andrews has more value as consolidation currency than as a straight drop in an 8-team league."
+            "label": "WR depth",
+            "text": "Chase, Jefferson, Higgins, Flowers and Harrison make WR a low-priority acquisition lane."
           }
         ]
       },
@@ -230,6 +237,13 @@
           "status": "complete",
           "team": "Jersey junkyard",
           "move": "Added Ollie Gordon II • Dropped MarShawn Lloyd"
+        },
+        {
+          "date": "2026-09-29",
+          "type": "drop",
+          "status": "complete",
+          "team": "Josh ❤️creampies",
+          "move": "Dropped De'Von Achane"
         }
       ],
       "snapshot": {
@@ -563,7 +577,7 @@
             "position": "WR",
             "team": "Pit",
             "status": null,
-            "yahooWideRostered": 67
+            "yahooWideRostered": 66
           },
           {
             "name": "Xavier Worthy",
@@ -592,76 +606,6 @@
             "team": "NO",
             "status": null,
             "yahooWideRostered": 61
-          },
-          {
-            "name": "Dontayvion Wicks",
-            "position": "WR",
-            "team": "Phi",
-            "status": null,
-            "yahooWideRostered": 48
-          },
-          {
-            "name": "Makai Lemon",
-            "position": "WR",
-            "team": "Phi",
-            "status": null,
-            "yahooWideRostered": 48
-          },
-          {
-            "name": "Wan'Dale Robinson",
-            "position": "WR",
-            "team": "Ten",
-            "status": null,
-            "yahooWideRostered": 48
-          },
-          {
-            "name": "Jakobi Meyers",
-            "position": "WR",
-            "team": "Jax",
-            "status": null,
-            "yahooWideRostered": 47
-          },
-          {
-            "name": "Tre Tucker",
-            "position": "WR",
-            "team": "LV",
-            "status": null,
-            "yahooWideRostered": 44
-          },
-          {
-            "name": "Sam Darnold",
-            "position": "QB",
-            "team": "Sea",
-            "status": null,
-            "yahooWideRostered": 42
-          },
-          {
-            "name": "Adonai Mitchell",
-            "position": "WR",
-            "team": "NYJ",
-            "status": "Q",
-            "yahooWideRostered": 36
-          },
-          {
-            "name": "Kalif Raymond",
-            "position": "WR",
-            "team": "Chi",
-            "status": null,
-            "yahooWideRostered": 19
-          },
-          {
-            "name": "Pat Bryant",
-            "position": "WR",
-            "team": "Den",
-            "status": null,
-            "yahooWideRostered": 8
-          },
-          {
-            "name": "Ted Hurst III",
-            "position": "WR",
-            "team": "TB",
-            "status": null,
-            "yahooWideRostered": 2
           }
         ],
         "recentTransactions": [
@@ -713,41 +657,6 @@
             "status": "complete",
             "team": "Josh ❤️creampies",
             "move": "Dropped De'Von Achane"
-          },
-          {
-            "date": "2026-09-23",
-            "type": "add",
-            "status": "complete",
-            "team": "Hazleton Coal Mine",
-            "move": "Added Spencer Shrader • Dropped Tyler Bass"
-          },
-          {
-            "date": "2026-09-23",
-            "type": "add",
-            "status": "complete",
-            "team": "Jersey junkyard",
-            "move": "Added Denzel Boston • Dropped Jaxson Dart"
-          },
-          {
-            "date": "2026-09-23",
-            "type": "add",
-            "status": "complete",
-            "team": "Jersey junkyard",
-            "move": "Added Panthers • Dropped Giants"
-          },
-          {
-            "date": "2026-09-23",
-            "type": "add",
-            "status": "complete",
-            "team": "Brock Hard & Tee Baggin",
-            "move": "Added Chiefs • Dropped Buccaneers"
-          },
-          {
-            "date": "2026-09-23",
-            "type": "add",
-            "status": "complete",
-            "team": "Brock Hard & Tee Baggin",
-            "move": "Added Mark Andrews • Dropped Juwan Johnson"
           }
         ]
       }
@@ -763,59 +672,59 @@
       "score": "0.00–0.00",
       "scoreState": "projected ahead",
       "weekNote": "Week 4 vs Hard Count Easton • projected 113.65–99.55",
-      "priority": "HIGH",
-      "health": "Coker Q • Brown IR • Jacobs CEL",
-      "nextMove": "CLAIM Denzel Boston with #3 — drop Mark Andrews",
-      "nextDetail": "Quick needs usable WR depth more than a second veteran tight end behind Travis Kelce. Denzel Boston is still available, has an 18.1% target share and sits as the WR19 in fantasy points per game entering Week 4, while Jalen Coker is questionable and A.J. Brown remains on IR.",
-      "confidence": "HIGH",
-      "cost": "Waiver priority #3",
-      "nextPrompt": "Re-scan Quick Snap Jamison's live Yahoo waiver pool. If Denzel Boston is still available, confirm whether he remains worth waiver priority #3 and whether Mark Andrews is still the cleanest drop. Only change the recommendation if a materially better WR/RB appeared.",
+      "priority": "HOLD",
+      "health": "1 Q • 1 IR • 1 CEL",
+      "nextMove": "HOLD waiver #3 — use Addison if Coker sits",
+      "nextDetail": "Jalen Coker is questionable, but Quick already has Jordan Addison, Rome Odunze and Josh Downs on the bench and is projected ahead this week. Keep waiver priority #3 instead of chasing another quarterback or marginal depth; if Coker is limited or inactive, move Jordan Addison into the starting WR spot.",
+      "confidence": "MEDIUM-HIGH",
+      "cost": "Preserve waiver #3",
+      "nextPrompt": "Re-check Quick Snap Jamison's Week 4 Yahoo roster and current practice statuses. Keep waiver #3 unless a healthy available player clearly upgrades my weekly starters. If Jalen Coker is limited or out, compare Jordan Addison, Rome Odunze and Josh Downs for the exact replacement and do not add a backup quarterback behind Jalen Hurts.",
       "alerts": [
-        {
-          "level": "bad",
-          "title": "A.J. Brown • IR",
-          "text": "The roster is operating without one of its expected weekly WR anchors."
-        },
         {
           "level": "watch",
           "title": "Jalen Coker • Q",
-          "text": "Quad injury makes the starting WR room thinner entering Week 4."
+          "text": "Quad injury makes his Week 4 availability the main lineup variable."
         },
         {
-          "level": "watch",
+          "level": "bad",
+          "title": "A.J. Brown • IR",
+          "text": "High-ankle sprain keeps him unavailable for the near term, but he remains an IR hold."
+        },
+        {
+          "level": "bad",
           "title": "Josh Jacobs • CEL",
-          "text": "Yahoo is carrying a CEL status flag. Keep him rostered while that designation is active unless a verified update changes the outlook."
+          "text": "Currently carries a non-active roster designation in Yahoo; do not rely on him for Week 4."
         },
         {
           "level": "info",
-          "title": "Projected edge",
-          "text": "Yahoo currently projects Quick Snap 113.65 to 99.55 over Hard Count Easton."
+          "title": "Jayden Daniels • FREE AGENT",
+          "text": "Verified available after today's drop, but Jalen Hurts already covers QB. No need to spend waiver priority there."
         }
       ],
       "waivers": [
         {
+          "name": "HOLD waiver #3",
+          "pos": "Strategy",
+          "why": "The lineup can absorb Coker's uncertainty with players already rostered, and you are projected ahead.",
+          "tag": "BEST MOVE"
+        },
+        {
           "name": "Denzel Boston",
           "pos": "WR • CLE • 75% Yahoo-wide",
-          "why": "Best fit for the roster need. Strong early target role and a favorable Week 4 matchup give him both immediate and rest-of-season utility.",
-          "tag": "USE #3"
+          "why": "Legitimate upside and verified available, but Thursday's matchup is difficult enough that he is not a must-burn claim for this roster.",
+          "tag": "WATCH"
         },
         {
           "name": "Kyle Monangai",
           "pos": "RB • CHI • 82% Yahoo-wide",
-          "why": "High market roster rate, but Quick is already deeper at RB than WR and his Week 3 stock moved down.",
-          "tag": "SECONDARY"
+          "why": "Strong market availability signal, but running back is already your deepest position.",
+          "tag": "WATCH"
         },
         {
-          "name": "KC Concepcion Jr.",
-          "pos": "WR • CLE • 63% Yahoo-wide",
-          "why": "Interesting depth add, but Boston has the stronger established target profile.",
-          "tag": "FALLBACK"
-        },
-        {
-          "name": "Devaughn Vele",
-          "pos": "WR • NO • 61% Yahoo-wide",
-          "why": "Playable WR depth if the preferred claim misses without forcing another TE onto the bench.",
-          "tag": "FALLBACK"
+          "name": "Jayden Daniels",
+          "pos": "QB • WAS • verified free agent",
+          "why": "Good player value, wrong roster need with Hurts locked in at QB.",
+          "tag": "PASS"
         }
       ],
       "lineup": [
@@ -831,14 +740,14 @@
           "name": "Jonathan Taylor",
           "meta": "IND",
           "points": "0.0",
-          "flag": "lock"
+          "flag": ""
         },
         {
           "slot": "RB",
           "name": "Kenneth Walker III",
           "meta": "KC",
           "points": "0.0",
-          "flag": "lock"
+          "flag": ""
         },
         {
           "slot": "WR",
@@ -859,14 +768,14 @@
           "name": "Travis Kelce",
           "meta": "KC",
           "points": "0.0",
-          "flag": "lock"
+          "flag": ""
         },
         {
           "slot": "FLEX",
           "name": "Jeremiyah Love",
           "meta": "ARI",
           "points": "0.0",
-          "flag": "lock"
+          "flag": ""
         },
         {
           "slot": "K",
@@ -884,23 +793,23 @@
         },
         {
           "slot": "BN",
-          "name": "Rome Odunze",
-          "meta": "CHI",
-          "points": "—",
-          "flag": ""
+          "name": "Jordan Addison",
+          "meta": "MIN",
+          "points": "0.0",
+          "flag": "move"
         },
         {
           "slot": "BN",
-          "name": "Mark Andrews",
-          "meta": "BAL",
-          "points": "—",
-          "flag": ""
+          "name": "Josh Jacobs",
+          "meta": "GB • CEL",
+          "points": "0.0",
+          "flag": "bad"
         },
         {
           "slot": "IR",
           "name": "A.J. Brown",
           "meta": "NE • IR",
-          "points": "—",
+          "points": "0.0",
           "flag": "bad"
         }
       ],
@@ -923,23 +832,23 @@
         }
       ],
       "strategy": {
-        "summary": "This is a need-based claim, not a panic move. Quick is 1–1 and projected ahead this week, but Brown is on IR and Coker is questionable. Boston adds a startable WR profile while Andrews is redundant behind Kelce.",
+        "summary": "Quick is 1–1 and projected ahead 113.65–99.55. The best edge is preserving waiver #3 while using existing receiver depth to cover Coker and A.J. Brown.",
         "bullets": [
           {
-            "label": "Why Boston",
-            "text": "Boston enters Week 4 with a meaningful target share and top-20 fantasy scoring at WR through three games."
+            "label": "Immediate lineup",
+            "text": "If Coker cannot go, Jordan Addison is the clean internal replacement without spending waiver capital."
           },
           {
-            "label": "Why spend #3",
-            "text": "In a 10-team league, a startable WR with an established role is a more defensible use of priority than a speculative bench stash."
+            "label": "QB discipline",
+            "text": "Jayden Daniels is newly available, but carrying him behind Hurts would not improve the starting lineup."
           },
           {
-            "label": "Why Andrews out",
-            "text": "Kelce is the weekly TE starter, so the second veteran tight end is the cleanest expendable slot."
+            "label": "WR wire",
+            "text": "Denzel Boston is interesting long term, but the current roster does not need to force the claim this week."
           },
           {
-            "label": "Do not chase Johnston",
-            "text": "Quentin Johnston remains available, but his early efficiency and role have lagged enough that he is not the preferred claim."
+            "label": "Waiver leverage",
+            "text": "Priority #3 is valuable enough to save for a clearer every-week starter or a direct injury replacement."
           }
         ]
       },
@@ -1357,76 +1266,6 @@
             "team": "NYJ",
             "status": null,
             "yahooWideRostered": 40
-          },
-          {
-            "name": "Rashod Bateman",
-            "position": "WR",
-            "team": "Bal",
-            "status": null,
-            "yahooWideRostered": 38
-          },
-          {
-            "name": "Adonai Mitchell",
-            "position": "WR",
-            "team": "NYJ",
-            "status": "Q",
-            "yahooWideRostered": 36
-          },
-          {
-            "name": "Kenyon Sadiq",
-            "position": "TE",
-            "team": "NYJ",
-            "status": null,
-            "yahooWideRostered": 33
-          },
-          {
-            "name": "Keenan Allen",
-            "position": "WR",
-            "team": "Ind",
-            "status": null,
-            "yahooWideRostered": 29
-          },
-          {
-            "name": "Daniel Jones",
-            "position": "QB",
-            "team": "Ind",
-            "status": null,
-            "yahooWideRostered": 21
-          },
-          {
-            "name": "Darren Waller",
-            "position": "TE",
-            "team": "Car",
-            "status": null,
-            "yahooWideRostered": 18
-          },
-          {
-            "name": "Geno Smith",
-            "position": "QB",
-            "team": "NYJ",
-            "status": null,
-            "yahooWideRostered": 9
-          },
-          {
-            "name": "Antonio Williams",
-            "position": "WR",
-            "team": "Was",
-            "status": null,
-            "yahooWideRostered": 6
-          },
-          {
-            "name": "Michael Penix Jr.",
-            "position": "QB",
-            "team": "Atl",
-            "status": null,
-            "yahooWideRostered": 6
-          },
-          {
-            "name": "Ted Hurst III",
-            "position": "WR",
-            "team": "TB",
-            "status": null,
-            "yahooWideRostered": 2
           }
         ],
         "recentTransactions": [
@@ -1471,48 +1310,6 @@
             "status": "complete",
             "team": "Quick Snap Jamison",
             "move": "Added Josh Downs • Dropped Trevor Lawrence"
-          },
-          {
-            "date": "2026-09-23",
-            "type": "add",
-            "status": "complete",
-            "team": "Shotgun alaa",
-            "move": "Added Chiefs • Dropped Ravens"
-          },
-          {
-            "date": "2026-09-23",
-            "type": "add",
-            "status": "complete",
-            "team": "Shotgun alaa",
-            "move": "Added Tyler Shough • Dropped Quentin Johnston"
-          },
-          {
-            "date": "2026-09-20",
-            "type": "add",
-            "status": "complete",
-            "team": "Quick Snap Jamison",
-            "move": "Added Josh Jacobs • Dropped Josh Downs"
-          },
-          {
-            "date": "2026-09-20",
-            "type": "add",
-            "status": "complete",
-            "team": "Quick Snap Jamison",
-            "move": "Added Jalen Coker • Dropped Harold Fannin Jr."
-          },
-          {
-            "date": "2026-09-20",
-            "type": "add",
-            "status": "complete",
-            "team": "Quick Snap Jamison",
-            "move": "Added Mark Andrews"
-          },
-          {
-            "date": "2026-09-18",
-            "type": "add",
-            "status": "complete",
-            "team": "2 Deep Bengels",
-            "move": "Added Deebo Samuel Sr. • Dropped De'Zhaun Stribling"
           }
         ]
       }
@@ -1528,59 +1325,59 @@
       "score": "0.00–0.00",
       "scoreState": "projected behind",
       "weekNote": "Week 4 vs Play Action Ayden • projected 112.55–113.31",
-      "priority": "HOLD",
-      "health": "Coker Q • Waddle Q • Caleb D",
-      "nextMove": "START Brock Bowers over Dalton Kincaid — HOLD #6",
-      "nextDetail": "The biggest edge is already on your roster. Multiple Week 4 ranking sets place Brock Bowers at or near the top of the TE board and ahead of Dalton Kincaid. Make that lineup swap first; the available pool does not justify forcing waiver priority #6 on a depth add.",
+      "priority": "LINEUP",
+      "health": "2 Q • 1 D",
+      "nextMove": "START Brock Bowers in FLEX — bench Coker",
+      "nextDetail": "Highlight is a virtual coin flip this week and Brock Bowers is healthy on the bench while Jalen Coker is questionable. Keep Dalton Kincaid at TE, move Bowers into the W/R/T slot, keep Jaylen Waddle in the WR lineup while his ankle is monitored, and preserve waiver priority #6.",
       "confidence": "HIGH",
-      "cost": "No waiver cost",
-      "nextPrompt": "Optimize Highlight Reel Jamison's live Yahoo Week 4 lineup. Start by comparing Brock Bowers and Dalton Kincaid using current rankings and matchup data, then re-check Waddle and Coker injury status. Preserve waiver #6 unless an available player clearly improves the weekly lineup.",
+      "cost": "No waiver spent",
+      "nextPrompt": "Optimize Highlight Reel Jamison's Week 4 Yahoo lineup. Put Brock Bowers into the W/R/T slot unless a fresh status change makes that wrong, compare Jalen Coker and Jaylen Waddle using the latest practice news, and preserve waiver #6 unless a verified free agent clearly beats the existing starters.",
       "alerts": [
         {
           "level": "info",
-          "title": "Brock Bowers",
-          "text": "He is currently on the Yahoo bench but ranks ahead of Kincaid across multiple Week 4 TE boards. This is the cleanest immediate upgrade."
+          "title": "Brock Bowers • BENCH",
+          "text": "Healthy and eligible for the W/R/T slot. He should not be left out of a close Week 4 matchup."
         },
         {
           "level": "watch",
           "title": "Jalen Coker • Q",
-          "text": "Quad issue is the main starting-lineup injury watch."
+          "text": "Quad injury makes him the cleanest player to move out of the starting group for now."
         },
         {
           "level": "watch",
           "title": "Jaylen Waddle • Q",
-          "text": "Early reporting was reassuring, but keep monitoring the official practice report before kickoff."
+          "text": "Reportedly fine after the walking boot concern, but practice participation still needs monitoring."
         },
         {
           "level": "bad",
           "title": "Caleb Williams • D",
-          "text": "Hamstring injury is expected to cost multiple weeks, reducing the value of carrying him as the backup QB right now."
+          "text": "Backup QB is dealing with a multi-week hamstring issue; he is the first bench slot to churn if a must-add appears."
         }
       ],
       "waivers": [
         {
           "name": "HOLD waiver #6",
           "pos": "Strategy",
-          "why": "Fix the TE lineup first. No current available player is a clearer weekly upgrade than simply starting Bowers.",
+          "why": "The clearest Week 4 gain is already on your bench: get Bowers into FLEX instead of forcing a claim.",
           "tag": "BEST MOVE"
-        },
-        {
-          "name": "Xavier Worthy",
-          "pos": "WR • KC • 65% Yahoo-wide",
-          "why": "Still an upside bench option, but his early target/yardage profile does not demand a priority claim over your existing WR depth.",
-          "tag": "WATCH"
         },
         {
           "name": "Woody Marks",
           "pos": "RB • HOU • 52% Yahoo-wide",
-          "why": "Useful RB depth, but he remains behind David Montgomery and is projected more as an RB3/flex than a weekly difference-maker.",
+          "why": "Useful RB stash, but Gibbs, Jeanty, Henderson and Tuten already give you enough RB depth.",
           "tag": "WATCH"
         },
         {
-          "name": "Khalil Shakir",
-          "pos": "WR • BUF • 47% Yahoo-wide",
-          "why": "Steady depth if WR injuries worsen, but not a lineup-changing add today.",
-          "tag": "WAIT"
+          "name": "Xavier Worthy",
+          "pos": "WR • KC • 65% Yahoo-wide",
+          "why": "Verified available, but his recent role has been volatile and he does not beat the Bowers lineup fix.",
+          "tag": "WATCH"
+        },
+        {
+          "name": "Colston Loveland",
+          "pos": "TE • CHI • 96% Yahoo-wide",
+          "why": "Strong market value, but Kincaid plus Bowers already make tight end a roster strength.",
+          "tag": "PASS"
         }
       ],
       "lineup": [
@@ -1634,6 +1431,20 @@
           "flag": "watch"
         },
         {
+          "slot": "BN",
+          "name": "Brock Bowers",
+          "meta": "LV • START IN FLEX",
+          "points": "0.0",
+          "flag": "move"
+        },
+        {
+          "slot": "BN",
+          "name": "Caleb Williams",
+          "meta": "CHI • D",
+          "points": "0.0",
+          "flag": "bad"
+        },
+        {
           "slot": "K",
           "name": "Jason Myers",
           "meta": "SEA",
@@ -1645,27 +1456,6 @@
           "name": "Chiefs",
           "meta": "KC",
           "points": "0.0",
-          "flag": ""
-        },
-        {
-          "slot": "BN",
-          "name": "Brock Bowers",
-          "meta": "LV",
-          "points": "—",
-          "flag": "move"
-        },
-        {
-          "slot": "BN",
-          "name": "Caleb Williams",
-          "meta": "CHI • D",
-          "points": "—",
-          "flag": "bad"
-        },
-        {
-          "slot": "BN",
-          "name": "Brian Thomas Jr.",
-          "meta": "JAX",
-          "points": "—",
           "flag": ""
         }
       ],
@@ -1688,23 +1478,23 @@
         }
       ],
       "strategy": {
-        "summary": "Highlight is 2–0 and only 0.76 projected points behind this week. The highest-confidence gain is a lineup correction, not a waiver gamble.",
+        "summary": "Highlight is 2–0 and projected just 0.76 points behind. This is a lineup-efficiency problem, not a waiver problem: Bowers is healthy and sitting behind a questionable starter.",
         "bullets": [
           {
-            "label": "TE edge",
-            "text": "Bowers is ranked materially ahead of Kincaid for Week 4 by multiple current ranking sources."
+            "label": "Best immediate gain",
+            "text": "Use the W/R/T flex to start Bowers while Coker's quad status is unsettled."
           },
           {
-            "label": "Waiver discipline",
-            "text": "Priority #6 does not need to be spent just because useful players are available; the roster already has strong RB/WR depth."
+            "label": "Waddle",
+            "text": "The early ankle update was reassuring, so keep him active unless practice reports worsen."
           },
           {
-            "label": "Injury management",
-            "text": "Waddle's early update was reassuring, while Coker still needs practice monitoring."
+            "label": "Bench churn",
+            "text": "Caleb Williams is a hurt backup QB in a one-QB build and is the expendable slot if a true waiver target emerges."
           },
           {
-            "label": "Bench efficiency",
-            "text": "Caleb Williams' multi-week hamstring absence makes the backup-QB slot the first place to consider churning if a true upside add emerges."
+            "label": "Waiver leverage",
+            "text": "Priority #6 is not especially powerful, but there is no reason to spend it on redundant depth today."
           }
         ]
       },
@@ -2115,76 +1905,6 @@
             "team": "LAR",
             "status": "D",
             "yahooWideRostered": 29
-          },
-          {
-            "name": "Ollie Gordon II",
-            "position": "RB",
-            "team": "Mia",
-            "status": null,
-            "yahooWideRostered": 26
-          },
-          {
-            "name": "Malik Washington",
-            "position": "WR",
-            "team": "Mia",
-            "status": null,
-            "yahooWideRostered": 22
-          },
-          {
-            "name": "Daniel Jones",
-            "position": "QB",
-            "team": "Ind",
-            "status": null,
-            "yahooWideRostered": 21
-          },
-          {
-            "name": "Kalif Raymond",
-            "position": "WR",
-            "team": "Chi",
-            "status": null,
-            "yahooWideRostered": 19
-          },
-          {
-            "name": "Darren Waller",
-            "position": "TE",
-            "team": "Car",
-            "status": null,
-            "yahooWideRostered": 18
-          },
-          {
-            "name": "Geno Smith",
-            "position": "QB",
-            "team": "NYJ",
-            "status": null,
-            "yahooWideRostered": 9
-          },
-          {
-            "name": "Pat Bryant",
-            "position": "WR",
-            "team": "Den",
-            "status": null,
-            "yahooWideRostered": 8
-          },
-          {
-            "name": "Antonio Williams",
-            "position": "WR",
-            "team": "Was",
-            "status": null,
-            "yahooWideRostered": 6
-          },
-          {
-            "name": "Michael Penix Jr.",
-            "position": "QB",
-            "team": "Atl",
-            "status": null,
-            "yahooWideRostered": 6
-          },
-          {
-            "name": "Ted Hurst III",
-            "position": "WR",
-            "team": "TB",
-            "status": null,
-            "yahooWideRostered": 2
           }
         ],
         "recentTransactions": [
@@ -2229,48 +1949,6 @@
             "status": "complete",
             "team": "Highlight Reel Jamison",
             "move": "Added Chiefs • Dropped Ravens"
-          },
-          {
-            "date": "2026-09-23",
-            "type": "add",
-            "status": "complete",
-            "team": "Highlight Reel Jamison",
-            "move": "Added Bo Nix • Dropped Jayden Reed"
-          },
-          {
-            "date": "2026-09-23",
-            "type": "add",
-            "status": "complete",
-            "team": "Sunday Funday jordan",
-            "move": "Added Dalton Schultz • Dropped Colston Loveland"
-          },
-          {
-            "date": "2026-09-23",
-            "type": "add",
-            "status": "complete",
-            "team": "Speed Chaser",
-            "move": "Added Tyler Shough • Dropped Jaxson Dart"
-          },
-          {
-            "date": "2026-09-23",
-            "type": "drop",
-            "status": "complete",
-            "team": "Speed Chaser",
-            "move": "Dropped Kaelon Black"
-          },
-          {
-            "date": "2026-09-20",
-            "type": "add",
-            "status": "complete",
-            "team": "Flea Flicker Philip",
-            "move": "Added Caleb Douglas"
-          },
-          {
-            "date": "2026-09-20",
-            "type": "add",
-            "status": "complete",
-            "team": "Highlight Reel Jamison",
-            "move": "Added Malik Washington • Dropped Kenny Gainwell"
           }
         ]
       }
