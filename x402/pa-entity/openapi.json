@@ -2,12 +2,12 @@
   "openapi": "3.1.0",
   "info": {
     "title": "PA Entity Lookup x402",
-    "version": "1.0.1",
-    "description": "Pay-per-call Pennsylvania business entity lookup using official Pennsylvania Department of State public data. The paid API remains hosted at pa-entity-x402.floot.app; this static catalogue is discovery-only."
+    "version": "1.0.2",
+    "description": "Pay-per-call Pennsylvania business entity lookup using official Pennsylvania Department of State public data. This catalogue is served from the crawlable seller origin; the paid route transparently forwards to the existing Floot payment backend so verification and settlement semantics remain unchanged."
   },
   "servers": [
     {
-      "url": "https://pa-entity-x402.floot.app/_api"
+      "url": "https://capturebrief.netlify.app/api"
     }
   ],
   "paths": {
@@ -61,80 +61,27 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "query": {
-                      "type": "string"
-                    },
-                    "count": {
-                      "type": "integer"
-                    },
+                    "query": { "type": "string" },
+                    "count": { "type": "integer" },
                     "results": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "businessName": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "filingNumber": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "registrationType": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "address1": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "address2": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "city": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "state": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "zip": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "county": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          }
+                          "businessName": { "type": ["string", "null"] },
+                          "filingNumber": { "type": ["string", "null"] },
+                          "registrationType": { "type": ["string", "null"] },
+                          "address1": { "type": ["string", "null"] },
+                          "address2": { "type": ["string", "null"] },
+                          "city": { "type": ["string", "null"] },
+                          "state": { "type": ["string", "null"] },
+                          "zip": { "type": ["string", "null"] },
+                          "county": { "type": ["string", "null"] }
                         }
                       }
                     },
-                    "source": {
-                      "type": "string"
-                    },
-                    "paid": {
-                      "type": "boolean"
-                    }
+                    "source": { "type": "string" },
+                    "paid": { "type": "boolean" }
                   }
                 }
               }
@@ -145,27 +92,16 @@
             "headers": {
               "PAYMENT-REQUIRED": {
                 "description": "Base64-encoded x402 v2 payment requirements",
-                "schema": {
-                  "type": "string"
-                }
+                "schema": { "type": "string" }
               },
               "X402-Price": {
-                "schema": {
-                  "type": "string",
-                  "const": "$0.005"
-                }
+                "schema": { "type": "string", "const": "$0.005" }
               },
               "X402-Asset": {
-                "schema": {
-                  "type": "string",
-                  "const": "USDC"
-                }
+                "schema": { "type": "string", "const": "USDC" }
               },
               "X402-Network": {
-                "schema": {
-                  "type": "string",
-                  "const": "eip155:8453"
-                }
+                "schema": { "type": "string", "const": "eip155:8453" }
               },
               "X402-Pay-To": {
                 "schema": {
