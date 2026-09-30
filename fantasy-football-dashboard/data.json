@@ -4,9 +4,9 @@
   "provider": "Yahoo",
   "season": 2026,
   "week": 4,
-  "updatedAt": "2026-09-30T14:02:30.002Z",
-  "updatedAtEt": "Sep 30, 2026 • 10:02 AM ET",
-  "freshness": "Fresh Yahoo league data retrieved separately for all three teams. A forced provider refresh was already on cooldown from a just-completed refresh, so the newly refreshed league state was used.",
+  "updatedAt": "2026-09-30T14:15:04.682Z",
+  "updatedAtEt": "Sep 30, 2026 • 10:15 AM ET",
+  "freshness": "Yahoo refresh completed successfully at 10:15 AM ET, then standings, Week 4 matchups/projections, rosters/status flags, waiver priorities, available players and recent transactions were re-read separately for all three teams.",
   "teams": {
     "brock": {
       "name": "Brock Hard & Tee Baggin",
@@ -22,15 +22,15 @@
       "matchup": {
         "opponent": "BEEFS GAY",
         "myScore": 0,
-        "myProjection": 141.74,
+        "myProjection": 141.86,
         "oppScore": 0,
-        "oppProjection": 124.82
+        "oppProjection": 124.88
       },
       "recommendation": {
-        "headline": "Use waiver #1 only for a true difference-maker",
-        "primary": "De'Von Achane was dropped on Sep 29. If Yahoo exposes that drop as a waiver claim, make him the first check for your #1 priority. If he is not claimable, hold #1 rather than forcing a marginal move.",
-        "secondary": "Kyle Monangai is the strongest confirmed available RB by Yahoo market roster rate (82%), but this roster is already deep. Monitor Breece Hall and Justin Jefferson, both currently Q.",
-        "action": "Priority: Achane claim if available → otherwise HOLD #1. Do not panic-trade the elite core."
+        "headline": "HOLD waiver #1; use Tony Pollard if Hall sits",
+        "primary": "Do not claim De'Von Achane: the Sep. 29 drop followed his season-ending ACL tear. Breece Hall remains Q. Tony Pollard is already on your bench and ranks as a stronger Week 4 fallback than forcing a waiver claim.",
+        "secondary": "The best confirmed free-agent RB in this league is Kyle Monangai, but Brock already has Pollard, J.K. Dobbins, RJ Harvey and Rhamondre Stevenson. Preserve the #1 priority for a true rest-of-season upgrade.",
+        "action": "HOLD waiver #1. If Hall is inactive or clearly limited, move Tony Pollard into RB2; keep monitoring Justin Jefferson's Q tag."
       },
       "statusFlags": [
         {
@@ -409,15 +409,15 @@
       "matchup": {
         "opponent": "Hard Count Easton",
         "myScore": 0,
-        "myProjection": 113.65,
+        "myProjection": 113.76,
         "oppScore": 0,
-        "oppProjection": 99.55
+        "oppProjection": 99.67
       },
       "recommendation": {
-        "headline": "Add Denzel Boston to stabilize WR depth",
-        "primary": "A.J. Brown is on IR and Jalen Coker is Q. Denzel Boston is confirmed available in this league and carries a 75% Yahoo market roster rate, making WR the cleanest upgrade target.",
-        "secondary": "Preferred roster-space cut is Josh Downs if you need an immediate add. Keep waiver priority #3 for a meaningful claim; do not spend it just to churn RB depth.",
-        "action": "Add Denzel Boston. If Coker remains limited late week, start Rome Odunze over him."
+        "headline": "Start Rome Odunze and preserve waiver #3",
+        "primary": "Jalen Coker is Q and A.J. Brown remains on IR. Your roster already has better Week 4 WR options than the confirmed waiver names: Rome Odunze is the cleanest promotion into the starting lineup.",
+        "secondary": "Josh Downs and Jordan Addison are also useful depth, so there is no need to spend waiver priority #3 on Denzel Boston or another marginal receiver add right now.",
+        "action": "Move Rome Odunze into a starting WR spot. Keep waiver #3 unless a clearly stronger player becomes claimable."
       },
       "statusFlags": [
         {
@@ -793,15 +793,15 @@
       "matchup": {
         "opponent": "Play Action Ayden",
         "myScore": 0,
-        "myProjection": 112.55,
+        "myProjection": 112.82,
         "oppScore": 0,
-        "oppProjection": 113.31
+        "oppProjection": 113.79
       },
       "recommendation": {
-        "headline": "Start Brock Bowers and add Xavier Worthy",
-        "primary": "Brock Bowers is healthy on the bench while Dalton Kincaid is starting. Make Bowers the default TE. Jalen Coker and Jaylen Waddle are both Q, so WR depth is the actual waiver need.",
-        "secondary": "Xavier Worthy is confirmed available in this league at 65% Yahoo market roster rate. Denzel Boston is the cleanest drop if you want the WR upgrade.",
-        "action": "TE: Bowers over Kincaid. Add Xavier Worthy for Denzel Boston; keep Brian Thomas Jr. ready if Waddle/Coker status worsens."
+        "headline": "Start Brock Bowers over Dalton Kincaid",
+        "primary": "This is the clearest lineup correction across all three teams. Bowers is healthy on the bench and is a top-end Week 4 TE; Kincaid is a good player but should not block Bowers from your TE slot.",
+        "secondary": "Do not add Xavier Worthy just because he is available. Your better move is to keep the waiver priority and use existing WR depth while monitoring Jalen Coker and Jaylen Waddle, both Q.",
+        "action": "TE: Brock Bowers IN, Dalton Kincaid to the bench. Hold waiver #6 unless injury news creates a materially better claim."
       },
       "statusFlags": [
         {
