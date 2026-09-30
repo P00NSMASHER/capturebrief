@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - ".nojekyll"
+      - "netlify-build.sh"
+      - "netlify.toml"
       - "x402/pa-entity/**"
       - "tests/pa-entity-discovery.test.mjs"
       - ".github/workflows/pa-entity-discovery.yml"
@@ -12,6 +14,8 @@ on:
       - main
     paths:
       - ".nojekyll"
+      - "netlify-build.sh"
+      - "netlify.toml"
       - "x402/pa-entity/**"
       - "tests/pa-entity-discovery.test.mjs"
       - ".github/workflows/pa-entity-discovery.yml"
