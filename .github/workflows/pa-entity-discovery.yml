@@ -54,8 +54,8 @@ jobs:
       - name: Select deployed discovery origin
         shell: bash
         run: |
-          if [[ "\${{ github.event_name }}" == "pull_request" ]]; then
-            echo "DISCOVERY_ORIGIN=https://deploy-preview-\${{ github.event.pull_request.number }}--capturebrief.netlify.app" >> "$GITHUB_ENV"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "DISCOVERY_ORIGIN=https://deploy-preview-${{ github.event.pull_request.number }}--capturebrief.netlify.app" >> "$GITHUB_ENV"
           else
             echo "DISCOVERY_ORIGIN=https://capturebrief.netlify.app" >> "$GITHUB_ENV"
           fi
@@ -126,7 +126,7 @@ jobs:
           const decode = (path) => {
             const headers = fs.readFileSync(path, "utf8");
             const line = headers.split(/\r?\n/).find(v => /^payment-required:/i.test(v));
-            assert.ok(line, \`PAYMENT-REQUIRED header missing from \${path}\`);
+            assert.ok(line, "PAYMENT-REQUIRED header missing from " + path);
             const encoded = line.replace(/^payment-required:\s*/i, "").trim();
             return JSON.parse(Buffer.from(encoded, "base64").toString("utf8"));
           };
@@ -150,3 +150,19 @@ jobs:
             "proxy must preserve the upstream payment resource verbatim");
           console.log("Live proxy/upstream x402 contract parity: PASS");
           NODE
+
+      - name: Register verified canonical origin with Agent402
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          set -euo pipefail
+          payload='{"origin":"https://capturebrief.netlify.app","replaces":"https://pa-entity-x402.floot.app"}'
+          response="$(curl -sS -X POST 'https://agent402.tools/api/index/register' \
+            -H 'content-type: application/json' \
+            --data "$payload" \
+            -w $'\n%{http_code}')"
+          status="${response##*$'\n'}"
+          body="${response%$'\n'*}"
+          printf '%s\n' "$body" | jq .
+          [[ "$status" =~ ^2 ]]
+          [[ "$(printf '%s' "$body" | jq -r '.listed // false')" == "true" ]]
