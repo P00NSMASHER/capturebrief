@@ -22,11 +22,13 @@ export function requirements(amount) {
   };
 }
 
-export function bazaarExtension(sampleQuery, outputExample) {
+export function bazaarExtension(meta) {
   const info = {
-    input: { type: 'http', method: 'GET', queryParams: sampleQuery },
-    output: { type: 'json', example: outputExample },
+    input: { type: 'http', method: 'GET', queryParams: meta.sampleQuery },
+    output: { type: 'json', example: meta.sampleOutput },
   };
+  const properties = Object.fromEntries((meta.parameters ?? []).map(p => [p.name, p.schema]));
+  const required = (meta.parameters ?? []).filter(p => p.required).map(p => p.name);
   return {
     bazaar: {
       info,
