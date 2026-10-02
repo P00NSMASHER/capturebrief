@@ -112,6 +112,7 @@ export async function facilitatorPost(kind, paymentPayload, paymentRequirements)
     if (!response.ok) {
       const e = new Error('facilitator_' + kind + '_' + response.status);
       e.body = body;
+      e.status = response.status;
       throw e;
     }
     return body ?? {};
@@ -132,13 +133,52 @@ export async function verifyPayment(paymentPayload, meta) {
 }
 
 export async function settlePayment(paymentPayload, meta) {
-  const result = await facilitatorPost('settle', paymentPayload, requirements(meta.amount));
-  if (result.success !== true) {
-    const e = new Error(String(result.errorReason ?? 'payment_settlement_failed'));
-    e.paymentRejected = true;
-    throw e;
+  const terms = requirements(meta.amount);
+  const waits = [0, 250, 750];
+
+  for (let attempt = 0; attempt < waits.length; attempt += 1) {
+    if (waits[attempt]) await new Promise(resolve => setTimeout(resolve, waits[attempt]));
+
+    try {
+      const result = await facilitatorPost('settle', paymentPayload, terms);
+      if (result.success === true) return result;
+
+      const reason = String(result.errorReason ?? 'payment_settlement_failed');
+      if (['settlement_pending', 'duplicate_settlement', 'rate_limited', 'facilitator_unavailable'].includes(reason)) {
+        if (attempt < waits.length - 1) continue;
+        const e = new Error(reason);
+        e.paymentUnresolved = true;
+        throw e;
+      }
+
+      const e = new Error(reason);
+      e.paymentRejected = true;
+      throw e;
+    } catch (err) {
+      if (err?.paymentRejected || err?.paymentUnresolved) throw err;
+
+      const status = Number(err?.status || 0);
+      const bodyReason = typeof err?.body?.errorReason === 'string' ? err.body.errorReason : '';
+      const reason =
+        bodyReason ||
+        (status === 429 ? 'rate_limited' :
+          status >= 500 ? 'facilitator_unavailable' :
+          status ? 'payment_settlement_failed' :
+          'settlement_transport_unknown');
+
+      const retryable = ['settlement_pending', 'duplicate_settlement', 'rate_limited', 'facilitator_unavailable', 'settlement_transport_unknown'].includes(reason);
+      if (retryable && attempt < waits.length - 1) continue;
+
+      const e = new Error(reason);
+      if (retryable) e.paymentUnresolved = true;
+      else e.paymentRejected = true;
+      throw e;
+    }
   }
-  return result;
+
+  const e = new Error('settlement_unknown');
+  e.paymentUnresolved = true;
+  throw e;
 }
 
 export function sendJson(res, status, body, headers = {}) {
