@@ -101,9 +101,10 @@ function safeReason(err) {
 }
 
 async function paidRoute(req, res, url, meta) {
+  const routeMeta = { ...meta, path: url.pathname };
   const signature = getPaymentHeader(req);
   if (!signature) {
-    sendPaymentRequired(req, res, meta);
+    sendPaymentRequired(req, res, routeMeta);
     return;
   }
 
@@ -111,15 +112,15 @@ async function paidRoute(req, res, url, meta) {
   try {
     payload = decodePayment(signature);
   } catch {
-    sendPaymentRequired(req, res, meta, 'invalid_payment_header');
+    sendPaymentRequired(req, res, routeMeta, 'invalid_payment_header');
     return;
   }
 
   try {
-    await verifyPayment(payload, meta);
+    await verifyPayment(payload, routeMeta);
   } catch (err) {
     if (err?.paymentRejected) {
-      sendPaymentRequired(req, res, meta, String(err.message || 'payment_verification_failed'));
+      sendPaymentRequired(req, res, routeMeta, String(err.message || 'payment_verification_failed'));
     } else {
       sendJson(res, 503, { error: 'payment_verifier_unavailable', paid: false });
     }
@@ -136,10 +137,10 @@ async function paidRoute(req, res, url, meta) {
 
   let settlement;
   try {
-    settlement = await settlePayment(payload, meta);
+    settlement = await settlePayment(payload, routeMeta);
   } catch (err) {
     if (err?.paymentRejected) {
-      sendPaymentRequired(req, res, meta, String(err.message || 'payment_settlement_failed'));
+      sendPaymentRequired(req, res, routeMeta, String(err.message || 'payment_settlement_failed'));
     } else if (err?.paymentUnresolved) {
       sendJson(res, 503, {
         error: 'payment_settlement_state_unknown',
