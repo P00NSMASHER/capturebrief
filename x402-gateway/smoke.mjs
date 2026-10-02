@@ -10,11 +10,12 @@ for (const [path, meta] of Object.entries(ROUTES)) {
   assert.ok(meta.serviceName.length <= 32, path + ' serviceName too long');
   assert.ok(meta.tags.length <= 5, path + ' has too many tags');
   assert.equal(new Set(meta.tags).size, meta.tags.length, path + ' tags must be unique');
-  const doc = paymentDocument(meta, 'https://example.test');
+  const doc = paymentDocument({ ...meta, path }, 'https://example.test');
   assert.equal(doc.x402Version, 2);
   assert.equal(doc.accepts[0].network, NETWORK);
   assert.equal(doc.accepts[0].asset, USDC);
   assert.equal(doc.accepts[0].payTo, PAY_TO);
+  assert.equal(doc.resource.url, 'https://example.test' + path);
   assert.equal(doc.accepts[0].extra.name, 'USD Coin');
   assert.equal(doc.accepts[0].extra.version, '2');
   assert.ok(doc.extensions?.bazaar?.info);
