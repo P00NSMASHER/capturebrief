@@ -24,7 +24,8 @@ import { ROUTES, homepage, llmsText, manifest, openApi, skillText } from './lib/
 const PORT = Number(process.env.PORT || 3000);
 
 function baseUrl(req) {
-  const proto = String(req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
+  const forwarded = req.headers['x-forwarded-proto'];
+  const proto = forwarded ? String(forwarded).split(',')[0].trim() : (req.socket?.encrypted ? 'https' : 'http');
   return proto + '://' + (req.headers.host || 'localhost:' + PORT);
 }
 
