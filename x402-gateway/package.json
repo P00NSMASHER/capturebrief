@@ -1,0 +1,11 @@
+{
+  "name": "agent-data-tools-x402-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check server.mjs && node --check lib/payment.mjs && node --check lib/sources.mjs && node --check lib/discovery.mjs"
+  }
+}
