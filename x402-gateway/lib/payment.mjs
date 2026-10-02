@@ -153,7 +153,8 @@ export function sendJson(res, status, body, headers = {}) {
 
 export function sendPaymentRequired(req, res, meta, reason = 'payment_required') {
   const host = req.headers.host || 'localhost';
-  const proto = String(req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
+  const forwarded = req.headers['x-forwarded-proto'];
+  const proto = forwarded ? String(forwarded).split(',')[0].trim() : (req.socket?.encrypted ? 'https' : 'http');
   const baseUrl = proto + '://' + host;
   const doc = paymentDocument(meta, baseUrl);
   sendJson(res, 402, {
