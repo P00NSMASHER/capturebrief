@@ -22,3 +22,4 @@ jobs:
           node-version: '20'
       - run: npm run check
       - run: node smoke.mjs
+      - run: node runtime-smoke.mjs
