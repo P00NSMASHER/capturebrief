@@ -38,7 +38,7 @@ export function bazaarExtension(sampleQuery, outputExample) {
             properties: {
               type: { const: 'http' },
               method: { const: 'GET' },
-              queryParams: { type: 'object' },
+              queryParams: { type: 'object', properties, required, additionalProperties: false },
             },
             required: ['type', 'method', 'queryParams'],
             additionalProperties: true,
@@ -68,7 +68,7 @@ export function paymentDocument(meta, baseUrl) {
       tags: meta.tags.slice(0, 5),
     },
     accepts: [requirements(meta.amount)],
-    extensions: bazaarExtension(meta.sampleQuery, meta.sampleOutput),
+    extensions: bazaarExtension(meta),
   };
 }
 
