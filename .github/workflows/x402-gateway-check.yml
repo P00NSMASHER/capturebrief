@@ -1,0 +1,24 @@
+name: x402 gateway checks
+
+on:
+  push:
+    branches:
+      - agent-data-tools-x402-gateway
+    paths:
+      - 'x402-gateway/**'
+      - '.github/workflows/x402-gateway-check.yml'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: x402-gateway
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm run check
+      - run: node smoke.mjs
