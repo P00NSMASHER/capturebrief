@@ -120,7 +120,7 @@ export function openApi(baseUrl) {
         tags: meta.tags.slice(0, 3),
         security: [],
         'x-payment-info': {
-          price: { mode: 'fixed', currency: 'USD', amount: meta.price.replace('$', '') + '000'.slice(meta.price.split('.')[1]?.length ?? 0) },
+          price: { mode: 'fixed', currency: 'USD', amount: Number(meta.price.slice(1)).toFixed(6) },
           protocols: [{ x402: {} }],
           network: NETWORK,
           payTo: PAY_TO,
