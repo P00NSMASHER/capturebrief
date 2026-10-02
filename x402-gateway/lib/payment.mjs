@@ -122,7 +122,7 @@ export async function facilitatorPost(kind, paymentPayload, paymentRequirements)
 
 export async function verifyPayment(paymentPayload, meta) {
   const result = await facilitatorPost('verify', paymentPayload, requirements(meta.amount));
-  if (result.isValid !== true && result.success !== true) {
+  if (result.isValid !== true) {
     const reason = result.invalidReason ?? result.errorReason ?? 'payment_verification_failed';
     const e = new Error(String(reason));
     e.paymentRejected = true;
