@@ -140,8 +140,15 @@ async function paidRoute(req, res, url, meta) {
   } catch (err) {
     if (err?.paymentRejected) {
       sendPaymentRequired(req, res, meta, String(err.message || 'payment_settlement_failed'));
+    } else if (err?.paymentUnresolved) {
+      sendJson(res, 503, {
+        error: 'payment_settlement_state_unknown',
+        reason: String(err.message || 'settlement_unknown'),
+        retrySamePayment: true,
+        resultServed: false,
+      });
     } else {
-      sendJson(res, 503, { error: 'payment_settlement_unavailable', paid: false });
+      sendJson(res, 503, { error: 'payment_settlement_unavailable', resultServed: false });
     }
     return;
   }
