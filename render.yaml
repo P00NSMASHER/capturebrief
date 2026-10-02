@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: agent-data-tools-x402-gateway
+    runtime: node
+    plan: free
+    region: ohio
+    rootDir: x402-gateway
+    buildCommand: npm run check && node smoke.mjs
+    startCommand: npm start
+    autoDeploy: true
+    healthCheckPath: /health
