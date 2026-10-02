@@ -23,3 +23,4 @@ jobs:
       - run: npm run check
       - run: node smoke.mjs
       - run: node runtime-smoke.mjs
+      - run: node payment-smoke.mjs
