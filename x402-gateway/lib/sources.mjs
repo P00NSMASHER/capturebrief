@@ -235,11 +235,19 @@ export async function censusGeocode(address) {
   const tract = firstGeo(geos, /Census Tracts/i);
   const block = firstGeo(geos, /Census Blocks/i);
   const district = firstGeo(geos, /Congressional Districts/i);
+  const districtField = district
+    ? Object.keys(district).find(key => /^CD\d+$/.test(key)) ?? null
+    : null;
   return {
     input,
     matched: true,
     matchedAddress: match.matchedAddress ?? null,
-    coordinates: match.coordinates ?? null,
+    coordinates: match.coordinates
+      ? {
+          longitude: Number(match.coordinates.x),
+          latitude: Number(match.coordinates.y),
+        }
+      : null,
     geographies: {
       stateFips: state?.STATE ?? null,
       countyFips: county?.COUNTY ?? null,
@@ -248,7 +256,7 @@ export async function censusGeocode(address) {
       tractGeoid: tract?.GEOID ?? null,
       block: block?.BLOCK ?? null,
       blockGeoid: block?.GEOID ?? null,
-      congressionalDistrict: district?.CD ?? null,
+      congressionalDistrict: districtField ? district[districtField] ?? null : null,
     },
     source: 'U.S. Census Bureau Geocoding Services',
   };
