@@ -1,17 +1,22 @@
 name: Product Core
 on:
   push:
+    branches: [main]
     paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','RELEASE-CONSISTENCY.md','DELIVERY-VERIFICATION.md','index.html','sample.html','decision-evidence-sample.html']
   pull_request:
     paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','RELEASE-CONSISTENCY.md','DELIVERY-VERIFICATION.md','index.html','sample.html','decision-evidence-sample.html']
+concurrency:
+  group: product-core-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 jobs:
   product-contract:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.11'
       - name: Compile product core
@@ -118,8 +123,8 @@ jobs:
   windows-compatibility:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.11'
       - name: Compile product core
