@@ -6,6 +6,7 @@ import unittest
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from capturebrief_core.archive_catalog import (
     ARCHIVE_CATALOG_YEARS,
@@ -194,10 +195,14 @@ class HistoryIndexTests(unittest.TestCase):
             writer=csv.DictWriter(buf,fieldnames=FIELDS)
             writer.writeheader(); writer.writerow(row("a2"))
             data=buf.getvalue().encode("cp1252")
-            result=fetch_and_ingest_slot(
-                db,slot="ARCHIVE:2026",destination=dest,snapshot_dir=snapshots,
-                observed_at=NOW,opener=lambda req,timeout=120: FakeResponse(data)
-            )
+            with patch(
+                "capturebrief_core.history_index.fiscal_year_for_datetime",
+                return_value=2026,
+            ):
+                result=fetch_and_ingest_slot(
+                    db,slot="ARCHIVE:2026",destination=dest,snapshot_dir=snapshots,
+                    observed_at=NOW,opener=lambda req,timeout=120: FakeResponse(data)
+                )
             self.assertEqual(result["ingest"]["slot"],"ARCHIVE:2026")
             self.assertTrue(dest.exists())
             status=index_status(db,fiscal_year=2026)
