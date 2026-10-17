@@ -3,6 +3,7 @@ import io
 import sqlite3
 import tempfile
 import unittest
+from unittest.mock import patch
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -194,16 +195,36 @@ class HistoryIndexTests(unittest.TestCase):
             writer=csv.DictWriter(buf,fieldnames=FIELDS)
             writer.writeheader(); writer.writerow(row("a2"))
             data=buf.getvalue().encode("cp1252")
-            result=fetch_and_ingest_slot(
-                db,slot="ARCHIVE:2026",destination=dest,snapshot_dir=snapshots,
-                observed_at=NOW,opener=lambda req,timeout=120: FakeResponse(data)
-            )
+            # This fixture is dated September 2026 (FY2026); freeze only the
+            # test clock, never the production FY2027 catalog freshness guard.
+            with patch("capturebrief_core.history_index.fiscal_year_for_datetime",
+                       return_value=2026):
+                result=fetch_and_ingest_slot(
+                    db,slot="ARCHIVE:2026",destination=dest,snapshot_dir=snapshots,
+                    observed_at=NOW,opener=lambda req,timeout=120: FakeResponse(data)
+                )
             self.assertEqual(result["ingest"]["slot"],"ARCHIVE:2026")
             self.assertTrue(dest.exists())
             status=index_status(db,fiscal_year=2026)
             self.assertIn("ARCHIVE:2026",status["present_slots"])
             self.assertIn("ACTIVE",status["missing_slots"])
             self.assertGreater(len(status["missing_slots"]),1)
+
+    def test_unverified_fy2027_archive_still_fails_before_download(self):
+        # Real FY2027 automation must not reuse a human-reviewed FY2026 catalog.
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db=root/"history.sqlite"; dest=root/"fy2026.csv"
+            def forbidden_network(*args,**kwargs):
+                self.fail("stale catalog must block before a provider request")
+            with patch("capturebrief_core.history_index.fiscal_year_for_datetime",
+                       return_value=2027):
+                with self.assertRaises(ArchiveCatalogStale):
+                    fetch_and_ingest_slot(
+                        db,slot="ARCHIVE:2026",destination=dest,
+                        opener=forbidden_network,
+                    )
+            self.assertFalse(dest.exists())
+            self.assertFalse(db.exists())
 
     def test_approved_fetch_without_snapshot_dir_retains_immutable_default_snapshot(self):
         with tempfile.TemporaryDirectory() as td:
