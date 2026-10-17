@@ -1,7 +1,10 @@
 # Verified public release artifact
 
-The existing CaptureBrief Netlify project remains the deployment target. Do not create
-a replacement site or publish the repository root.
+> **Historical Netlify release artifact instructions — not the current website deployment path.**
+> CaptureBrief's authoritative website uses GitHub Pages, the gh-pages branch,
+> and https://p00nsmasher.github.io/capturebrief/. Do not publish the repository root.
+> The older Netlify ZIP, manual deployment and form steps below are retained
+> as historical build instructions, not as an active production-release procedure.
 
 ## Build and publication are separate
 
@@ -19,18 +22,18 @@ artifact. No raw product code, tests, fixtures, customer data, source catalogs, 
 operating documents enter that deployment ZIP. No deployment credentials are required
 or embedded. All artifact receipts explicitly say the build is not deployment proof.
 
-## Existing-site handoff
+## Current GitHub Pages release handoff
 
-Download the workflow artifact for the intended main-branch commit. Extract the outer
-GitHub artifact first; `CaptureBrief_Public_Release.zip` is the actual website package.
-Extract that ZIP to obtain the public output folder for a manual deployment to the
-existing project's Deploys page. Do not upload the outer artifact folder or the repository.
+The older Netlify release ZIP remains historical packaging evidence only,
+not a GitHub Pages deployment instruction. The authoritative website
+must be changed from its actual gh-pages branch, never from product-engine
+main or by uploading the older Netlify artifact bundle.
+Use the existing gh-pages site-quality workflow for independent website QA.
 
-After an authorized publish, verify the existing production homepage, sample page,
-local assets, and the served `release-manifest.json`. Confirm that its `source_commit`
-and file hashes match the retained artifact. Then inspect recognized intake form fields.
-Do not label the release live merely because GitHub tests passed or Netlify accepted a job.
-Do not submit test forms or send notification emails without specific approval.
+After an authorized Pages release, independently verify the served homepage,
+sample page and assets at https://p00nsmasher.github.io/capturebrief/.
+CI success or deployment acknowledgement is not proof of publication.
+Do not submit test forms, contact customers or send messages without approval.
 
 ## Fulfillment readiness corrections
 
