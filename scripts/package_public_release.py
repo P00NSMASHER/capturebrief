@@ -19,7 +19,18 @@ PUBLIC_FILES = frozenset({
     "robots.txt", "sample.html", "site.webmanifest", "sitemap.xml", "terms.html",
     "thanks.html", "assets/main.js", "assets/og-capturebrief.png",
     "assets/styles.css", "assets/v5.css",
+    # Exactly the two reviewed x402 discovery JSON sources and their two
+    # public aliases already copied by netlify-build.sh. No other additions.
+    ".well-known/x402", "openapi.json",
+    "x402/pa-entity/.well-known/x402", "x402/pa-entity/openapi.json",
 })
+
+# Root discovery endpoints are deliberate byte-identical aliases. They do NOT
+# exist as Git paths; both must match the original immutable source commit.
+PINNED_PUBLIC_MIRRORS = {
+    ".well-known/x402": "x402/pa-entity/.well-known/x402",
+    "openapi.json": "x402/pa-entity/openapi.json",
+}
 _FIXED_TIME = (1980, 1, 1, 0, 0, 0)
 
 
@@ -55,7 +66,8 @@ def package_release(root: Path, output_dir: Path, source_sha: str) -> dict:
         data = (dist / name).read_bytes()
         if not data:
             raise ValueError("empty public file: " + name)
-        if data != _git(root, "show", f"{source_sha}:{name}"):
+        source_path = PINNED_PUBLIC_MIRRORS.get(name, name)
+        if data != _git(root, "show", f"{source_sha}:{source_path}"):
             raise ValueError("built file does not match pinned source: " + name)
         files[name] = data
     rows = [{"path": name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
