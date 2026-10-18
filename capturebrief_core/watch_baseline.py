@@ -470,6 +470,12 @@ def compare_watch_baseline(
             f"SOURCE_RECORD:{source_id}" for source_id in dep.get("source_ids") or []
             if f"SOURCE_RECORD:{source_id}" in keys
         )
+        # A stale source check is itself actionable for every assumption
+        # that relied on that source, even without a changed digest.
+        matched.update(
+            f"SOURCE_CHECK:{source_id}" for source_id in dep.get("source_ids") or []
+            if f"SOURCE_CHECK:{source_id}" in keys
+        )
         matched.update(
             f"RULE:{key}" for key in dep.get("rule_keys") or []
             if f"RULE:{key}" in keys
