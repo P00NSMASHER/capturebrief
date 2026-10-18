@@ -10,7 +10,9 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from scripts.package_public_release import PUBLIC_FILES, package_release
+from scripts.package_public_release import (
+    PINNED_PUBLIC_MIRRORS, PUBLIC_FILES, package_release,
+)
 
 
 class PublicReleaseTests(unittest.TestCase):
@@ -26,6 +28,8 @@ class PublicReleaseTests(unittest.TestCase):
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("Test public content: " + name, encoding="utf-8")
+        for alias, original in PINNED_PUBLIC_MIRRORS.items():
+            shutil.copyfile(self.root / original, self.root / alias)
         self.git("add", ".")
         self.git("commit", "--quiet", "-m", "test public fixture")
         self.sha = self.git("rev-parse", "HEAD").strip()
@@ -72,6 +76,31 @@ class PublicReleaseTests(unittest.TestCase):
         first = self.package()
         second = package_release(self.root, Path(self.temp.name)/"again", self.sha)
         self.assertEqual(first["archive_sha256"], second["archive_sha256"])
+
+    def test_x402_discovery_mirrors_are_exact_source_bytes(self):
+        receipt = self.package()
+        with zipfile.ZipFile(self.output / receipt["archive"]) as z:
+            for alias, original in PINNED_PUBLIC_MIRRORS.items():
+                self.assertEqual(z.read(alias), z.read(original))
+                self.assertEqual(
+                    z.read(alias), (self.root / original).read_bytes()
+                )
+            self.assertEqual(len(PUBLIC_FILES), 22)
+            self.assertEqual(receipt["file_count"], 23)  # + pinned manifest
+            self.assertFalse(receipt["deployed"])
+
+    def test_modified_x402_public_alias_is_rejected(self):
+        (self.root / "dist" / ".well-known" / "x402").write_text(
+            "unreviewed replacement", encoding="utf-8"
+        )
+        with self.assertRaisesRegex(ValueError, "built file does not match pinned source"):
+            self.package()
+
+    def test_extra_x402_or_internal_payment_file_is_rejected(self):
+        path = self.root / "dist" / "x402" / "pa-entity" / "private.json"
+        path.write_text('{"customer":"not public"}', encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "public file allowlist mismatch"):
+            self.package()
 
     def test_internal_file_is_rejected(self):
         (self.root / "dist" / "OUTBOUND-COMMUNICATIONS.md").write_text("internal policy")
