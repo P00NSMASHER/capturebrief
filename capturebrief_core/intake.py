@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ipaddress
 import re
 from datetime import datetime, timezone
 from typing import Any
@@ -42,8 +43,23 @@ def _public_web_reference(value: Any) -> str:
     if parsed.username or parsed.password:
         raise IntakeError("public opportunity URL must not contain credentials")
     hostname = parsed.hostname.lower().rstrip(".")
-    if hostname in {"localhost", "127.0.0.1", "::1"} or hostname.endswith(".local"):
+    # Buyer-supplied links are never network-fetched by this intake builder,
+    # but should not invite customers/operators to use local/private targets.
+    if (
+        not hostname or "." not in hostname
+        or hostname == "localhost"
+        or hostname.endswith((".local", ".localhost", ".internal",
+                              ".home.arpa", ".invalid", ".test"))
+    ):
         raise IntakeError("public opportunity URL must reference a public host")
+    try:
+        ipaddress.ip_address(hostname)
+    except ValueError:
+        pass
+    else:
+        # Direct IP hosts are out of scope even if the address happens to be
+        # routable; SAM.gov solicitations use a named public host.
+        raise IntakeError("public opportunity URL must reference a named public host")
     return opportunity
 
 
