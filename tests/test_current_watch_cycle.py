@@ -118,7 +118,22 @@ class CurrentWatchCycleTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 execute(self.case, fake, api_key="fake-test-only",
                         updated_case_path=str(root / "updated.json"),
-                        receipt_dir=str(root / "receipts"), opener=self.present)
+                        receipt_dir=str(root / "receipts"),
+                        opener=lambda req, timeout=30: self.fail("No API fetch for invalid baseline"))
+            self.assertFalse((root / "updated.json").exists())
+
+    def test_mismatched_baseline_pursuit_blocks_before_source_fetch(self):
+        unrelated = copy.deepcopy(self.baseline)
+        unrelated["case_id"] = "DIFFERENT"
+        payload = {k:v for k,v in unrelated.items() if k != "baseline_sha256"}
+        unrelated["baseline_sha256"] = digest(canonical(payload))
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            with self.assertRaisesRegex(ValueError, "different pursuit"):
+                execute(self.case, unrelated, api_key="fake-test-only",
+                        updated_case_path=str(root / "updated.json"),
+                        receipt_dir=str(root / "receipts"),
+                        opener=lambda req, timeout=30: self.fail("No API fetch for wrong pursuit"))
             self.assertFalse((root / "updated.json").exists())
 
     def test_future_provider_observation_cannot_be_backdated(self):
