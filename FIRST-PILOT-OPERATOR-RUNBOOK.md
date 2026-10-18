@@ -81,6 +81,21 @@ software QA into first-customer validation or change any customer terms.
 3. At each scheduled check, independently fetch and retain fresh,
    approved first-party observations for agreed sources. Merely rerunning
    a comparator on an old case is not a fresh check.
+   For an already history-resolved active case, the on-demand approved
+   SAM current-action portion can run with an operator-held API key:
+
+       python scripts/run_current_watch_cycle.py /private/case.json /private/baseline.json \
+         --updated-case /private/case-refreshed.json \
+         --receipt-dir /private/watch-receipts
+
+   This command uses SAM_API_KEY from the operator environment, requires
+   a complete retained history receipt, fetches and verifies only the
+   documented latest-active API source, and produces an immutable review
+   receipt. A no-active-match or missing historical action is a REVIEW
+   REQUIRED event, never proof of termination. It does not fetch archived
+   CSVs, all references or rule editions; those agreed watch sources
+   still require separate approved observations. It is not scheduled,
+   not a completeness certification, and never sends updates.
 4. Use scripts/run_watch_receipt.py on the delivered baseline and the
    actually refreshed private case. It writes an immutable, content-
    addressed receipt outside the public repo. Exit 0 = fresh proven
