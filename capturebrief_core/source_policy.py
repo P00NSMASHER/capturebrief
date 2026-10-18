@@ -20,9 +20,16 @@ def classify_sam_url(url: str) -> str:
     CaptureBrief intentionally does not treat a technically public web-UI endpoint as an
     approved automation source. Public APIs and Data Services extracts are separate contracts.
     """
-    p = urlparse(str(url or ""))
-    host = (p.hostname or "").lower()
-    path = p.path or ""
+    try:
+        p = urlparse(str(url or ""))
+        # Exact approved hosts are not enough: credentials and nonstandard
+        # ports must never enter an automated first-party collection route.
+        if p.username is not None or p.password is not None or p.fragment or p.port not in (None, 443):
+            return "UNAPPROVED"
+        host = (p.hostname or "").lower()
+        path = p.path or ""
+    except (ValueError, TypeError):
+        return "UNAPPROVED"
 
     if p.scheme != "https":
         return "UNAPPROVED"
@@ -54,7 +61,9 @@ def classify_sam_url(url: str) -> str:
 def require_approved_automation(url: str, *, expected: str | None = None) -> str:
     cls = classify_sam_url(url)
     if cls not in APPROVED_AUTOMATION_CLASSES:
-        raise SourcePolicyError(f"automated collection disabled for source class {cls}: {url}")
+        # The rejected URL may contain embedded credentials, signed-query
+        # tokens or private resource IDs. Never echo it in logs/exceptions.
+        raise SourcePolicyError(f"automated collection disabled for source class {cls}")
     if expected and cls != expected:
         raise SourcePolicyError(f"source class {cls} does not match required class {expected}")
     return cls
