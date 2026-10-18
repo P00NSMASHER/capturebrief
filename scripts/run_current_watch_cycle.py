@@ -25,7 +25,7 @@ sys.path.insert(0, str(REPOSITORY))
 from capturebrief_core.atomic_io import ensure_exact_bytes
 from capturebrief_core.current_search import fetch_and_apply_current
 from capturebrief_core.model import canonical_json, sha256_hex
-from capturebrief_core.watch_baseline import compare_watch_baseline
+from capturebrief_core.watch_baseline import _validate_baseline, compare_watch_baseline
 from scripts.run_watch_receipt import _private_dir, evaluate_and_retain
 
 def _private_path(path: str) -> Path:
@@ -61,6 +61,13 @@ def execute(
     receipt_root = _private_dir(receipt_dir)
     if target.is_relative_to(receipt_root) and target.name.startswith("watch-"):
         raise ValueError("Updated case cannot collide with a watch receipt")
+    # Validate provenance and pursuit identity BEFORE using an API key or
+    # accepting an ambiguous no-active-match as an operator review event.
+    _validate_baseline(baseline)
+    if (baseline.get("case_id"), baseline.get("family_id")) != (
+        case.get("case_id"), case.get("family_id")
+    ):
+        raise ValueError("Delivered baseline belongs to a different pursuit")
     updated, details = fetch_and_apply_current(
         case,
         api_key=api_key,
