@@ -77,6 +77,47 @@ class PublicReleaseTests(unittest.TestCase):
         second = package_release(self.root, Path(self.temp.name)/"again", self.sha)
         self.assertEqual(first["archive_sha256"], second["archive_sha256"])
 
+    @unittest.skipUnless(
+        os.environ.get("GITHUB_ACTIONS") == "true",
+        "real checkout packaging is isolated to ephemeral hosted CI",
+    )
+    def test_hosted_exact_checkout_staging_and_packaging(self):
+        # Prove the actual git-pinned repository build, not only synthetic
+        # fixture ZIPs. No publishing, network calls, payment or deployment.
+        source_root = Path(__file__).resolve().parents[1]
+        bash = shutil.which("bash")
+        if bash is None:
+            self.skipTest("CI Linux runner executes Bash source build")
+        self.assertFalse((source_root / "dist").exists(),
+                         "hosted checkout must start without prior staged bytes")
+        try:
+            subprocess.run(
+                [bash, "netlify-build.sh"], cwd=source_root, check=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            actual_commit = subprocess.run(
+                ["git", "-C", str(source_root), "rev-parse", "HEAD"],
+                check=True, capture_output=True, text=True,
+            ).stdout.strip()
+            with tempfile.TemporaryDirectory() as temp:
+                output = Path(temp) / "release"
+                result = package_release(source_root, output, actual_commit)
+                self.assertFalse(result["deployed"])
+                self.assertEqual(result["file_count"], len(PUBLIC_FILES) + 1)
+                with zipfile.ZipFile(output / result["archive"]) as archive:
+                    self.assertIsNone(archive.testzip())
+                    self.assertEqual(
+                        set(archive.namelist()),
+                        PUBLIC_FILES | {"release-manifest.json"},
+                    )
+                    for alias, source in PINNED_PUBLIC_MIRRORS.items():
+                        self.assertEqual(
+                            archive.read(alias), (source_root / source).read_bytes()
+                        )
+        finally:
+            if (source_root / "dist").exists():
+                shutil.rmtree(source_root / "dist")
+
     def test_x402_discovery_mirrors_are_exact_source_bytes(self):
         receipt = self.package()
         with zipfile.ZipFile(self.output / receipt["archive"]) as z:
