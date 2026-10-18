@@ -48,8 +48,8 @@ jobs:
       UPSTREAM_ROUTE: https://pa-entity-x402.floot.app/_api/pa-business
       EXPECTED_NETWORK: eip155:8453
       EXPECTED_AMOUNT: "5000"
-      EXPECTED_ASSET: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
-      EXPECTED_PAY_TO: 0x708f7b52b56eafd7fc1de65fc7752ed732914021
+      EXPECTED_ASSET: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+      EXPECTED_PAY_TO: "0x708f7b52b56eafd7fc1de65fc7752ed732914021"
     steps:
       - name: Select deployed discovery origin
         shell: bash
