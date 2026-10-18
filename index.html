@@ -288,6 +288,10 @@
             <div class="form-heading"><div><span>Scope request</span><strong>Nothing is sent from this page.</strong></div><span class="local-badge">Local draft</span></div>
             <label for="purchase-status">Purchase status <span aria-hidden="true">*</span></label>
             <select id="purchase-status" name="purchase-status" required><option value="">Choose one</option><option value="PAID">I already purchased</option><option value="SCOPE_FIRST">Check scope before I buy</option></select>
+            <label for="company-name">Company <span aria-hidden="true">*</span></label>
+            <input id="company-name" name="company" type="text" autocomplete="organization" maxlength="200" placeholder="Your company" required>
+            <label for="work-email">Work email <span aria-hidden="true">*</span></label>
+            <input id="work-email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="254" placeholder="name@company.com" required>
             <label for="opportunity-url">Public opportunity link <span aria-hidden="true">*</span></label>
             <input id="opportunity-url" name="opportunity" type="url" inputmode="url" autocomplete="url" placeholder="https://sam.gov/opp/..." required>
             <label for="current-posture">Current posture <span aria-hidden="true">*</span></label>
