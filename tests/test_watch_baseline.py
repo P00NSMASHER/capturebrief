@@ -78,6 +78,12 @@ class WatchBaselineTests(unittest.TestCase):
         stale={e["source_id"] for e in result["events"] if e["type"]=="WATCH_SOURCE_NOT_REFRESHED"}
         self.assertIn("trace-source",stale)
         self.assertNotIn("sam-current",stale)
+        # An assumption citing the unrefreshed source cannot keep its
+        # prior reviewed state without reopening to human inspection.
+        reopen = next(item for item in result["reopened_assumptions"]
+                      if item["assumption_id"] == "A1")
+        self.assertIn("SOURCE_CHECK:trace-source", reopen["matched_dependencies"])
+        self.assertTrue(reopen["previous_decision_preserved"])
         self.assertTrue(result["requires_human_review"])
         self.assertNotEqual(result["watch_status"],"NO_CHANGE_OBSERVED")
 
