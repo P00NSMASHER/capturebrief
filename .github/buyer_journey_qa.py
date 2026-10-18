@@ -93,6 +93,8 @@ try:
                     page.on("request", lambda req: requests_before.append(req.url))
                     page.evaluate("Object.defineProperty(navigator,'clipboard',{value:{writeText:async t=>{window.__qaCopied=t}},configurable:true})")
                     page.locator("#purchase-status").select_option("PAID")
+                    page.locator("#company-name").fill("Example Public Federal LLC")
+                    page.locator("#work-email").fill("buyer@example.com")
                     page.locator("#opportunity-url").fill("https://sam.gov/opp/fictional-public-demo")
                     page.locator("#current-posture").select_option("HOLD")
                     page.locator("#assumptions").fill("The deadline has not changed.\nWe can submit 20 pages.\nThe cited edition applies.")
@@ -104,6 +106,8 @@ try:
                     check("Purchase status (customer-reported, not verified): Already purchased" in copied, "Buyer-reported status is explicitly unverified")
                     check("independently verify payment in Stripe" in copied, "Operator must verify payment with Stripe before starting")
                     check("payment verification needed" in copied.lower(), "Draft subject cannot claim payment was verified")
+                    check("Company: Example Public Federal LLC" in copied, "Required company arrives in the private email draft")
+                    check("Work email: buyer@example.com" in copied, "Required work email arrives in the private email draft")
                     check("Public opportunity link: https://sam.gov/opp/fictional-public-demo" in copied, "Public link enters draft")
                     check("1. The deadline has not changed." in copied and "3. The cited edition applies." in copied, "Assumptions numbered")
                     check("only public, non-sensitive information" in copied, "Safety confirmation enters draft")
@@ -114,6 +118,30 @@ try:
                     page.locator("#assumptions").fill("One\nTwo\nThree\nFour\nFive\nSix")
                     page.locator("#copy-request").click()
                     check("five assumptions or fewer" in page.locator("#request-status").inner_text(), "Sixth assumption is blocked")
+
+                    page.locator("#assumptions").fill("Same request.\n  same   REQUEST.  ")
+                    page.locator("#copy-request").click()
+                    check("duplicate assumptions" in page.locator("#request-status").inner_text(), "Duplicate assumptions are blocked")
+
+                    page.locator("#assumptions").fill("x" * 501)
+                    page.locator("#copy-request").click()
+                    check("500 characters" in page.locator("#request-status").inner_text(), "Oversized assumption is blocked")
+
+                    page.locator("#assumptions").fill("The deadline is current.")
+                    page.locator("#opportunity-url").fill("https://user:password@sam.gov/opp/fictional-public-demo")
+                    page.locator("#copy-request").click()
+                    check("without embedded credentials" in page.locator("#request-status").inner_text(), "Credentialed URL is blocked")
+                    page.locator("#opportunity-url").fill("https://sam.gov/opp/fictional-public-demo")
+
+                    page.locator("#company-name").fill("")
+                    page.locator("#copy-request").click()
+                    check(page.locator("#company-name").evaluate("(i)=>!i.checkValidity()"), "Company is required")
+                    page.locator("#company-name").fill("Example Public Federal LLC")
+
+                    page.locator("#work-email").fill("not-an-email")
+                    page.locator("#copy-request").click()
+                    check(page.locator("#work-email").evaluate("(i)=>!i.checkValidity()"), "Valid work email is required")
+                    page.locator("#work-email").fill("buyer@example.com")
 
                     navigate(page, "index.html?checkout=complete#request")
                     check(page.locator("#purchase-status").input_value() == "PAID", "Checkout return selects paid intake")
