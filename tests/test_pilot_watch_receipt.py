@@ -59,6 +59,22 @@ class PilotWatchReceiptTests(unittest.TestCase):
                 evaluate_and_retain(self.baseline, self.case,
                                     checked_at=NOW, receipt_dir=folder)
 
+    def test_exact_fourteen_day_boundary_and_expiration(self):
+        with tempfile.TemporaryDirectory() as folder:
+            at_deadline = evaluate_and_retain(
+                self.baseline, self.case,
+                checked_at=NOW + timedelta(days=14), receipt_dir=folder,
+            )
+            self.assertTrue(at_deadline["requires_human_review"])
+            self.assertNotEqual(at_deadline["watch_status"], "NO_CHANGE_OBSERVED")
+            expired = evaluate_and_retain(
+                self.baseline, self.case,
+                checked_at=NOW + timedelta(days=14, seconds=1), receipt_dir=folder,
+            )
+            self.assertEqual(expired["watch_status"], "EXPIRED")
+            self.assertTrue(expired["requires_human_review"])
+            self.assertFalse(expired["external_send_authorized"])
+
     def test_invalid_integrity_hash_produces_no_receipt(self):
         with tempfile.TemporaryDirectory() as folder:
             baseline = json.loads(json.dumps(self.baseline))
