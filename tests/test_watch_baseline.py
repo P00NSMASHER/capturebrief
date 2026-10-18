@@ -66,6 +66,47 @@ class WatchBaselineTests(unittest.TestCase):
         self.assertFalse(baseline["contains_raw_case"])
         self.assertFalse(baseline["contains_source_text"])
 
+
+    def test_one_fresh_source_does_not_clear_other_stale_sources(self):
+        from datetime import timedelta
+        case=ready_case()
+        baseline=build_watch_baseline(case,now=NOW)
+        after=copy.deepcopy(case)
+        later=NOW+timedelta(minutes=20)
+        after["sources"][0]["observed_at"]=later.isoformat()
+        result=compare_watch_baseline(baseline,after,now=later)
+        stale={e["source_id"] for e in result["events"] if e["type"]=="WATCH_SOURCE_NOT_REFRESHED"}
+        self.assertIn("trace-source",stale)
+        self.assertNotIn("sam-current",stale)
+        self.assertTrue(result["requires_human_review"])
+        self.assertNotEqual(result["watch_status"],"NO_CHANGE_OBSERVED")
+
+    def test_raw_source_fingerprint_change_reopens_trace_dependency(self):
+        case=ready_case()
+        baseline=build_watch_baseline(case,now=NOW)
+        after=copy.deepcopy(case)
+        for source in after["sources"]:
+            if source["source_id"]=="trace-source":
+                source["content_sha256"]="f"*64
+        result=compare_watch_baseline(baseline,after,now=NOW)
+        self.assertIn("SOURCE_RECORD:trace-source",{e["key"] for e in result["events"]})
+        reopened=next(r for r in result["reopened_assumptions"] if r["assumption_id"]=="A1")
+        self.assertIn("SOURCE_RECORD:trace-source",reopened["matched_dependencies"])
+        self.assertTrue(result["requires_human_review"])
+        self.assertFalse(result["automatic_decision_change"])
+
+    def test_future_dated_source_refresh_is_not_valid_freshness(self):
+        from datetime import timedelta
+        case=ready_case()
+        baseline=build_watch_baseline(case,now=NOW)
+        after=copy.deepcopy(case)
+        later=NOW+timedelta(minutes=1)
+        for source in after["sources"]:
+            source["observed_at"]=(later+timedelta(days=1)).isoformat()
+        result=compare_watch_baseline(baseline,after,now=later)
+        self.assertEqual(sum(e["type"]=="WATCH_SOURCE_NOT_REFRESHED" for e in result["events"]),len(after["sources"]))
+        self.assertTrue(result["requires_human_review"])
+
     def test_baseline_tamper_is_rejected(self):
         case=ready_case()
         baseline=build_watch_baseline(case,now=NOW)
