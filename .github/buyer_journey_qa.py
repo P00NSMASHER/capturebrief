@@ -115,6 +115,22 @@ try:
                     check(len(requests_before) == loaded_requests, "Copying draft makes no network request")
                     check("Nothing was sent" not in page.locator("#request-status").inner_text(), "Copy status does not claim submission")
 
+                    # Full contract: five distinct 500-character lines must survive
+                    # without HTML maxlength truncation or unreliable mailto links.
+                    five_long = "\\n".join(chr(65+i) * 500 for i in range(5))
+                    page.locator("#assumptions").fill(five_long)
+                    check(page.locator("#assumptions").input_value() == five_long, "Five 500-character assumptions are retained")
+                    page.evaluate("window.__qaCopied = null")
+                    page.locator("#copy-request").click()
+                    page.wait_for_function("() => window.__qaCopied && window.__qaCopied.includes('5. EEEEE')")
+                    complete_draft = page.evaluate("window.__qaCopied")
+                    check(all((f"{i+1}. " + chr(65+i)*500) in complete_draft for i in range(5)),
+                          "Copy draft includes all 2500 characters without truncation")
+                    original_page_url = page.url
+                    page.locator("#request-builder").evaluate("(f) => f.requestSubmit()")
+                    check(page.url == original_page_url and "too long" in page.locator("#request-status").inner_text(),
+                          "Oversized mailto is blocked with copy fallback, no navigation or external action")
+
                     page.locator("#assumptions").fill("One\nTwo\nThree\nFour\nFive\nSix")
                     page.locator("#copy-request").click()
                     check("five assumptions or fewer" in page.locator("#request-status").inner_text(), "Sixth assumption is blocked")
