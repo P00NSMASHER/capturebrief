@@ -19,7 +19,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+REPOSITORY = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPOSITORY))
 
 from capturebrief_core.atomic_io import ensure_exact_bytes
 from capturebrief_core.current_search import fetch_and_apply_current
