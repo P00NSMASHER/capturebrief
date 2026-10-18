@@ -76,6 +76,8 @@
 
   const recipient = 'jayp19386@gmail.com';
   const purchaseStatus = document.getElementById('purchase-status');
+  const company = document.getElementById('company-name');
+  const workEmail = document.getElementById('work-email');
   const opportunity = document.getElementById('opportunity-url');
   const posture = document.getElementById('current-posture');
   const assumptions = document.getElementById('assumptions');
@@ -117,6 +119,13 @@
       return null;
     }
     opportunity.setCustomValidity('');
+    const hostname = (parsed.hostname || '').toLowerCase().replace(/\.$/, '');
+    if (parsed.username || parsed.password || ['localhost', '127.0.0.1', '[::1]'].includes(hostname) || hostname.endsWith('.local')) {
+      opportunity.setCustomValidity('Provide a public web URL without credentials or private localhost addresses.');
+      opportunity.reportValidity();
+      setStatus('The opportunity link must refer to a public website without embedded credentials.', true);
+      return null;
+    }
     if (!['http:', 'https:'].includes(parsed.protocol)) {
       opportunity.setCustomValidity('Use a public http:// or https:// link.');
       opportunity.reportValidity();
@@ -124,7 +133,37 @@
       return null;
     }
 
+    if (!company.value.trim()) {
+      company.setCustomValidity('Enter your company name.');
+      company.reportValidity();
+      setStatus('A company name is required to prepare the request.', true);
+      return null;
+    }
+    if (!/^[^@\s]{1,64}@[^@\s]{1,189}\.[^@\s]{2,63}$/.test(workEmail.value.trim())) {
+      workEmail.setCustomValidity('Enter a valid work email address.');
+      workEmail.reportValidity();
+      setStatus('A valid work email address is required.', true);
+      return null;
+    }
     const lines = assumptionLines();
+    if (!lines.length) {
+      assumptions.setCustomValidity('Enter at least one assumption.');
+      assumptions.reportValidity();
+      setStatus('Please include at least one assumption to check.', true);
+      return null;
+    }
+    if (lines.some(line => line.length > 500)) {
+      assumptions.setCustomValidity('Each assumption must be 500 characters or fewer.');
+      assumptions.reportValidity();
+      setStatus('Each assumption must be 500 characters or fewer.', true);
+      return null;
+    }
+    if (new Set(lines.map(line => line.toLowerCase().replace(/\s+/g, ' ').trim())).size !== lines.length) {
+      assumptions.setCustomValidity('Remove duplicate assumptions.');
+      assumptions.reportValidity();
+      setStatus('Remove duplicate assumptions before preparing the draft.', true);
+      return null;
+    }
     if (lines.length > 5) {
       assumptions.setCustomValidity('Include no more than five assumptions.');
       assumptions.reportValidity();
@@ -143,6 +182,8 @@
       'Hello CaptureBrief,',
       '',
       `Purchase status (customer-reported, not verified): ${paid ? 'Already purchased' : 'Scope check before purchase'}`,
+      `Company: ${company.value.trim()}`,
+      `Work email: ${workEmail.value.trim()}`,
       `Public opportunity link: ${opportunity.value.trim()}`,
       `Current posture: ${posture.value}`,
       '',
@@ -164,7 +205,7 @@
     };
   };
 
-  [purchaseStatus, opportunity, posture, assumptions, publicOnly].forEach(control => {
+  [purchaseStatus, company, workEmail, opportunity, posture, assumptions, publicOnly].forEach(control => {
     control.addEventListener('input', () => {
       control.setCustomValidity('');
       status.textContent = '';
