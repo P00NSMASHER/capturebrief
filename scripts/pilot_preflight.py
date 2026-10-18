@@ -53,8 +53,16 @@ def inspect(
     bundle_path: str | None = None, receipt: dict[str, Any] | None = None,
     baseline: dict[str, Any] | None = None,
     observed_case: dict[str, Any] | None = None,
+    stage: str = "completion",
 ) -> dict[str, Any]:
-    """Assess actual source and deliverable artifacts; no caller-supplied PASS flags."""
+    """Assess observed evidence, separating admission from post-delivery work.
+
+    The admission stage NEVER makes a customer-delivery claim. The completion
+    stage preserves all existing evidence and watch requirements. Neither can
+    grant payment, release, communications or certification authorization.
+    """
+    if stage not in {"admission", "completion"}:
+        raise ValueError("stage must be admission or completion")
     if not isinstance(now, datetime) or now.utcoffset() is None:
         raise ValueError("inspection time must include a timezone")
     now = now.astimezone(timezone.utc)
@@ -72,7 +80,12 @@ def inspect(
         result("catalog", "BLOCKED_STALE_CATALOG",
                f"FY{fiscal_year} exceeds the last independently pinned first-party catalog observation")
 
-    if case is None:
+    if stage == "admission":
+        result("real_case", "POST_ADMISSION_CUSTOMER_EVIDENCE",
+               "A future customer's genuine pursuit is not required before admitting the first supervised pilot")
+        result("release", "POST_ADMISSION_DELIVERY_REVIEW",
+               "A real customer's reviewed evidence and trace are due before their deliverable")
+    elif case is None:
         result("real_case", "BLOCKED_NO_CASE", "No retained real-pursuit case supplied")
         result("release", "BLOCKED_NO_CASE", "No case evidence to audit")
     else:
@@ -94,7 +107,10 @@ def inspect(
         except (ValueError, TypeError, KeyError) as exc:
             result("release", "BLOCKED_EVIDENCE_INVALID", type(exc).__name__)
 
-    if not bundle_path or receipt is None or case is None:
+    if stage == "admission":
+        result("delivery", "POST_ADMISSION_CUSTOMER_BUNDLE",
+               "A customer's verified bundle is required before that customer's delivery, not before pilot admission")
+    elif not bundle_path or receipt is None or case is None:
         result("delivery", "BLOCKED_UNVERIFIED_BUNDLE",
                "Need an actual ZIP and its separately retained original build receipt")
     else:
@@ -113,7 +129,10 @@ def inspect(
                if verified["integrity_verified"] else
                ", ".join(verified.get("errors") or ["NO_INTEGRITY_PROOF"]))
 
-    if baseline is None or observed_case is None:
+    if stage == "admission":
+        result("watch", "POST_ADMISSION_WATCH_OBSERVATION",
+               "An actual 14-day watch can only be measured after customer delivery; operational setup still needs independent QA")
+    elif baseline is None or observed_case is None:
         result("watch", "BLOCKED_NO_FRESH_WATCH_REPLAY",
                "Need a delivered baseline and a separately refreshed later public observation")
     else:
@@ -149,14 +168,25 @@ def inspect(
     passes = {"CATALOG_YEAR_COVERED", "PUBLIC_LINK_FORMAT_VERIFIED",
               "CORE_EVIDENCE_ELIGIBLE", "BUNDLE_BYTES_VERIFIED",
               "WATCH_FRESH_OBSERVATION_VERIFIED"}
-    tech_ok = all(gates[key]["status"] in passes for key in technical)
+    # No mere presence of a future/fictional case, copied email or unverified
+    # processor claim can turn an admission check into a signed launch approval.
+    tech_ok = stage == "completion" and all(gates[key]["status"] in passes for key in technical)
+    if stage == "admission":
+        status = ("PILOT_ADMISSION_REVIEW_REQUIRED"
+                  if gates["catalog"]["status"] == "CATALOG_YEAR_COVERED"
+                  else "PILOT_ADMISSION_BLOCKED")
+    else:
+        status = "AWAITING_EXTERNAL_PILOT_APPROVAL" if tech_ok else "PILOT_BLOCKED"
     return {
         "schema": "capturebrief-pilot-preflight-v1",
+        "stage": stage,
         "checked_at": now.isoformat().replace("+00:00", "Z"),
         "fiscal_year": fiscal_year,
         "technical_preflight_passed": tech_ok,
         "approved_to_accept_payment_or_send_customer_material": False,
-        "status": "AWAITING_EXTERNAL_PILOT_APPROVAL" if tech_ok else "PILOT_BLOCKED",
+        "status": status,
+        "pre_pilot_gates": ["catalog", "intake", "payment", "operator", "production"],
+        "post_pilot_gates": ["real_case", "release", "delivery", "watch"],
         "gates": gates,
     }
 
@@ -169,6 +199,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--baseline", help="Delivered watch-baseline JSON")
     parser.add_argument("--observed-case", help="Freshly sourced later case snapshot JSON")
     parser.add_argument("--as-of", help="Timezone-aware ISO-8601 check time (default now)")
+    parser.add_argument("--stage", choices=("admission", "completion"), default="completion",
+                        help="admission before the first customer; completion after the real delivered watch")
     args = parser.parse_args(argv)
     try:
         now = (datetime.fromisoformat(args.as_of.replace("Z", "+00:00"))
@@ -176,7 +208,7 @@ def main(argv: list[str] | None = None) -> int:
         out = inspect(now=now, case=_read_object(args.case),
                       bundle_path=args.bundle, receipt=_read_object(args.receipt),
                       baseline=_read_object(args.baseline),
-                      observed_case=_read_object(args.observed_case))
+                      observed_case=_read_object(args.observed_case), stage=args.stage)
     except (ValueError, OSError, TypeError, json.JSONDecodeError) as exc:
         print(json.dumps({"status": "PILOT_BLOCKED", "error": type(exc).__name__}))
         return 2
