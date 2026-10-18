@@ -101,7 +101,9 @@ try:
                     page.locator("#copy-request").click()
                     page.wait_for_function("() => window.__qaCopied && window.__qaCopied.includes('Current posture: HOLD')")
                     copied = page.evaluate("window.__qaCopied")
-                    check("Purchase status: Already purchased" in copied, "Paid order status enters draft")
+                    check("Purchase status (customer-reported, not verified): Already purchased" in copied, "Buyer-reported status is explicitly unverified")
+                    check("independently verify payment in Stripe" in copied, "Operator must verify payment with Stripe before starting")
+                    check("payment verification needed" in copied.lower(), "Draft subject cannot claim payment was verified")
                     check("Public opportunity link: https://sam.gov/opp/fictional-public-demo" in copied, "Public link enters draft")
                     check("1. The deadline has not changed." in copied and "3. The cited edition applies." in copied, "Assumptions numbered")
                     check("only public, non-sensitive information" in copied, "Safety confirmation enters draft")
@@ -115,7 +117,7 @@ try:
 
                     navigate(page, "index.html?checkout=complete#request")
                     check(page.locator("#purchase-status").input_value() == "PAID", "Checkout return selects paid intake")
-                    check("verified separately" in page.locator("#request-status").inner_text(), "Checkout return avoids an unverified payment claim")
+                    check("does not verify a payment" in page.locator("#request-status").inner_text(), "Editable checkout return cannot attest a payment")
                 else:
                     check(not page.locator("#request-builder").is_visible(), "No-JS builder is hidden")
                     check(page.locator(".noscript-note").is_visible(), "No-JS fallback is visible")
