@@ -54,11 +54,30 @@ Authoritative website: https://p00nsmasher.github.io/capturebrief/ on the gh-pag
 
 ## Read-only technical preflight (does not certify commercial launch)
 
-From the repository root, run:
+Two separate stages prevent the circular requirement that the first
+customer's entire watch must finish before the first customer is admitted.
 
-    python scripts/pilot_preflight.py --as-of 2026-10-18T12:00:00Z
+**Before the first supervised pilot** (catalog and operational admission checks):
 
-When private operator-held real evidence exists, supply --case, --bundle, --receipt, --baseline and --observed-case. The tool computes audit, version freshness, bundle integrity and watch status from actual artifacts, without making a network call, emailing, charging, publishing, or accepting payment. It will not auto-approve a pilot. Even when its technical checks pass, independent inbox/payment verification, specific message approval, real-source correctness and approved release are mandatory.
+    python scripts/pilot_preflight.py --stage admission --as-of 2026-10-18T12:00:00Z
+
+At admission, real customer case, delivery ZIP and completed 14-day watch
+are explicitly **POST_ADMISSION**; they are neither fabricated nor
+prematurely demanded. The current FY2027 catalog still blocks admission
+independently. Payment/inbox, reviewed release and operator approval remain
+external, unverified gates. Admission never returns customer authorization.
+
+**After real customer delivery and watch** (full evidence acceptance):
+
+    python scripts/pilot_preflight.py --stage completion --case case.json \
+      --bundle delivery.zip --receipt original-receipt.json \
+      --baseline delivered-watch-baseline.json --observed-case fresh-case.json
+
+Completion retains the independent original ZIP digest, audit and
+non-synthetic Decision Evidence, genuinely refreshed watch observation,
+and explicit human approvals. Both stages are local-only diagnostics: no
+network request, email, charge, publication, automatic approval or
+customer data export. Never interpret a CLI status as permission to send.
 
 PR #49 concerns a separate older public ZIP packaging lane, not the active GitHub Pages publication. The unrelated PA x402 discovery workflow startup error should not be used as evidence that CaptureBrief's Product Core failed.
 
