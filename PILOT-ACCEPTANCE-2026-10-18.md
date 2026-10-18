@@ -7,10 +7,12 @@ Authoritative website: https://p00nsmasher.github.io/capturebrief/ on the gh-pag
 
 - [x] Inspect a genuine first-party SAM.gov opportunity with publicly visible version changes.
 - [x] Exercise intake and core refusal on a real public URL paired with fictional buyer claims. No invented source receipts or automatically supported assertions.
-- [ ] Select an actual current IT/cyber/cloud pursuit within the offer and retain approved SAM Public API v2 observation, full public-source provenance, required source bytes, exact quotes, reference closure and human-reviewed rule applicability.
+- [x] Select an actual current federal enterprise-IT services pursuit for public-source rehearsal; still obtain approved SAM API v2 observation, retained controlling files, version closure, exact quotes, and human-reviewed rule applicability before any customer-delivery claim.
 - [ ] Produce a complete non-synthetic Decision Evidence package and actual delivery ZIP, verify it using the original independent receipt and inspect each buyer-facing finding.
 
-**Real public metadata rehearsal, not a customer:** First-party GSA notice 47PH5226R0003 at https://sam.gov/opp/3127a3862fe74c0b8bf614948e89f66f/view was inspected on October 18, 2026. Its October 14 Amendment 007 extended offers to November 4, 2026 at 4 p.m. Eastern, superseding October 29. This is a construction procurement, useful for checking the version-control truth boundary but **not** a representative IT/cyber customer sample. No complete SAM API receipt, retained source packet or customer bundle was produced. The fictional intake test uses the superseded deadline as a buyer assumption and must leave it UNPROVEN until evidence is obtained.
+**Real public IT-sector metadata rehearsal, not a customer:** The Army's active MAPS multi-domain services solicitation W15P7T-26-R-A006, https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view, is a federal enterprise-IT/engineering-services procurement. Official public notice metadata updated October 16, 2026 advertises a November 12, 2026, 11:59 a.m. Eastern offer deadline, replacing the original May 1 deadline; Amendment 0011 and multiple public attachments are listed. Our fictional buyer assumption uses the old May 1 due date as a negative-control input. Source metadata alone is NOT a verified current API observation, full reference closure, approved historical evidence, expert review or customer delivery; the case must stay UNPROVEN and release-blocked.
+
+**Additional version-control example:** GSA construction notice 47PH5226R0003 at https://sam.gov/opp/3127a3862fe74c0b8bf614948e89f66f/view contains Amendment 007 extending its deadline to November 4, 2026, but is not suitable as the IT-sector pilot sample.
 
 ## 2. FY2027 SAM archive catalog
 
@@ -24,14 +26,17 @@ Authoritative website: https://p00nsmasher.github.io/capturebrief/ on the gh-pag
 - [x] The current public website/legal pages are reachable. The CaptureBrief live Stripe payment link was independently read as active for a one-time $149 charge.
 - [x] The browser request-builder is local only: it copies a draft or asks the buyer's email client to open a message. It does not submit data to a CaptureBrief backend.
 - [x] Proposed gh-pages PR #50 corrects a trust issue: buyer-selectable PAID and a forgeable ?checkout=complete redirect are **not** processor payment evidence. It labels the resulting email claim unverified.
-- [ ] Verify exact published email-draft behaviour and actual inbox receipt under owner-approved test sending. A copied or opened draft does not establish that an email was sent or received.
-- [ ] For an actual order, reconcile Stripe account, price, payment ID, settlement/payment status and refund path, without relying on the customer-supplied status or website URL. Avoid a real charge for QA; refunds require case-specific authorization.
+- [x] Search the connected Gmail inbox for exact CaptureBrief scope/paid-intake subjects: no actual matching inquiry was found in the checked mailbox. This is a visibility check, not proof the website sent a message.
+- [ ] Verify exact published email-draft behaviour and actual inbox receipt under an individually approved test send. A copied or opened draft does not establish delivery.
+- [x] Read CaptureBrief's connected live Stripe account: no completed Checkout Sessions or PaymentIntents were present in the queried account. Test-mode Checkout Session `cs_test_a17hxV7xfKNdJ0oXBSuzDxdqOCZT9FMrUX57ISBoKggE1bgNnAWu1a5qBg` was created unpaid for $149; this is not a completed payment or refund test.
+- [ ] For an actual order, reconcile the specific Stripe payment ID and order's payment/refund status. Complete a sandbox test payment/refund using authorized Stripe test methods; the prior automated test-card attempt was blocked, so it must not be marked passed.
 
 ## 4. Fourteen-day targeted watch
 
-- [x] Existing core watch logic retains the hash-bound baseline, 14-day expiry, fresh-observation requirement, change/reopen events, review state and prohibition of automatic decision changes.
+- [x] Existing core watch logic retains hash-bound baseline, 14-day expiry, change/reopen events, human review and no automatic decision changes. Pilot branch adds per-source freshness and fingerprint change controls so a single refreshed source cannot mask others left stale.
 - [ ] For a released genuine source case, create the initial baseline at delivery and perform **actual scheduled fresh approved source observations** across the full 14-day interval; retain per-check proof and an operator exception queue.
-- [ ] Exercise changed, no-change, stale, fetch-failure and expiration outcomes using fresh evidence, without automatically emailing customers. Every external message requires independent specific approval.
+- [x] Add tests for partial freshness, altered source fingerprints and future-dated source observations. Add `scripts/run_watch_receipt.py` to write content-addressed immutable local operator receipts **outside the public repository**, without messages or scheduling.
+- [ ] Independently exercise a complete actual 14-day live watch on a real released case, including source failures and change alerts. Every outbound notification still requires message-specific approval.
 
 ## 5. Fulfillment and security
 
@@ -43,7 +48,7 @@ Authoritative website: https://p00nsmasher.github.io/capturebrief/ on the gh-pag
 ## 6. Independent acceptance and rollout
 
 - [x] Main Product Core at 12d90024f053a78ead7936abf092931fce240d3e passed (https://github.com/P00NSMASHER/capturebrief/actions/runs/39077316900).
-- [ ] Verify the final proposed main and gh-pages PR heads against full Linux/Windows Product Core and the GitHub Pages Chromium/WebKit buyer-journey CI.
+- [x] PR #50 buyer-intake patch passed GitHub Pages Chromium/WebKit Website Quality CI. Product Core regression suites passed on the pilot branch, including new per-source watch safety tests; recheck final head and acceptance logs after any subsequent patch.
 - [ ] Obtain independent release review; reconcile open material faults, approve releases through existing controls, deploy the correct gh-pages branch and verify live published bytes.
 - [ ] Complete one real supervised IT-sector customer workflow from confirmed paid order and reviewed source package through verified delivery and monitored follow-up, recording feedback/corrections.
 
