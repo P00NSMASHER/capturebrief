@@ -217,6 +217,12 @@
     event.preventDefault();
     const draft = compose();
     if (!draft) return;
+    // Email-client URL size limits vary; never risk truncating a full request.
+    // The copy path keeps all five 500-character assumptions intact.
+    if (draft.href.length > 1900) {
+      setStatus('This request is too long for a reliable email-draft link. Use “Copy request” and paste the full text into your email instead. Nothing was sent.', true);
+      return;
+    }
     setStatus('Your browser was asked to open an email draft. Review it before sending. Nothing was sent by this page.');
     window.location.href = draft.href;
   });
