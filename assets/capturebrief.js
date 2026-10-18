@@ -98,7 +98,7 @@
   const checkoutReturn = new URLSearchParams(window.location.search).get('checkout') === 'complete';
   if (checkoutReturn) {
     purchaseStatus.value = 'PAID';
-    setStatus('Welcome back from Stripe. Complete this intake. Payment is verified separately before work begins.');
+    setStatus('Returned from checkout. This link does not verify a payment; CaptureBrief will check the Stripe payment record before work begins.');
   }
 
   const compose = () => {
@@ -138,11 +138,11 @@
     }
 
     const paid = purchaseStatus.value === 'PAID';
-    const subject = paid ? 'CaptureBrief paid order intake' : 'CaptureBrief scope request';
+    const subject = paid ? 'CaptureBrief checkout-reported intake (payment verification needed)' : 'CaptureBrief scope request';
     const body = [
       'Hello CaptureBrief,',
       '',
-      `Purchase status: ${paid ? 'Already purchased' : 'Scope check before purchase'}`,
+      `Purchase status (customer-reported, not verified): ${paid ? 'Already purchased' : 'Scope check before purchase'}`,
       `Public opportunity link: ${opportunity.value.trim()}`,
       `Current posture: ${posture.value}`,
       '',
@@ -152,7 +152,7 @@
       'I confirm this request contains only public, non-sensitive information.',
       '',
       paid
-        ? 'Please confirm fit, source coverage, and the delivery date. I understand an out-of-scope request will be refunded before work begins.'
+        ? 'Please independently verify payment in Stripe, then confirm fit, source coverage, and the delivery date. I understand an out-of-scope request will be refunded before work begins.'
         : 'Please confirm fit, source coverage, delivery date, and written terms before purchase.'
     ].join('\r\n');
 
