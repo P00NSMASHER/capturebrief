@@ -1,6 +1,7 @@
 """Cross-boundary tests: browser-generated request -> strict private case -> no send."""
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -12,6 +13,7 @@ from pathlib import Path
 
 from capturebrief_core.audit import audit_case
 from capturebrief_core.intake import IntakeError
+from capturebrief_core.model import canonical_json
 from capturebrief_core.request_draft import (
     MAX_REQUEST_TEXT,
     PAID_CLAIM, PAID_END, PAID_SUBJECT, SCOPE_CLAIM, SCOPE_END,
@@ -152,6 +154,8 @@ class RequestDraftTests(unittest.TestCase):
             self.assertEqual(first, again)
             saved_case = json.loads(case_path.read_text())
             saved_receipt = json.loads(receipt_path.read_text())
+            self.assertEqual(saved_receipt["case_sha256"], hashlib.sha256(canonical_json(saved_case)).hexdigest())
+            self.assertEqual(saved_receipt["case_file_sha256"], hashlib.sha256(case_path.read_bytes()).hexdigest())
             self.assertEqual(saved_receipt["independent_payment_lookup"], "NOT_PERFORMED")
             self.assertFalse(saved_receipt["case_release_authorized"])
             self.assertFalse(saved_receipt["sender_authenticated"])
