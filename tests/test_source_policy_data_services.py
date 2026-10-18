@@ -89,6 +89,32 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
                 "https://sam.gov/api/prod/opps/v3/opportunities/abc/resources"
             )
 
+    def test_source_policy_rejects_credentials_fragments_and_nonstandard_ports(self):
+        approved = "https://sam.gov/api/prod/fileextractservices/v1/api/download/Contract%20Opportunities/datagov/file.csv"
+        self.assertEqual(classify_sam_url(approved), "SAM_DATA_SERVICES_EXTRACT")
+        bad = [
+            "https://user:secret@sam.gov/api/prod/fileextractservices/v1/api/download/Contract%20Opportunities/datagov/file.csv",
+            "https://sam.gov:8443/api/prod/fileextractservices/v1/api/download/Contract%20Opportunities/datagov/file.csv",
+            approved + "#client-secret",
+            "https://[not-a-host",
+            "https://api.sam.gov:badport/opportunities/v2/search",
+        ]
+        for value in bad:
+            with self.subTest(url=value):
+                self.assertEqual(classify_sam_url(value), "UNAPPROVED")
+                with self.assertRaises(SourcePolicyError):
+                    require_approved_automation(value)
+
+    def test_rejected_urls_cannot_leak_signed_query_or_userinfo(self):
+        sensitive = ("https://user:password-value@sam.gov/api/prod/opps/v3/"
+                     "opportunities/secret-id/resources?api_key=do-not-print&signature=another-secret")
+        with self.assertRaises(SourcePolicyError) as caught:
+            require_approved_automation(sensitive)
+        error = str(caught.exception)
+        for secret in ("password-value", "do-not-print", "another-secret", "secret-id", "api_key"):
+            self.assertNotIn(secret, error)
+        self.assertIn("UNAPPROVED", error)
+
     def test_automated_ui_manifest_is_disabled(self):
         with self.assertRaises(SourcePolicyError):
             fetch_manifest("abc")
