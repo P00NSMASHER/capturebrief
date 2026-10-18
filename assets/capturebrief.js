@@ -120,10 +120,15 @@
     }
     opportunity.setCustomValidity('');
     const hostname = (parsed.hostname || '').toLowerCase().replace(/\.$/, '');
-    if (parsed.username || parsed.password || ['localhost', '127.0.0.1', '[::1]'].includes(hostname) || hostname.endsWith('.local')) {
-      opportunity.setCustomValidity('Provide a public web URL without credentials or private localhost addresses.');
+    const addressLiteral = /^\d+(?:\.\d+){3}$/.test(hostname)
+      || hostname.startsWith('[') || /^\d+$/.test(hostname);
+    const reservedDomain = hostname === 'localhost'
+      || ['.localhost', '.local', '.internal', '.home.arpa', '.invalid', '.test']
+        .some(suffix => hostname.endsWith(suffix));
+    if (parsed.username || parsed.password || !hostname.includes('.') || addressLiteral || reservedDomain) {
+      opportunity.setCustomValidity('Provide a public domain link without credentials or direct IP/private hosts.');
       opportunity.reportValidity();
-      setStatus('The opportunity link must refer to a public website without embedded credentials.', true);
+      setStatus('The opportunity link must refer to a public website without embedded credentials or private addresses.', true);
       return null;
     }
     if (!['http:', 'https:'].includes(parsed.protocol)) {
