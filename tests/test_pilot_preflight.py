@@ -76,6 +76,42 @@ class PilotPreflightTests(unittest.TestCase):
         self.assertEqual(out["gates"]["payment"]["status"], "STRIPE_LIVE_RECORD_VERIFICATION_REQUIRED")
         self.assertFalse(out["technical_preflight_passed"])
 
+    def test_pre_pilot_admission_does_not_require_future_delivery_or_watch(self):
+        # This frozen September historical clock exercises lifecycle separation,
+        # not a declaration that the October FY2027 catalog is approved.
+        pre_rollover = datetime(2026, 9, 21, 12, 0, tzinfo=timezone.utc)
+        out = inspect(now=pre_rollover, stage="admission")
+        self.assertEqual(out["stage"], "admission")
+        self.assertEqual(out["status"], "PILOT_ADMISSION_REVIEW_REQUIRED")
+        self.assertEqual(out["gates"]["real_case"]["status"], "POST_ADMISSION_CUSTOMER_EVIDENCE")
+        self.assertEqual(out["gates"]["release"]["status"], "POST_ADMISSION_DELIVERY_REVIEW")
+        self.assertEqual(out["gates"]["delivery"]["status"], "POST_ADMISSION_CUSTOMER_BUNDLE")
+        self.assertEqual(out["gates"]["watch"]["status"], "POST_ADMISSION_WATCH_OBSERVATION")
+        self.assertFalse(out["technical_preflight_passed"])
+        self.assertIs(out["approved_to_accept_payment_or_send_customer_material"], False)
+        self.assertEqual(set(out["pre_pilot_gates"]),
+                         {"catalog", "intake", "payment", "operator", "production"})
+
+    def test_current_admission_blocks_stale_fy2027_without_circular_customer_requirements(self):
+        out = inspect(now=NOW, stage="admission")
+        self.assertEqual(out["status"], "PILOT_ADMISSION_BLOCKED")
+        self.assertEqual(out["gates"]["catalog"]["status"], "BLOCKED_STALE_CATALOG")
+        self.assertEqual(out["gates"]["delivery"]["status"], "POST_ADMISSION_CUSTOMER_BUNDLE")
+        self.assertFalse(out["technical_preflight_passed"])
+        self.assertFalse(out["approved_to_accept_payment_or_send_customer_material"])
+
+    def test_completion_retains_strict_bundle_and_watch_requirements(self):
+        historical = datetime(2026, 9, 21, 12, 0, tzinfo=timezone.utc)
+        out = inspect(now=historical, stage="completion")
+        self.assertEqual(out["status"], "PILOT_BLOCKED")
+        self.assertEqual(out["gates"]["delivery"]["status"], "BLOCKED_UNVERIFIED_BUNDLE")
+        self.assertEqual(out["gates"]["watch"]["status"], "BLOCKED_NO_FRESH_WATCH_REPLAY")
+        self.assertFalse(out["technical_preflight_passed"])
+
+    def test_bad_stage_is_rejected_not_treated_as_approved(self):
+        with self.assertRaisesRegex(ValueError, "stage must"):
+            inspect(now=NOW, stage="waived")
+
     def test_cli_is_read_only_and_exit_code_never_claims_approval(self):
         root = Path(__file__).resolve().parents[1]
         run = subprocess.run(
