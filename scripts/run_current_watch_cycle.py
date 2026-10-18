@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from capturebrief_core.atomic_io import ensure_exact_bytes
 from capturebrief_core.current_search import fetch_and_apply_current
 from capturebrief_core.model import canonical_json, sha256_hex
+from capturebrief_core.watch_baseline import compare_watch_baseline
 from scripts.run_watch_receipt import _private_dir, evaluate_and_retain
 
 def _private_path(path: str) -> Path:
@@ -47,10 +48,14 @@ def execute(
     """Fetch and store one real API currentness observation; fail closed otherwise."""
     if not api_key:
         raise ValueError("An operator-provided SAM_API_KEY is required")
-    now = checked_at or datetime.now(timezone.utc)
-    if not isinstance(now, datetime) or now.utcoffset() is None:
+    if checked_at is not None and (
+        not isinstance(checked_at, datetime) or checked_at.utcoffset() is None
+    ):
         raise ValueError("Watch cycle requires timezone-aware checked_at")
-    now = now.astimezone(timezone.utc)
+    # Observe the check completion clock AFTER the network fetch below. The
+    # provider's genuine observed_at would otherwise be later than a time
+    # captured just before the request, causing every live run to fail.
+    now = checked_at.astimezone(timezone.utc) if checked_at else None
     target = _private_path(updated_case_path)
     receipt_root = _private_dir(receipt_dir)
     if target.is_relative_to(receipt_root) and target.name.startswith("watch-"):
@@ -60,6 +65,9 @@ def execute(
         api_key=api_key,
         **({"opener": opener} if opener is not None else {}),
     )
+    observed_completion_at = datetime.now(timezone.utc)
+    if now is None:
+        now = observed_completion_at
     status = details.get("fetch", {}).get("status")
     if status != "CURRENT_OBSERVATION_FOUND":
         # Crucial: no current API result is NOT proof of an inactive notice.
@@ -93,6 +101,11 @@ def execute(
     if observed_at.utcoffset() is None or observed_at.astimezone(timezone.utc) > now:
         raise ValueError("Current API response was observed after the declared check time")
 
+    # Validate the baseline before publishing ANY refreshed case file.
+    # A tampered or mismatched baseline must not leave behind a case that
+    # appears newly sourced without its corresponding review.
+    compare_watch_baseline(baseline, updated, now=now)
+
     # This is an additional source of case evidence, not consent to update
     # any buyer assertion. It must never overwrite differing bytes.
     encoded = (json.dumps(updated, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode()
@@ -110,7 +123,9 @@ def execute(
         "updated_case_sha256": sha256_hex(canonical_json(updated)),
         "watch_status": check["watch_status"],
         "source_observation_recorded": True,
-        "all_watch_sources_refreshed": not check["requires_human_review"],
+        # One official current API fetch is NOT coverage of history, rule
+        # editions, manifests or every other agreed monitored source.
+        "all_watch_sources_refreshed": False,
         "watch_receipt_path": check["receipt_path"],
         "human_review_required": check["requires_human_review"],
         "automatic_decision_change": False,
@@ -139,7 +154,6 @@ def main(argv: list[str] | None = None) -> int:
         result = execute(
             case, baseline, api_key=api_key,
             updated_case_path=args.updated_case, receipt_dir=args.receipt_dir,
-            checked_at=datetime.now(timezone.utc),
         )
     except (ValueError, OSError, TypeError, KeyError, json.JSONDecodeError, RuntimeError) as exc:
         # Do not print raw provider errors (which may include API-key-bearing
