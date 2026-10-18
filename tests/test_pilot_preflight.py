@@ -10,7 +10,7 @@ from capturebrief_core.intake import build_case_from_intake
 from scripts.pilot_preflight import inspect, official_opportunity
 
 NOW = datetime(2026, 10, 18, 12, 0, tzinfo=timezone.utc)
-OFFICIAL = "https://sam.gov/opp/3127a3862fe74c0b8bf614948e89f66f/view"
+OFFICIAL = "https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view"
 
 
 class PilotPreflightTests(unittest.TestCase):
@@ -22,7 +22,7 @@ class PilotPreflightTests(unittest.TestCase):
             "https://buyer:s3cret@sam.gov/opp/3127a3862fe74c0b8bf614948e89f66f/view",
             "https://sam.gov/opp/example/view",
             "https://sam.gov/private/buyer-brief",
-            "https://sam.gov/opp/3127a3862fe74c0b8bf614948e89f66f/view#forged",
+            "https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view#forged",
             None,
         ):
             with self.subTest(value=value):
@@ -37,15 +37,15 @@ class PilotPreflightTests(unittest.TestCase):
         self.assertIs(out["approved_to_accept_payment_or_send_customer_material"], False)
 
     def test_real_public_notice_only_opens_review_not_customer_release(self):
-        # This is a real, currently visible public notice; the buyer is fictitious.
+        # This is an observed public federal IT/enterprise-services notice; buyer details are fictional.
         # A true public URL by itself supplies no verified controlling sources.
         intake = {
             "email": "buyer@example.com",
             "company": "Fictional Federal Corp",
             "public_opportunity": OFFICIAL,
             "current_posture": "HOLD",
-            "assumption_1": "The proposal deadline is still October 29, 2026.",
-            "assumption_2": "No further amendments affect the deadline.",
+            "assumption_1": "The proposal deadline is still May 1, 2026.",
+            "assumption_2": "The original FY2026 posting has no later amendments.",
             "public_only_confirmation": "yes",
         }
         case = build_case_from_intake(intake, submitted_at=NOW.isoformat())
