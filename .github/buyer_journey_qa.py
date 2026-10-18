@@ -147,6 +147,17 @@ try:
                     page.locator("#opportunity-url").fill("https://user:password@sam.gov/opp/fictional-public-demo")
                     page.locator("#copy-request").click()
                     check("without embedded credentials" in page.locator("#request-status").inner_text(), "Credentialed URL is blocked")
+                    for unsafe_url in (
+                        "https://192.168.1.10/internal",
+                        "https://169.254.169.254/latest/meta-data",
+                        "https://[fc00::1]/private",
+                        "https://company.internal/portal",
+                        "https://localhost./portal",
+                    ):
+                        page.locator("#opportunity-url").fill(unsafe_url)
+                        page.locator("#copy-request").click()
+                        check("private addresses" in page.locator("#request-status").inner_text(),
+                              f"Private/reserved URL blocked: {unsafe_url}")
                     page.locator("#opportunity-url").fill("https://sam.gov/opp/fictional-public-demo")
 
                     page.locator("#company-name").fill("")
