@@ -117,7 +117,7 @@ try:
 
                     # Full contract: five distinct 500-character lines must survive
                     # without HTML maxlength truncation or unreliable mailto links.
-                    five_long = "\\n".join(chr(65+i) * 500 for i in range(5))
+                    five_long = chr(10).join(chr(65+i) * 500 for i in range(5))
                     page.locator("#assumptions").fill(five_long)
                     check(page.locator("#assumptions").input_value() == five_long, "Five 500-character assumptions are retained")
                     page.evaluate("window.__qaCopied = null")
