@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from capturebrief_core.atomic_io import ensure_exact_bytes
+from capturebrief_core.model import canonical_json, sha256_hex
 from capturebrief_core.request_draft import MAX_REQUEST_TEXT, create_unverified_case
 
 REPOSITORY = Path(__file__).resolve().parents[1]
@@ -55,11 +56,15 @@ def import_request(message_path: str, case_path: str, receipt_path: str, *,
     # This is an operator import timestamp, NOT authenticated email-delivery time.
     case["intake"]["record_time_basis"] = "LOCAL_IMPORT_TIME_NOT_MAIL_PROVIDER_RECEIPT"
     case_bytes = (json.dumps(case, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode("utf-8")
-    case_sha = hashlib.sha256(case_bytes).hexdigest()
+    # Case-content identity MUST match Product Core canonical-json SHA-256;
+    # the pretty-printed on-disk bytes have a separate file integrity digest.
+    case_sha = sha256_hex(canonical_json(case))
+    case_file_sha = hashlib.sha256(case_bytes).hexdigest()
     receipt = {
         "schema": "capturebrief-private-intake-receipt-v1",
         "case_id": case["case_id"],
         "case_sha256": case_sha,
+        "case_file_sha256": case_file_sha,
         "request_sha256": hashlib.sha256(raw).hexdigest(),
         "imported_at": checked_at.isoformat().replace("+00:00", "Z"),
         "case_submitted_at_is_email_delivery_proof": False,
@@ -76,6 +81,7 @@ def import_request(message_path: str, case_path: str, receipt_path: str, *,
         "status": "PRIVATE_CASE_CREATED_REVIEW_REQUIRED",
         "case_id": case["case_id"],
         "case_sha256": case_sha,
+        "case_file_sha256": case_file_sha,
         "request_sha256": receipt["request_sha256"],
         "case_output": str(case_output),
         "receipt_output": str(receipt_output),
