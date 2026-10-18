@@ -215,6 +215,8 @@ with sync_playwright() as pw:
             page.evaluate("Object.defineProperty(navigator,'clipboard',{value:{writeText:async t=>{window.__qaCopied=t}},configurable:true})")
             if name == "index.html":
                 page.locator("#purchase-status").select_option("SCOPE_FIRST")
+                page.locator("#company-name").fill("Public Example Corp")
+                page.locator("#work-email").fill("buyer@example.com")
                 page.locator("#opportunity-url").fill("https://sam.gov/opp/demo")
                 page.locator("#current-posture").select_option("GO")
                 page.locator("#assumptions").fill("The deadline has not changed.\nWe can bid as prime.")
@@ -222,6 +224,7 @@ with sync_playwright() as pw:
                 page.locator("#copy-request").click()
                 page.wait_for_function("() => window.__qaCopied && window.__qaCopied.includes('Public opportunity link:')")
                 copied_request = page.evaluate("window.__qaCopied")
+                check("Company: Public Example Corp" in copied_request and "Work email: buyer@example.com" in copied_request, "CaptureBrief: complete required buyer identity copied")
                 check("Current posture: GO" in copied_request, "CaptureBrief: request posture copied")
                 check("1. The deadline has not changed." in copied_request, "CaptureBrief: numbered assumptions copied")
                 check("Request copied" in page.locator("#request-status").inner_text(), "CaptureBrief: honest local-copy status")
