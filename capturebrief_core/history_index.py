@@ -227,7 +227,9 @@ def _download_extract_unlocked(
     except HTTPError as exc:
         raise HistoryIndexError(f"Data Services HTTP {exc.code}") from exc
     except URLError as exc:
-        raise HistoryIndexError(f"Data Services transport failure: {exc.reason}") from exc
+        # URLError.reason may include an original signed URL or credentials.
+        # Avoid disclosing it in CI, logs or operator-facing errors.
+        raise HistoryIndexError("Data Services transport failure") from exc
     finally:
         if tmp.exists():
             tmp.unlink()
