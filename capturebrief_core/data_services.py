@@ -65,11 +65,12 @@ def download_extract(
                     raise DataServicesError("Data Services extract Content-Length exceeds accepted bounds")
             data = response.read(max_bytes + 1)
     except HTTPError as exc:
-        raise DataServicesError(f"Data Services extract HTTP {exc.code}") from exc
-    except URLError as exc:
-        # URLError.reason can contain signed resource URLs or credentials;
-        # never render it into errors that may become CI/operator logs.
-        raise DataServicesError("Data Services extract transport failure") from exc
+        # HTTPError may include a temporary X-Amz-signed URL as its cause.
+        raise DataServicesError(f"Data Services extract HTTP {exc.code}") from None
+    except URLError:
+        # Suppress urllib's cause to avoid exposing query signatures even
+        # when a caller prints the complete Python traceback.
+        raise DataServicesError("Data Services extract transport failure") from None
     if len(data) > max_bytes:
         raise DataServicesError("extract exceeds max_bytes during download")
     if expected is not None and len(data) != expected:
