@@ -15,7 +15,7 @@ certification or a live 14-day watch.
 | Customer website / gh-pages | #50 | 2f5af397fc5d46e6f919f11b0f6e3701df69c665 |
 | Pilot core, source-index gates, watch | #51 | 620842390d741bb5bcfa9bc1994b1bdfb650c884 |
 | Private website-draft intake parser | #52 | c95fd399c3d3816ac02e628d86347ff96b263bdc |
-| Official SAM public CSV/S3 transport security | #53 | 38ce7268e52cb067dc0009195bc027abf7ff2f40 |
+| Official SAM public CSV/S3 transport security | #53 | 6ad99fbceacf537a5e4eb400e42d9a6f4a3516b3 |
 | Unrelated PA x402 CI YAML parse fix | #54 | 567c648ac91f23423a808b85ec3c617a919dcc36 |
 | Live Stripe three-record reconciliation | #55 | bbbac444705b0a95ea4af12430c287a984b427ee |
 
@@ -102,4 +102,10 @@ On October 19, 2026, official SAM Data Services returned an HTTP 303 to `falextr
 
 The actual guarded repository retention command passed against the live official download route in [CI #39304861281](https://github.com/P00NSMASHER/capturebrief/actions/runs/39304861281), retrieving the original 1,607,260 bytes, SHA-256 `7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce`. [CI #39305721653](https://github.com/P00NSMASHER/capturebrief/actions/runs/39305721653) independently re-ran the current signed-transport command successfully after idempotent receipt improvements; original bytes were retained only ephemerally by those CI jobs.
 
-New tests reject wrong-year objects, forged/expired signers, duplicate signature fields, malicious redirects, printed signed-link transport errors, mutated retention receipt fields and misleading fresh timestamps on rechecks. Windows and Linux Product Core regressions passed at PR #53 head `38ce7268e52cb067dc0009195bc027abf7ff2f40`. The production catalog remains pinned to FY2026; a single FY2027 source file and any automated hash check still cannot certify complete original history or independently approve customer work.
+New tests reject wrong-year objects, forged/expired signers, duplicate signature fields, malicious redirects, printed signed-link transport errors, mutated retention receipt fields and misleading fresh timestamps on rechecks. Windows and Linux Product Core regressions passed at PR #53 head `6ad99fbceacf537a5e4eb400e42d9a6f4a3516b3`. The production catalog remains pinned to FY2026; a single FY2027 source file and any automated hash check still cannot certify complete original history or independently approve customer work.
+
+## Retention receipt idempotence and combined Windows check
+
+The pinned PR #53 source utility now accepts legitimate current, short-lived SAM.gov Signature V4 redirects to the exact original FY archive object, and suppresses transport-error traceback links to presigned secrets. Its immutable original-file receipt can be replayed with the SAME source bytes without rewriting the original observation timestamp; it refuses altered existing receipt fields, byte-format changes and duplicate keys.
+
+A prior expanded Windows composition detected a test-fixture restoration that had converted canonical LF receipt bytes to CRLF, making the integrity guard correctly reject the modified fixture. The fixture was corrected to restore original bytes byte-for-byte. Product Core Linux/Windows completed successfully at the new PR #53 head `6ad99fbceacf537a5e4eb400e42d9a6f4a3516b3`. Require the final all-PR composition run for that exact SHA before claiming full combined release QA PASS. This still does not authorize FY2027 source-catalog approval or a real customer release.
