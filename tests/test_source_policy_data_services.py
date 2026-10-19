@@ -11,6 +11,8 @@ from capturebrief_core.data_services import (
     ACTIVE_DOWNLOAD,
     ARCHIVE_DOWNLOAD,
     FamilyAmbiguous,
+    download_extract,
+    DataServicesError,
     issue_history_receipt_from_snapshots,
     scan_extract_bytes,
 )
@@ -22,6 +24,7 @@ from capturebrief_core.source_policy import (
     SourcePolicyError,
     classify_sam_url,
     require_approved_automation,
+    require_approved_extract_delivery,
 )
 
 NOW = "2026-09-21T13:00:00+00:00"
@@ -114,6 +117,60 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
         for secret in ("password-value", "do-not-print", "another-secret", "secret-id", "api_key"):
             self.assertNotIn(secret, error)
         self.assertIn("UNAPPROVED", error)
+
+    def test_official_sam_extract_redirect_is_exact_resource_bound_only(self):
+        active_s3 = ("https://s3.amazonaws.com/falextracts/Contract%20Opportunities/"
+                     "datagov/ContractOpportunitiesFullCSV.csv")
+        archive_s3 = ("https://s3.amazonaws.com/falextracts/Contract%20Opportunities/"
+                      "Archived%20Data/FY2027_archived_opportunities.csv")
+        self.assertEqual(require_approved_extract_delivery(ACTIVE_DOWNLOAD, ACTIVE_DOWNLOAD), "sam.gov")
+        self.assertEqual(require_approved_extract_delivery(ACTIVE_DOWNLOAD, active_s3), "s3.amazonaws.com")
+        self.assertEqual(require_approved_extract_delivery(ARCHIVE_DOWNLOAD.format(fy=2027), archive_s3),
+                         "s3.amazonaws.com")
+        self.assertEqual(classify_sam_url(active_s3), "UNAPPROVED",
+                         "S3 is a guarded redirect target, not a new direct collection surface")
+        for bad in (
+            "https://evil.example/redirect",
+            "https://s3.amazonaws.com/other-bucket/Contract%20Opportunities/"
+            "Archived%20Data/FY2027_archived_opportunities.csv",
+            archive_s3.replace("FY2027_", "FY2026_"),
+            archive_s3.replace("https://", "http://"),
+            archive_s3.replace("s3.amazonaws.com", "s3.amazonaws.com.evil.example"),
+            archive_s3 + "?api_key=leak-me",
+            archive_s3 + "#fragment",
+            archive_s3.replace("s3.amazonaws.com", "user:pw@s3.amazonaws.com"),
+            "https://s3.amazonaws.com:8443" + archive_s3.split("s3.amazonaws.com")[1],
+        ):
+            with self.subTest(bad=bad), self.assertRaises(SourcePolicyError) as result:
+                require_approved_extract_delivery(ARCHIVE_DOWNLOAD.format(fy=2027), bad)
+            self.assertNotIn("leak-me", str(result.exception))
+            self.assertNotIn("user:pw", str(result.exception))
+
+    def test_in_memory_download_accepts_only_explicit_sam_binding_and_bytes(self):
+        original = (HEADER + row("notice1", "SOL-123")).encode("utf-8")
+        source = ARCHIVE_DOWNLOAD.format(fy=2027)
+        official = ("https://s3.amazonaws.com/falextracts/Contract%20Opportunities/"
+                    "Archived%20Data/FY2027_archived_opportunities.csv")
+        result = download_extract(
+            source, opener=lambda req, timeout=60: FakeResponse(original, url=official),
+        )
+        self.assertEqual(result, original)
+        touched = []
+        def no_read_if_redirect_bad(req, timeout=60):
+            class Dangerous(FakeResponse):
+                def read(self, n=-1):
+                    touched.append(True)
+                    return super().read(n)
+            return Dangerous(original, url="https://evil.example/data?password=SECRET")
+        with self.assertRaises(SourcePolicyError):
+            download_extract(source, opener=no_read_if_redirect_bad)
+        self.assertEqual(touched, [], "Unapproved redirect bytes must not even be read")
+        class WrongLength(FakeResponse):
+            def __init__(self):
+                super().__init__(original, url=official)
+                self.headers = {"Content-Length": str(len(original) + 10)}
+        with self.assertRaises(DataServicesError):
+            download_extract(source, opener=lambda req, timeout=60: WrongLength())
 
     def test_automated_ui_manifest_is_disabled(self):
         with self.assertRaises(SourcePolicyError):
