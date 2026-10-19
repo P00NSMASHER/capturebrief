@@ -13,7 +13,7 @@ certification or a live 14-day watch.
 | Target | Pull request | Immutable candidate head |
 |---|---|---|
 | Customer website / gh-pages | #50 | 2f5af397fc5d46e6f919f11b0f6e3701df69c665 |
-| Pilot core, source-index gates, watch | #51 | 620842390d741bb5bcfa9bc1994b1bdfb650c884 |
+| Pilot core, source-index gates, watch | #51 | b302d137f9a562549384bbe7ea65bece2f4e8cb8 |
 | Private website-draft intake parser | #52 | c95fd399c3d3816ac02e628d86347ff96b263bdc |
 | Official SAM public CSV/S3 transport security | #53 | cf441e8d580af3a7d147d2884b7b3814fdf28e12 |
 | Unrelated PA x402 CI YAML parse fix | #54 | 567c648ac91f23423a808b85ec3c617a919dcc36 |
@@ -118,3 +118,40 @@ On the user-authorized Windows device, a clean local checkout of the verified PR
 **Observed acceptance on the exact final candidate:** local command exit 0; exact 1,607,260 original bytes; SHA-256 `7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce`; original read-only; independent receipt SHA matches; no stray temporary files; signed SAM source transport correctly bound to `falextracts.s3.amazonaws.com`. A subsequent direct execution also exited 0 with the ORIGINAL receipt bytes and observation timestamp unchanged. The earlier rejected temporary pair was deleted only after independently matching its hashes to the accepted original. No sensitive user file paths or temporary signed query strings are recorded publicly.
 
 **Remaining nontechnical holds:** The privately retained file is still only **ONE** FY archive original and is not a complete 34-year source index, and no independent human catalog approval has been granted. BitLocker/whole-disk encryption is **unverified** because read-only operating system queries returned access denied; encrypted off-device backup remains unverified. No actual customer charge, message, release, real delivered ZIP or live 14-day watch has been represented as complete. Protected independent GitHub code review is required before any main or gh-pages merge.
+
+## October 19: FY2027 unapproved source-index coverage audit (still NO RELEASE)
+
+PR #51 now includes an additional **read-only, candidate-only** diagnostic at
+`scripts/audit_fy2027_candidate.py`. It validates the exact previously
+recorded, unapproved 36-file SAM listing before checking an existing PRIVATE
+index against the **34 required observed FY1969/FY1970/FY1980/FY1981 and
+FY1998–FY2027 archives, plus one ACTIVE slot (35 total)**. Future-listed
+FY2029/30 are excluded; an invented FY2028 is rejected. Missing, stale,
+mismatched-size, unverified and SHA-mismatched slots are distinguished.
+
+Example for an authorized operator with an already existing private index:
+
+    python scripts/audit_fy2027_candidate.py --private-index PRIVATE_INDEX_PATH --verify-bytes
+
+The command does not create an index, import the separately retained FY2027
+candidate, fetch source bytes, certify original publisher authenticity,
+approve a catalog or release a customer. An old 2026-complete synthetic index
+is missing candidate-only FY1969, FY1981 and FY2027; this is a synthetic
+comparison, **not** a claim about the real private workstation's inventory.
+
+A newly updated PR #51 exact head `b302d137f9a562549384bbe7ea65bece2f4e8cb8`
+passed its direct Product Core Linux and Windows CI. The revised ephemeral
+all-PR composition passed [run #39316089037](https://github.com/P00NSMASHER/capturebrief/actions/runs/39316089037)
+at QA SHA `588d9c48d7b60175ec934ca01f0418dd226e5ab7`:
+**523 Linux tests, 126 Windows tests**, plus successful Chromium and WebKit
+browser → private fictional case → Stripe no-send/rejection checks. The QA
+workflow pins the new #51 commit. This section is a later documentation
+addition, so that cited run validates the code composition BEFORE this
+documentation-only receipt update; any subsequent exact-head CI is a
+separate evidence event.
+
+Despite this technical pass, FY2027 production catalog remains pinned to
+FY2026; the genuine PAAM source index is not yet audited; the 34-year original
+history is not complete or independently reviewed; machine encryption,
+encrypted off-device backup and independent reviewer approvals remain
+unproven. No real customer case, message, charge, release or deployment.
