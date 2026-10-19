@@ -1,5 +1,7 @@
 import io
 import unittest
+import traceback
+from urllib.error import URLError
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 from urllib.request import Request
@@ -233,6 +235,18 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
         # source slot's approval.
         with self.assertRaises(SourcePolicyError):
             require_approved_extract_delivery(start, self._fake_sam_presigned_archive(year=2026))
+
+    def test_signed_redirect_transport_failure_is_not_printable_in_traceback(self):
+        secret = "X-Amz-Signature=NEVER_PRINT_THIS"
+        def fail(req, timeout=60):
+            raise URLError("signed URL failed: "+secret)
+        try:
+            download_extract(ARCHIVE_DOWNLOAD.format(fy=2027), opener=fail)
+        except DataServicesError as exc:
+            self.assertEqual(str(exc), "Data Services extract transport failure")
+            self.assertNotIn(secret, traceback.format_exc())
+        else:
+            self.fail("Signed URL transport exception must be controlled")
 
     def test_in_memory_download_accepts_only_explicit_sam_binding_and_bytes(self):
         original = (HEADER + row("notice1", "SOL-123")).encode("utf-8")
