@@ -135,7 +135,9 @@ class PilotWatchReceiptTests(unittest.TestCase):
                 checked_at=NOW + timedelta(minutes=10), receipt_dir=folder,
             )
             changed = copy.deepcopy(self.case)
-            changed["packet"]["current_action_id"] = "different"
+            # This is a fingerprinted dependency, unlike changing an
+            # unrelated field that the watch intentionally ignores.
+            changed["packet"]["artifacts"][0]["sha256"] = "d" * 64
             with self.assertRaises(ValueError):
                 evaluate_and_retain(
                     self.baseline, changed,
