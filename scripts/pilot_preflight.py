@@ -34,11 +34,15 @@ def official_opportunity(value: Any) -> bool:
         return False
     try:
         u = urlsplit(value)
+        return (
+            u.scheme == "https" and (u.hostname or "").lower() == "sam.gov"
+            and u.port in (None, 443)
+            and u.username is None and u.password is None
+            and not u.query and not u.fragment
+            and OFFICIAL_NOTICE.fullmatch(u.path) is not None
+        )
     except ValueError:
         return False
-    return (u.scheme == "https" and (u.hostname or "").lower() == "sam.gov"
-            and not u.username and not u.password and not u.fragment
-            and OFFICIAL_NOTICE.fullmatch(u.path) is not None)
 
 
 def _read_object(path: str | None) -> dict[str, Any] | None:
