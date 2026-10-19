@@ -101,6 +101,30 @@ software QA into first-customer validation or change any customer terms.
    addressed receipt outside the public repo. Exit 0 = fresh proven
    unchanged; 3 = human review required/expired/stale/change; 2 =
    invalid input or another controlled failure.
+
+   For the FIRST scheduled check after delivery:
+
+       python scripts/run_watch_receipt.py /private/baseline.json \
+         /private/fresh-case.json --receipt-dir /private/watch-receipts
+
+   For EVERY SUBSEQUENT scheduled check, provide the original private JSON
+   receipt from the immediately preceding check, including unsuccessful
+   checks:
+
+       python scripts/run_watch_receipt.py /private/baseline.json \
+         /private/next-fresh-case.json --receipt-dir /private/watch-receipts \
+         --previous-receipt /private/watch-receipts/watch-PRIOR-SHA.json
+
+   The tool rejects a later check in a directory containing another
+   receipt for the same engagement unless a previous receipt is provided.
+   The comparator validates that the prior receipt belongs to this case,
+   has an untampered digest and earlier timestamp, then requires every
+   agreed monitored source to have an observation newer than the LAST
+   check, not merely newer than delivery. A previous REVIEW_REQUIRED
+   result cannot silently become clean without human disposition.
+   Only exact same-check replay is idempotent. Run the source-refresh
+   step BEFORE the comparison. Do not reuse old source bytes/timestamps.
+   The latest on-demand SAM source cycle also supports --previous-receipt.
 5. When status changes, reviewer assesses affected assumptions; the
    original buyer decision must not be silently changed. Record changed,
    missing, stale, inaccessible and expired source results distinctly.
