@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import re
-from urllib.parse import urlparse, urlsplit
+from datetime import datetime, timedelta, timezone
+from urllib.parse import parse_qsl, urlparse, urlsplit
 from urllib.request import HTTPRedirectHandler, build_opener
 
 
@@ -81,6 +82,62 @@ def require_approved_automation(url: str, *, expected: str | None = None) -> str
     return cls
 
 
+# The live first-party SAM.gov Data Services endpoint was observed to
+# return HTTP 303 to an Amazon S3 Signature V4 *presigned* object, rather than
+# the earlier unsigned public listing URL. Scope this to the exact official
+# bucket, exact source-relative file path, known temporary signing fields,
+# S3 request scope and a currently valid short-lived signature. This is
+# transport verification only; publisher/authenticity and catalog approval
+# remain separate immutable source-review requirements.
+_PRESIGNED_FIELDS = frozenset({
+    "X-Amz-Algorithm", "X-Amz-Date", "X-Amz-SignedHeaders",
+    "X-Amz-Credential", "X-Amz-Expires", "X-Amz-Signature",
+})
+
+
+def _authorized_falextracts_presigned_redirect(final, *, source_suffix: str) -> bool:
+    if (final.hostname or "").lower() != "falextracts.s3.amazonaws.com":
+        return False
+    if final.path != "/" + source_suffix:
+        return False
+    try:
+        fields = parse_qsl(final.query, keep_blank_values=True,
+                           strict_parsing=True, max_num_fields=8)
+        values = dict(fields)
+        if len(fields) != 6 or set(values) != _PRESIGNED_FIELDS:
+            return False
+        if (values["X-Amz-Algorithm"] != "AWS4-HMAC-SHA256" or
+                values["X-Amz-SignedHeaders"] != "host" or
+                re.fullmatch(r"[0-9a-f]{64}", values["X-Amz-Signature"]) is None):
+            return False
+        raw_date = values["X-Amz-Date"]
+        if not re.fullmatch(r"[0-9]{8}T[0-9]{6}Z", raw_date):
+            return False
+        signed_at = datetime.strptime(raw_date, "%Y%m%dT%H%M%SZ").replace(
+            tzinfo=timezone.utc)
+        raw_expires = values["X-Amz-Expires"]
+        if not raw_expires.isdecimal() or len(raw_expires) > 6:
+            return False
+        lifespan = int(raw_expires)
+        if not 1 <= lifespan <= 3600:
+            return False
+        credentials = values["X-Amz-Credential"].split("/")
+        if (len(credentials) != 5 or
+                re.fullmatch(r"[A-Z0-9]{16,64}", credentials[0]) is None or
+                credentials[1] != raw_date[:8] or
+                re.fullmatch(r"[a-z0-9-]{4,24}", credentials[2]) is None or
+                credentials[3:] != ["s3", "aws4_request"]):
+            return False
+        now = datetime.now(timezone.utc)
+        if signed_at > now + timedelta(minutes=5):
+            return False
+        if signed_at + timedelta(seconds=lifespan, minutes=5) < now:
+            return False
+        return True
+    except (KeyError, TypeError, ValueError, OverflowError):
+        return False
+
+
 # This is intentionally NOT a blanket allowlist for S3 or SAM's undocumented
 # web UI. Official SAM.gov Data Services may redirect a documented public
 # extract URL to the exact falextracts S3 object publicly listed by SAM.gov.
@@ -121,6 +178,8 @@ def require_approved_extract_delivery(entrypoint: str, delivered_url: str) -> st
             and not final.query
         ):
             return "s3.amazonaws.com"
+        if _authorized_falextracts_presigned_redirect(final, source_suffix=suffix):
+            return "falextracts.s3.amazonaws.com"
     except (TypeError, ValueError) as exc:
         raise SourcePolicyError("unapproved extract transport contract") from exc
     raise SourcePolicyError("unapproved extract redirect destination")
