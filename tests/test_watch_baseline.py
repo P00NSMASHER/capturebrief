@@ -67,6 +67,57 @@ class WatchBaselineTests(unittest.TestCase):
         self.assertFalse(baseline["contains_source_text"])
 
 
+    def test_second_check_needs_each_source_newer_than_previous_not_just_delivery(self):
+        from datetime import timedelta
+        case = ready_case()
+        baseline = build_watch_baseline(case, now=NOW)
+        day_one = NOW + timedelta(minutes=20)
+        day_two = NOW + timedelta(minutes=40)
+        once = copy.deepcopy(case)
+        for source in once["sources"]:
+            source["observed_at"] = day_one.isoformat()
+        first = compare_watch_baseline(baseline, once, now=day_one)
+        self.assertEqual(first["source_checks"]["trace-source"]["observed_at"],
+                         day_one.isoformat())
+        # A second comparison with only the delivered baseline could
+        # mistakenly treat yesterday's timestamps as fresh.
+        repeated = compare_watch_baseline(
+            baseline, once, now=day_two, previous_observation=first,
+        )
+        self.assertIn("WATCH_SOURCE_NOT_REFRESHED_SINCE_PREVIOUS_CHECK",
+                      {event["type"] for event in repeated["events"]})
+        self.assertFalse(repeated["fresh_observation_evidenced"])
+        self.assertTrue(repeated["requires_human_review"])
+        self.assertEqual(repeated["previous_observation_sha256"],
+                         first["observation_sha256"])
+        self.assertFalse(repeated["automatic_decision_change"])
+
+    def test_previous_watch_receipt_must_be_untampered_and_chronologically_before(self):
+        from datetime import timedelta
+        case = ready_case()
+        baseline = build_watch_baseline(case, now=NOW)
+        newer = NOW + timedelta(minutes=15)
+        first = compare_watch_baseline(baseline, case, now=newer)
+        forged = copy.deepcopy(first)
+        forged["source_checks"]["trace-source"]["observed_at"] = (
+            newer + timedelta(days=1)).isoformat()
+        with self.assertRaisesRegex(ValueError, "hash mismatch"):
+            compare_watch_baseline(baseline, case,
+                                   now=newer + timedelta(minutes=2),
+                                   previous_observation=forged)
+        with self.assertRaisesRegex(ValueError, "not earlier"):
+            compare_watch_baseline(baseline, case, now=newer,
+                                   previous_observation=first)
+        wrong = copy.deepcopy(first)
+        wrong["baseline_sha256"] = "0"*64
+        wrong["observation_sha256"] = digest(canonical({
+            k:v for k,v in wrong.items() if k!="observation_sha256"
+        }))
+        with self.assertRaisesRegex(ValueError, "different pursuit/baseline"):
+            compare_watch_baseline(baseline, case,
+                                   now=newer + timedelta(minutes=2),
+                                   previous_observation=wrong)
+
     def test_one_fresh_source_does_not_clear_other_stale_sources(self):
         from datetime import timedelta
         case=ready_case()
