@@ -93,7 +93,7 @@ class FY2027UnapprovedCandidateCoverageTests(unittest.TestCase):
             self.assertRegex(result["candidate_observation_sha256"], r"^[0-9a-f]{64}$")
             self.assertEqual(before, db.read_bytes())
 
-            paths[2027].write_bytes(b"tampered but equal length X")
+            paths[2027].write_bytes(b"X" * len(paths[2027].read_bytes()))
             rejected = inspect_unapproved_fy2027_candidate_index(
                 db, now=NOW, verify_bytes=True,
             )
