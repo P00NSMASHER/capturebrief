@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlencode
 
 from capturebrief_core.archive_catalog import (
     ARCHIVE_CATALOG_CURRENT_THROUGH_FY,
@@ -98,6 +99,37 @@ class Fy2027PrivateCandidateTests(unittest.TestCase):
             )
             self.assertEqual(result, again)
             self.assertEqual(len(list(root.glob("FY2027-*.csv"))), 1)
+
+    def test_current_sam_signed_redirect_original_retained_without_secret_query(self):
+        with tempfile.TemporaryDirectory() as td:
+            date = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+            params = urlencode({
+                "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+                "X-Amz-Date": date,
+                "X-Amz-SignedHeaders": "host",
+                "X-Amz-Credential": "A"*20 + "/" + date[:8] +
+                                    "/us-east-1/s3/aws4_request",
+                "X-Amz-Expires": "300",
+                "X-Amz-Signature": "b"*64,
+            })
+            signed = (
+                "https://falextracts.s3.amazonaws.com/Contract%20Opportunities/"
+                "Archived%20Data/FY2027_archived_opportunities.csv?" + params
+            )
+            result = retain_exact_fy2027(
+                Path(td) / "signed-original",
+                opener=lambda req, timeout=120: FakeResponse(url=signed),
+                expected_sha256=FAKE_SHA, expected_bytes=len(FAKE_CSV),
+                observed_at=FIXED,
+            )
+            receipt = json.loads(Path(result["receipt_file"]).read_text(encoding="utf-8"))
+            self.assertEqual(receipt["official_delivery_host"],
+                             "falextracts.s3.amazonaws.com")
+            self.assertEqual(receipt["downloaded_sha256"], FAKE_SHA)
+            self.assertFalse(receipt["human_source_review_complete"])
+            self.assertNotIn("X-Amz-Signature", str(receipt))
+            self.assertNotIn("b"*64, str(receipt))
+            self.assertEqual(Path(result["original_file"]).read_bytes(), FAKE_CSV)
 
     def test_changed_source_hash_does_not_publish_candidate_or_receipt(self):
         with tempfile.TemporaryDirectory() as td:
