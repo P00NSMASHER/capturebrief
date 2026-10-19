@@ -117,14 +117,23 @@ software QA into first-customer validation or change any customer terms.
 
    The tool rejects a later check in a directory containing another
    receipt for the same engagement unless a previous receipt is provided.
-   The comparator validates that the prior receipt belongs to this case,
-   has an untampered digest and earlier timestamp, then requires every
-   agreed monitored source to have an observation newer than the LAST
-   check, not merely newer than delivery. A previous REVIEW_REQUIRED
-   result cannot silently become clean without human disposition.
-   Only exact same-check replay is idempotent. Run the source-refresh
-   step BEFORE the comparison. Do not reuse old source bytes/timestamps.
-   The latest on-demand SAM source cycle also supports --previous-receipt.
+   Before any new receipt is recorded, it verifies that the entire saved
+   chain is present and has intact content-addressed SHA-256 digests. A
+   provided predecessor must match the LATEST retained observation exactly,
+   not just an older signed receipt. Deleted/intervening receipts, same-time
+   forks and mismatched chains fail closed. An engagement-wide lock
+   serializes source-comparison and receipt publication to prevent
+   concurrent scheduled retries from making divergent valid chains.
+   The comparator requires every agreed monitored source to have a new
+   observation since the LAST check, not merely newer than delivery.
+   A previous REVIEW_REQUIRED result cannot silently become clean without
+   human disposition. Only an exact same-time replay is idempotent.
+   Watch receipts must remain in one dedicated private directory; do not
+   delete, edit or move them during the engagement. Retain backups of the
+   original files as required by the data-retention policy.
+   Run the source-refresh step BEFORE the comparison. Do not reuse old
+   source bytes/timestamps. The on-demand SAM source cycle also
+   supports --previous-receipt.
 5. When status changes, reviewer assesses affected assumptions; the
    original buyer decision must not be silently changed. Record changed,
    missing, stale, inaccessible and expired source results distinctly.
