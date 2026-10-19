@@ -14,7 +14,7 @@
 ## Independently read back from Stripe sandbox API
 
 1. Created a Session with livemode=false, status=open and payment_status=unpaid.
-2. Browser verified Stripe TEST MODE and completed one fake card payment. Browser followed the configured success redirect. The destination web preview encountered ERR_TUNNEL_CONNECTION_FAILED; this did not invalidate the Stripe payment result.
+2. Browser verified Stripe TEST MODE and completed one fake card payment. Browser followed the configured success redirect. The destination web preview encountered ERR_TUNNEL_CONNECTION_FAILED; this did not invalidate the Stripe payment result. A separate read-only Browser Use probe reproduced the SAME network tunnel failure on unrelated https://example.com/ and https://github.com/; no HTTP response was obtained from ANY of those sites. This points to the Browser Use transport rather than proving CaptureBrief production downtime. Production GitHub Pages latest inspected deployment succeeded, but browser-level acceptance of the success page remains unverified.
 3. Read Checkout Session directly from the same CaptureBrief sandbox account: status=complete, payment_status=paid, amount_total=14900, currency=usd, payment_intent=pi_3US8gqDpIBzr6NyS212nSGoe.
 4. Independently retrieved PaymentIntent: status=succeeded, amount=14900, amount_received=14900, latest_charge=ch_3US8gqDpIBzr6NyS2GN82u08.
 5. Executed one full sandbox refund: re_3US8gqDpIBzr6NyS22rFtlzi, status=succeeded, amount=14900, currency=usd.
