@@ -92,7 +92,11 @@ def retain_exact_fy2027(
         if fetched.get("source_url") != SOURCE_URL:
             raise ValueError("Downloaded source is not the approved public SAM entrypoint")
         # Host is transport evidence, not independent publisher approval.
-        if fetched.get("final_delivery_host") not in {"sam.gov", "s3.amazonaws.com"}:
+        if fetched.get("final_delivery_host") not in {
+            "sam.gov", "s3.amazonaws.com", "falextracts.s3.amazonaws.com",
+        }:
+            # This is the final constrained transport host returned by the
+            # source-policy validator, NEVER a blanket acceptance of S3.
             raise ValueError("Downloaded source did not use approved first-party transport")
         final_path = root / f"FY2027-{digest}.csv"
         retention = ensure_exact_file(
