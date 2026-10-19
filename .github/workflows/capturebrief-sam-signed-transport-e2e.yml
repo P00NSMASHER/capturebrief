@@ -1,0 +1,51 @@
+name: CaptureBrief FY2027 official signed transport E2E (no publish)
+
+on:
+  push:
+    branches:
+      - fix/source-policy-secret-redaction-20261018
+    paths:
+      - ".github/workflows/capturebrief-sam-signed-transport-e2e.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  live-public-fy2027-transport:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Obtain exact public source through guarded real SAM route and verify hash
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/retain_fy2027_candidate.py --private-dir "$RUNNER_TEMP/capturebrief-test-retention"
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          root = Path(os.environ["RUNNER_TEMP"]) / "capturebrief-test-retention"
+          expected = "7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce"
+          original = root / f"FY2027-{expected}.csv"
+          receipts = list(root.glob("*.receipt.json"))
+          assert original.is_file() and original.stat().st_size == 1607260
+          assert hashlib.sha256(original.read_bytes()).hexdigest() == expected
+          assert len(receipts) == 1
+          receipt = json.loads(receipts[0].read_text(encoding="utf-8"))
+          assert receipt["downloaded_sha256"] == expected
+          assert receipt["official_delivery_host"] in {"falextracts.s3.amazonaws.com", "s3.amazonaws.com"}
+          assert receipt["catalog_approved"] is False
+          assert receipt["human_source_review_complete"] is False
+          assert receipt["case_release_authorized"] is False
+          assert receipt["external_send_authorized"] is False
+          print(json.dumps({"actual_sam_route": "OFFICIAL_SIGNED_TRANSPORT_ACCEPTED",
+              "original_sha256": expected, "original_bytes": 1607260,
+              "source_transport_host": receipt["official_delivery_host"],
+              "original_retained_only_ephemerally": True, "customer_release_authorized": False}))
+          PY
+          # No artifact upload, no customer content, no catalog update.
