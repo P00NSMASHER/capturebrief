@@ -138,11 +138,23 @@ def inspect(
     else:
         url = (case.get("intake") or {}).get("public_opportunity")
         if official_opportunity(url):
-            result("real_case", "PUBLIC_LINK_FORMAT_VERIFIED",
-                   "Official public notice URL has the required structure; content and currentness are not thereby verified")
+            # Confirm that the specific buyer-selected notice, including an
+            # older amendment URL, belongs to the claimed action family.
+            # A SAM-shaped URL alone must not attest a different pursuit.
+            notice_id = urlsplit(url).path.split("/")[2].lower()
+            history_ids = {
+                str(action).lower() for action in
+                ((case.get("packet") or {}).get("history_action_ids") or [])
+            }
+            if notice_id in history_ids:
+                result("real_case", "PUBLIC_NOTICE_BOUND_TO_HISTORY",
+                       "The buyer notice ID belongs to the claimed case history; publisher authenticity and version currentness remain separate checks")
+            else:
+                result("real_case", "BLOCKED_INTAKE_NOTICE_NOT_IN_HISTORY",
+                       "The buyer's notice is not part of this case's independently reviewed action set")
         else:
             result("real_case", "BLOCKED_NO_OFFICIAL_PILOT_NOTICE",
-                   "Case needs a genuine first-party public SAM.gov notice reference")
+                   "Case needs a canonical first-party public SAM.gov notice reference")
         try:
             readiness = evaluate_delivery_readiness(case, now=now)
             if readiness.eligible:
@@ -212,7 +224,7 @@ def inspect(
            "Any code or website changes require passing exact-head QA and approved publication")
 
     technical = ("catalog", "source_index", "real_case", "release", "delivery", "watch")
-    passes = {"CATALOG_YEAR_COVERED", "INDEX_LOCAL_HASHES_MATCH", "PUBLIC_LINK_FORMAT_VERIFIED",
+    passes = {"CATALOG_YEAR_COVERED", "INDEX_LOCAL_HASHES_MATCH", "PUBLIC_NOTICE_BOUND_TO_HISTORY",
               "CORE_EVIDENCE_ELIGIBLE", "BUNDLE_BYTES_VERIFIED",
               "WATCH_FRESH_OBSERVATION_VERIFIED"}
     # No mere presence of a future/fictional case, copied email or unverified
