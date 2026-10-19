@@ -1,6 +1,7 @@
 """Pilot release must fail closed on missing real evidence and unsigned claims."""
 import json
 import subprocess
+import tempfile
 import sys
 import unittest
 from datetime import datetime, timezone
@@ -8,6 +9,7 @@ from pathlib import Path
 
 from capturebrief_core.intake import build_case_from_intake
 from scripts.pilot_preflight import inspect, official_opportunity
+from tests.test_source_coverage_audit import make_index
 
 NOW = datetime(2026, 10, 18, 12, 0, tzinfo=timezone.utc)
 OFFICIAL = "https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view"
@@ -23,6 +25,9 @@ class PilotPreflightTests(unittest.TestCase):
             "https://sam.gov/opp/example/view",
             "https://sam.gov/private/buyer-brief",
             "https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view#forged",
+            "https://sam.gov:444/opp/c20a138049b94add92f0f32a41856585/view",
+            "https://sam.gov:badport/opp/c20a138049b94add92f0f32a41856585/view",
+            "https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view?api_key=SECRET",
             None,
         ):
             with self.subTest(value=value):
@@ -82,7 +87,8 @@ class PilotPreflightTests(unittest.TestCase):
         pre_rollover = datetime(2026, 9, 21, 12, 0, tzinfo=timezone.utc)
         out = inspect(now=pre_rollover, stage="admission")
         self.assertEqual(out["stage"], "admission")
-        self.assertEqual(out["status"], "PILOT_ADMISSION_REVIEW_REQUIRED")
+        self.assertEqual(out["status"], "PILOT_ADMISSION_BLOCKED")
+        self.assertEqual(out["gates"]["source_index"]["status"], "BLOCKED_NO_PRIVATE_INDEX")
         self.assertEqual(out["gates"]["real_case"]["status"], "POST_ADMISSION_CUSTOMER_EVIDENCE")
         self.assertEqual(out["gates"]["release"]["status"], "POST_ADMISSION_DELIVERY_REVIEW")
         self.assertEqual(out["gates"]["delivery"]["status"], "POST_ADMISSION_CUSTOMER_BUNDLE")
@@ -90,15 +96,65 @@ class PilotPreflightTests(unittest.TestCase):
         self.assertFalse(out["technical_preflight_passed"])
         self.assertIs(out["approved_to_accept_payment_or_send_customer_material"], False)
         self.assertEqual(set(out["pre_pilot_gates"]),
-                         {"catalog", "intake", "payment", "operator", "production"})
+                         {"catalog", "source_index", "intake", "payment", "operator", "production"})
 
     def test_current_admission_blocks_stale_fy2027_without_circular_customer_requirements(self):
         out = inspect(now=NOW, stage="admission")
         self.assertEqual(out["status"], "PILOT_ADMISSION_BLOCKED")
         self.assertEqual(out["gates"]["catalog"]["status"], "BLOCKED_STALE_CATALOG")
+        self.assertEqual(out["gates"]["source_index"]["status"], "BLOCKED_CATALOG_STALE")
         self.assertEqual(out["gates"]["delivery"]["status"], "POST_ADMISSION_CUSTOMER_BUNDLE")
         self.assertFalse(out["technical_preflight_passed"])
         self.assertFalse(out["approved_to_accept_payment_or_send_customer_material"])
+
+    def test_private_full_index_local_hashes_allow_only_review_not_launch(self):
+        # The indexed bytes below are synthetic. Local hash consistency is not
+        # authentic publisher proof or an authorization to take payment.
+        historical = datetime(2026, 9, 21, 15, 30, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as td:
+            index, _ = make_index(Path(td))
+            out = inspect(
+                now=historical, stage="admission",
+                history_index=str(index), verify_source_bytes=True,
+            )
+            self.assertEqual(out["status"], "PILOT_ADMISSION_REVIEW_REQUIRED")
+            self.assertEqual(out["gates"]["source_index"]["status"],
+                             "INDEX_LOCAL_HASHES_MATCH")
+            self.assertTrue(out["gates"]["source_index"]["coverage"]["file_hashes_checked"])
+            self.assertFalse(out["gates"]["source_index"]["coverage"][
+                "publisher_authenticity_independently_established"])
+            self.assertFalse(out["technical_preflight_passed"])
+            self.assertFalse(out["approved_to_accept_payment_or_send_customer_material"])
+
+    def test_fresh_index_metadata_alone_cannot_pass_admission(self):
+        historical = datetime(2026, 9, 21, 15, 30, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as td:
+            index, _ = make_index(Path(td))
+            out = inspect(now=historical, stage="admission", history_index=str(index))
+            self.assertEqual(out["status"], "PILOT_ADMISSION_BLOCKED")
+            self.assertEqual(out["gates"]["source_index"]["status"],
+                             "BLOCKED_INDEX_BYTES_UNCHECKED")
+
+    def test_unreadable_index_fails_closed_without_creating_file(self):
+        historical = datetime(2026, 9, 21, 15, 30, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "never-created.sqlite"
+            out = inspect(now=historical, stage="admission", history_index=str(path),
+                          verify_source_bytes=True)
+            self.assertEqual(out["status"], "PILOT_ADMISSION_BLOCKED")
+            self.assertEqual(out["gates"]["source_index"]["status"],
+                             "BLOCKED_UNREADABLE_INDEX")
+            self.assertFalse(path.exists())
+
+    def test_FY2027_stays_blocked_even_with_fully_hashed_old_index(self):
+        with tempfile.TemporaryDirectory() as td:
+            index, _ = make_index(Path(td))
+            out = inspect(now=NOW, stage="admission", history_index=str(index),
+                          verify_source_bytes=True)
+            self.assertEqual(out["gates"]["source_index"]["status"],
+                             "BLOCKED_CATALOG_STALE")
+            self.assertEqual(out["status"], "PILOT_ADMISSION_BLOCKED")
+            self.assertFalse(out["approved_to_accept_payment_or_send_customer_material"])
 
     def test_completion_retains_strict_bundle_and_watch_requirements(self):
         historical = datetime(2026, 9, 21, 12, 0, tzinfo=timezone.utc)
