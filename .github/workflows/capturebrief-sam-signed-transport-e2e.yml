@@ -6,6 +6,9 @@ on:
       - fix/source-policy-secret-redaction-20261018
     paths:
       - ".github/workflows/capturebrief-sam-signed-transport-e2e.yml"
+      - "scripts/retain_fy2027_candidate.py"
+      - "capturebrief_core/source_policy.py"
+      - "tests/test_retain_fy2027_candidate.py"
 
 permissions:
   contents: read
