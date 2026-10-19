@@ -15,7 +15,7 @@ certification or a live 14-day watch.
 | Customer website / gh-pages | #50 | 2f5af397fc5d46e6f919f11b0f6e3701df69c665 |
 | Pilot core, source-index gates, watch | #51 | 620842390d741bb5bcfa9bc1994b1bdfb650c884 |
 | Private website-draft intake parser | #52 | c95fd399c3d3816ac02e628d86347ff96b263bdc |
-| Official SAM public CSV/S3 transport security | #53 | 414d1d667257d02420b346df439b0d695cec58a6 |
+| Official SAM public CSV/S3 transport security | #53 | 1979f4486a50d81003313414e6ff7745314568a5 |
 | Unrelated PA x402 CI YAML parse fix | #54 | 567c648ac91f23423a808b85ec3c617a919dcc36 |
 | Live Stripe three-record reconciliation | #55 | bbbac444705b0a95ea4af12430c287a984b427ee |
 
@@ -91,3 +91,7 @@ dispatch after approval. It runs no periodic schedule. To repeat safely,
 verify branch heads are unchanged or update the pinned SHAs, rerun the
 synthetic composition, require Linux/Windows and browser PASS, then
 request a separate independent release review.
+
+## FY2027 privately retainable original candidate
+
+PR #53 adds a SHA-pinned operator utility (scripts/retain_fy2027_candidate.py) for an authorized private machine, using only the official public SAM Data Services FY2027 download entrypoint and its exact guarded S3 object handoff. It checks the full 1,607,260 bytes against SHA-256 7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce **before** retaining immutable original bytes and an unapproved provenance receipt outside the public repository. Its tests are entirely fictional/offline. The command has NOT yet been executed on the owner's private production machine and does not change the approved catalog/index. The final QA workflow adds its tests to Windows and the full Linux corpus.
