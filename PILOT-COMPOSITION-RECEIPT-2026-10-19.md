@@ -15,7 +15,7 @@ certification or a live 14-day watch.
 | Customer website / gh-pages | #50 | 2f5af397fc5d46e6f919f11b0f6e3701df69c665 |
 | Pilot core, source-index gates, watch | #51 | 620842390d741bb5bcfa9bc1994b1bdfb650c884 |
 | Private website-draft intake parser | #52 | c95fd399c3d3816ac02e628d86347ff96b263bdc |
-| Official SAM public CSV/S3 transport security | #53 | 6ad99fbceacf537a5e4eb400e42d9a6f4a3516b3 |
+| Official SAM public CSV/S3 transport security | #53 | cf441e8d580af3a7d147d2884b7b3814fdf28e12 |
 | Unrelated PA x402 CI YAML parse fix | #54 | 567c648ac91f23423a808b85ec3c617a919dcc36 |
 | Live Stripe three-record reconciliation | #55 | bbbac444705b0a95ea4af12430c287a984b427ee |
 
@@ -94,7 +94,7 @@ request a separate independent release review.
 
 ## FY2027 privately retainable original candidate
 
-PR #53 adds a SHA-pinned operator utility (scripts/retain_fy2027_candidate.py) for an authorized private machine, using only the official public SAM Data Services FY2027 download entrypoint and its exact guarded S3 object handoff. It checks the full 1,607,260 bytes against SHA-256 7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce **before** retaining immutable original bytes and an unapproved provenance receipt outside the public repository. Its tests are entirely fictional/offline. The command has NOT yet been executed on the owner's private production machine and does not change the approved catalog/index. The final QA workflow adds its tests to Windows and the full Linux corpus.
+PR #53 adds a SHA-pinned operator utility (scripts/retain_fy2027_candidate.py) for an authorized private machine, using only the official public SAM Data Services FY2027 download entrypoint and its exact guarded S3 object handoff. It checks the full 1,607,260 bytes against SHA-256 7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce **before** retaining immutable original bytes and an unapproved provenance receipt outside the public repository. Its tests are entirely fictional/offline. The earlier code was first exercised on the user's authorized workstation, and the FINAL tested PR #53 command has now run successfully in a separate local acceptance directory and does not change the approved catalog/index. The final QA workflow adds its tests to Windows and the full Linux corpus.
 
 ## Real SAM temporary signed transport verification
 
@@ -109,3 +109,12 @@ New tests reject wrong-year objects, forged/expired signers, duplicate signature
 The pinned PR #53 source utility now accepts legitimate current, short-lived SAM.gov Signature V4 redirects to the exact original FY archive object, and suppresses transport-error traceback links to presigned secrets. Its immutable original-file receipt can be replayed with the SAME source bytes without rewriting the original observation timestamp; it refuses altered existing receipt fields, byte-format changes and duplicate keys.
 
 A prior expanded Windows composition detected a test-fixture restoration that had converted canonical LF receipt bytes to CRLF, making the integrity guard correctly reject the modified fixture. The fixture was corrected to restore original bytes byte-for-byte. Product Core Linux/Windows completed successfully at the new PR #53 head `6ad99fbceacf537a5e4eb400e42d9a6f4a3516b3`. Require the final all-PR composition run for that exact SHA before claiming full combined release QA PASS. This still does not authorize FY2027 source-catalog approval or a real customer release.
+
+
+## October 19 final direct Windows acceptance and hard-link correction
+
+On the user-authorized Windows device, a clean local checkout of the verified PR #53 head `cf441e8d580af3a7d147d2884b7b3814fdf28e12` ran `scripts/retain_fy2027_candidate.py` with a new private per-user retention directory. The initial older implementation uncovered a Windows-only source-publication defect: a read-only hard-linked temporary file could not be deleted, leaving an unreceipted duplicate even though its digest matched. The fix in `capturebrief_core/atomic_io.py` now defers the Windows read-only attribute until AFTER removing its hard link, while preserving SHA-256 checks and the read-only final original. New `tests.test_atomic_io` coverage checks Windows source preservation, no lingering tmp files, read-only status and repeat idempotence.
+
+**Observed acceptance on the exact final candidate:** local command exit 0; exact 1,607,260 original bytes; SHA-256 `7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce`; original read-only; independent receipt SHA matches; no stray temporary files; signed SAM source transport correctly bound to `falextracts.s3.amazonaws.com`. A subsequent direct execution also exited 0 with the ORIGINAL receipt bytes and observation timestamp unchanged. The earlier rejected temporary pair was deleted only after independently matching its hashes to the accepted original. No sensitive user file paths or temporary signed query strings are recorded publicly.
+
+**Remaining nontechnical holds:** The privately retained file is still only **ONE** FY archive original and is not a complete 34-year source index, and no independent human catalog approval has been granted. BitLocker/whole-disk encryption is **unverified** because read-only operating system queries returned access denied; encrypted off-device backup remains unverified. No actual customer charge, message, release, real delivered ZIP or live 14-day watch has been represented as complete. Protected independent GitHub code review is required before any main or gh-pages merge.
