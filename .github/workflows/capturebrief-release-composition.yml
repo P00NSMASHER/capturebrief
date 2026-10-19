@@ -1,0 +1,126 @@
+name: CaptureBrief proposed release composition (NO DEPLOY)
+
+on:
+  push:
+    branches:
+      - qa/pilot-composition-acceptance-20261019
+    paths:
+      - ".github/workflows/capturebrief-release-composition.yml"
+
+# Ephemeral synthetic merges only. Never merges/deploys to main or gh-pages.
+permissions:
+  contents: read
+
+jobs:
+  compose-and-verify:
+    name: Composition / ${{ matrix.mode }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            mode: linux
+          - runner: windows-latest
+            mode: windows
+    defaults:
+      run:
+        shell: bash
+    env:
+      PYTHONPATH: "."
+      PYTHONDONTWRITEBYTECODE: "1"
+      SITE_CHECKOUT: "site-candidate"
+      PAYMENT_CHECKOUT: "."
+    steps:
+      - name: Checkout composition branch without write credentials
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Combine pinned candidate heads only on an ephemeral local branch
+        run: |
+          set -euo pipefail
+          git config user.email "capturebrief-ci@example.invalid"
+          git config user.name "CaptureBrief CI synthetic merge"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git switch -c capturebrief-synthetic-release
+          while IFS=: read -r source_branch expected; do
+            [[ -n "$source_branch" ]] || continue
+            git fetch --no-tags origin "refs/heads/$source_branch"
+            actual="$(git rev-parse FETCH_HEAD)"
+            if [[ "$actual" != "$expected" ]]; then
+              echo "BLOCKED: branch moved from pinned SHA; refuse stale composition."
+              exit 3
+            fi
+            git merge --no-ff --no-edit "$expected"
+          done <<'PINNED'
+          pilot/acceptance-evidence-gates-20261018:6ff19a6abacc6911a22e594346b405ee5fd7dc01
+          feat/pilot-email-intake-bridge-20261018:c95fd399c3d3816ac02e628d86347ff96b263bdc
+          fix/source-policy-secret-redaction-20261018:414d1d667257d02420b346df439b0d695cec58a6
+          feat/pilot-stripe-payment-reconciliation-20261019:bbbac444705b0a95ea4af12430c287a984b427ee
+          fix/x402-workflow-typed-env-20261018:567c648ac91f23423a808b85ec3c617a919dcc36
+          PINNED
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo "All five exact PR heads composed locally; no GitHub branch changes."
+          git log -6 --format="%h %s"
+      - name: Checkout immutable website candidate into its own directory
+        uses: actions/checkout@v4
+        with:
+          repository: P00NSMASHER/capturebrief
+          ref: 2f5af397fc5d46e6f919f11b0f6e3701df69c665
+          path: site-candidate
+          persist-credentials: false
+      - name: Configure Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check website pin and compile combined Python code
+        run: |
+          set -euo pipefail
+          test "$(git -C site-candidate rev-parse HEAD)" = "2f5af397fc5d46e6f919f11b0f6e3701df69c665"
+          python -m compileall -q capturebrief_core scripts
+      - name: Full combined Linux Product Core test corpus
+        if: matrix.mode == 'linux'
+        run: python -m unittest discover -s tests -v
+      - name: Windows pilot, security, history and payment regression corpus
+        if: matrix.mode == 'windows'
+        run: >-
+          python -m unittest
+          tests.test_payment_reconciliation
+          tests.test_request_draft
+          tests.test_pilot_preflight
+          tests.test_pilot_watch_receipt
+          tests.test_current_watch_cycle
+          tests.test_source_coverage_audit
+          tests.test_history_index
+          tests.test_source_policy_data_services
+          -v
+      - name: Install pinned Chromium and WebKit for composed release
+        if: matrix.mode == 'linux'
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Browser to case to Stripe integrated no-send contract
+        if: matrix.mode == 'linux'
+        run: python scripts/qa_browser_to_core_intake.py
+      - name: Assert that neither independent approval nor launch is implied
+        run: |
+          python - <<'PY'
+          import json
+          from capturebrief_core.archive_catalog import ARCHIVE_CATALOG_CURRENT_THROUGH_FY
+          assert ARCHIVE_CATALOG_CURRENT_THROUGH_FY == 2026, "Unexpected FY2027 catalog approval"
+          print(json.dumps({
+              "kind": "CaptureBrief ephemeral release composition test",
+              "composed_main_prs": [51, 52, 53, 55, 54],
+              "website_pr": 50,
+              "synthetic_merge_only": True,
+              "independent_release_approval_proven": False,
+              "real_customer_delivery_proven": False,
+              "FY2027_full_catalog_certified": False,
+              "real_14_day_live_watch_proven": False,
+              "external_email_authorized": False,
+              "real_payment_authorized": False
+          }, sort_keys=True))
+          PY
