@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from capturebrief_core.atomic_io import ensure_exact_bytes
+from capturebrief_core.decision_trace import canonical, digest
 from capturebrief_core.model import parse_dt
 from capturebrief_core.watch_baseline import compare_watch_baseline
 
@@ -32,6 +33,63 @@ def _private_dir(value: str) -> Path:
     return root
 
 
+# A daily supervised watch has 14 intended observations, but bounded retries
+# may create additional receipts. An unbounded directory scan is unsafe.
+MAX_RECEIPT_FILES = 512
+MAX_RECEIPT_BYTES = 2 * 1024 * 1024
+
+
+def _saved_watch_history(root: Path, baseline: dict) -> list[tuple[datetime, dict]]:
+    """Verify immutable prior receipts before trusting their lineage.
+
+    A matching SHA filename alone is not proof that the stored bytes or
+    intervening historical receipts are untampered. Reject any ambiguous,
+    modified, or missing chain rather than skipping a prior warning.
+    """
+    if not root.is_dir():
+        return []
+    entries = sorted(root.glob("watch-*.json"))
+    if len(entries) > MAX_RECEIPT_FILES:
+        raise ValueError("Watch history exceeds bounded receipt count")
+    records: list[tuple[datetime, dict]] = []
+    for path in entries:
+        if (path.is_symlink() or not path.is_file() or
+                path.stat().st_size > MAX_RECEIPT_BYTES):
+            raise ValueError("Existing watch receipt is not a safe regular file")
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise ValueError("Existing watch receipt is not a JSON object")
+        sha = data.get("observation_sha256")
+        if not isinstance(sha, str) or len(sha) != 64 or path.name != f"watch-{sha}.json":
+            raise ValueError("Existing watch receipt filename/digest mismatch")
+        body = {k:v for k,v in data.items() if k != "observation_sha256"}
+        if digest(canonical(body)) != sha:
+            raise ValueError("Existing watch receipt content hash mismatch")
+        if (data.get("case_id"), data.get("baseline_sha256")) != (
+            baseline.get("case_id"), baseline.get("baseline_sha256")
+        ):
+            continue
+        if data.get("family_id") != baseline.get("family_id"):
+            raise ValueError("Watch receipt has inconsistent pursuit family")
+        observed = parse_dt(data.get("observed_at"))
+        if observed is None:
+            raise ValueError("Existing watch receipt has invalid timestamp")
+        records.append((observed, data))
+
+    records.sort(key=lambda row: (row[0], row[1]["observation_sha256"]))
+    # One observation per clock tick. Identical same-time replays are already
+    # content-addressed and share one path, so different digests mean a fork.
+    if len({row[0] for row in records}) != len(records):
+        raise ValueError("Watch history has conflicting same-time observations")
+    # Verify no recorded step skips an intervening observation. A prior
+    # unresolved REVIEW_REQUIRED result is preserved by the comparator.
+    for i, (_, recorded) in enumerate(records):
+        predecessor = (records[i-1][1]["observation_sha256"] if i else None)
+        if recorded.get("previous_observation_sha256") != predecessor:
+            raise ValueError("Watch history has a broken predecessor chain")
+    return records
+
+
 def evaluate_and_retain(
     baseline: dict,
     refreshed_case: dict,
@@ -46,23 +104,31 @@ def evaluate_and_retain(
     if created is None or checked_at.astimezone(timezone.utc) <= created:
         raise ValueError("Watch check requires a later independent observation after delivery")
     target_dir = _private_dir(receipt_dir)
-    # The previous check MUST be supplied for a repeated engagement; never
-    # compare every day to the delivered baseline and call old source bytes fresh.
-    if previous_observation is None and target_dir.is_dir():
-        for record in sorted(target_dir.glob("watch-*.json")):
-            if record.is_symlink() or not record.is_file() or record.stat().st_size > 2 * 1024 * 1024:
-                raise ValueError("Existing watch receipt is not a safe regular file")
-            stored=json.loads(record.read_text(encoding="utf-8"))
-            if (stored.get("case_id"),stored.get("baseline_sha256")) == (
-                baseline.get("case_id"),baseline.get("baseline_sha256")
-            ):
-                stored_at=parse_dt(stored.get("observed_at"))
-                if stored_at is None or stored_at > checked_at:
-                    raise ValueError("Existing watch receipt timestamp is invalid or future-dated")
-                if stored_at < checked_at:
-                    raise ValueError("Subsequent watch check must supply the prior watch receipt")
-                # Same check time: hash-based ensure_exact_bytes below enforces
-                # byte-for-byte idempotence without advancing source freshness.
+    # Every later check must chain to the actual last immutable receipt on
+    # disk, not merely to an arbitrary older (but correctly hashed) receipt.
+    # Otherwise an operator could skip a prior review-required event and
+    # misrepresent the state of a 14-day engagement.
+    history = _saved_watch_history(target_dir, baseline)
+    if history:
+        last_at, last = history[-1]
+        if checked_at < last_at:
+            raise ValueError("Watch check cannot precede the latest saved observation")
+        if checked_at == last_at:
+            # Only an exact same-time replay of the SAME step is allowed.
+            expected_previous = last.get("previous_observation_sha256")
+            if expected_previous is None:
+                if previous_observation is not None:
+                    raise ValueError("Same-time watch replay has mismatched predecessor")
+            elif (not isinstance(previous_observation, dict) or
+                  previous_observation.get("observation_sha256") != expected_previous):
+                raise ValueError("Same-time watch replay has mismatched predecessor")
+        elif (not isinstance(previous_observation, dict) or
+              previous_observation.get("observation_sha256") !=
+              last.get("observation_sha256") or
+              previous_observation != last):
+            raise ValueError("Later watch check must include the latest retained receipt")
+    elif previous_observation is not None:
+        raise ValueError("Previous watch receipt is not retained in this private directory")
     observation = compare_watch_baseline(
         baseline, refreshed_case, now=checked_at,
         previous_observation=previous_observation,
