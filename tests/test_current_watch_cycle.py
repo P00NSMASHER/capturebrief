@@ -82,6 +82,31 @@ class CurrentWatchCycleTests(unittest.TestCase):
             self.assertNotIn("fake-test-only", new_case.read_text())
             self.assertNotIn("fake-test-only", json.dumps(report))
 
+    def test_rejected_watch_lineage_cannot_publish_refreshed_case(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            receipt_dir = root / "receipts"
+            initial = root / "first-case.json"
+            result = execute(
+                self.case, self.baseline, api_key="fake-test-only",
+                updated_case_path=str(initial), receipt_dir=str(receipt_dir),
+                opener=self.present,
+            )
+            self.assertTrue(Path(result["watch_receipt_path"]).exists())
+            subsequent = root / "second-case.json"
+            # The receipt directory now contains a prior watch result. A
+            # later check cannot skip it and still publish a new case file.
+            with self.assertRaisesRegex(ValueError, "latest retained receipt"):
+                execute(
+                    self.case, self.baseline, api_key="fake-test-only",
+                    updated_case_path=str(subsequent),
+                    receipt_dir=str(receipt_dir),
+                    checked_at=datetime.now(timezone.utc) + timedelta(minutes=1),
+                    opener=self.present,
+                )
+            self.assertFalse(subsequent.exists())
+            self.assertEqual(len(list(receipt_dir.glob("watch-*.json"))), 1)
+
     def test_missing_active_api_match_stays_review_required_not_terminal(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
