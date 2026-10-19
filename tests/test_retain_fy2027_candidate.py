@@ -163,7 +163,8 @@ class Fy2027PrivateCandidateTests(unittest.TestCase):
                 observed_at=FIXED,
             )
             path = Path(initial["receipt_file"])
-            original = json.loads(path.read_text())
+            original_bytes = path.read_bytes()
+            original = json.loads(original_bytes)
             for altered_key, altered_value in (
                 ("catalog_approved", True),
                 ("downloaded_bytes", 1),
@@ -179,7 +180,10 @@ class Fy2027PrivateCandidateTests(unittest.TestCase):
                         expected_sha256=FAKE_SHA, expected_bytes=len(FAKE_CSV),
                         observed_at=FIXED + timedelta(hours=1),
                     )
-            path.write_text(json.dumps(original, indent=2, sort_keys=True) + "\n")
+            # Restore the EXACT original bytes: Windows text-mode output
+            # otherwise converts LF to CRLF and correctly fails immutable
+            # receipt byte verification.
+            path.write_bytes(original_bytes)
             again = retain_exact_fy2027(
                 root, opener=lambda req, timeout=120: FakeResponse(),
                 expected_sha256=FAKE_SHA, expected_bytes=len(FAKE_CSV),
