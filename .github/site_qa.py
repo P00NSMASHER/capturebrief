@@ -168,9 +168,19 @@ with sync_playwright() as pw:
                 check(page.locator('a[href="privacy.html"]').count() >= 1, "CaptureBrief: privacy link")
                 check(page.locator('a[href="terms.html"]').count() >= 1, "CaptureBrief: terms link")
                 check(page.locator('a[href="data-handling.html"]').count() >= 1, "CaptureBrief: data-handling link")
-                page.locator("#deliverables").scroll_into_view_if_needed()
-                page.wait_for_timeout(150)
-                check(page.locator(".header").evaluate("e=>e.classList.contains('is-scrolled')"), "CaptureBrief: compact scrolled navigation")
+                # WebKit can see #deliverables as already partly visible.
+                # Explicitly scroll, then test the observed state instead of
+                # using a fixed 150ms delay susceptible to smooth scrolling.
+                page.evaluate("""() => {
+                    document.documentElement.style.scrollBehavior = 'auto';
+                    const target = document.querySelector('#deliverables');
+                    window.scrollTo(0, Math.max(120, window.scrollY + target.getBoundingClientRect().top));
+                }""")
+                page.wait_for_function("window.scrollY > 18", timeout=5000)
+                page.wait_for_function(
+                    "() => document.querySelector('.header').classList.contains('is-scrolled')",
+                    timeout=5000,
+                )
                 check(float(page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--page-progress') || 0")) > 0, "CaptureBrief: reading progress updates")
                 page.evaluate("window.scrollTo(0,0)")
             else:
