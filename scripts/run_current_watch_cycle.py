@@ -118,16 +118,29 @@ def execute(
         previous_observation=previous_observation,
     )
 
-    # This is an additional source of case evidence, not consent to update
-    # any buyer assertion. It must never overwrite differing bytes.
+    # This is additional source evidence, not consent to change a buyer's
+    # assertion. Preflight any conflicting output BEFORE making a watch
+    # receipt, then validate+retain the watch history BEFORE publishing a
+    # refreshed case. A failed previous-receipt chain must not leave a case
+    # file falsely suggesting a completed monitoring check.
     encoded = (json.dumps(updated, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode()
-    ensure_exact_bytes(target, encoded)
+    if target.exists() or target.is_symlink():
+        if target.is_symlink() or not target.is_file() or target.stat().st_size != len(encoded):
+            raise ValueError("Refreshed case output conflicts with an existing file")
+        import hashlib
+        existing = hashlib.sha256()
+        with target.open("rb") as handle:
+            for piece in iter(lambda: handle.read(1024 * 1024), b""):
+                existing.update(piece)
+        if existing.digest() != hashlib.sha256(encoded).digest():
+            raise ValueError("Refreshed case output differs from existing private artifact")
     check = evaluate_and_retain(
         baseline, updated,
         checked_at=now,
         receipt_dir=str(receipt_root),
         previous_observation=previous_observation,
     )
+    ensure_exact_bytes(target, encoded)
     return {
         "status": "CURRENT_API_CHECK_REVIEW_REQUIRED"
                   if check["requires_human_review"] else "CURRENT_API_CHECK_RECORDED",
