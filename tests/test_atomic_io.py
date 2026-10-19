@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import stat
 import tempfile
 import unittest
 from pathlib import Path
@@ -72,6 +74,32 @@ class AtomicIoTests(unittest.TestCase):
             self.assertTrue(first["created"])
             self.assertFalse(second["created"])
             self.assertEqual(target.read_bytes(),source.read_bytes())
+
+    def test_immutable_file_copy_removes_temporary_hardlinks_and_seals_target(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            raw=b"NoticeId,Sol#,PostedDate\\n" + b"x,TEST,10/19/2026\\n"
+            source=root/"original.csv"
+            source.write_bytes(raw)
+            target=root/"private"/"FY2027-verified.csv"
+            first=ensure_exact_file(
+                source, target, expected_sha256=hashlib.sha256(raw).hexdigest(),
+                expected_size=len(raw), mode=0o444,
+            )
+            self.assertTrue(first["created"])
+            self.assertEqual(target.read_bytes(),raw)
+            self.assertEqual(list(target.parent.glob(".*.tmp")),[])
+            # On Windows, NTFS hardlink names share the read-only bit.
+            # The final artifact must be read-only without locking a second
+            # temp name, otherwise receipt issuance fails after publication.
+            if os.name=="nt":
+                self.assertFalse(target.stat().st_mode & stat.S_IWUSR)
+            second=ensure_exact_file(
+                source,target, expected_sha256=hashlib.sha256(raw).hexdigest(),
+                expected_size=len(raw),mode=0o444,
+            )
+            self.assertFalse(second["created"])
+            self.assertEqual(list(target.parent.glob(".*.tmp")),[])
 
     def test_streaming_content_addressed_file_copy_rejects_conflict(self):
         with tempfile.TemporaryDirectory() as d:
