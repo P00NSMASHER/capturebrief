@@ -324,6 +324,7 @@ def compare_watch_baseline(
     case:dict[str,Any],
     *,
     now:datetime|None=None,
+    previous_observation:dict[str,Any]|None=None,
 )->dict[str,Any]:
     now=_aware(now or datetime.now(timezone.utc))
     _validate_baseline(baseline)
@@ -337,6 +338,39 @@ def compare_watch_baseline(
         raise ValueError("watch observation cannot precede baseline creation")
     before=baseline["state"]; after=_public_state(case,now=now)
     events=[]
+    # A fresh observation compared only with DELIVERY would incorrectly pass
+    # again tomorrow even when its source timestamps have not advanced.
+    # Validate and chain the PREVIOUS check before assessing this one.
+    previous_sources=None
+    if previous_observation is not None:
+        prev=previous_observation
+        if not isinstance(prev,dict) or prev.get("schema_version")!=WATCH_SCHEMA:
+            raise ValueError("unsupported preceding watch receipt")
+        prev_body={k:v for k,v in prev.items() if k!="observation_sha256"}
+        if digest(canonical(prev_body))!=prev.get("observation_sha256"):
+            raise ValueError("preceding watch receipt hash mismatch")
+        if (prev.get("case_id"),prev.get("family_id"),prev.get("baseline_sha256")) != (
+            baseline.get("case_id"),baseline.get("family_id"),baseline.get("baseline_sha256")
+        ):
+            raise ValueError("preceding watch receipt belongs to a different pursuit/baseline")
+        prev_time=parse_dt(prev.get("observed_at"))
+        if prev_time is None or prev_time<created or prev_time>=now:
+            raise ValueError("preceding receipt is not earlier than this watch check")
+        previous_sources=prev.get("source_checks")
+        if not isinstance(previous_sources,dict) or not previous_sources:
+            raise ValueError("preceding receipt lacks per-source freshness state")
+        if prev.get("watch_status")!="NO_CHANGE_OBSERVED" or prev.get("requires_human_review") is not False:
+            events.append({
+                "type":"WATCH_PREVIOUS_REVIEW_UNRESOLVED",
+                "key":"WATCH_PRIOR_REVIEW",
+                "reason":"A previous watch event requires recorded human disposition; a later automatic clean status is unsafe.",
+                "previous_observation_sha256":prev.get("observation_sha256"),
+            })
+        # Never accept a prior receipt that reports future or invalid times.
+        if any(parse_dt(row.get("observed_at")) is None or
+               parse_dt(row.get("observed_at"))>prev_time
+               for row in previous_sources.values() if isinstance(row,dict)):
+            raise ValueError("preceding watch source timestamps are invalid")
 
     def event(kind,key,before_value,after_value,*,alias_keys=None,**extra):
         if before_value!=after_value:
@@ -360,6 +394,26 @@ def compare_watch_baseline(
         now==created or
         (baseline_watermark is not None and current_watermark is not None and current_watermark>baseline_watermark)
     )
+    if previous_sources is not None:
+        advanced=True
+        current_sources=after.get("source_checks") or {}
+        for source_id, prior in sorted(previous_sources.items()):
+            updated=current_sources.get(source_id) or {}
+            old_ts=parse_dt(prior.get("observed_at")) if isinstance(prior,dict) else None
+            new_ts=parse_dt(updated.get("observed_at"))
+            if old_ts is None or new_ts is None or new_ts<=old_ts or new_ts>now:
+                advanced=False
+                events.append({
+                    "type":"WATCH_SOURCE_NOT_REFRESHED_SINCE_PREVIOUS_CHECK",
+                    "key":f"SOURCE_CHECK:{source_id}",
+                    "source_id":source_id,
+                    "before":prior.get("observed_at") if isinstance(prior,dict) else None,
+                    "after":updated.get("observed_at"),
+                    "reason":"No newer verified observation of this source since the immediately preceding check.",
+                })
+        if not previous_sources.keys()<=current_sources.keys():
+            advanced=False
+        fresh_observation = fresh_observation and advanced
     if now>created and not fresh_observation:
         events.append({
             "type":"WATCH_NO_FRESH_OBSERVATION",
@@ -508,6 +562,16 @@ def compare_watch_baseline(
         "fresh_observation_evidenced":fresh_observation,
         "baseline_observation_watermark":before.get("observation_watermark"),
         "current_observation_watermark":after.get("observation_watermark"),
+        "source_checks":{k:{
+            "observed_at":v.get("observed_at"),
+            "content_sha256":v.get("content_sha256"),
+            "artifact_state":v.get("artifact_state"),
+            "authority":v.get("authority"),
+        } for k,v in sorted((after.get("source_checks") or {}).items())},
+        "previous_observation_sha256":(
+            previous_observation.get("observation_sha256")
+            if previous_observation is not None else None
+        ),
         "events":events,
         "reopened_assumptions":reopened,
         "integrity_findings":integrity_findings,
