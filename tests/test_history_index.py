@@ -2,6 +2,8 @@ import csv
 import io
 import sqlite3
 import tempfile
+import traceback
+from urllib.error import URLError
 import unittest
 from unittest.mock import patch
 from contextlib import closing
@@ -310,6 +312,24 @@ class HistoryIndexTests(unittest.TestCase):
             self.assertEqual(fetched, [])
             self.assertEqual(target.read_bytes(), prior)
             self.assertEqual(list(Path(td).glob(".*.download")), [])
+
+    def test_signed_redirect_transport_error_never_leaks_token_in_traceback(self):
+        secret = "X-Amz-Signature=NEVER_PRINT_THIS"
+        def fail(req, timeout=120):
+            raise URLError("live signed link failed?"+secret)
+        with tempfile.TemporaryDirectory() as td:
+            dest = Path(td) / "not-published.csv"
+            try:
+                download_extract_to_file(
+                    dest, source_url=ARCHIVE_DOWNLOAD.format(fy=2027),
+                    opener=fail,
+                )
+            except HistoryIndexError as exc:
+                self.assertEqual(str(exc), "Data Services transport failure")
+                self.assertNotIn(secret, traceback.format_exc())
+            else:
+                self.fail("Injected presigned transport error was not rejected")
+            self.assertFalse(dest.exists())
 
     def test_data_services_redirect_to_unapproved_host_is_rejected(self):
         class RedirectResponse(FakeResponse):
