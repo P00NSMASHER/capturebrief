@@ -114,6 +114,8 @@ class SourceCoverageAuditTests(unittest.TestCase):
                 past = (NOW - timedelta(days=30)).isoformat()
                 conn.execute("UPDATE current_sources SET checked_at=? "
                              "WHERE slot='ACTIVE'", (past,))
+                conn.execute("UPDATE source_snapshots SET observed_at=? "
+                             "WHERE slot='ACTIVE'", (past,))
                 conn.commit()
             result = inspect_private_index(db, fiscal_year=2026,
                                            now=NOW, verify_bytes=True)
