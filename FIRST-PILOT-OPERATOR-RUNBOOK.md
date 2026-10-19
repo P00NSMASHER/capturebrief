@@ -132,8 +132,12 @@ software QA into first-customer validation or change any customer terms.
    delete, edit or move them during the engagement. Retain backups of the
    original files as required by the data-retention policy.
    Run the source-refresh step BEFORE the comparison. Do not reuse old
-   source bytes/timestamps. The on-demand SAM source cycle also
-   supports --previous-receipt.
+   source bytes/timestamps. The on-demand SAM source cycle also supports
+   --previous-receipt, and it now validates the complete saved receipt
+   chain BEFORE publishing the refreshed customer-case file. A failed
+   source check or broken predecessor leaves no new published case.
+   Concurrent attempts on the same private receipt directory are
+   serialized with the existing fail-closed filesystem lock.
 5. When status changes, reviewer assesses affected assumptions; the
    original buyer decision must not be silently changed. Record changed,
    missing, stale, inaccessible and expired source results distinctly.
