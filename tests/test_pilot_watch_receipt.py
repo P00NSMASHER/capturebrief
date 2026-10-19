@@ -88,9 +88,11 @@ class PilotWatchReceiptTests(unittest.TestCase):
             )
             self.assertTrue(at_deadline["requires_human_review"])
             self.assertNotEqual(at_deadline["watch_status"], "NO_CHANGE_OBSERVED")
+            at_deadline_receipt = json.loads(Path(at_deadline["receipt_path"]).read_text())
             expired = evaluate_and_retain(
                 self.baseline, self.case,
                 checked_at=NOW + timedelta(days=14, seconds=1), receipt_dir=folder,
+                previous_observation=at_deadline_receipt,
             )
             self.assertEqual(expired["watch_status"], "EXPIRED")
             self.assertTrue(expired["requires_human_review"])
