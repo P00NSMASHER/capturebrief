@@ -38,6 +38,25 @@ class SamCatalogCandidateTests(unittest.TestCase):
         self.assertTrue(data["independent_review_required"])
         self.assertRegex(data["observation_sha256"], r"^[0-9a-f]{64}$")
 
+    def test_later_full_byte_observation_is_not_operator_retention_or_approval(self):
+        proof = json.loads((REPO / "research" /
+            "fy2027_original_bytes_observation_20261019.json").read_text())
+        self.assertEqual(proof["schema"], "capturebrief-sam-public-file-byte-observation-v1")
+        self.assertEqual(proof["github_actions_run"],
+                         "https://github.com/P00NSMASHER/capturebrief/actions/runs/39205786451")
+        self.assertEqual(proof["size_bytes"], 1607260)
+        self.assertEqual(proof["csv_data_rows"], 1104)
+        self.assertEqual(proof["sha256"],
+                         "7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce")
+        self.assertRegex(proof["sha256"], r"^[0-9a-f]{64}$")
+        self.assertTrue(proof["full_bytes_were_read"])
+        self.assertFalse(proof["original_bytes_durably_retained"])
+        self.assertFalse(proof["operator_approved_extract_index_updated"])
+        self.assertFalse(proof["human_catalog_reviewed"])
+        self.assertFalse(proof["approved_for_full_catalog_claim"])
+        self.assertFalse(proof["customer_release_authorized"])
+        self.assertEqual(proof["current_catalog_approved_through_fy"], 2026)
+
     def test_false_human_review_or_approved_flag_is_rejected(self):
         for change in (
             {"production_authority": True},
