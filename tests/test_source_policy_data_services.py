@@ -93,12 +93,18 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
             )
 
     def test_source_policy_rejects_credentials_fragments_and_nonstandard_ports(self):
-        approved = "https://sam.gov/api/prod/fileextractservices/v1/api/download/Contract%20Opportunities/datagov/file.csv"
+        approved = ACTIVE_DOWNLOAD
         self.assertEqual(classify_sam_url(approved), "SAM_DATA_SERVICES_EXTRACT")
+        self.assertEqual(classify_sam_url(ARCHIVE_DOWNLOAD.format(fy=2027)),
+                         "SAM_DATA_SERVICES_EXTRACT")
         bad = [
-            "https://user:secret@sam.gov/api/prod/fileextractservices/v1/api/download/Contract%20Opportunities/datagov/file.csv",
-            "https://sam.gov:8443/api/prod/fileextractservices/v1/api/download/Contract%20Opportunities/datagov/file.csv",
+            approved.replace("https://sam.gov", "https://user:secret@sam.gov"),
+            approved.replace("https://sam.gov", "https://sam.gov:8443"),
             approved + "#client-secret",
+            approved + "&extra=private",
+            approved.replace("privacy=Public", "privacy=Private"),
+            approved.replace("ContractOpportunitiesFullCSV.csv", "file.csv"),
+            approved.replace("ContractOpportunitiesFullCSV.csv", "file.csv/../ContractOpportunitiesFullCSV.csv"),
             "https://[not-a-host",
             "https://api.sam.gov:badport/opportunities/v2/search",
         ]
