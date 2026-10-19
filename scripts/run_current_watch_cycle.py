@@ -45,6 +45,7 @@ def execute(
     receipt_dir: str,
     checked_at: datetime | None = None,
     opener: Callable[..., Any] | None = None,
+    previous_observation: dict | None = None,
 ) -> dict[str, Any]:
     """Fetch and store one real API currentness observation; fail closed otherwise."""
     if not api_key:
@@ -112,7 +113,10 @@ def execute(
     # Validate the baseline before publishing ANY refreshed case file.
     # A tampered or mismatched baseline must not leave behind a case that
     # appears newly sourced without its corresponding review.
-    compare_watch_baseline(baseline, updated, now=now)
+    compare_watch_baseline(
+        baseline, updated, now=now,
+        previous_observation=previous_observation,
+    )
 
     # This is an additional source of case evidence, not consent to update
     # any buyer assertion. It must never overwrite differing bytes.
@@ -122,6 +126,7 @@ def execute(
         baseline, updated,
         checked_at=now,
         receipt_dir=str(receipt_root),
+        previous_observation=previous_observation,
     )
     return {
         "status": "CURRENT_API_CHECK_REVIEW_REQUIRED"
@@ -148,6 +153,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--updated-case", required=True, help="Private new case output file")
     p.add_argument("--receipt-dir", required=True, help="Private receipt directory")
     p.add_argument("--api-key-env", default="SAM_API_KEY", help="Environment variable containing SAM API key")
+    p.add_argument("--previous-receipt", help="Original private JSON receipt from the immediately prior scheduled watch check")
     args = p.parse_args(argv)
     try:
         api_key = os.getenv(args.api_key_env, "")
@@ -159,9 +165,12 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError("Source, baseline and updated case must be distinct")
         case = json.loads(path_case.read_text(encoding="utf-8"))
         baseline = json.loads(path_baseline.read_text(encoding="utf-8"))
+        previous = (json.loads(_private_path(args.previous_receipt).read_text(encoding="utf-8"))
+                    if args.previous_receipt else None)
         result = execute(
             case, baseline, api_key=api_key,
             updated_case_path=args.updated_case, receipt_dir=args.receipt_dir,
+            previous_observation=previous,
         )
     except (ValueError, OSError, TypeError, KeyError, json.JSONDecodeError, RuntimeError) as exc:
         # Do not print raw provider errors (which may include API-key-bearing
