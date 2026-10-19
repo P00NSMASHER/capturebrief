@@ -56,7 +56,13 @@ def evaluate_and_retain(
             if (stored.get("case_id"),stored.get("baseline_sha256")) == (
                 baseline.get("case_id"),baseline.get("baseline_sha256")
             ):
-                raise ValueError("Subsequent watch check must supply the prior watch receipt")
+                stored_at=parse_dt(stored.get("observed_at"))
+                if stored_at is None or stored_at > checked_at:
+                    raise ValueError("Existing watch receipt timestamp is invalid or future-dated")
+                if stored_at < checked_at:
+                    raise ValueError("Subsequent watch check must supply the prior watch receipt")
+                # Same check time: hash-based ensure_exact_bytes below enforces
+                # byte-for-byte idempotence without advancing source freshness.
     observation = compare_watch_baseline(
         baseline, refreshed_case, now=checked_at,
         previous_observation=previous_observation,
