@@ -1,5 +1,7 @@
 import io
 import unittest
+from datetime import datetime, timedelta, timezone
+from urllib.parse import urlencode
 from urllib.request import Request
 
 from capturebrief_core.current_api import (
@@ -171,6 +173,66 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
                     "Archived%20Data/FY2027_archived_opportunities.csv")
         redirected = guard.redirect_request(request, None, 302, "Found", {}, approved)
         self.assertEqual(redirected.full_url, approved)
+
+    @staticmethod
+    def _fake_sam_presigned_archive(*, when=None, expiry=300, year=2027):
+        dt = when or datetime.now(timezone.utc)
+        date = dt.strftime("%Y%m%dT%H%M%SZ")
+        query = urlencode({
+            "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+            "X-Amz-Date": date,
+            "X-Amz-SignedHeaders": "host",
+            "X-Amz-Credential": "A"*20 + "/" + date[:8] + "/us-east-1/s3/aws4_request",
+            "X-Amz-Expires": str(expiry),
+            "X-Amz-Signature": "a"*64,
+        })
+        return (
+            "https://falextracts.s3.amazonaws.com/Contract%20Opportunities/"
+            f"Archived%20Data/FY{year}_archived_opportunities.csv?" + query
+        )
+
+    def test_real_sam_signed_redirect_contract_exact_object_and_v4_schema(self):
+        origin = ARCHIVE_DOWNLOAD.format(fy=2027)
+        signed = self._fake_sam_presigned_archive()
+        self.assertEqual(require_approved_extract_delivery(origin, signed),
+                         "falextracts.s3.amazonaws.com")
+        self.assertEqual(classify_sam_url(signed), "UNAPPROVED")
+        guard = _OfficialExtractRedirectGuard(origin)
+        redirected = guard.redirect_request(Request(origin), None, 303, "See Other", {}, signed)
+        self.assertEqual(redirected.full_url, signed)
+
+    def test_signed_redirect_never_accepts_wrong_fy_bucket_unsigned_or_unbounded(self):
+        start = ARCHIVE_DOWNLOAD.format(fy=2027)
+        exact = self._fake_sam_presigned_archive()
+        corrupted = (
+            exact.replace("FY2027_", "FY2026_"),
+            exact.replace("falextracts.s3.amazonaws.com",
+                          "falextracts.s3.amazonaws.com.evil.example"),
+            exact.replace("falextracts.s3.amazonaws.com",
+                          "otherbucket.s3.amazonaws.com"),
+            exact.replace("https://", "http://"),
+            exact + "&X-Amz-Signature=" + "a"*64,
+            exact + "&api_key=LEAK-ME",
+            exact + "#evil",
+            exact.replace("X-Amz-Algorithm=AWS4-HMAC-SHA256",
+                          "X-Amz-Algorithm=invalid"),
+            exact.replace("X-Amz-SignedHeaders=host", "X-Amz-SignedHeaders=host%3Bcookie"),
+            exact.replace("X-Amz-Signature=" + "a"*64, "X-Amz-Signature=INVALID"),
+            self._fake_sam_presigned_archive(expiry=3601),
+            self._fake_sam_presigned_archive(when=datetime.now(timezone.utc)-timedelta(hours=2)),
+            self._fake_sam_presigned_archive(when=datetime.now(timezone.utc)+timedelta(hours=1)),
+            "https://falextracts.s3.amazonaws.com/Contract%20Opportunities/"
+            "Archived%20Data/FY2027_archived_opportunities.csv",
+        )
+        for bad in corrupted:
+            with self.subTest(value=bad.split("?")[0]), self.assertRaises(SourcePolicyError) as seen:
+                require_approved_extract_delivery(start, bad)
+            self.assertNotIn("LEAK-ME", str(seen.exception))
+            self.assertNotIn("a"*64, str(seen.exception))
+        # A valid signature for a different public FY MUST NOT borrow this
+        # source slot's approval.
+        with self.assertRaises(SourcePolicyError):
+            require_approved_extract_delivery(start, self._fake_sam_presigned_archive(year=2026))
 
     def test_in_memory_download_accepts_only_explicit_sam_binding_and_bytes(self):
         original = (HEADER + row("notice1", "SOL-123")).encode("utf-8")
