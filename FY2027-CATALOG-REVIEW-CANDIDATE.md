@@ -54,6 +54,31 @@ The current production-approved catalog is STILL observed September 21, 2026,
 current through FY2026; this machine/browser observation does NOT supply the
 independent human approval required to amend that catalog.
 
+## Exact machine-readable candidate and offline validation
+
+The public observation is frozen in
+`research/sam_archives_observation_20261019.json`. It records the
+36 observed filename strings in original sorted order, the first-party
+listing/API URLs, observation window, and a read-only one-byte FY2027 object
+probe. Its exact browser provenance is explicitly **UNREVIEWED**.
+
+Run offline without credentials or network calls:
+
+    python scripts/reconcile_sam_catalog_candidate.py
+
+The output identifies the four filename additions relative to the last
+pinned FY2026 catalog (**FY1969, FY1981, FY2027, FY2029**) and retains
+future listed FY2029/FY2030 separately. It rejects renamed/duplicate years,
+invented FY2028, changed observation timestamps, spoofed source URLs, and
+fabricated claims that FY2027's full source bytes or human review were
+completed. The tool cannot update the production catalog or authorize a
+FULL_CATALOG claim.
+
+This is a reproducible review *candidate*, not a source attestation. The
+FY2027 original full CSV has not been downloaded and its complete SHA-256
+remains unavailable here. Official collection and human source review still
+need to happen in an authorized external environment.
+
 ## Source recertification: exact checks to perform
 
 - [ ] Independently load the above *first-party page* at the review time.
