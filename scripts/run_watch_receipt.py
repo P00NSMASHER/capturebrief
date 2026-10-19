@@ -56,9 +56,24 @@ def _saved_watch_history(root: Path, baseline: dict) -> list[tuple[datetime, dic
         if (path.is_symlink() or not path.is_file() or
                 path.stat().st_size > MAX_RECEIPT_BYTES):
             raise ValueError("Existing watch receipt is not a safe regular file")
-        data = json.loads(path.read_text(encoding="utf-8"))
+        raw = path.read_bytes()
+        # A matching logical JSON digest alone is insufficient for immutable
+        # retention: modified whitespace or duplicate keys could alter stored
+        # bytes while preserving the same parsed object/canonical digest.
+        def unique_keys(pairs):
+            out = {}
+            for key, value in pairs:
+                if key in out:
+                    raise ValueError("Existing watch receipt has duplicate JSON fields")
+                out[key] = value
+            return out
+        data = json.loads(raw.decode("utf-8"), object_pairs_hook=unique_keys)
         if not isinstance(data, dict):
             raise ValueError("Existing watch receipt is not a JSON object")
+        exact = (json.dumps(data, ensure_ascii=False, sort_keys=True, indent=2)
+                 + "\n").encode("utf-8")
+        if raw != exact:
+            raise ValueError("Existing watch receipt was not retained byte-for-byte")
         sha = data.get("observation_sha256")
         if not isinstance(sha, str) or len(sha) != 64 or path.name != f"watch-{sha}.json":
             raise ValueError("Existing watch receipt filename/digest mismatch")
