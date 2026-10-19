@@ -175,12 +175,24 @@ with sync_playwright() as pw:
                     document.documentElement.style.scrollBehavior = 'auto';
                     const target = document.querySelector('#deliverables');
                     window.scrollTo(0, Math.max(120, window.scrollY + target.getBoundingClientRect().top));
+                    window.dispatchEvent(new Event('scroll'));
                 }""")
-                page.wait_for_function("window.scrollY > 18", timeout=5000)
-                page.wait_for_function(
-                    "() => document.querySelector('.header').classList.contains('is-scrolled')",
-                    timeout=5000,
-                )
+                page.mouse.wheel(0, 360)
+                try:
+                    page.wait_for_function("window.scrollY > 18", timeout=6000)
+                    page.wait_for_function(
+                        "() => document.querySelector('.header').classList.contains('is-scrolled')",
+                        timeout=6000,
+                    )
+                except Exception as err:
+                    state = page.evaluate("""() => ({
+                        scrollY: window.scrollY,
+                        scrollTop: document.scrollingElement?.scrollTop,
+                        maxScroll: document.documentElement.scrollHeight - window.innerHeight,
+                        headerClass: document.querySelector('.header')?.className,
+                        pageProgress: getComputedStyle(document.documentElement).getPropertyValue('--page-progress')
+                    })""")
+                    raise AssertionError(f"CaptureBrief: scroll state failed {state}") from err
                 check(float(page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--page-progress') || 0")) > 0, "CaptureBrief: reading progress updates")
                 page.evaluate("window.scrollTo(0,0)")
             else:
