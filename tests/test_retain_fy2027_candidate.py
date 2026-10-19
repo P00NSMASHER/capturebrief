@@ -7,7 +7,7 @@ import json
 import os
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -90,14 +90,18 @@ class Fy2027PrivateCandidateTests(unittest.TestCase):
             with self.assertRaises(ArchiveCatalogStale):
                 catalog_years_for_fiscal_year(2027)
 
+            receipt_bytes_before = Path(result["receipt_file"]).read_bytes()
             again = retain_exact_fy2027(
                 root,
                 opener=lambda req, timeout=120: FakeResponse(),
                 expected_sha256=FAKE_SHA,
                 expected_bytes=len(FAKE_CSV),
-                observed_at=FIXED,
+                observed_at=FIXED + timedelta(minutes=45),
             )
             self.assertEqual(result, again)
+            self.assertEqual(Path(result["receipt_file"]).read_bytes(),
+                             receipt_bytes_before,
+                             "A later recheck cannot invent a fresh original observation")
             self.assertEqual(len(list(root.glob("FY2027-*.csv"))), 1)
 
     def test_current_sam_signed_redirect_original_retained_without_secret_query(self):
@@ -149,6 +153,39 @@ class Fy2027PrivateCandidateTests(unittest.TestCase):
                     self.assertEqual(list(root.glob("FY2027-*.csv")), [])
                     self.assertEqual(list(root.glob("*.receipt.json")), [])
                     self.assertEqual(list(root.glob(".fy2027-transfer-*")), [])
+
+    def test_tampered_prior_retention_receipt_cannot_be_reused(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "private"
+            initial = retain_exact_fy2027(
+                root, opener=lambda req, timeout=120: FakeResponse(),
+                expected_sha256=FAKE_SHA, expected_bytes=len(FAKE_CSV),
+                observed_at=FIXED,
+            )
+            path = Path(initial["receipt_file"])
+            original = json.loads(path.read_text())
+            for altered_key, altered_value in (
+                ("catalog_approved", True),
+                ("downloaded_bytes", 1),
+                ("operator_path", "/public/other-file.csv"),
+                ("prior_ci_sha256", "0"*64),
+            ):
+                forged = dict(original)
+                forged[altered_key] = altered_value
+                path.write_text(json.dumps(forged, indent=2, sort_keys=True) + "\n")
+                with self.subTest(key=altered_key), self.assertRaises(ValueError):
+                    retain_exact_fy2027(
+                        root, opener=lambda req, timeout=120: FakeResponse(),
+                        expected_sha256=FAKE_SHA, expected_bytes=len(FAKE_CSV),
+                        observed_at=FIXED + timedelta(hours=1),
+                    )
+            path.write_text(json.dumps(original, indent=2, sort_keys=True) + "\n")
+            again = retain_exact_fy2027(
+                root, opener=lambda req, timeout=120: FakeResponse(),
+                expected_sha256=FAKE_SHA, expected_bytes=len(FAKE_CSV),
+                observed_at=FIXED + timedelta(days=1),
+            )
+            self.assertEqual(initial, again)
 
     def test_wrong_official_object_is_rejected_before_extraction(self):
         with tempfile.TemporaryDirectory() as td:
