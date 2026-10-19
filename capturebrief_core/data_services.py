@@ -10,7 +10,10 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from .model import canonical_json, history_set_digest, parse_dt, sha256_hex
-from .source_policy import require_approved_automation
+from .source_policy import (
+    open_approved_extract, require_approved_automation,
+    require_approved_extract_delivery,
+)
 
 ACTIVE_DATA_SERVICES_PAGE = "https://sam.gov/data-services/Contract%20Opportunities/datagov?privacy=Public"
 ARCHIVE_DATA_SERVICES_PAGE = "https://sam.gov/data-services/Contract%20Opportunities/Archived%20Data?privacy=Public"
@@ -36,21 +39,41 @@ def fiscal_year_for_date(value: str) -> int:
     return d.year + 1 if d.month >= 10 else d.year
 
 
-def download_extract(url: str, *, timeout: float = 60.0, max_bytes: int = 500 * 1024 * 1024) -> bytes:
-    require_approved_automation(url, expected="SAM_DATA_SERVICES_EXTRACT")
+def download_extract(
+    url: str, *, timeout: float = 60.0,
+    max_bytes: int = 500 * 1024 * 1024, opener=None,
+) -> bytes:
+    """Read an approved SAM extract without following arbitrary URL redirects."""
+    require_approved_extract_delivery(url, url)
+    if max_bytes <= 0:
+        raise ValueError("max_bytes must be positive")
     req = Request(url, headers={"User-Agent": "CaptureBrief/0.3"})
     try:
-        with urlopen(req, timeout=timeout) as response:
-            declared = response.headers.get("Content-Length")
-            if declared and int(declared) > max_bytes:
-                raise DataServicesError(f"extract exceeds max_bytes before download: {declared}")
+        with open_approved_extract(req, timeout=timeout, source_url=url, opener=opener) as response:
+            # Revalidate even when using an injected opener (test cases) and
+            # before accepting ANY bytes as first-party Data Services evidence.
+            final_url = response.geturl() if hasattr(response, "geturl") else url
+            require_approved_extract_delivery(url, final_url)
+            declared = response.headers.get("Content-Length") if getattr(response, "headers", None) else None
+            expected = None
+            if declared not in (None, ""):
+                try:
+                    expected = int(declared)
+                except (ValueError, TypeError) as exc:
+                    raise DataServicesError("Data Services extract Content-Length is invalid") from exc
+                if expected < 0 or expected > max_bytes:
+                    raise DataServicesError("Data Services extract Content-Length exceeds accepted bounds")
             data = response.read(max_bytes + 1)
     except HTTPError as exc:
         raise DataServicesError(f"Data Services extract HTTP {exc.code}") from exc
     except URLError as exc:
-        raise DataServicesError(f"Data Services extract transport failure: {exc.reason}") from exc
+        # URLError.reason can contain signed resource URLs or credentials;
+        # never render it into errors that may become CI/operator logs.
+        raise DataServicesError("Data Services extract transport failure") from exc
     if len(data) > max_bytes:
         raise DataServicesError("extract exceeds max_bytes during download")
+    if expected is not None and len(data) != expected:
+        raise DataServicesError("Data Services extract did not match Content-Length")
     return data
 
 
