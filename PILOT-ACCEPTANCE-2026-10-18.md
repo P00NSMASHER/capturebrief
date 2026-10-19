@@ -65,6 +65,15 @@ customer's entire watch must finish before the first customer is admitted.
       --history-index /private/capturebrief/history.sqlite \
       --verify-source-bytes --as-of 2026-10-18T12:00:00Z
 
+If original, retained CSV files are intentionally located in a different
+private directory, supply:
+
+    --source-snapshot-root /private/capturebrief/approved-extracts
+
+The audit will not follow an index's arbitrary local_path pointer outside
+the approved root; it treats such a record as a missing/unverified source.
+Paths under the public repository and symlinked index paths are rejected.
+
 Without --history-index, or with --verify-source-bytes omitted, the current
 preflight explicitly blocks source-index readiness. The audit reads an
 EXISTING private SQLite database in read-only mode and does not create,
