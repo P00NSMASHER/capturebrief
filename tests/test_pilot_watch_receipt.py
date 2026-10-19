@@ -128,6 +128,43 @@ class PilotWatchReceiptTests(unittest.TestCase):
                     checked_at=NOW + timedelta(minutes=10), receipt_dir=folder,
                 )
 
+    def test_byte_modified_receipt_cannot_keep_original_logical_digest(self):
+        # A JSON object with extra harmless whitespace decodes to the SAME
+        # values and digest, but is no longer the originally retained file.
+        with tempfile.TemporaryDirectory() as folder:
+            saved = evaluate_and_retain(
+                self.baseline, self.case,
+                checked_at=NOW + timedelta(minutes=10), receipt_dir=folder,
+            )
+            path = Path(saved["receipt_path"])
+            original = path.read_bytes()
+            path.write_bytes(original + b"\n")
+            with self.assertRaisesRegex(ValueError, "byte-for-byte"):
+                evaluate_and_retain(
+                    self.baseline, self.case,
+                    checked_at=NOW + timedelta(minutes=10), receipt_dir=folder,
+                )
+
+    def test_duplicate_json_fields_cannot_hide_retained_watch_changes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            saved = evaluate_and_retain(
+                self.baseline, self.case,
+                checked_at=NOW + timedelta(minutes=10), receipt_dir=folder,
+            )
+            path = Path(saved["receipt_path"])
+            original = path.read_text(encoding="utf-8")
+            prefix = '"schema_version": "1.0",'
+            self.assertIn(prefix, original)
+            path.write_text(original.replace(
+                prefix, prefix + '\n  "schema_version": "1.0",',
+                1,
+            ), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "duplicate JSON fields"):
+                evaluate_and_retain(
+                    self.baseline, self.case,
+                    checked_at=NOW + timedelta(minutes=10), receipt_dir=folder,
+                )
+
     def test_same_clock_time_fork_is_rejected(self):
         import copy
         with tempfile.TemporaryDirectory() as folder:
