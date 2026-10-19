@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+from contextlib import closing
 import os
 import sqlite3
 import tempfile
@@ -29,7 +30,7 @@ def make_index(root: Path, *, missing: str | None = None,
         *((f"ARCHIVE:{fy}", ARCHIVE_DOWNLOAD.format(fy=fy), fy)
           for fy in ARCHIVE_CATALOG_YEARS),
     ]
-    with sqlite3.connect(db) as conn:
+    with closing(sqlite3.connect(db)) as conn, conn:
         for slot, url, fy in all_slots:
             if slot == missing:
                 continue
@@ -110,7 +111,7 @@ class SourceCoverageAuditTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             db, paths = make_index(Path(td))
             paths["ARCHIVE:1970"].unlink()
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn, conn:
                 past = (NOW - timedelta(days=30)).isoformat()
                 conn.execute("UPDATE current_sources SET checked_at=? "
                              "WHERE slot='ACTIVE'", (past,))
@@ -126,7 +127,7 @@ class SourceCoverageAuditTests(unittest.TestCase):
     def test_forged_approved_mode_or_wrong_source_contract_is_unverified(self):
         with tempfile.TemporaryDirectory() as td:
             db, _ = make_index(Path(td))
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn, conn:
                 conn.execute("UPDATE current_sources SET collection_mode='OPERATOR_FILE' "
                              "WHERE slot='ACTIVE'")
                 conn.execute("UPDATE source_snapshots SET source_url='https://evil.example/x' "
@@ -139,7 +140,7 @@ class SourceCoverageAuditTests(unittest.TestCase):
     def test_future_dated_or_inconsistent_observation_does_not_pass(self):
         with tempfile.TemporaryDirectory() as td:
             db, _ = make_index(Path(td))
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn, conn:
                 future = (NOW + timedelta(hours=1)).isoformat()
                 conn.execute("UPDATE current_sources SET checked_at=? "
                              "WHERE slot='ACTIVE'", (future,))
@@ -158,7 +159,7 @@ class SourceCoverageAuditTests(unittest.TestCase):
             db, paths = make_index(allowed)
             outside = root / "outside-secret"
             outside.write_bytes(paths["ARCHIVE:2026"].read_bytes())
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn, conn:
                 conn.execute("UPDATE source_snapshots SET local_path=? "
                              "WHERE slot='ARCHIVE:2026'", (str(outside),))
                 conn.commit()
@@ -176,7 +177,7 @@ class SourceCoverageAuditTests(unittest.TestCase):
             separate = root / "approved-extracts"
             separate.mkdir()
             # Move every retained extract outside the index's parent directory.
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn, conn:
                 for slot, source in files.items():
                     new = separate / source.name
                     source.rename(new)
