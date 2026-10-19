@@ -16,12 +16,11 @@ ACCOUNT_ID = "acct_1UItcBRVKNw4DyjZ"
 PAYMENT_LINK_ID = "plink_1UIvfJRVKNw4DyjZSj7aRJz1"
 AMOUNT_USD_CENTS = 14900
 CURRENCY = "usd"
-IDENTIFIER = re.compile(r"^[a-z]+_[A-Za-z0-9]+$")
-
-
 def _valid_id(value: Any, prefix: str) -> bool:
-    return (isinstance(value, str) and value.startswith(prefix + "_")
-            and IDENTIFIER.fullmatch(value) is not None)
+    # Stripe object IDs can have a compound prefix such as cs_live_;
+    # match the exact expected object prefix rather than a generic one.
+    return (isinstance(value, str) and
+            re.fullmatch(re.escape(prefix) + r"_[A-Za-z0-9]+", value) is not None)
 
 
 def _safe_email(value: Any) -> str | None:
