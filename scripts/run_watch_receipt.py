@@ -38,6 +38,7 @@ def evaluate_and_retain(
     *,
     checked_at: datetime,
     receipt_dir: str,
+    previous_observation: dict | None = None,
 ) -> dict:
     if checked_at.utcoffset() is None:
         raise ValueError("watch check time must be timezone aware")
@@ -45,7 +46,21 @@ def evaluate_and_retain(
     if created is None or checked_at.astimezone(timezone.utc) <= created:
         raise ValueError("Watch check requires a later independent observation after delivery")
     target_dir = _private_dir(receipt_dir)
-    observation = compare_watch_baseline(baseline, refreshed_case, now=checked_at)
+    # The previous check MUST be supplied for a repeated engagement; never
+    # compare every day to the delivered baseline and call old source bytes fresh.
+    if previous_observation is None and target_dir.is_dir():
+        for record in sorted(target_dir.glob("watch-*.json")):
+            if record.is_symlink() or not record.is_file() or record.stat().st_size > 2 * 1024 * 1024:
+                raise ValueError("Existing watch receipt is not a safe regular file")
+            stored=json.loads(record.read_text(encoding="utf-8"))
+            if (stored.get("case_id"),stored.get("baseline_sha256")) == (
+                baseline.get("case_id"),baseline.get("baseline_sha256")
+            ):
+                raise ValueError("Subsequent watch check must supply the prior watch receipt")
+    observation = compare_watch_baseline(
+        baseline, refreshed_case, now=checked_at,
+        previous_observation=previous_observation,
+    )
     if observation["watch_status"] == "NO_CHANGE_OBSERVED" and not observation["fresh_observation_evidenced"]:
         raise ValueError("A clean watch result requires fresh retained source observations")
     raw = (json.dumps(observation, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8")
@@ -59,6 +74,8 @@ def evaluate_and_retain(
         "fresh_observation_evidenced": observation["fresh_observation_evidenced"],
         "requires_human_review": observation["requires_human_review"],
         "event_count": len(observation["events"]),
+        "previous_observation_sha256": observation["previous_observation_sha256"],
+        "source_check_count": len(observation["source_checks"]),
         "external_send_authorized": False,
     }
 
@@ -69,14 +86,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("refreshed_case", help="Private newly acquired case JSON")
     parser.add_argument("--receipt-dir", required=True, help="Private output directory outside the public repository")
     parser.add_argument("--as-of", help="Timezone-aware ISO timestamp; defaults to current UTC")
+    parser.add_argument("--previous-receipt", help="Private original JSON receipt from the prior watch check")
     args = parser.parse_args(argv)
     try:
         baseline = json.loads(Path(args.baseline).read_text(encoding="utf-8"))
         case = json.loads(Path(args.refreshed_case).read_text(encoding="utf-8"))
         checked_at = (datetime.fromisoformat(args.as_of.replace("Z","+00:00"))
                       if args.as_of else datetime.now(timezone.utc))
+        prev = (json.loads(Path(args.previous_receipt).read_text(encoding="utf-8"))
+                if args.previous_receipt else None)
         result = evaluate_and_retain(
             baseline, case, checked_at=checked_at, receipt_dir=args.receipt_dir,
+            previous_observation=prev,
         )
     except (ValueError, OSError, TypeError, KeyError, json.JSONDecodeError) as exc:
         print(json.dumps({"status": "WATCH_CHECK_INVALID", "reason": type(exc).__name__,
