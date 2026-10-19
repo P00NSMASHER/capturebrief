@@ -1,0 +1,50 @@
+name: CaptureBrief website-to-core intake contract
+
+on:
+  push:
+    branches:
+      - feat/pilot-email-intake-bridge-20261018
+    paths:
+      - scripts/qa_browser_to_core_intake.py
+      - .github/workflows/capturebrief-intake-contract.yml
+
+# This is only a test of two independent PR candidate commits.
+# Nothing in this workflow sends an email, bills Stripe, deploys,
+# imports private cases, or changes production/gh-pages.
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      SITE_CHECKOUT: site-candidate
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Check out core candidate (PR 52)
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check out immutable website candidate (PR 50)
+        uses: actions/checkout@v4
+        with:
+          repository: P00NSMASHER/capturebrief
+          ref: 620e1336fe168ff86e5308bf3dae58b99b1b1781
+          path: site-candidate
+          persist-credentials: false
+      - name: Reject mismatched website ref
+        run: |
+          set -euo pipefail
+          actual="$(git -C site-candidate rev-parse HEAD)"
+          test "$actual" = "620e1336fe168ff86e5308bf3dae58b99b1b1781"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install fixed Playwright tool version
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Verify actual browser-generated request against Python core
+        run: python scripts/qa_browser_to_core_intake.py
