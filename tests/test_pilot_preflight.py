@@ -55,7 +55,7 @@ class PilotPreflightTests(unittest.TestCase):
         }
         case = build_case_from_intake(intake, submitted_at=NOW.isoformat())
         out = inspect(now=NOW, case=case)
-        self.assertEqual(out["gates"]["real_case"]["status"], "PUBLIC_LINK_FORMAT_VERIFIED")
+        self.assertEqual(out["gates"]["real_case"]["status"], "BLOCKED_INTAKE_NOTICE_NOT_IN_HISTORY")
         self.assertEqual(out["gates"]["release"]["status"], "BLOCKED_BY_CORE_EVIDENCE")
         self.assertEqual(out["gates"]["delivery"]["status"], "BLOCKED_UNVERIFIED_BUNDLE")
         self.assertEqual(out["gates"]["watch"]["status"], "BLOCKED_NO_FRESH_WATCH_REPLAY")
@@ -63,6 +63,31 @@ class PilotPreflightTests(unittest.TestCase):
         self.assertEqual(case["packet"]["history_receipts"], [])
         self.assertEqual(case["current_action_receipts"], [])
         self.assertTrue(all(x["evidence_state"] == "UNPROVEN" for x in case["assumptions"]))
+
+    def test_buyer_notice_must_match_claimed_history_even_if_sam_shaped(self):
+        intake = {
+            "email": "buyer@example.com",
+            "company": "Fictional Federal Corp",
+            "public_opportunity": OFFICIAL,
+            "current_posture": "HOLD",
+            "assumption_1": "The original deadline still applies.",
+            "public_only_confirmation": "yes",
+        }
+        case = build_case_from_intake(intake, submitted_at=NOW.isoformat())
+        case["packet"]["history_action_ids"] = ["f" * 32]
+        mismatched = inspect(now=NOW, case=case)
+        self.assertEqual(mismatched["gates"]["real_case"]["status"],
+                         "BLOCKED_INTAKE_NOTICE_NOT_IN_HISTORY")
+        self.assertFalse(mismatched["technical_preflight_passed"])
+
+        # A caller can insert a matching ID in an unverified history list.
+        # This removes only the *identity* failure, NEVER source/release proof.
+        case["packet"]["history_action_ids"] = [OFFICIAL.split("/")[4]]
+        linked = inspect(now=NOW, case=case)
+        self.assertEqual(linked["gates"]["real_case"]["status"],
+                         "PUBLIC_NOTICE_BOUND_TO_HISTORY")
+        self.assertEqual(linked["gates"]["release"]["status"], "BLOCKED_BY_CORE_EVIDENCE")
+        self.assertFalse(linked["approved_to_accept_payment_or_send_customer_material"])
 
     def test_unverified_digest_and_fake_payment_cannot_flip_readiness(self):
         intake = {
