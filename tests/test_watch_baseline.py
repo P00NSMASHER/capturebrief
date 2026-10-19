@@ -118,6 +118,32 @@ class WatchBaselineTests(unittest.TestCase):
                                    now=newer + timedelta(minutes=2),
                                    previous_observation=wrong)
 
+    def test_simulated_14_day_replay_never_falsely_clears_stale_sources(self):
+        from datetime import timedelta
+        case = ready_case()
+        baseline = build_watch_baseline(case, now=NOW)
+        previous = None
+        # Clock-replayed QA only: this is not actual 14 elapsed calendar days.
+        for day in range(1, 15):
+            when = NOW + timedelta(days=day)
+            result = compare_watch_baseline(
+                baseline, case, now=when, previous_observation=previous,
+            )
+            self.assertEqual(result["watch_status"], "REVIEW_REQUIRED")
+            self.assertTrue(result["requires_human_review"])
+            self.assertFalse(result["fresh_observation_evidenced"])
+            self.assertFalse(result["automatic_decision_change"])
+            self.assertTrue(result["previous_decision_preserved"])
+            previous = result
+        expired = compare_watch_baseline(
+            baseline, case,
+            now=NOW + timedelta(days=14, seconds=1),
+            previous_observation=previous,
+        )
+        self.assertEqual(expired["watch_status"], "EXPIRED")
+        self.assertTrue(expired["requires_human_review"])
+        self.assertFalse(expired["automatic_decision_change"])
+
     def test_one_fresh_source_does_not_clear_other_stale_sources(self):
         from datetime import timedelta
         case=ready_case()
