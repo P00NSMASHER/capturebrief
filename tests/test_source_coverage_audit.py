@@ -150,6 +150,48 @@ class SourceCoverageAuditTests(unittest.TestCase):
             self.assertIn("ACTIVE", result["stale_slots"])
             self.assertIn("ARCHIVE:2026", result["unverified_slots"])
 
+    def test_index_cannot_read_arbitrary_files_outside_approved_extract_root(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            allowed = root / "allowed"
+            allowed.mkdir()
+            db, paths = make_index(allowed)
+            outside = root / "outside-secret"
+            outside.write_bytes(paths["ARCHIVE:2026"].read_bytes())
+            with sqlite3.connect(db) as conn:
+                conn.execute("UPDATE source_snapshots SET local_path=? "
+                             "WHERE slot='ARCHIVE:2026'", (str(outside),))
+                conn.commit()
+            result = inspect_private_index(db, fiscal_year=2026, now=NOW,
+                                           verify_bytes=True)
+            self.assertIn("ARCHIVE:2026", result["missing_or_wrong_size_file_slots"])
+            self.assertFalse(result["local_file_hashes_match"])
+
+    def test_explicit_private_snapshot_root_allows_separate_approved_storage(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            index_dir = root / "indexes"
+            index_dir.mkdir()
+            db, files = make_index(index_dir)
+            separate = root / "approved-extracts"
+            separate.mkdir()
+            # Move every retained extract outside the index's parent directory.
+            with sqlite3.connect(db) as conn:
+                for slot, source in files.items():
+                    new = separate / source.name
+                    source.rename(new)
+                    conn.execute("UPDATE source_snapshots SET local_path=? "
+                                 "WHERE slot=?", (str(new), slot))
+                conn.commit()
+            default = inspect_private_index(db, fiscal_year=2026, now=NOW,
+                                            verify_bytes=True)
+            self.assertFalse(default["metadata_complete"])
+            approved = inspect_private_index(db, fiscal_year=2026, now=NOW,
+                                             verify_bytes=True,
+                                             snapshot_root=separate)
+            self.assertTrue(approved["local_file_hashes_match"])
+            self.assertFalse(approved["publisher_authenticity_independently_established"])
+
     def test_unapproved_fy2027_blocks_even_complete_fy2026_index(self):
         with tempfile.TemporaryDirectory() as td:
             db, _ = make_index(Path(td))
