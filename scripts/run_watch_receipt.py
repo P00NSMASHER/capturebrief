@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from capturebrief_core.atomic_io import ensure_exact_bytes
+from capturebrief_core.atomic_io import ensure_exact_bytes, exclusive_path_lock
 from capturebrief_core.decision_trace import canonical, digest
 from capturebrief_core.model import parse_dt
 from capturebrief_core.watch_baseline import compare_watch_baseline
@@ -104,58 +104,62 @@ def evaluate_and_retain(
     if created is None or checked_at.astimezone(timezone.utc) <= created:
         raise ValueError("Watch check requires a later independent observation after delivery")
     target_dir = _private_dir(receipt_dir)
-    # Every later check must chain to the actual last immutable receipt on
-    # disk, not merely to an arbitrary older (but correctly hashed) receipt.
-    # Otherwise an operator could skip a prior review-required event and
-    # misrepresent the state of a 14-day engagement.
-    history = _saved_watch_history(target_dir, baseline)
-    if history:
-        last_at, last = history[-1]
-        if checked_at < last_at:
-            raise ValueError("Watch check cannot precede the latest saved observation")
-        if checked_at == last_at:
-            # Only an exact same-time replay of the SAME step is allowed.
-            expected_previous = last.get("previous_observation_sha256")
-            if expected_previous is None:
-                if previous_observation is not None:
+    # Serialize read-history -> validate predecessor -> publish. Without this
+    # engagement-wide lock, simultaneous scheduled retries can fork a valid
+    # on-disk receipt chain between the prior read and new file creation.
+    with exclusive_path_lock(target_dir / ".watch-series", suffix=".lock"):
+        # Every later check must chain to the actual last immutable receipt on
+        # disk, not merely to an arbitrary older (but correctly hashed) receipt.
+        # Otherwise an operator could skip a prior review-required event and
+        # misrepresent the state of a 14-day engagement.
+        history = _saved_watch_history(target_dir, baseline)
+        if history:
+            last_at, last = history[-1]
+            if checked_at < last_at:
+                raise ValueError("Watch check cannot precede the latest saved observation")
+            if checked_at == last_at:
+                # Only an exact same-time replay of the SAME step is allowed.
+                expected_previous = last.get("previous_observation_sha256")
+                if expected_previous is None:
+                    if previous_observation is not None:
+                        raise ValueError("Same-time watch replay has mismatched predecessor")
+                elif (not isinstance(previous_observation, dict) or
+                      previous_observation.get("observation_sha256") != expected_previous):
                     raise ValueError("Same-time watch replay has mismatched predecessor")
             elif (not isinstance(previous_observation, dict) or
-                  previous_observation.get("observation_sha256") != expected_previous):
-                raise ValueError("Same-time watch replay has mismatched predecessor")
-        elif (not isinstance(previous_observation, dict) or
-              previous_observation.get("observation_sha256") !=
-              last.get("observation_sha256") or
-              previous_observation != last):
-            raise ValueError("Later watch check must include the latest retained receipt")
-    elif previous_observation is not None:
-        raise ValueError("Previous watch receipt is not retained in this private directory")
-    observation = compare_watch_baseline(
-        baseline, refreshed_case, now=checked_at,
-        previous_observation=previous_observation,
-    )
-    # A same-time check may replay only the exact original result. Creating
-    # another observation at the same timestamp would fork the signed chain.
-    if (history and checked_at == history[-1][0] and
-            observation["observation_sha256"] !=
-            history[-1][1]["observation_sha256"]):
-        raise ValueError("Conflicting same-time watch observations")
-    if observation["watch_status"] == "NO_CHANGE_OBSERVED" and not observation["fresh_observation_evidenced"]:
-        raise ValueError("A clean watch result requires fresh retained source observations")
-    raw = (json.dumps(observation, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8")
-    target_dir.mkdir(parents=True, exist_ok=True)
-    path = target_dir / f"watch-{observation['observation_sha256']}.json"
-    ensure_exact_bytes(path, raw)
-    return {
-        "watch_status": observation["watch_status"],
-        "observation_sha256": observation["observation_sha256"],
-        "receipt_path": str(path),
-        "fresh_observation_evidenced": observation["fresh_observation_evidenced"],
-        "requires_human_review": observation["requires_human_review"],
-        "event_count": len(observation["events"]),
-        "previous_observation_sha256": observation["previous_observation_sha256"],
-        "source_check_count": len(observation["source_checks"]),
-        "external_send_authorized": False,
-    }
+                  previous_observation.get("observation_sha256") !=
+                  last.get("observation_sha256") or
+                  previous_observation != last):
+                raise ValueError("Later watch check must include the latest retained receipt")
+        elif previous_observation is not None:
+            raise ValueError("Previous watch receipt is not retained in this private directory")
+        observation = compare_watch_baseline(
+            baseline, refreshed_case, now=checked_at,
+            previous_observation=previous_observation,
+        )
+        # A same-time check may replay only the exact original result. Creating
+        # another observation at the same timestamp would fork the signed chain.
+        if (history and checked_at == history[-1][0] and
+                observation["observation_sha256"] !=
+                history[-1][1]["observation_sha256"]):
+            raise ValueError("Conflicting same-time watch observations")
+        if observation["watch_status"] == "NO_CHANGE_OBSERVED" and not observation["fresh_observation_evidenced"]:
+            raise ValueError("A clean watch result requires fresh retained source observations")
+        raw = (json.dumps(observation, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8")
+        target_dir.mkdir(parents=True, exist_ok=True)
+        path = target_dir / f"watch-{observation['observation_sha256']}.json"
+        ensure_exact_bytes(path, raw)
+        return {
+            "watch_status": observation["watch_status"],
+            "observation_sha256": observation["observation_sha256"],
+            "receipt_path": str(path),
+            "fresh_observation_evidenced": observation["fresh_observation_evidenced"],
+            "requires_human_review": observation["requires_human_review"],
+            "event_count": len(observation["events"]),
+            "previous_observation_sha256": observation["previous_observation_sha256"],
+            "source_check_count": len(observation["source_checks"]),
+            "external_send_authorized": False,
+        }
 
 
 def main(argv: list[str] | None = None) -> int:
