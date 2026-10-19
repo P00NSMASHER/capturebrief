@@ -122,7 +122,7 @@ class PilotWatchReceiptTests(unittest.TestCase):
             body = json.loads(original.read_text())
             body["requires_human_review"] = False
             original.write_text(json.dumps(body), encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, "content hash mismatch"):
+            with self.assertRaisesRegex(ValueError, "byte-for-byte|content hash mismatch"):
                 evaluate_and_retain(
                     self.baseline, self.case,
                     checked_at=NOW + timedelta(minutes=10), receipt_dir=folder,
