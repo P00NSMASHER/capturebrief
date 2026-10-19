@@ -36,6 +36,27 @@ class PilotWatchReceiptTests(unittest.TestCase):
             )
             self.assertEqual(result, again)
 
+            # A later operator check in this private receipt directory must
+            # chain to its immediate predecessor rather than silently
+            # comparing unchanged sources to the old delivery baseline.
+            with self.assertRaisesRegex(ValueError, "Subsequent watch check"):
+                evaluate_and_retain(
+                    self.baseline, self.case,
+                    checked_at=NOW + timedelta(minutes=10),
+                    receipt_dir=folder,
+                )
+            new = evaluate_and_retain(
+                self.baseline, self.case,
+                checked_at=NOW + timedelta(minutes=10),
+                receipt_dir=folder, previous_observation=receipt,
+            )
+            self.assertEqual(new["previous_observation_sha256"],
+                             receipt["observation_sha256"])
+            latest = json.loads(Path(new["receipt_path"]).read_text())
+            self.assertIn("WATCH_SOURCE_NOT_REFRESHED_SINCE_PREVIOUS_CHECK",
+                          {e["type"] for e in latest["events"]})
+            self.assertTrue(new["requires_human_review"])
+
     def test_tamper_cannot_overwrite_prior_receipt(self):
         with tempfile.TemporaryDirectory() as folder:
             result = evaluate_and_retain(self.baseline, self.case,
