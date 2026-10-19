@@ -20,7 +20,7 @@ from typing import Any
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
-from capturebrief_core.atomic_io import ensure_exact_bytes, ensure_exact_file
+from capturebrief_core.atomic_io import ensure_exact_bytes, ensure_exact_file, exclusive_path_lock
 from capturebrief_core.data_services import ARCHIVE_DOWNLOAD
 from capturebrief_core.history_index import download_extract_to_file
 
@@ -133,7 +133,55 @@ def retain_exact_fy2027(
     receipt_raw = (json.dumps(receipt, indent=2, sort_keys=True, ensure_ascii=False)
                    + "\n").encode("utf-8")
     receipt_path = root / f"FY2027-{digest}.receipt.json"
-    ensure_exact_bytes(receipt_path, receipt_raw)
+    # The original capture receipt is IMMUTABLE. Re-reading the same source
+    # later does not rewrite observed_at or pretend to be a new approved
+    # reviewer observation. Lock receipt verification/publication across
+    # concurrent operators, and reject tampered or forged old receipts.
+    with exclusive_path_lock(receipt_path):
+        if receipt_path.exists() or receipt_path.is_symlink():
+            if (receipt_path.is_symlink() or not receipt_path.is_file() or
+                    receipt_path.stat().st_size > 16 * 1024):
+                raise ValueError("Prior source retention receipt is unsafe")
+            retained_raw = receipt_path.read_bytes()
+
+            def no_duplicate_keys(pairs):
+                result = {}
+                for key, value in pairs:
+                    if key in result:
+                        raise ValueError("Duplicate fields in retained source receipt")
+                    result[key] = value
+                return result
+
+            previous = json.loads(retained_raw.decode("utf-8"),
+                                  object_pairs_hook=no_duplicate_keys)
+            required = (
+                "schema", "source_listing", "source_url", "prior_ci_sha256",
+                "prior_ci_run", "downloaded_sha256", "downloaded_bytes",
+                "operator_path", "test_override", "retained_original_file",
+                "local_file_sha256_verified", "catalog_approved",
+                "full_archive_history_verified", "human_source_review_complete",
+                "case_release_authorized", "external_send_authorized",
+            )
+            for key in required:
+                if key not in previous:
+                    raise ValueError("Existing original-source receipt is incomplete")
+                if key == "schema":
+                    if previous[key] != receipt["schema"]:
+                        raise ValueError("Existing source receipt schema conflict")
+                elif key not in ("prior_ci_run",):
+                    if previous[key] != receipt[key]:
+                        raise ValueError("Existing original-source receipt conflict")
+            if previous["prior_ci_run"] != PROVENANCE_RUN:
+                raise ValueError("Original-source receipt is bound to wrong provenance")
+            if not isinstance(previous.get("observed_at"), str):
+                raise ValueError("Original-source receipt has no observation timestamp")
+            if retained_raw != (
+                json.dumps(previous, indent=2, sort_keys=True, ensure_ascii=False)
+                + "\n").encode("utf-8"):
+                raise ValueError("Original-source receipt bytes were changed")
+            ensure_exact_bytes(receipt_path, retained_raw)
+        else:
+            ensure_exact_bytes(receipt_path, receipt_raw)
     return {
         "status": "PRIVATE_SOURCE_OBSERVATION_REVIEW_REQUIRED",
         "sha256": digest,
