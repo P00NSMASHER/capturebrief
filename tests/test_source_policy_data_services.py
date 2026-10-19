@@ -1,5 +1,6 @@
 import io
 import unittest
+from urllib.request import Request
 
 from capturebrief_core.current_api import (
     SEARCH_URL,
@@ -22,6 +23,7 @@ from capturebrief_core.manifest import (
 )
 from capturebrief_core.source_policy import (
     SourcePolicyError,
+    _OfficialExtractRedirectGuard,
     classify_sam_url,
     require_approved_automation,
     require_approved_extract_delivery,
@@ -151,6 +153,24 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
                 require_approved_extract_delivery(ARCHIVE_DOWNLOAD.format(fy=2027), bad)
             self.assertNotIn("leak-me", str(result.exception))
             self.assertNotIn("user:pw", str(result.exception))
+
+    def test_every_http_redirect_hop_is_guarded_before_following(self):
+        start = ARCHIVE_DOWNLOAD.format(fy=2027)
+        guard = _OfficialExtractRedirectGuard(start)
+        request = Request(start)
+        for bad in (
+            "https://evil.example/temporary-redirect",
+            "https://sam.gov/api/prod/fileextractservices/v1/api/download/"
+            "Contract%20Opportunities/Archived%20Data/FY2026_archived_opportunities.csv?privacy=Public",
+            "https://s3.amazonaws.com/falextracts/Contract%20Opportunities/"
+            "Archived%20Data/FY2028_archived_opportunities.csv",
+        ):
+            with self.subTest(bad=bad), self.assertRaises(SourcePolicyError):
+                guard.redirect_request(request, None, 302, "Found", {}, bad)
+        approved = ("https://s3.amazonaws.com/falextracts/Contract%20Opportunities/"
+                    "Archived%20Data/FY2027_archived_opportunities.csv")
+        redirected = guard.redirect_request(request, None, 302, "Found", {}, approved)
+        self.assertEqual(redirected.full_url, approved)
 
     def test_in_memory_download_accepts_only_explicit_sam_binding_and_bytes(self):
         original = (HEADER + row("notice1", "SOL-123")).encode("utf-8")
