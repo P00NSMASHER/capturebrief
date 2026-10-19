@@ -8,6 +8,7 @@ locally recorded SHA-256 (an integrity check, not publisher authentication).
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 import sqlite3
 from contextlib import closing
@@ -62,10 +63,11 @@ def _source_file_matches(row: dict, *, check_hash: bool, snapshot_root: Path) ->
         return False
 
 
-def inspect_private_index(
+def _inspect_index_for_explicit_years(
     index_path: str | Path,
     *,
     fiscal_year: int,
+    years: list[int],
     now: datetime,
     verify_bytes: bool = False,
     snapshot_root: str | Path | None = None,
@@ -74,7 +76,10 @@ def inspect_private_index(
     if not isinstance(now, datetime) or now.utcoffset() is None:
         raise ValueError("Inspection time must be timezone-aware")
     now = now.astimezone(timezone.utc)
-    years = catalog_years_for_fiscal_year(fiscal_year)  # fail-closed catalog check
+    if (type(years) is not list or len(years) == 0
+            or any(type(fy) is not int or fy < 1900 or fy > fiscal_year for fy in years)
+            or len(set(years)) != len(years)):
+        raise ValueError("Invalid explicit archive-year inventory for read-only audit")
     required = {"ACTIVE", *(f"ARCHIVE:{fy}" for fy in years)}
     path = _private_regular(index_path)
     raw_root = Path(snapshot_root).expanduser().absolute() if snapshot_root is not None else path.parent
@@ -154,3 +159,82 @@ def inspect_private_index(
         "human_catalog_approval_supplied": False,
         "external_send_authorized": False,
     }
+
+
+def inspect_private_index(
+    index_path: str | Path,
+    *,
+    fiscal_year: int,
+    now: datetime,
+    verify_bytes: bool = False,
+    snapshot_root: str | Path | None = None,
+) -> dict:
+    """Production-catalog-bound read-only coverage check; FY2027 still fails closed."""
+    years = catalog_years_for_fiscal_year(fiscal_year)
+    return _inspect_index_for_explicit_years(
+        index_path, fiscal_year=fiscal_year, years=years, now=now,
+        verify_bytes=verify_bytes, snapshot_root=snapshot_root,
+    )
+
+
+def inspect_unapproved_fy2027_candidate_index(
+    index_path: str | Path,
+    *,
+    now: datetime,
+    verify_bytes: bool = False,
+    snapshot_root: str | Path | None = None,
+) -> dict:
+    """Compare an existing private index with the frozen, UNAPPROVED 36-file listing.
+
+    Read-only diagnostic; NEVER certifies the FY2027 catalog even if all fake
+    or genuine local file hashes happen to match. Source candidates not yet
+    imported in the approved private index remain explicitly MISSING.
+    """
+    from scripts.reconcile_sam_catalog_candidate import reconcile_observation
+
+    observation_path = REPOSITORY / "research" / "sam_archives_observation_20261019.json"
+    if not observation_path.is_file() or observation_path.stat().st_size > 128 * 1024:
+        raise ValueError("Frozen FY2027 source observation is unavailable or oversized")
+
+    def reject_duplicate_keys(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Duplicate key in frozen source observation")
+            result[key] = value
+        return result
+
+    observation = json.loads(
+        observation_path.read_text(encoding="utf-8"),
+        object_pairs_hook=reject_duplicate_keys,
+    )
+    candidate = reconcile_observation(observation)
+    if (candidate["approved_to_update_catalog"] is not False
+            or candidate["approved_for_full_catalog_claims"] is not False
+            or candidate["production_current_through_fy"] != 2026):
+        raise ValueError("FY2027 candidate must be unapproved and production still pinned")
+    years = candidate["proposed_required_through_fy2027"]
+    # Require all 34 years plus active; exclude merely future-listed FY2029/30.
+    if len(years) != 34 or 2027 not in years or 2028 in years:
+        raise ValueError("FY2027 candidate year inventory is incomplete or unexpected")
+    audit = _inspect_index_for_explicit_years(
+        index_path, fiscal_year=2027, years=years, now=now,
+        verify_bytes=verify_bytes, snapshot_root=snapshot_root,
+    )
+    # Keep candidate completeness in separate names: no caller can mistake
+    # this result for approved production FULL_CATALOG coverage.
+    metadata_complete = audit.pop("metadata_complete")
+    local_file_hashes_match = audit.pop("local_file_hashes_match")
+    audit.update({
+        "schema": "capturebrief-fy2027-unapproved-candidate-coverage-v1",
+        "status": "FY2027_CATALOG_REVIEW_REQUIRED",
+        "candidate_observation_sha256": candidate["observation_sha256"],
+        "candidate_catalog_approved": False,
+        "candidate_metadata_complete": metadata_complete,
+        "candidate_local_file_hashes_match": local_file_hashes_match,
+        "production_catalog_current_through_fy": 2026,
+        "approved_full_catalog_coverage": False,
+        "customer_release_authorized": False,
+        "source_files_downloaded_by_this_tool": False,
+    })
+    return audit
