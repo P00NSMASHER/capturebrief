@@ -89,7 +89,7 @@
 
   const assumptionLines = () => assumptions.value
     .split(/\r?\n/)
-    .map(line => line.replace(/^\s*(?:[-*]|\d+[.)])\s*/, '').trim())
+    .map(line => line.replace(/^\s*(?:[-*]|[1-5][.)])\s+/, '').trim())
     .filter(Boolean);
 
   const setStatus = (message, error = false) => {
