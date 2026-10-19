@@ -225,11 +225,13 @@ def _download_extract_unlocked(
         os.replace(tmp,dest)
         fsync_directory(dest.parent)
     except HTTPError as exc:
-        raise HistoryIndexError(f"Data Services HTTP {exc.code}") from exc
-    except URLError as exc:
-        # URLError.reason may include an original signed URL or credentials.
-        # Avoid disclosing it in CI, logs or operator-facing errors.
-        raise HistoryIndexError("Data Services transport failure") from exc
+        # urllib HTTPError can carry a complete temporary signed S3 URL.
+        # Suppress traceback chaining as well as redacting the error text.
+        raise HistoryIndexError(f"Data Services HTTP {exc.code}") from None
+    except URLError:
+        # urllib's underlying exception may embed X-Amz-* tokens, credentials
+        # or private paths. Never expose that cause in traceback/log output.
+        raise HistoryIndexError("Data Services transport failure") from None
     finally:
         if tmp.exists():
             tmp.unlink()
