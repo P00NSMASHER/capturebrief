@@ -15,6 +15,14 @@ APPROVED_AUTOMATION_CLASSES = {
     "SAM_API_RESOURCE_LINK",
 }
 
+# Only these TWO first-party CSV families are permitted to support an
+# automated historical-extract source contract, always in PUBLIC mode.
+_EXTRACT_ROOT = "/api/prod/fileextractservices/v1/api/download/"
+_ORIGINAL = re.compile(
+    r"^Contract%20Opportunities/(?:datagov/ContractOpportunitiesFullCSV[.]csv|"
+    r"Archived%20Data/FY[0-9]{4}_archived_opportunities[.]csv)$"
+)
+
 
 def classify_sam_url(url: str) -> str:
     """Classify SAM/GSA URLs by the collection contract CaptureBrief is allowed to automate.
@@ -43,7 +51,9 @@ def classify_sam_url(url: str) -> str:
     ):
         return "SAM_PUBLIC_API"
 
-    if host == "sam.gov" and path.startswith("/api/prod/fileextractservices/v1/api/download/Contract%20Opportunities/"):
+    if (host == "sam.gov" and path.startswith(_EXTRACT_ROOT)
+            and p.query == "privacy=Public"
+            and _ORIGINAL.fullmatch(path.removeprefix(_EXTRACT_ROOT)) is not None):
         return "SAM_DATA_SERVICES_EXTRACT"
 
     # Attachment URLs returned by the documented Opportunities API may currently use this
@@ -75,13 +85,6 @@ def require_approved_automation(url: str, *, expected: str | None = None) -> str
 # web UI. Official SAM.gov Data Services may redirect a documented public
 # extract URL to the exact falextracts S3 object publicly listed by SAM.gov.
 # Retain the SAM entrypoint as the source and validate EACH redirected hop.
-_EXTRACT_ROOT = "/api/prod/fileextractservices/v1/api/download/"
-_ORIGINAL = re.compile(
-    r"^Contract%20Opportunities/(?:datagov/ContractOpportunitiesFullCSV[.]csv|"
-    r"Archived%20Data/FY[0-9]{4}_archived_opportunities[.]csv)$"
-)
-
-
 def require_approved_extract_delivery(entrypoint: str, delivered_url: str) -> str:
     """Verify exact SAM->SAM or SAM->official-object path binding.
 
