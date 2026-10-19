@@ -115,6 +115,22 @@ try:
                     check(len(requests_before) == loaded_requests, "Copying draft makes no network request")
                     check("Nothing was sent" not in page.locator("#request-status").inner_text(), "Copy status does not claim submission")
 
+                    # Do not silently erase legal clause numbers or FY
+                    # decimal identifiers that resemble list numbering.
+                    page.locator("#assumptions").fill(
+                        "1. FAR 52.204-21 applies.\n"
+                        "52.204-21 must be cited verbatim.\n"
+                        "2027.4 budget provision is current."
+                    )
+                    page.evaluate("window.__qaCopied = null")
+                    page.locator("#copy-request").click()
+                    page.wait_for_function("() => window.__qaCopied !== null")
+                    legal_copy = page.evaluate("window.__qaCopied")
+                    check("1. FAR 52.204-21 applies." in legal_copy and
+                          "2. 52.204-21 must be cited verbatim." in legal_copy and
+                          "3. 2027.4 budget provision is current." in legal_copy,
+                          "Federal clause/FY numbers must survive normalization")
+
                     # Full contract: five distinct 500-character lines must survive
                     # without HTML maxlength truncation or unreliable mailto links.
                     five_long = chr(10).join(chr(65+i) * 500 for i in range(5))
