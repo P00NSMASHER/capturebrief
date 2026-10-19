@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sqlite3
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,6 +24,7 @@ from capturebrief_core.archive_catalog import (
 from capturebrief_core.delivery_readiness import evaluate_delivery_readiness
 from capturebrief_core.delivery_verify import verify_delivery_bundle
 from capturebrief_core.watch_baseline import compare_watch_baseline
+from scripts.source_coverage_audit import inspect_private_index
 
 OFFICIAL_NOTICE = re.compile(r"^/opp/[0-9a-f]{32}/view/?$", re.I)
 
@@ -53,7 +55,8 @@ def inspect(
     bundle_path: str | None = None, receipt: dict[str, Any] | None = None,
     baseline: dict[str, Any] | None = None,
     observed_case: dict[str, Any] | None = None,
-    stage: str = "completion",
+    stage: str = "completion", history_index: str | None = None,
+    verify_source_bytes: bool = False,
 ) -> dict[str, Any]:
     """Assess observed evidence, separating admission from post-delivery work.
 
@@ -79,6 +82,46 @@ def inspect(
     except ArchiveCatalogStale:
         result("catalog", "BLOCKED_STALE_CATALOG",
                f"FY{fiscal_year} exceeds the last independently pinned first-party catalog observation")
+
+    if gates["catalog"]["status"] != "CATALOG_YEAR_COVERED":
+        result("source_index", "BLOCKED_CATALOG_STALE",
+               "No source index can override a catalog that is not independently certified through this fiscal year")
+    elif not history_index:
+        result("source_index", "BLOCKED_NO_PRIVATE_INDEX",
+               "A private first-party source index and independently retained extracts are required")
+    else:
+        try:
+            index_result = inspect_private_index(
+                history_index, fiscal_year=fiscal_year, now=now,
+                verify_bytes=verify_source_bytes,
+            )
+            if not index_result["metadata_complete"]:
+                status = "BLOCKED_INDEX_COVERAGE"
+            elif not verify_source_bytes:
+                status = "BLOCKED_INDEX_BYTES_UNCHECKED"
+            elif not index_result["local_file_hashes_match"]:
+                status = "BLOCKED_SOURCE_HASH_MISMATCH"
+            else:
+                status = "INDEX_LOCAL_HASHES_MATCH"
+            summary = {
+                "required_slot_count": index_result["required_slot_count"],
+                "fresh_slot_count": index_result["fresh_slot_count"],
+                "missing_slots": index_result["missing_slots"],
+                "stale_slots": index_result["stale_slots"],
+                "unverified_slots": index_result["unverified_slots"],
+                "missing_or_wrong_size_file_slots": index_result["missing_or_wrong_size_file_slots"],
+                "hash_mismatch_slots": index_result["hash_mismatch_slots"],
+                "file_hashes_checked": index_result["file_hashes_checked"],
+                "publisher_authenticity_independently_established": False,
+            }
+            gates["source_index"] = {
+                "status": status,
+                "reason": "Private index local metadata/hash audit only; publisher origin and human catalog review need independent evidence",
+                "coverage": summary,
+            }
+        except (ValueError, OSError, sqlite3.DatabaseError) as exc:
+            result("source_index", "BLOCKED_UNREADABLE_INDEX",
+                   "Private index unavailable, unsupported, or inconsistent: " + type(exc).__name__)
 
     if stage == "admission":
         result("real_case", "POST_ADMISSION_CUSTOMER_EVIDENCE",
@@ -164,8 +207,8 @@ def inspect(
     result("production", "PROTECTED_RELEASE_REVIEW_REQUIRED",
            "Any code or website changes require passing exact-head QA and approved publication")
 
-    technical = ("catalog", "real_case", "release", "delivery", "watch")
-    passes = {"CATALOG_YEAR_COVERED", "PUBLIC_LINK_FORMAT_VERIFIED",
+    technical = ("catalog", "source_index", "real_case", "release", "delivery", "watch")
+    passes = {"CATALOG_YEAR_COVERED", "INDEX_LOCAL_HASHES_MATCH", "PUBLIC_LINK_FORMAT_VERIFIED",
               "CORE_EVIDENCE_ELIGIBLE", "BUNDLE_BYTES_VERIFIED",
               "WATCH_FRESH_OBSERVATION_VERIFIED"}
     # No mere presence of a future/fictional case, copied email or unverified
@@ -173,7 +216,8 @@ def inspect(
     tech_ok = stage == "completion" and all(gates[key]["status"] in passes for key in technical)
     if stage == "admission":
         status = ("PILOT_ADMISSION_REVIEW_REQUIRED"
-                  if gates["catalog"]["status"] == "CATALOG_YEAR_COVERED"
+                  if (gates["catalog"]["status"] == "CATALOG_YEAR_COVERED"
+                      and gates["source_index"]["status"] == "INDEX_LOCAL_HASHES_MATCH")
                   else "PILOT_ADMISSION_BLOCKED")
     else:
         status = "AWAITING_EXTERNAL_PILOT_APPROVAL" if tech_ok else "PILOT_BLOCKED"
@@ -185,7 +229,7 @@ def inspect(
         "technical_preflight_passed": tech_ok,
         "approved_to_accept_payment_or_send_customer_material": False,
         "status": status,
-        "pre_pilot_gates": ["catalog", "intake", "payment", "operator", "production"],
+        "pre_pilot_gates": ["catalog", "source_index", "intake", "payment", "operator", "production"],
         "post_pilot_gates": ["real_case", "release", "delivery", "watch"],
         "gates": gates,
     }
@@ -199,6 +243,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--baseline", help="Delivered watch-baseline JSON")
     parser.add_argument("--observed-case", help="Freshly sourced later case snapshot JSON")
     parser.add_argument("--as-of", help="Timezone-aware ISO-8601 check time (default now)")
+    parser.add_argument("--history-index", help="Existing private read-only SAM source index; never created")
+    parser.add_argument("--verify-source-bytes", action="store_true",
+                        help="Stream/hash every required local extract (may require substantial disk I/O)")
     parser.add_argument("--stage", choices=("admission", "completion"), default="completion",
                         help="admission before the first customer; completion after the real delivered watch")
     args = parser.parse_args(argv)
@@ -208,7 +255,9 @@ def main(argv: list[str] | None = None) -> int:
         out = inspect(now=now, case=_read_object(args.case),
                       bundle_path=args.bundle, receipt=_read_object(args.receipt),
                       baseline=_read_object(args.baseline),
-                      observed_case=_read_object(args.observed_case), stage=args.stage)
+                      observed_case=_read_object(args.observed_case), stage=args.stage,
+                      history_index=args.history_index,
+                      verify_source_bytes=args.verify_source_bytes)
     except (ValueError, OSError, TypeError, json.JSONDecodeError) as exc:
         print(json.dumps({"status": "PILOT_BLOCKED", "error": type(exc).__name__}))
         return 2
