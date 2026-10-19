@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -145,6 +146,32 @@ class PilotWatchReceiptTests(unittest.TestCase):
                 )
             self.assertEqual(len(list(Path(folder).glob("watch-*.json"))), 1)
             self.assertTrue(Path(original["receipt_path"]).exists())
+
+    def test_simultaneous_first_checks_cannot_fork_the_chain(self):
+        import copy
+        with tempfile.TemporaryDirectory() as folder:
+            changed = copy.deepcopy(self.case)
+            changed["packet"]["artifacts"][0]["sha256"] = "d" * 64
+            when = NOW + timedelta(minutes=10)
+
+            def check(case):
+                return evaluate_and_retain(
+                    self.baseline, case, checked_at=when, receipt_dir=folder,
+                )
+
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                futures = [pool.submit(check, case)
+                           for case in (self.case, changed)]
+                results = []
+                for future in futures:
+                    try:
+                        results.append(("ok", future.result()))
+                    except ValueError as exc:
+                        results.append(("blocked", str(exc)))
+            self.assertEqual([status for status, _ in results].count("ok"), 1)
+            self.assertEqual([status for status, _ in results].count("blocked"), 1)
+            self.assertEqual(len(list(Path(folder).glob("watch-*.json"))), 1)
+            self.assertFalse((Path(folder) / ".watch-series.lock").exists())
 
     def test_tamper_cannot_overwrite_prior_receipt(self):
         with tempfile.TemporaryDirectory() as folder:
