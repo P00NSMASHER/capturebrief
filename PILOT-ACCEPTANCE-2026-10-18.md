@@ -18,7 +18,15 @@ Authoritative website: https://p00nsmasher.github.io/capturebrief/ on the gh-pag
 
 - [x] An October 18 read-only inspection of SAM.gov's live first-party Archived Data page visibly found FY2027_archived_opportunities.csv marked Public. FY2026, FY2029 and FY2030 also appeared; FY2028 was not established by that inspection. Official source: https://sam.gov/data-services/Contract%20Opportunities/Archived%20Data?privacy=Public .
 - [ ] Preserve a distinct **human-reviewed** October FY2027 catalog observation, exact observed year inventory, source identity, observation timestamp, version/hash and independent approval before updating the canonical approved catalog. A browser agent's observation is not a human signoff.
-- [ ] Fetch and retain genuine approved first-party active and relevant archive extract bytes, update index receipts and confirm currentness, including FY2027 before issuing any FY2027 FULL_CATALOG completeness claim.
+- [x] Independently compute a streaming SHA-256 of the entire public FY2027
+  official-listing S3 file in one bounded, no-secret GitHub Actions run
+  [#39205786451](https://github.com/P00NSMASHER/capturebrief/actions/runs/39205786451):
+  1,607,260 bytes, 1,104 CSV rows, SHA-256
+  `7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce`.
+  The file was read in ephemeral CI and **not durably retained**.
+- [ ] Fetch and privately retain genuine approved first-party active and ALL
+  relevant archive extract bytes, update index receipts and confirm source
+  freshness, including FY2027, before any FY2027 FULL_CATALOG claim.
 - [x] Retain the existing FY2027 fail-closed production logic until both independent catalog review and required fresh source receipts are complete. Do not silently backdate live checks to FY2026 or invent a FY2028 record.
 - [x] Add private read-only coverage auditing to the pilot preflight. The audit examines the existing SQLite source index, validates required source-slot identities and checked timestamps, detects missing/stale/unverified entries or missing files, and can optionally stream-check recorded extract SHA-256 hashes. It does not initialize/migrate the index, download sources or prove publisher origin. No private paths or contents are returned in the report.
 - [ ] Perform the audit against the actual operator-held, current-FY SAM extract index. There is no FY2027-recertified index or genuine publisher-byte evidence available in this public repository.
