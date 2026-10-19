@@ -23,7 +23,49 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/retain_fy2027_candidate.py --private-dir "$RUNNER_TEMP/capturebrief-test-retention"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from scripts.retain_fy2027_candidate import retain_exact_fy2027
+          from capturebrief_core.history_index import download_extract_to_file
+          from capturebrief_core.data_services import ARCHIVE_DOWNLOAD
+          dest = Path(os.environ["RUNNER_TEMP"]) / "capturebrief-test-retention"
+          try:
+              result = retain_exact_fy2027(dest)
+              print(json.dumps({"operator_retention_status":result["status"],
+                                "source_digest":result["sha256"],
+                                "bytes":result["bytes"],
+                                "catalog_approved":False}))
+          except Exception as exc:
+              reason = str(exc)
+              code = (
+                  "DIFFERENT_FROM_PREVIOUSLY_VERIFIED_SHA" if "original changed" in reason
+                  else "PRIVATE_ROOT_ERROR" if "private" in reason.lower()
+                  else "ATOMIC_RETENTION_ERROR" if "artifact" in reason or "retained" in reason
+                  else "UNCLASSIFIED_SAFE_FAILURE"
+              )
+              print(json.dumps({"operator_retention_status":"BLOCKED",
+                                "exception_type":type(exc).__name__,
+                                "reason_code":code,
+                                "approved_to_update_catalog":False}))
+              # Separately observe the current exact public SAM object bytes
+              # without storing its presigned redirect, uploading, or approving.
+              source = dest.parent / "diagnostic-public-fy2027.csv"
+              try:
+                  r = download_extract_to_file(source,
+                      source_url=ARCHIVE_DOWNLOAD.format(fy=2027),
+                      max_bytes=2000000, timeout=40)
+                  print(json.dumps({"live_public_original_bytes":r["size_bytes"],
+                       "live_public_original_sha256":r["sha256"],
+                       "final_host_only":r["final_delivery_host"],
+                       "matches_prior_verified_original":r["sha256"] ==
+                        "7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce",
+                       "human_review_complete":False}))
+              except Exception as further:
+                  print(json.dumps({"diagnostic_status":"SOURCE_FETCH_UNAVAILABLE",
+                       "reason_type":type(further).__name__}))
+              raise SystemExit(2)
+          PY
           python - <<'PY'
           import hashlib
           import json
