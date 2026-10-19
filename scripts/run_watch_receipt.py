@@ -133,6 +133,12 @@ def evaluate_and_retain(
         baseline, refreshed_case, now=checked_at,
         previous_observation=previous_observation,
     )
+    # A same-time check may replay only the exact original result. Creating
+    # another observation at the same timestamp would fork the signed chain.
+    if (history and checked_at == history[-1][0] and
+            observation["observation_sha256"] !=
+            history[-1][1]["observation_sha256"]):
+        raise ValueError("Conflicting same-time watch observations")
     if observation["watch_status"] == "NO_CHANGE_OBSERVED" and not observation["fresh_observation_evidenced"]:
         raise ValueError("A clean watch result requires fresh retained source observations")
     raw = (json.dumps(observation, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8")
