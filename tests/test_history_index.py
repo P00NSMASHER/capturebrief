@@ -268,6 +268,49 @@ class HistoryIndexTests(unittest.TestCase):
             self.assertIn("content-addressed snapshot retention failed",str(ctx.exception))
             self.assertEqual(conflicting.read_bytes(),b"different")
 
+    def test_first_party_sam_extract_redirects_to_exact_official_s3_object(self):
+        target = ("https://s3.amazonaws.com/falextracts/Contract%20Opportunities/"
+                  "Archived%20Data/FY2026_archived_opportunities.csv")
+        source = ARCHIVE_DOWNLOAD.format(fy=2026)
+        class OfficialRedirect(FakeResponse):
+            def geturl(self):
+                return target
+        with tempfile.TemporaryDirectory() as td:
+            dest = Path(td) / "fy2026.csv"
+            data = b"NoticeId,Sol#,PostedDate,Type,Active,AAC Code,Office,Link\nabc,SOL,09/21/2026,Solicitation,No,AAC1,TEST,https://sam.gov/opp/example/view\n"
+            result = download_extract_to_file(
+                dest, source_url=source, opener=lambda req, timeout=120: OfficialRedirect(data),
+            )
+            self.assertEqual(dest.read_bytes(), data)
+            self.assertTrue(result["redirect_used"])
+            self.assertEqual(result["final_delivery_host"], "s3.amazonaws.com")
+            self.assertEqual(result["sha256"], __import__("hashlib").sha256(data).hexdigest())
+            self.assertFalse(result["final_url_retained"])
+            self.assertNotIn("final_url", result)
+            self.assertRegex(result["final_url_sha256"], "^[a-f0-9]{64}$")
+
+    def test_unapproved_s3_redirect_cannot_publish_download_bytes(self):
+        source = ARCHIVE_DOWNLOAD.format(fy=2026)
+        prior = b"previous"
+        fetched = []
+        class WrongObject(FakeResponse):
+            def geturl(self):
+                return ("https://s3.amazonaws.com/falextracts/Contract%20Opportunities/"
+                        "Archived%20Data/FY2027_archived_opportunities.csv")
+            def read(self, n=-1):
+                fetched.append(True)
+                return super().read(n)
+        with tempfile.TemporaryDirectory() as td:
+            target = Path(td) / "fy2026.csv"
+            target.write_bytes(prior)
+            with self.assertRaises(RuntimeError):
+                download_extract_to_file(
+                    target, source_url=source, opener=lambda req, timeout=120: WrongObject(b"forged")
+                )
+            self.assertEqual(fetched, [])
+            self.assertEqual(target.read_bytes(), prior)
+            self.assertEqual(list(Path(td).glob(".*.download")), [])
+
     def test_data_services_redirect_to_unapproved_host_is_rejected(self):
         class RedirectResponse(FakeResponse):
             def geturl(self):
