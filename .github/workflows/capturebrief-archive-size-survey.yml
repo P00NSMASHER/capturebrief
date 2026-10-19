@@ -1,0 +1,71 @@
+name: CaptureBrief one-time FY2027 archive size survey (RESEARCH ONLY)
+
+on:
+  push:
+    branches: [qa/pilot-composition-acceptance-20261019]
+    paths: ['.github/workflows/capturebrief-archive-size-survey.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  inventory-storage-estimate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read public SAM archive-listing metadata without downloading CSV content
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from urllib.parse import urlsplit
+          from urllib.request import Request, build_opener, HTTPRedirectHandler
+          url = ("https://sam.gov/api/prod/fileextractservices/v1/api/listfiles"
+                 "?domain=Contract%20Opportunities%2FArchived%20Data&privacy=Public")
+          class NoRedirect(HTTPRedirectHandler):
+              def redirect_request(self, *args):
+                  raise ValueError("no metadata redirects allowed")
+          try:
+              with build_opener(NoRedirect()).open(
+                  Request(url, headers={"Accept":"application/json",
+                                        "User-Agent":"CaptureBrief-Archive-Size-Research/1.0"}),
+                  timeout=15
+              ) as response:
+                  assert response.status == 200
+                  assert urlsplit(response.geturl()).hostname == "sam.gov"
+                  raw = response.read(2 * 1024 * 1024 + 1)
+                  assert len(raw) < 2 * 1024 * 1024, "metadata only"
+                  obj = json.loads(raw)
+          except Exception as exc:
+              print(json.dumps({"status":"METADATA_UNAVAILABLE",
+                                "error_type":type(exc).__name__,
+                                "full_catalog_approved":False}))
+              raise SystemExit(0)
+          records = {}
+          pattern = re.compile(r"^FY(\\d{4})_archived_opportunities[.]csv$")
+          def visit(node):
+              if isinstance(node, list):
+                  for sub in node:
+                      visit(sub)
+              elif isinstance(node, dict):
+                  matches = [v for v in node.values()
+                             if isinstance(v,str) and pattern.fullmatch(v)]
+                  for name in matches:
+                      year = int(pattern.fullmatch(name).group(1))
+                      relevant = {k:v for k,v in node.items()
+                                  if re.search("size|length|byte", k, re.I)
+                                  and isinstance(v, (int,float,str))}
+                      records[year] = relevant
+                  for sub in node.values():
+                      if isinstance(sub, (dict,list)):
+                          visit(sub)
+          visit(obj)
+          output = {"status":"PUBLIC_METADATA_ONLY",
+                    "archive_year_count":len(records),
+                    "per_year_size_metadata":{str(y):records[y] for y in sorted(records)},
+                    "full_original_files_fetched":0,
+                    "FY2027_catalog_approved":False,
+                    "complete_source_history_verified":False}
+          print(json.dumps(output, sort_keys=True))
+          PY
