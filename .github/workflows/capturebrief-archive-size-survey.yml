@@ -43,7 +43,7 @@ jobs:
                                 "full_catalog_approved":False}))
               raise SystemExit(0)
           records = {}
-          pattern = re.compile(r"^FY(\\d{4})_archived_opportunities[.]csv$")
+          pattern = re.compile(r"^FY(\d{4})_archived_opportunities[.]csv$")
           def visit(node):
               if isinstance(node, list):
                   for sub in node:
