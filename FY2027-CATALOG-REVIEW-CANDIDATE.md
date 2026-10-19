@@ -47,8 +47,8 @@ FY2027 original object metadata:
 - S3 Last-Modified: 2026-10-18 14:51:03 GMT.
 - S3 ETag: 342a9a79f252ba732c347376f4efa66f
   (not asserted to be a SHA-256 checksum).
-- Full FY2027 original source bytes and independently computed complete-file
-  SHA-256 remain **UNVERIFIED** pending a complete download/review.
+- At that earlier time only a one-byte probe had been completed. A later,
+  separately documented complete-object read is described below.
 
 The current production-approved catalog is STILL observed September 21, 2026,
 current through FY2026; this machine/browser observation does NOT supply the
@@ -79,6 +79,27 @@ FY2027 original full CSV has not been downloaded and its complete SHA-256
 remains unavailable here. Official collection and human source review still
 need to happen in an authorized external environment.
 
+## October 19 full original-file checksum — automated, unreviewed
+
+A one-time **read-only GitHub Actions source probe** successfully downloaded
+the complete official-listing S3 object from the exact first-party-listed
+URL, prohibited redirect following, checked full HTTP 200, verified required
+CSV columns, counted data rows and computed a streaming SHA-256 digest.
+
+- Source proof workflow: [GitHub Actions #39205786451](https://github.com/P00NSMASHER/capturebrief/actions/runs/39205786451)
+- Original object bytes read: **1,607,260**
+- CSV records (excluding header): **1,104**
+- SHA-256: `7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce`
+- S3 last modified: 2026-10-18 14:51:03 GMT.
+- S3 ETag: `342a9a79f252ba732c347376f4efa66f` (not represented as SHA).
+- Full raw bytes **were read but not retained**: the CI runner deleted its
+  temporary original file. A digest is not a replacement for locally
+  retained original bytes in the approved source-history index.
+- Machine-readable proof: `research/fy2027_original_bytes_observation_20261019.json`.
+- Result status: **AUTOMATED_UNREVIEWED_PUBLIC_ORIGIN_BYTES**.
+  This does **not** grant catalog signoff, source provenance review,
+  full historical coverage or permission to release a customer package.
+
 ## Source recertification: exact checks to perform
 
 - [ ] Independently load the above *first-party page* at the review time.
@@ -97,8 +118,11 @@ need to happen in an authorized external environment.
       A bot's read-only browsing is not a human-reviewed catalog signoff.
 - [ ] Require whole-catalog hash consistency tests and explicit negative
       controls for unapproved future fiscal years and edited snapshot hashes.
-- [ ] Obtain immutable approved-source active/archive CSV receipts, per-file
-      SHA-256 and refreshed observation times for each required FY2027 year slot.
+- [x] Calculate and independently log an automated SHA-256 for the complete
+      FY2027 public object (original bytes were not retained by CI).
+- [ ] Independently review and durably retain original approved-source active
+      and archive CSV bytes for **all** required FY2027 year slots, with
+      per-file SHA-256 and refreshed checked-at timestamps in a private index.
 - [ ] Independently pass both Linux and Windows Product Core exact-head tests
       and protected-main review before any deployment or customer claim.
 
