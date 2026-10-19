@@ -7,7 +7,9 @@ No email, payment, SAM API, third-party submission, or customer data.
 """
 from __future__ import annotations
 
+import copy
 import functools
+import importlib.util
 import json
 import os
 import threading
@@ -93,6 +95,101 @@ def assert_case(draft, *, claim, count):
     return case
 
 
+def check_fictional_processor_contract(core_case, browser_name):
+    """Check the payment contract as a THIRD independent proposed PR.
+
+    These are MADE-UP Stripe-shaped objects, never actual processor receipts.
+    Even a matching set does not authenticate a provider or authorize work.
+    """
+    payment_root = Path(os.environ["PAYMENT_CHECKOUT"]).resolve(strict=True)
+    module_path = payment_root / "capturebrief_core" / "payment_reconciliation.py"
+    check(module_path.is_file(), "pinned payment PR code is missing")
+    spec = importlib.util.spec_from_file_location(
+        "capturebrief_candidate_payment_reconciliation", module_path,
+    )
+    check(spec is not None and spec.loader is not None, "payment module loader missing")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    session = {
+        "object": "checkout.session",
+        "id": "cs_live_FICTIONALWEB2CORE",
+        "livemode": True,
+        "payment_link": module.PAYMENT_LINK_ID,
+        "mode": "payment",
+        "status": "complete",
+        "payment_status": "paid",
+        "currency": "usd",
+        "amount_total": 14900,
+        "customer_details": {"email": core_case["intake"]["email"]},
+        "payment_intent": "pi_FICTIONALWEB2CORE",
+    }
+    payment = {
+        "object": "payment_intent",
+        "id": "pi_FICTIONALWEB2CORE",
+        "livemode": True,
+        "status": "succeeded",
+        "capture_method": "automatic",
+        "currency": "usd",
+        "amount": 14900,
+        "amount_received": 14900,
+        "latest_charge": "ch_FICTIONALWEB2CORE",
+    }
+    charge = {
+        "object": "charge",
+        "id": "ch_FICTIONALWEB2CORE",
+        "payment_intent": "pi_FICTIONALWEB2CORE",
+        "livemode": True,
+        "paid": True,
+        "captured": True,
+        "status": "succeeded",
+        "currency": "usd",
+        "amount": 14900,
+        "amount_refunded": 0,
+        "refunded": False,
+        "disputed": False,
+        "failure_code": None,
+    }
+
+    def reconcile(s, p, c, **overrides):
+        return module.reconcile_capturebrief_payment(
+            s, p, c, account_id=overrides.get("account_id", module.ACCOUNT_ID),
+            buyer_email=overrides.get("buyer_email", core_case["intake"]["email"]),
+        )
+
+    consistent = reconcile(session, payment, charge)
+    check(consistent["payment_verified_by_matching_records"], "fictional records failed internal consistency")
+    check(not consistent["processor_records_authenticated_by_caller"] and
+          not consistent["work_authorized"] and
+          not consistent["external_send_authorized"],
+          "fictional processor record match mistakenly authorized external action")
+
+    refunded = copy.deepcopy(charge)
+    refunded["refunded"] = True
+    refunded["amount_refunded"] = 14900
+    check(not reconcile(session, payment, refunded)["payment_verified_by_matching_records"],
+          "refunded fictional payment mistakenly accepted")
+
+    sandbox = copy.deepcopy(session)
+    sandbox["id"] = "cs_test_FICTIONALWEB2CORE"
+    sandbox["livemode"] = False
+    check(not reconcile(sandbox, payment, charge)["payment_verified_by_matching_records"],
+          "sandbox payment mistakenly accepted as live")
+
+    check(not reconcile(session, payment, charge,
+                        buyer_email="another-buyer@example.com")["payment_verified_by_matching_records"],
+          "wrong buyer email wrongly matched against payment")
+    check(not reconcile(session, payment, charge,
+                        account_id="acct_NOT_CAPTUREBRIEF")["payment_verified_by_matching_records"],
+          "wrong Stripe account was accepted")
+    return [
+        browser_name + ": fictional processor triple remains review-only",
+        browser_name + ": fully refunded order rejected",
+        browser_name + ": Stripe test-mode order cannot count as live",
+        browser_name + ": buyer/account mismatches rejected",
+    ]
+
+
 def run():
     server = ThreadingHTTPServer(
         ("127.0.0.1", 0),
@@ -126,6 +223,7 @@ def run():
                     check(case["assumptions"][0]["text"] == "The original deadline is unchanged.",
                           "first assumption changed in transit")
                     checks.append(browser_name + ": fictional scope copy => unproven backend case")
+                    checks.extend(check_fictional_processor_contract(case, browser_name))
 
                     fill(page, purchase="PAID")
                     paid = copy_request(page)
@@ -222,6 +320,8 @@ def run():
         "stripe_charges": 0,
         "customer_records_used": False,
         "backend_persists_customer_data": False,
+        "stripe_provider_records_real": False,
+        "stripe_payment_candidate_pinned": True,
         "approved_to_accept_paid_pilot": False,
         "cross_branch_contract_passed": bool(checks) and not errors,
     }
