@@ -27,7 +27,10 @@ from .data_services import (
     FamilyAmbiguous,
 )
 from .model import canonical_json, history_set_digest, parse_dt, sha256_hex
-from .source_policy import require_approved_automation
+from .source_policy import (
+    open_approved_extract, require_approved_automation,
+    require_approved_extract_delivery,
+)
 
 INDEX_SCHEMA_VERSION = 2
 DEFAULT_MAX_EXTRACT_BYTES = 2_000_000_000
@@ -167,7 +170,7 @@ def _download_extract_unlocked(
     source_url: str,
     timeout: float = 120.0,
     max_bytes: int = DEFAULT_MAX_EXTRACT_BYTES,
-    opener=urlopen,
+    opener=None,
 ) -> dict[str, Any]:
     require_approved_automation(source_url, expected="SAM_DATA_SERVICES_EXTRACT")
     if max_bytes <= 0:
@@ -181,8 +184,10 @@ def _download_extract_unlocked(
     tmp=Path(temp_name)
     try:
         try:
-            response=opener(req,timeout=timeout)
+            response=open_approved_extract(req,timeout=timeout,source_url=source_url,opener=opener)
             with response, os.fdopen(fd,"wb",closefd=False) as out:
+                final_url=response.geturl() if hasattr(response,"geturl") else source_url
+                final_host=require_approved_extract_delivery(source_url,final_url)
                 declared=response.headers.get("Content-Length") if getattr(response,"headers",None) else None
                 declared_size=None
                 if declared not in (None,""):
@@ -207,8 +212,6 @@ def _download_extract_unlocked(
                     raise HistoryIndexError(
                         f"extract byte count {size} does not match Content-Length {declared_size}"
                     )
-                final_url=response.geturl() if hasattr(response,"geturl") else source_url
-                require_approved_automation(final_url,expected="SAM_DATA_SERVICES_EXTRACT")
                 out.flush()
                 os.fsync(out.fileno())
                 source_etag=response.headers.get("ETag") if getattr(response,"headers",None) else None
@@ -234,7 +237,10 @@ def _download_extract_unlocked(
         "sha256":digest.hexdigest(),
         "size_bytes":size,
         "observed_at":datetime.now(timezone.utc).isoformat(),
-        "final_url":final_url,
+        "final_url_retained":False,
+        "redirect_used":final_url!=source_url,
+        "final_delivery_host":final_host,
+        "final_url_sha256":hashlib.sha256(final_url.encode("utf-8")).hexdigest(),
         "source_etag":source_etag,
         "source_last_modified":source_last_modified,
     }
@@ -246,7 +252,7 @@ def download_extract_to_file(
     source_url: str,
     timeout: float = 120.0,
     max_bytes: int = DEFAULT_MAX_EXTRACT_BYTES,
-    opener=urlopen,
+    opener=None,
     lock_timeout_seconds: float = 5.0,
 ) -> dict[str, Any]:
     """Stream one approved Data Services extract to disk with atomic publication."""
@@ -272,7 +278,7 @@ def fetch_and_ingest_slot(
     snapshot_dir: str | Path | None = None,
     observed_at: str | None = None,
     max_bytes: int = DEFAULT_MAX_EXTRACT_BYTES,
-    opener=urlopen,
+    opener=None,
     lock_timeout_seconds: float = 5.0,
 ) -> dict[str, Any]:
     """Fetch and ingest one slot while preserving exact immutable source bytes."""
