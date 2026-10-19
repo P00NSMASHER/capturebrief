@@ -36,10 +36,15 @@ def _private_regular(path: str | Path) -> Path:
     return resolved
 
 
-def _source_file_matches(row: dict, *, check_hash: bool) -> bool:
+def _source_file_matches(row: dict, *, check_hash: bool, snapshot_root: Path) -> bool:
     try:
         path = Path(str(row["local_path"]))
         if not path.is_absolute() or path.is_symlink() or not path.is_file():
+            return False
+        # Database fields are untrusted pointers. Never inspect arbitrary
+        # operator/system files: only the explicitly approved extract root.
+        resolved = path.resolve(strict=True)
+        if not resolved.is_relative_to(snapshot_root):
             return False
         declared = row["size_bytes"]
         if type(declared) is not int or declared < 1:
@@ -63,6 +68,7 @@ def inspect_private_index(
     fiscal_year: int,
     now: datetime,
     verify_bytes: bool = False,
+    snapshot_root: str | Path | None = None,
 ) -> dict:
     """Summarize approved SAM slot metadata; never create/mutate the index."""
     if not isinstance(now, datetime) or now.utcoffset() is None:
@@ -71,6 +77,12 @@ def inspect_private_index(
     years = catalog_years_for_fiscal_year(fiscal_year)  # fail-closed catalog check
     required = {"ACTIVE", *(f"ARCHIVE:{fy}" for fy in years)}
     path = _private_regular(index_path)
+    raw_root = Path(snapshot_root).expanduser().absolute() if snapshot_root is not None else path.parent
+    if raw_root.is_symlink() or raw_root.is_relative_to(REPOSITORY):
+        raise ValueError("Snapshot root must be a private directory outside public repository")
+    allowed_root = raw_root.resolve(strict=True)
+    if allowed_root.is_relative_to(REPOSITORY) or not allowed_root.is_dir():
+        raise ValueError("Snapshot root must be a private directory outside public repository")
     uri = "file:" + quote(str(path), safe="/:") + "?mode=ro"
     with closing(sqlite3.connect(uri, uri=True, timeout=5)) as conn:
         conn.row_factory = sqlite3.Row
@@ -114,10 +126,10 @@ def inspect_private_index(
         if now - checked > age_limit or checked > now + timedelta(minutes=5):
             stale.append(slot)
             continue
-        if not _source_file_matches(row, check_hash=False):
+        if not _source_file_matches(row, check_hash=False, snapshot_root=allowed_root):
             missing_bytes.append(slot)
             continue
-        if verify_bytes and not _source_file_matches(row, check_hash=True):
+        if verify_bytes and not _source_file_matches(row, check_hash=True, snapshot_root=allowed_root):
             mismatched_hashes.append(slot)
             continue
         fresh.append(slot)
