@@ -135,7 +135,7 @@ def run():
                     checks.append(browser_name + ": PAID claim remains unverified")
 
                     lines = [chr(65+i)*500 for i in range(5)]
-                    fill(page, assumptions="\n".join(lines))
+                    fill(page, purchase="PAID", assumptions="\n".join(lines))
                     check(page.locator("#assumptions").input_value() == "\n".join(lines),
                           "website truncated 2500 buyer assumption characters")
                     long_draft = copy_request(page)
@@ -152,6 +152,23 @@ def run():
                           "too long" in page.locator("#request-status").inner_text().lower(),
                           "oversized draft failed safe copy-only fallback")
                     checks.append(browser_name + ": long mailto refused; copy still works")
+
+                    # A leading FAR clause ID must NEVER be stripped as
+                    # optional list numbering by the browser composer.
+                    numbered = (
+                        "1. FAR 52.204-21 applies.\n"
+                        "52.204-21 must be cited verbatim.\n"
+                        "2027.4 budget provision is current."
+                    )
+                    fill(page, purchase="SCOPE_FIRST", assumptions=numbered)
+                    clause_draft = copy_request(page)
+                    clauses = assert_case(clause_draft, claim=SCOPE_CLAIM, count=3)
+                    check([x["text"] for x in clauses["assumptions"]] == [
+                        "FAR 52.204-21 applies.",
+                        "52.204-21 must be cited verbatim.",
+                        "2027.4 budget provision is current.",
+                    ], "FAR clause/FY identifiers were dropped in UI normalization")
+                    checks.append(browser_name + ": legal clause/FY IDs survive copy/import")
 
                     # Browser must not produce a draft that core would reject.
                     invalids = [
