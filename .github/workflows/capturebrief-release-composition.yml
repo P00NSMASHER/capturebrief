@@ -1,11 +1,13 @@
 name: CaptureBrief proposed release composition (NO DEPLOY)
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - qa/pilot-composition-acceptance-20261019
     paths:
       - ".github/workflows/capturebrief-release-composition.yml"
+      - "PILOT-COMPOSITION-RECEIPT-2026-10-19.md"
 
 # Ephemeral synthetic merges only. Never merges/deploys to main or gh-pages.
 permissions:
