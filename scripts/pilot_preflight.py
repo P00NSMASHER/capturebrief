@@ -61,6 +61,7 @@ def inspect(
     observed_case: dict[str, Any] | None = None,
     stage: str = "completion", history_index: str | None = None,
     verify_source_bytes: bool = False,
+    source_snapshot_root: str | None = None,
 ) -> dict[str, Any]:
     """Assess observed evidence, separating admission from post-delivery work.
 
@@ -98,6 +99,7 @@ def inspect(
             index_result = inspect_private_index(
                 history_index, fiscal_year=fiscal_year, now=now,
                 verify_bytes=verify_source_bytes,
+                snapshot_root=source_snapshot_root,
             )
             if not index_result["metadata_complete"]:
                 status = "BLOCKED_INDEX_COVERAGE"
@@ -262,6 +264,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--history-index", help="Existing private read-only SAM source index; never created")
     parser.add_argument("--verify-source-bytes", action="store_true",
                         help="Stream/hash every required local extract (may require substantial disk I/O)")
+    parser.add_argument("--source-snapshot-root",
+                        help="Approved private extract directory; defaults to index file's directory")
     parser.add_argument("--stage", choices=("admission", "completion"), default="completion",
                         help="admission before the first customer; completion after the real delivered watch")
     args = parser.parse_args(argv)
@@ -273,7 +277,8 @@ def main(argv: list[str] | None = None) -> int:
                       baseline=_read_object(args.baseline),
                       observed_case=_read_object(args.observed_case), stage=args.stage,
                       history_index=args.history_index,
-                      verify_source_bytes=args.verify_source_bytes)
+                      verify_source_bytes=args.verify_source_bytes,
+                      source_snapshot_root=args.source_snapshot_root)
     except (ValueError, OSError, TypeError, json.JSONDecodeError) as exc:
         print(json.dumps({"status": "PILOT_BLOCKED", "error": type(exc).__name__}))
         return 2
