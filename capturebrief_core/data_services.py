@@ -3,12 +3,14 @@ from __future__ import annotations
 import csv
 import hashlib
 import io
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from .archive_catalog import ARCHIVE_CATALOG_CURRENT_THROUGH_FY
 from .model import canonical_json, history_set_digest, parse_dt, sha256_hex
 from .source_policy import (
     open_approved_extract, require_approved_automation,
@@ -32,6 +34,25 @@ class FamilyAmbiguous(DataServicesError):
 
 def _norm(value: Any) -> str:
     return " ".join(str(value or "").split()).strip().upper()
+
+
+def _require_exact_original_source_slot(source_kind: str, fiscal_year: int | None,
+                                        source_url: str) -> str:
+    """Bind source type to exact GSA active/archive original endpoint.
+
+    A URL being in the approved Data Services class does not prove it
+    describes the specific ARCHIVE FY or ACTIVE type supplied by a caller.
+    """
+    if source_kind not in {"ACTIVE", "ARCHIVE"}:
+        raise ValueError("source_kind must be ACTIVE or ARCHIVE")
+    if source_kind == "ACTIVE":
+        if fiscal_year is not None or source_url != ACTIVE_DOWNLOAD:
+            raise ValueError("ACTIVE original source and fiscal-year label do not match")
+        return "ACTIVE"
+    if (type(fiscal_year) is not int or not 1900 <= fiscal_year <= 2099
+            or source_url != ARCHIVE_DOWNLOAD.format(fy=fiscal_year)):
+        raise ValueError("ARCHIVE original fiscal year and official source URL do not match")
+    return f"ARCHIVE:{fiscal_year}"
 
 
 def fiscal_year_for_date(value: str) -> int:
@@ -112,19 +133,7 @@ def scan_extract_bytes(
     solicitation_number: str,
     fiscal_year: int | None = None,
 ) -> dict[str, Any]:
-    if source_kind not in {"ACTIVE", "ARCHIVE"}:
-        raise ValueError("source_kind must be ACTIVE or ARCHIVE")
-    # An approved SAM URL is NOT permission to relabel an ACTIVE original
-    # as an archived year or another FY. Without exact slot binding,
-    # a missing archived original can be masked with a different file and
-    # a caller-confirmed scope can incorrectly return COMPLETE.
-    if source_kind == "ACTIVE":
-        if fiscal_year is not None or source_url != ACTIVE_DOWNLOAD:
-            raise ValueError("ACTIVE original source and fiscal-year label do not match")
-    else:
-        if (type(fiscal_year) is not int or not 1900 <= fiscal_year <= 2099
-                or source_url != ARCHIVE_DOWNLOAD.format(fy=fiscal_year)):
-            raise ValueError("ARCHIVE original fiscal year and official source URL do not match")
+    _require_exact_original_source_slot(source_kind, fiscal_year, source_url)
     require_approved_automation(source_url, expected="SAM_DATA_SERVICES_EXTRACT")
     target = _norm(solicitation_number)
     if not target:
@@ -251,6 +260,51 @@ def issue_history_receipt_from_snapshots(
     observed_at = observed_at or datetime.now(timezone.utc).isoformat()
     if not parse_dt(observed_at):
         raise ValueError("observed_at must be timezone-aware ISO-8601")
+    target_solicitation = _norm(solicitation_number)
+    if not target_solicitation:
+        raise ValueError("Solicitation number must be nonempty for history receipt")
+    if not isinstance(snapshots, list) or not snapshots:
+        raise DataServicesError("No original source snapshots supplied")
+    source_slots: set[str] = set()
+    for snapshot in snapshots:
+        if not isinstance(snapshot, dict):
+            raise DataServicesError("Malformed original source snapshot")
+        try:
+            slot = _require_exact_original_source_slot(
+                snapshot.get("source_kind"), snapshot.get("fiscal_year"),
+                snapshot.get("source_url"),
+            )
+            require_approved_automation(
+                snapshot["source_url"], expected="SAM_DATA_SERVICES_EXTRACT",
+            )
+        except (ValueError, TypeError, KeyError) as exc:
+            raise DataServicesError("Original snapshot source slot is invalid") from None
+        if slot in source_slots:
+            raise DataServicesError("Duplicate original source slot in history receipt")
+        source_slots.add(slot)
+        count = snapshot.get("rows_scanned")
+        digest = snapshot.get("extract_sha256")
+        matches = snapshot.get("matches")
+        if (type(count) is not int or count < 0
+                or not isinstance(digest, str)
+                or re.fullmatch(r"[0-9a-f]{64}", digest) is None
+                or not isinstance(matches, list) or len(matches) > count):
+            raise DataServicesError("Invalid original snapshot count or source digest")
+        seen_notice: set[str] = set()
+        for match in matches:
+            if not isinstance(match, dict):
+                raise DataServicesError("Malformed source-matched action")
+            notice_id = match.get("notice_id")
+            row_digest = match.get("row_sha256")
+            if (not isinstance(notice_id, str) or not notice_id.strip()
+                    or _norm(match.get("solicitation_number")) != target_solicitation
+                    or not isinstance(row_digest, str)
+                    or re.fullmatch(r"[0-9a-f]{64}", row_digest) is None):
+                raise DataServicesError("Original snapshot contains invalid matched action")
+            normalized = _norm(notice_id)
+            if normalized in seen_notice:
+                raise DataServicesError("Duplicate NoticeId within source snapshot matches")
+            seen_notice.add(normalized)
     rows, family = _family_filter(snapshots, seed_notice_id=seed_notice_id)
 
     action_ids = sorted({r["notice_id"] for r in rows})
@@ -271,7 +325,21 @@ def issue_history_receipt_from_snapshots(
         required_archive_fys = set(range(scope_start_fy, scope_end_fy + 1))
     missing_fys = sorted(required_archive_fys - supplied_archive_fys)
 
-    complete = bool(scope_confirmed and active_present and required_archive_fys and not missing_fys)
+    # A caller-supplied scope flag is NOT human approval of a later
+    # publisher catalog. The production catalog still ends at FY2026.
+    production_catalog_approved = (
+        type(scope_start_fy) is int and type(scope_end_fy) is int
+        and 1900 <= scope_start_fy <= scope_end_fy
+        and scope_end_fy <= ARCHIVE_CATALOG_CURRENT_THROUGH_FY
+    )
+    if scope_confirmed is True and required_archive_fys:
+        out_of_scope = supplied_archive_fys - required_archive_fys
+        if out_of_scope:
+            raise DataServicesError("Out-of-scope archived originals cannot certify history")
+    complete = bool(
+        scope_confirmed is True and production_catalog_approved
+        and active_present and required_archive_fys and not missing_fys
+    )
     status = "COMPLETE" if complete else "OBSERVED_ONLY"
 
     payload = {
@@ -282,6 +350,10 @@ def issue_history_receipt_from_snapshots(
             "start_fy": scope_start_fy,
             "end_fy": scope_end_fy,
             "scope_confirmed": scope_confirmed,
+            "production_archive_catalog_approved": production_catalog_approved,
+            "production_catalog_current_through_fy": ARCHIVE_CATALOG_CURRENT_THROUGH_FY,
+            "original_snapshot_slots_validated": True,
+            "independent_publisher_authenticity_approved": False,
             "required_archive_fys": sorted(required_archive_fys),
             "supplied_archive_fys": sorted(supplied_archive_fys),
             "missing_archive_fys": missing_fys,
