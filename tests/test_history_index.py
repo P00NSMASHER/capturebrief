@@ -471,7 +471,13 @@ class HistoryIndexTests(unittest.TestCase):
                 observed_at=NOW,fiscal_year=2026,
             )
             self.assertEqual(receipt["status"],"OBSERVED_ONLY")
-            self.assertEqual(receipt["action_ids"],[])
+            # The exact seed remains observable, but the two distinct
+            # offices cannot be associated or reported as COMPLETE.
+            self.assertEqual(receipt["action_ids"],["seed-without-office"])
+            self.assertIn(
+                "FAMILY_SEED_OFFICE_MISSING",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
             self.assertIn(
                 "FAMILY_OFFICE_COLLISION_REQUIRES_REVIEW",
                 receipt["evidence_payload"]["coverage_errors"],
