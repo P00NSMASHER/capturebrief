@@ -179,7 +179,10 @@ def _download_extract_unlocked(
     dest.parent.mkdir(parents=True,exist_ok=True)
     digest=hashlib.sha256()
     size=0
-    req=Request(source_url,headers={"User-Agent":"CaptureBrief/0.3"})
+    req=Request(source_url,headers={
+        "User-Agent":"CaptureBrief/0.3",
+        "Accept-Encoding":"identity",
+    })
     fd,temp_name=tempfile.mkstemp(prefix=f".{dest.name}.",suffix=".download",dir=str(dest.parent))
     tmp=Path(temp_name)
     try:
@@ -188,7 +191,23 @@ def _download_extract_unlocked(
             with response, os.fdopen(fd,"wb",closefd=False) as out:
                 final_url=response.geturl() if hasattr(response,"geturl") else source_url
                 final_host=require_approved_extract_delivery(source_url,final_url)
-                declared=response.headers.get("Content-Length") if getattr(response,"headers",None) else None
+                # Only the complete, unencoded original is acceptable as
+                # immutable Data Services source evidence. Range responses or
+                # transparent transfer compression can yield a valid SHA-256
+                # for the WRONG bytes and contaminate current-source claims.
+                status=getattr(response,"status",None)
+                if status is None and hasattr(response,"getcode"):
+                    status=response.getcode()
+                if status!=200:
+                    raise HistoryIndexError("extract original response must be HTTP 200")
+                headers=getattr(response,"headers",None)
+                if headers is None:
+                    raise HistoryIndexError("extract original response headers missing")
+                if str(headers.get("Content-Encoding","identity")).strip().lower()!="identity":
+                    raise HistoryIndexError("extract original transfer encoding must be identity")
+                if headers.get("Content-Range"):
+                    raise HistoryIndexError("extract original must not contain a byte-range header")
+                declared=headers.get("Content-Length")
                 declared_size=None
                 if declared not in (None,""):
                     try:
