@@ -217,12 +217,17 @@ class FY2027OfflineEncryptedBackupTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "passphrase.txt"
             p.write_bytes(PASSWORD)
-            if os.name != "nt":
+            if os.name == "nt":
+                # Simple mode bits do not prove restricted inherited NTFS ACLs.
+                # Never read a plaintext secret file on Windows by default.
+                with self.assertRaisesRegex(ValueError, "Windows passphrase files"):
+                    m._read_secret(str(p))
+            else:
                 p.chmod(0o644)
                 with self.assertRaises(ValueError):
                     m._read_secret(str(p))
                 p.chmod(0o600)
-            self.assertEqual(m._read_secret(str(p)), PASSWORD)
+                self.assertEqual(m._read_secret(str(p)), PASSWORD)
 
 
 if __name__ == "__main__":
