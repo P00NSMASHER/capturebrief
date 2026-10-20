@@ -155,5 +155,60 @@ class SourceCapacityTests(unittest.TestCase):
             self.assertIs(receipt[blocked], False, blocked)
 
 
+    def test_actual_early_year_full_byte_semantics_remain_unapproved(self):
+        from scripts.fy2027_archive_capacity_probe import CANDIDATE_YEARS
+        source = (Path(__file__).resolve().parents[1] / "research" /
+                  "fy2027_early_archive_full_byte_observations_20261020.json")
+        evidence = json.loads(source.read_text(encoding="utf-8"))
+        self.assertEqual(
+            evidence["schema"],
+            "capturebrief-fy2027-unapproved-early-archive-full-byte-observation-v1",
+        )
+        self.assertEqual(
+            evidence["mode"],
+            "BOUNDED_ONE_TIME_IN_MEMORY_PUBLIC_ORIGINAL_BYTE_READ_NO_RETENTION",
+        )
+        original = {
+            o["fiscal_year"]: o
+            for o in evidence["observations"]
+        }
+        self.assertEqual(set(original), {1969, 1970, 1980, 1981, 1998})
+        self.assertTrue(set(original).issubset(set(CANDIDATE_YEARS)))
+        expected = {
+            1969: (685, 0),
+            1970: (2712, 3),
+            1980: (1157, 1),
+            1981: (685, 0),
+            1998: (96549, 85),
+        }
+        for year, (size, rows) in expected.items():
+            with self.subTest(year=year):
+                o = original[year]
+                self.assertEqual((o["bytes"], o["csv_rows"]), (size, rows))
+                self.assertEqual(len(o["sha256"]), 64)
+                self.assertTrue(all(c in "0123456789abcdef" for c in o["sha256"]))
+                self.assertTrue(o["required_headers_present"])
+                self.assertEqual(o["extra_columns_rows"], 0)
+                self.assertEqual(o["short_rows"], 0)
+                self.assertFalse(o["approved"])
+                self.assertFalse(o["original_bytes_retained"])
+        self.assertEqual(original[1969]["sha256"], original[1981]["sha256"])
+        self.assertEqual(evidence["observed_original_bytes"], 101788)
+        self.assertEqual(evidence["observed_csv_rows_total"], 89)
+        for flag in (
+            "read_bytes_persistently_stored",
+            "all_34_year_originals_observed",
+            "publisher_originals_independently_reviewed",
+            "source_catalog_approved",
+            "private_history_index_updated",
+            "disk_encryption_verified",
+            "encrypted_offdevice_backup_verified",
+            "customer_release_authorized",
+            "external_send_authorized",
+        ):
+            self.assertIs(evidence[flag], False, flag)
+
+
+
 if __name__ == "__main__":
     unittest.main()
