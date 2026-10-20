@@ -155,3 +155,50 @@ FY2026; the genuine PAAM source index is not yet audited; the 34-year original
 history is not complete or independently reviewed; machine encryption,
 encrypted off-device backup and independent reviewer approvals remain
 unproven. No real customer case, message, charge, release or deployment.
+
+
+## October 19 — seven-PR combined storage and pilot composition
+
+A new exact-head, ephemeral **NO DEPLOY** synthetic composition tested
+**seven** main-target candidate heads together, rather than just the
+five pilot-repair heads. Pinned inputs were:
+
+| Candidate | PR | Exact head used |
+|---|---:|---|
+| Pilot source coverage/watch | #51 | `b302d137f9a562549384bbe7ea65bece2f4e8cb8` |
+| Buyer draft-to-private intake | #52 | `c95fd399c3d3816ac02e628d86347ff96b263bdc` |
+| SAM signed-redirect security/original retention | #53 | `cf441e8d580af3a7d147d2884b7b3814fdf28e12` |
+| Live Stripe account receipt safeguards | #55 | `bbbac444705b0a95ea4af12430c287a984b427ee` |
+| CI typed x402 addresses | #54 | `567c648ac91f23423a808b85ec3c617a919dcc36` |
+| Operator-only encrypted private backup | #57 | `b77f48a623a622c1f297fd819290bbfda5415bdf` |
+| Guarded FY archive capacity/compressed original (stacked #53/#58/#59/#60) | #61 | `ef478f497472a10eeba1388ba6cfd8327e44a2b6` |
+| Separate website checkout | #50 | `2f5af397fc5d46e6f919f11b0f6e3701df69c665` |
+
+**Actual [GitHub Actions run #39356771333](https://github.com/P00NSMASHER/capturebrief/actions/runs/39356771333)**,
+at QA workflow head
+`02e483273922b35acab6a58410ead40dcf2872c3`:
+
+- **Linux:** 561 actual combined unit tests PASSED.
+- **Windows:** 164 real combined tests PASSED, **one skipped**.
+- **Chromium and WebKit** integration PASSED, including browser-to-Python
+  case, fictional processor negative controls and no external POST.
+- Installed optional `cryptography==46.0.4` into CI runners for the
+  synthetic AES-256-GCM/backup tests only; production core does not
+  depend on this package by merely merging source.
+
+All Git merges occurred exclusively inside discarded CI workspaces.
+No protected main or gh-pages branch was modified. Neither the test
+result nor any candidate PR is a valid independent human release
+review; **all seven source PR heads remain unmerged** at this observation.
+
+**Mandatory NO-GO remains:** approved FY2027 34-year original-source
+catalog and complete hash-bound private history, genuine first
+customer scope/payment/delivery, actual fourteen-day monitored case,
+administrator-verified host disk encryption, actual encrypted
+off-device backup with independently recoverable key and proven
+off-device restore, independent code/security review and protected
+production-release authorization. Local DPAPI-backed FY2027 AES copy
+and one local restore were completed separately on PAAM-L044, but
+their recovery key remains machine/profile bound and no off-device
+disaster recovery is proven. Compression's measured 4.60 GiB proxy
+is not guaranteed full archive storage or index/backup capacity.
