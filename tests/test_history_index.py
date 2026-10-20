@@ -228,20 +228,24 @@ class HistoryIndexTests(unittest.TestCase):
                 ("local_path", str(root / ".." / "OUTSIDE_PRIVATE_ROOT.csv")),
             )
             for field, bad in variants:
-                with self.subTest(field=field), closing(sqlite3.connect(db)) as conn, conn:
-                    conn.execute(
-                        f"UPDATE source_snapshots SET {field}=? "
-                        "WHERE slot='ARCHIVE:2026'",
-                        (bad,),
-                    )
+                with self.subTest(field=field):
+                    with closing(sqlite3.connect(db)) as conn, conn:
+                        conn.execute(
+                            f"UPDATE source_snapshots SET {field}=? "
+                            "WHERE slot='ARCHIVE:2026'",
+                            (bad,),
+                        )
+                    # Do not hold an SQLite write lock while read-only
+                    # status verification initializes and opens the index.
                     status = index_status(db, fiscal_year=2026, now=NOW_DT)
                     self.assertFalse(status["complete"])
                     self.assertIn("ARCHIVE:2026", status["unverified_slots"])
-                    conn.execute(
-                        f"UPDATE source_snapshots SET {field}=? "
-                        "WHERE slot='ARCHIVE:2026'",
-                        (original[field],),
-                    )
+                    with closing(sqlite3.connect(db)) as conn, conn:
+                        conn.execute(
+                            f"UPDATE source_snapshots SET {field}=? "
+                            "WHERE slot='ARCHIVE:2026'",
+                            (original[field],),
+                        )
             self.assertTrue(index_status(db, fiscal_year=2026, now=NOW_DT)["complete"])
 
     def test_explicit_external_source_root_must_be_operator_supplied(self):
