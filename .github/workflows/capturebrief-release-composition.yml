@@ -66,11 +66,12 @@ jobs:
           security/fy2027-compressed-disk-reserve-20261019:ef53c49b1ac63124256701e52a3bd5513c02e82a
           research/fy2027-archive-capacity-probe-20261019:7ddba048416bd059c80b02d84accde4e69f743fa
           security/independent-source-row-projection-audit-20261019:47b1341ab1419b392a661ce803f60f7f7c6193e3
+          security/sam-original-slot-binding-20261020:f6c165f93455a7ddec8c8fa73592062dd7515ba0
           PINNED
           git diff --check
           test -z "$(git status --porcelain)"
-          echo "All nine exact PR heads composed locally; no GitHub branch changes."
-          git log -10 --format="%h %s"
+          echo "All ten exact PR heads composed locally; no GitHub branch changes."
+          git log -11 --format="%h %s"
       - name: Checkout immutable website candidate into its own directory
         uses: actions/checkout@v4
         with:
@@ -109,6 +110,7 @@ jobs:
           tests.test_atomic_io
           tests.test_history_index
           tests.test_source_policy_data_services
+          tests.test_sam_source_slot_binding
           tests.test_fy2027_encrypted_backup
           tests.test_fy2027_archive_capacity_probe
           tests.test_fy2027_small_original_semantics
@@ -133,7 +135,7 @@ jobs:
           assert ARCHIVE_CATALOG_CURRENT_THROUGH_FY == 2026, "Unexpected FY2027 catalog approval"
           print(json.dumps({
               "kind": "CaptureBrief ephemeral release composition test",
-              "composed_main_prs": [51, 52, 53, 55, 54, 57, 61, 58, 62],
+              "composed_main_prs": [51, 52, 53, 55, 54, 57, 61, 58, 62, 63],
               "website_pr": 50,
               "synthetic_merge_only": True,
               "independent_release_approval_proven": False,
