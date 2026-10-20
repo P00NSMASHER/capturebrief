@@ -709,8 +709,14 @@ def issue_history_receipt_from_index(
         snapshot_root=snapshot_root,
     )
 
+    # Unapproved and future fiscal years may exist in the same SQLite index.
+    # They must never enter actions for an earlier approved historical catalog.
+    required_slots = set(coverage["required_slots"])
     with closing(_connect(index_path)) as conn:
-        rows = _current_family_rows(conn, solicitation_number)
+        rows = [
+            row for row in _current_family_rows(conn, solicitation_number)
+            if row.get("slot") in required_slots
+        ]
 
     seed = next((row for row in rows if row.get("notice_id") == seed_notice_id), None)
     errors: list[str] = []
@@ -785,7 +791,9 @@ def issue_history_receipt_from_index(
         "supplied_archive_fys": sorted(
             int(row["fiscal_year"])
             for row in coverage["snapshots"]
-            if row.get("source_kind") == "ARCHIVE" and row.get("fiscal_year") is not None
+            if row.get("source_kind") == "ARCHIVE"
+            and row.get("fiscal_year") is not None
+            and row.get("slot") in required_slots
         ),
         "missing_archive_fys": [
             int(slot.split(":", 1)[1])
@@ -795,6 +803,7 @@ def issue_history_receipt_from_index(
         "active_extract_present": "ACTIVE" in coverage["present_slots"],
         "catalog_snapshot": cat,
         "coverage_complete": coverage["complete"],
+        "out_of_scope_source_snapshots_excluded": True,
         "stale_slots": coverage["stale_slots"],
         "unverified_slots": coverage["unverified_slots"],
         "freshness_checked_at": coverage["checked_at"],
@@ -830,6 +839,7 @@ def issue_history_receipt_from_index(
                 ),
             }
             for row in coverage["snapshots"]
+            if row.get("slot") in required_slots
         ],
         "ordering_authoritative": False,
         "current_action_authoritative": False,
