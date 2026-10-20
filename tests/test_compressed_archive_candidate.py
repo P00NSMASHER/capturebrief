@@ -5,7 +5,6 @@ import gzip
 import hashlib
 import json
 import os
-import subprocess
 import tempfile
 from contextlib import contextmanager
 import unittest
@@ -17,21 +16,14 @@ from scripts import retain_compressed_sam_archive_candidate as m
 
 @contextmanager
 def private_tempdir():
-    """Build a genuinely ACL-restricted fake-only fixture root on Windows."""
-    with tempfile.TemporaryDirectory() as base:
-        if os.name == "nt":
-            # CI Windows temp folders may inherit broad Users/Authenticated
-            # Users grants; production source retention *correctly* rejects
-            # them. Give fictional tests their own explicitly private tree.
-            subprocess.run(
-                ["icacls", base, "/inheritance:r"],
-                check=True, capture_output=True, text=True,
-            )
-            subprocess.run(
-                ["icacls", base, "/grant:r",
-                 os.environ["USERNAME"] + ":(OI)(CI)F"],
-                check=True, capture_output=True, text=True,
-            )
+    """Fixture inside per-user private AppData, not broad GitHub runner D: temp."""
+    # Windows hosted runners often grant built-in Users access to their
+    # shared D:\\a\\_temp directory. Genuine source retention correctly
+    # refuses those broad ACLs; test invented bytes under the user profile.
+    parent = os.environ.get("LOCALAPPDATA") if os.name == "nt" else None
+    if os.name == "nt" and (not parent or not Path(parent).is_dir()):
+        raise RuntimeError("Windows private user AppData is unavailable")
+    with tempfile.TemporaryDirectory(prefix="cb-private-test-", dir=parent) as base:
         yield base
 
 
