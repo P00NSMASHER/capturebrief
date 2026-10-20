@@ -30,7 +30,7 @@
     {
       "fiscal_year": 1969,
       "server_declared_original_bytes": 685,
-      "full_original_sha256_o": "933e41c8c32c5bb1875d21427c368ff8ea07343317ad697eba698fe5603c5be6",
+      "observed_full_original_sha256": "933e41c8c32c5bb1875d21427c368ff8ea07343317ad697eba698fe5603c5be6",
       "observed_csv_rows": 0,
       "evidence_class": "ONE_TIME_PUBLIC_FULL_BYTE_IN_MEMORY_OBSERVATION_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -42,7 +42,7 @@
     {
       "fiscal_year": 1970,
       "server_declared_original_bytes": 2712,
-      "full_original_sha256_o": "bfbe158c899f217495f4ebc6b913267e193b374a2d476ab931a5bc254f9d68f2",
+      "observed_full_original_sha256": "bfbe158c899f217495f4ebc6b913267e193b374a2d476ab931a5bc254f9d68f2",
       "observed_csv_rows": 3,
       "evidence_class": "ONE_TIME_PUBLIC_FULL_BYTE_IN_MEMORY_OBSERVATION_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -54,7 +54,7 @@
     {
       "fiscal_year": 1980,
       "server_declared_original_bytes": 1157,
-      "full_original_sha256_o": "e58ba87346ce332d63a04c8376525ce996bce0c1135a4dadae71db9c4d716511",
+      "observed_full_original_sha256": "e58ba87346ce332d63a04c8376525ce996bce0c1135a4dadae71db9c4d716511",
       "observed_csv_rows": 1,
       "evidence_class": "ONE_TIME_PUBLIC_FULL_BYTE_IN_MEMORY_OBSERVATION_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -66,7 +66,7 @@
     {
       "fiscal_year": 1981,
       "server_declared_original_bytes": 685,
-      "full_original_sha256_o": "933e41c8c32c5bb1875d21427c368ff8ea07343317ad697eba698fe5603c5be6",
+      "observed_full_original_sha256": "933e41c8c32c5bb1875d21427c368ff8ea07343317ad697eba698fe5603c5be6",
       "observed_csv_rows": 0,
       "evidence_class": "ONE_TIME_PUBLIC_FULL_BYTE_IN_MEMORY_OBSERVATION_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -78,7 +78,7 @@
     {
       "fiscal_year": 1998,
       "server_declared_original_bytes": 96549,
-      "full_original_sha256_o": "854bf64d57d07845b8a94eb26f8deb68a35c04dbd3e855f7776e103bfa1ad187",
+      "observed_full_original_sha256": "854bf64d57d07845b8a94eb26f8deb68a35c04dbd3e855f7776e103bfa1ad187",
       "observed_csv_rows": 85,
       "evidence_class": "ONE_TIME_PUBLIC_FULL_BYTE_IN_MEMORY_OBSERVATION_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -90,7 +90,7 @@
     {
       "fiscal_year": 1999,
       "server_declared_original_bytes": 2157836,
-      "full_original_sha256_o": "def8f8be6b002dc7df31e478c68aaeb7d1bec6bed9c4fa030f24f6970c8bca8c",
+      "observed_full_original_sha256": "def8f8be6b002dc7df31e478c68aaeb7d1bec6bed9c4fa030f24f6970c8bca8c",
       "observed_csv_rows": 1415,
       "evidence_class": "ONE_TIME_PUBLIC_FULL_BYTE_IN_MEMORY_OBSERVATION_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -102,7 +102,7 @@
     {
       "fiscal_year": 2000,
       "server_declared_original_bytes": 1770534,
-      "full_original_sha256_o": "94eb95631fa44a401dfd1fcb4f18e1082ddb22bf45c1e3a69533c2288d37e6f1",
+      "observed_full_original_sha256": "94eb95631fa44a401dfd1fcb4f18e1082ddb22bf45c1e3a69533c2288d37e6f1",
       "observed_csv_rows": 1047,
       "evidence_class": "ONE_TIME_PUBLIC_FULL_BYTE_IN_MEMORY_OBSERVATION_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -114,7 +114,7 @@
     {
       "fiscal_year": 2001,
       "server_declared_original_bytes": 2406431,
-      "full_original_sha256_o": "5d6aeca22b38784626f9259f6a7973f912c485a1ebe67ea0a83acbc1597b51a5",
+      "observed_full_original_sha256": "5d6aeca22b38784626f9259f6a7973f912c485a1ebe67ea0a83acbc1597b51a5",
       "observed_csv_rows": 1467,
       "evidence_class": "ONE_TIME_PUBLIC_FULL_BYTE_IN_MEMORY_OBSERVATION_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -126,7 +126,7 @@
     {
       "fiscal_year": 2002,
       "server_declared_original_bytes": 214678581,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -138,7 +138,7 @@
     {
       "fiscal_year": 2003,
       "server_declared_original_bytes": 324283219,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -150,7 +150,7 @@
     {
       "fiscal_year": 2004,
       "server_declared_original_bytes": 331835249,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -162,7 +162,7 @@
     {
       "fiscal_year": 2005,
       "server_declared_original_bytes": 349434253,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -174,7 +174,7 @@
     {
       "fiscal_year": 2006,
       "server_declared_original_bytes": 394729913,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -186,7 +186,7 @@
     {
       "fiscal_year": 2007,
       "server_declared_original_bytes": 454622118,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -198,7 +198,7 @@
     {
       "fiscal_year": 2008,
       "server_declared_original_bytes": 550880793,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -210,7 +210,7 @@
     {
       "fiscal_year": 2009,
       "server_declared_original_bytes": 677444123,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -222,7 +222,7 @@
     {
       "fiscal_year": 2010,
       "server_declared_original_bytes": 765674599,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -234,7 +234,7 @@
     {
       "fiscal_year": 2011,
       "server_declared_original_bytes": 772944058,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -246,7 +246,7 @@
     {
       "fiscal_year": 2012,
       "server_declared_original_bytes": 836409111,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -258,7 +258,7 @@
     {
       "fiscal_year": 2013,
       "server_declared_original_bytes": 860352514,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -270,7 +270,7 @@
     {
       "fiscal_year": 2014,
       "server_declared_original_bytes": 907453638,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -282,7 +282,7 @@
     {
       "fiscal_year": 2015,
       "server_declared_original_bytes": 908653070,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -294,7 +294,7 @@
     {
       "fiscal_year": 2016,
       "server_declared_original_bytes": 905524721,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -306,7 +306,7 @@
     {
       "fiscal_year": 2017,
       "server_declared_original_bytes": 988776106,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -318,7 +318,7 @@
     {
       "fiscal_year": 2018,
       "server_declared_original_bytes": 1041498110,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -330,7 +330,7 @@
     {
       "fiscal_year": 2019,
       "server_declared_original_bytes": 963400158,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -342,7 +342,7 @@
     {
       "fiscal_year": 2020,
       "server_declared_original_bytes": 1144346582,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -354,7 +354,7 @@
     {
       "fiscal_year": 2021,
       "server_declared_original_bytes": 1139857166,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -366,7 +366,7 @@
     {
       "fiscal_year": 2022,
       "server_declared_original_bytes": 1175188610,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -378,7 +378,7 @@
     {
       "fiscal_year": 2023,
       "server_declared_original_bytes": 1277614651,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -390,7 +390,7 @@
     {
       "fiscal_year": 2024,
       "server_declared_original_bytes": 1151944809,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -402,7 +402,7 @@
     {
       "fiscal_year": 2025,
       "server_declared_original_bytes": 1164543804,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -414,7 +414,7 @@
     {
       "fiscal_year": 2026,
       "server_declared_original_bytes": 1023490271,
-      "full_original_sha256_o": null,
+      "observed_full_original_sha256": null,
       "observed_csv_rows": null,
       "evidence_class": "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": false,
@@ -426,7 +426,7 @@
     {
       "fiscal_year": 2027,
       "server_declared_original_bytes": 1607260,
-      "full_original_sha256_o": "7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce",
+      "observed_full_original_sha256": "7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce",
       "observed_csv_rows": 1104,
       "evidence_class": "EXACT_PRIVATE_LOCAL_ORIGINAL_RETAINED_UNAPPROVED",
       "source_original_durably_retained_on_authorized_pc": true,
