@@ -68,8 +68,10 @@ def _private_path(value: str | Path, *, directory: bool) -> Path:
     raw = Path(value).expanduser().absolute()
     # Reject symlinks at every existing path component, not just the leaf.
     for part in (raw, *raw.parents):
-        if part.is_symlink():
-            raise ValueError("Backup paths cannot traverse symlinks")
+        # Windows directory junctions are reparse points but not symlinks.
+        junction = getattr(part, "is_junction", None)
+        if part.is_symlink() or (junction is not None and junction()):
+            raise ValueError("Backup paths cannot traverse symlinks or junctions")
     real = raw.resolve(strict=directory)
     if real == REPO or real.is_relative_to(REPO):
         raise ValueError("Private source or encrypted backup path belongs outside public Git")
