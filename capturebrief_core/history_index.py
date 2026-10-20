@@ -884,6 +884,23 @@ def issue_history_receipt_from_index(
 
     action_ids = sorted(by_notice)
     if action_ids:
+        # Cross-snapshot observations for the SAME NoticeId may carry
+        # different AAC or Office identifiers even when the source Sol#
+        # is identical. An AAC-based family filter can hide the
+        # contradictory observation while falsely claiming COMPLETE.
+        # Flag any change, including known/blank transitions, as
+        # requiring adjudication. Only required FY slots are in rows.
+        action_id_set = set(action_ids)
+        identities_by_notice: dict[str, set[tuple[str, str]]] = {}
+        for row in rows:
+            notice = str(row.get("notice_id") or "")
+            if notice in action_id_set:
+                identities_by_notice.setdefault(notice, set()).add((
+                    _norm(row.get("aac_code")),
+                    _norm(row.get("office")),
+                ))
+        if any(len(identities) > 1 for identities in identities_by_notice.values()):
+            errors.append("NOTICE_ID_SOURCE_IDENTITY_DRIFT_REQUIRES_REVIEW")
         with closing(_connect(index_path)) as conn:
             if _notice_ids_have_other_solicitation(
                 conn, action_ids, required_slots=required_slots,
