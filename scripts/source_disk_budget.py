@@ -26,14 +26,24 @@ MAX_ANNUAL_ORIGINAL_BYTES=1_500_000_000
 MIN_GZIP_OVERHEAD_BYTES=256*1024
 
 
+
+def worst_case_gzip_bytes(declared_original_bytes: int) -> int:
+    """Conservative input-size-bound gzip ceiling, shared with publisher retainer."""
+    if (type(declared_original_bytes) is not int
+            or not 0 < declared_original_bytes <= MAX_ANNUAL_ORIGINAL_BYTES):
+        raise ValueError("Unsupported bounded source-original byte count")
+    return (
+        declared_original_bytes
+        + max(MIN_GZIP_OVERHEAD_BYTES, (declared_original_bytes + 99) // 100)
+    )
+
+
 def inspect_source_capacity(
     private_root: str | Path, declared_original_bytes: int, *,
     disk_usage=None,
 ) -> dict[str, Any]:
     """Read local free bytes; never infer source review or disk encryption."""
-    if (type(declared_original_bytes) is not int
-            or not 0 < declared_original_bytes <= MAX_ANNUAL_ORIGINAL_BYTES):
-        raise ValueError("Unsupported bounded source-original byte count")
+    worst_case_compressed_bytes=worst_case_gzip_bytes(declared_original_bytes)
     root=Path(private_root)
     if not root.is_dir() or root.is_symlink():
         raise ValueError("Source capacity requires an existing private directory")
@@ -41,10 +51,6 @@ def inspect_source_capacity(
     # Allow >1% of raw size for worst-case incompressible gzip and metadata,
     # instead of trusting sampled ratios. Do not reuse the amount as a 34-year
     # storage promise.
-    worst_case_compressed_bytes=(
-        declared_original_bytes
-        + max(MIN_GZIP_OVERHEAD_BYTES,(declared_original_bytes+99)//100)
-    )
     required_free=worst_case_compressed_bytes+UNALLOCATED_RESERVE_BYTES
     if disk_usage is None:
         disk_usage=shutil.disk_usage
