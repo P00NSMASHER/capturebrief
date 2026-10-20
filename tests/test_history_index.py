@@ -275,8 +275,8 @@ class HistoryIndexTests(unittest.TestCase):
             pristine = source.read_bytes()
             self.assertIn(b"VALID_FICTIONAL_ID", pristine)
             for label, prefix, invalid in (
-                ("undefined-cp1252-byte", b"", b"INVALID_\\x81_ID"),
-                ("invalid-utf8-bom-body", b"\\xef\\xbb\\xbf", b"INVALID_\\xff_ID"),
+                ("undefined-cp1252-byte", b"", b"INVALID_\x81_ID"),
+                ("invalid-utf8-bom-body", b"\xef\xbb\xbf", b"INVALID_\xff_ID"),
             ):
                 with self.subTest(case=label):
                     db = root / f"{label}.sqlite"
@@ -311,7 +311,7 @@ class HistoryIndexTests(unittest.TestCase):
             root = Path(td)
             source = root / "invented-cp1252-source.csv"
             db = root / "invented-source.sqlite"
-            write_csv(source, [row("FICTIONAL-CAF\\u00c9")])
+            write_csv(source, [row("FICTIONAL-CAF\u00c9")])
             result = ingest_extract_file(
                 db, source,
                 source_url=ACTIVE_DOWNLOAD,
@@ -323,7 +323,7 @@ class HistoryIndexTests(unittest.TestCase):
             self.assertEqual(result["rows_scanned"], 1)
             with closing(sqlite3.connect(db)) as conn:
                 value = conn.execute("SELECT notice_id FROM opportunity_rows").fetchone()[0]
-            self.assertEqual(value, "FICTIONAL-CAF\\u00c9")
+            self.assertEqual(value, "FICTIONAL-CAF\u00c9")
 
     def test_content_addressed_snapshots_are_reused(self):
         with tempfile.TemporaryDirectory() as td:
