@@ -463,6 +463,88 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
                 observed_at=NOW,
             )
 
+    def test_memory_only_history_declared_range_rejects_colliding_agency_offices(self):
+        # A caller-declared fiscal range cannot turn an ambiguous source
+        # family into COMPLETE merely because Sol# strings coincide.
+        source = ACTIVE_DOWNLOAD
+        base = row("fictional-seed","SOL-1",aac="AAC1")
+        for name,peer in (
+            ("different-office",
+             row("fictional-peer","SOL-1",aac="AAC1").replace(
+                 ",Office,AAC1,",",OTHER OFFICE,AAC1,",1)),
+            ("missing-office",
+             row("fictional-peer","SOL-1",aac="AAC1").replace(
+                 ",Office,AAC1,",",,AAC1,",1)),
+            ("missing-aac",
+             row("fictional-peer","SOL-1",aac="")),
+        ):
+            with self.subTest(case=name):
+                current=scan_extract_bytes(
+                    (HEADER+base+peer).encode("utf-8"),
+                    source_url=source,source_kind="ACTIVE",
+                    solicitation_number="SOL-1",
+                )
+                with self.assertRaises(FamilyAmbiguous):
+                    issue_history_receipt_from_snapshots(
+                        [current],solicitation_number="SOL-1",
+                        seed_notice_id="fictional-seed",observed_at=NOW,
+                        scope_start_fy=2026,scope_end_fy=2026,
+                        scope_confirmed=True,
+                    )
+        # Even an unseeded selection cannot resolve a cross-office
+        # source by guessing the first listed row's identity.
+        different = row("foreign","SOL-1",aac="AAC1").replace(
+            ",Office,AAC1,",",OTHER OFFICE,AAC1,",1,
+        )
+        current=scan_extract_bytes(
+            (HEADER+base+different).encode("utf-8"),
+            source_url=source,source_kind="ACTIVE",
+            solicitation_number="SOL-1",
+        )
+        with self.assertRaises(FamilyAmbiguous):
+            issue_history_receipt_from_snapshots(
+                [current],solicitation_number="SOL-1",observed_at=NOW,
+                scope_start_fy=2026,scope_end_fy=2026,scope_confirmed=True,
+            )
+
+    def test_memory_only_history_requires_seed_agency_and_office_anchors(self):
+        for kind,seed in (
+            ("missing-aac",row("fictional-seed","SOL-1",aac="")),
+            ("missing-office",row("fictional-seed","SOL-1",aac="AAC1").replace(
+                ",Office,AAC1,",",,AAC1,",1)),
+        ):
+            with self.subTest(case=kind):
+                current=scan_extract_bytes(
+                    (HEADER+seed+row("fictional-peer","SOL-1")).encode("utf-8"),
+                    source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                    solicitation_number="SOL-1",
+                )
+                with self.assertRaises(FamilyAmbiguous):
+                    issue_history_receipt_from_snapshots(
+                        [current],solicitation_number="SOL-1",
+                        seed_notice_id="fictional-seed",observed_at=NOW,
+                        scope_start_fy=2026,scope_end_fy=2026,scope_confirmed=True,
+                    )
+
+    def test_memory_only_history_rejects_same_notice_across_agencies(self):
+        current=scan_extract_bytes(
+            (HEADER+row("one-id","SOL-1",aac="AAC1")).encode("utf-8"),
+            source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+            solicitation_number="SOL-1",
+        )
+        archived=scan_extract_bytes(
+            (HEADER+row("one-id","SOL-1",aac="AAC2")).encode("utf-8"),
+            source_url=ARCHIVE_DOWNLOAD.format(fy=2026),
+            source_kind="ARCHIVE",fiscal_year=2026,
+            solicitation_number="SOL-1",
+        )
+        with self.assertRaises(FamilyAmbiguous):
+            issue_history_receipt_from_snapshots(
+                [current,archived],solicitation_number="SOL-1",
+                seed_notice_id="one-id",observed_at=NOW,
+                scope_start_fy=2026,scope_end_fy=2026,scope_confirmed=True,
+            )
+
     def test_current_receipt_must_bind_to_history(self):
         observation = {
             "record": {
