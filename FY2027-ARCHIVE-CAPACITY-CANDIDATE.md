@@ -21,3 +21,47 @@ Later full candidate probe, after independent source-collection policy review:
     python scripts/fy2027_archive_capacity_probe.py --live-public-metadata --years all
 
 Do **not** download the 34 complete originals into PAAM-L044's limited local disk merely because metadata estimates appear to fit. Do not introduce FY2027 into production until original publisher bytes, private retention, disk encryption, encrypted off-device restoration, catalog signoff and independent QA all pass.
+
+
+## October 19, 2026 — all 34 years: metadata observation complete
+
+[Exact GitHub Actions #39350338311](https://github.com/P00NSMASHER/capturebrief/actions/runs/39350338311)
+returned **34 of 34** guarded HTTP 206 responses, each with a strictly
+bounded `Range: bytes=0-0` and declared source-object size. Exactly
+**34 source bytes** were sampled across the archive year set; no bulk CSV
+originals were retained.
+
+- **34 archive CSVs, server-declared sum: 20,333,624,076 bytes**,
+  or approximately **20.33 decimal GB / 18.94 GiB**.
+- The largest declared annual object is FY2023, **1,277,614,651 bytes**.
+- FY2026 alone declares **1,023,490,271 bytes**.
+- FY2027 declares **1,607,260 bytes**, consistent with the previously
+  independently hashed FY2027 original, but the present range probe did
+  not itself rehash the complete object.
+- **Excluded**: current ACTIVE CSV, disk space needed for SQLite and
+  working files, duplicate staging, backups, encryption overhead, and
+  real-case customer data.
+
+A frozen numeric **unreviewed metadata receipt**, with all 34 exact
+FY-to-size mappings, lives in
+`research/fy2027_archive_capacity_observation_20261020.json`.
+Offline tests assert it does not grant source-index, publisher, catalog,
+human-review or customer-release authority.
+
+**Operational decision:** A private host with less than 18.94 GiB available
+cannot hold even one complete uncompressed set of the 34 candidate
+originals. A significant additional allowance is needed for index,
+inflight working files and independently protected backups. Do not
+launch indiscriminate bulk collection on an undersized machine.
+
+As a **possible zero-spending planning option only**, Oracle currently
+documents **200 GB combined Always Free boot/block volume storage** in
+a tenancy's home region, subject to the tenancy's actual quota,
+eligible VM capacity and provisioning choices:
+https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm
+Cloudflare R2's **10 GB-month** free allowance is insufficient for these
+uncompressed 34 archive objects:
+https://developers.cloudflare.com/r2/pricing/
+No Oracle infrastructure or Cloudflare bucket was provisioned by this
+research, and free-tier availability/billing safety must be verified in
+the actual connected account before any infrastructure changes.
