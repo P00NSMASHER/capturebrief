@@ -335,6 +335,12 @@ def _read_secret(path: str | None) -> bytes:
         if not sys.stdin.isatty():
             raise ValueError("Interactive local terminal or independently protected secret file required")
         return getpass.getpass("Private offline backup passphrase: ").encode("utf-8")
+    # On Windows, simple file-mode checks do not enforce NTFS ACLs.
+    # A plaintext passphrase file with inherited Users/Everyone read access
+    # would compromise every off-device encrypted copy. Until a strict SID/ACL
+    # verifier is available, require a trusted interactive terminal instead.
+    if os.name == "nt":
+        raise ValueError("Windows passphrase files are disabled until NTFS ACLs can be verified")
     secret_path = _private_path(path, directory=False)
     if secret_path.is_symlink() or not secret_path.is_file():
         raise ValueError("Secure local passphrase file not present")
