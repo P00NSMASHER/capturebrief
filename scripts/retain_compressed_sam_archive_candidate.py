@@ -21,6 +21,7 @@ import json
 import os
 import re
 import stat
+import subprocess
 import sys
 import tempfile
 from datetime import datetime, timezone
@@ -71,6 +72,37 @@ def _private_dir(directory: str | Path) -> Path:
         raise ValueError("Retention root is not a directory")
     # The operator's private root is the only persistent destination.
     real.mkdir(mode=0o700, parents=True, exist_ok=True)
+    # File mode bits are NOT an NTFS access-control proof on Windows. The
+    # read-only ACL assessment uses immutable well-known broad group SIDs;
+    # unknown/untranslatable trustees also block candidate retention. This
+    # does not substitute for independently confirmed device encryption.
+    if os.name == "nt":
+        ps = (
+            "$ErrorActionPreference='Stop';"
+            "$p=[Console]::In.ReadToEnd().Trim();"
+            "$a=Get-Acl -LiteralPath $p -ErrorAction Stop;"
+            "$groups=@('S-1-1-0','S-1-5-11','S-1-5-32-545');"
+            "foreach($rule in $a.Access){"
+            "if($rule.AccessControlType -ne 'Allow'){continue};"
+            "try{$sid=$rule.IdentityReference.Translate("
+            "[System.Security.Principal.SecurityIdentifier]).Value}"
+            "catch{exit 3};"
+            "if($sid -in $groups){exit 4}"
+            "};exit 0"
+        )
+        try:
+            checked = subprocess.run(
+                ["powershell.exe", "-NoProfile", "-NonInteractive",
+                 "-Command", ps],
+                input=str(real), text=True, capture_output=True,
+                check=False, timeout=20,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise ValueError("Private NTFS ACL cannot be independently read") from exc
+        if checked.returncode != 0:
+            raise ValueError("Private NTFS ACL grants broad access or is unverified")
+    elif real.stat().st_mode & 0o077:
+        raise ValueError("Private source directory grants group/other access")
     return real
 
 
