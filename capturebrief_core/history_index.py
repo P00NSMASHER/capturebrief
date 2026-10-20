@@ -757,12 +757,37 @@ def issue_history_receipt_from_index(
             else:
                 family_rows = anchored
         elif seed_office:
-            family_rows = [row for row in rows if _norm(row.get("office")) == seed_office]
+            anchored = [
+                row for row in rows if _norm(row.get("office")) == seed_office
+            ]
+            known_aacs = {
+                _norm(row.get("aac_code")) for row in anchored
+                if _norm(row.get("aac_code"))
+            }
+            aac_unspecified = any(
+                not _norm(row.get("aac_code")) for row in anchored
+            )
+            # Without a seed AAC, a notice from a different agency
+            # cannot be safely linked by office name and Sol# alone.
+            # Mixed known/unknown or multiple agency codes require
+            # separate adjudication even if the office text matches.
+            if len(known_aacs) > 1 or (known_aacs and aac_unspecified):
+                errors.append("FAMILY_AAC_COLLISION_REQUIRES_REVIEW")
+                family_rows = [
+                    row for row in anchored
+                    if row.get("notice_id") == seed_notice_id
+                ]
+            else:
+                family_rows = anchored
         else:
-            aacs = {_norm(row.get("aac_code")) for row in rows if _norm(row.get("aac_code"))}
-            if len(aacs) > 1:
-                raise FamilyAmbiguous(f"solicitation number spans multiple AAC codes: {sorted(aacs)}")
-            family_rows = rows
+            # Neither an agency code nor an office name anchors this
+            # seed to other notices. Permit observation of only the
+            # exact seed; never certify a merged multi-notice family.
+            errors.append("FAMILY_AGENCY_IDENTITY_MISSING")
+            family_rows = [
+                row for row in rows
+                if row.get("notice_id") == seed_notice_id
+            ]
         family = {
             "solicitation_number": seed.get("solicitation_raw") or solicitation_number,
             "aac_code": seed.get("aac_code"),
