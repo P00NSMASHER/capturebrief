@@ -545,7 +545,7 @@ def index_status(
     with closing(_connect(index_path)) as conn:
         rows = conn.execute(
             "SELECT c.slot,c.checked_at,c.collection_mode,c.source_etag,c.source_last_modified,"
-            "s.snapshot_id,s.source_kind,s.fiscal_year,s.source_url,s.extract_sha256,"
+            "s.snapshot_id,s.slot AS snapshot_slot,s.source_kind,s.fiscal_year,s.source_url,s.extract_sha256,"
             "s.size_bytes,s.observed_at,s.local_path,s.rows_scanned "
             "FROM current_sources c JOIN source_snapshots s ON s.snapshot_id=c.snapshot_id"
         ).fetchall()
@@ -586,6 +586,7 @@ def index_status(
         checked = parse_dt(row.get("checked_at"))
         observed = parse_dt(row.get("observed_at"))
         if (row.get("collection_mode") != APPROVED_FETCH
+                or row.get("snapshot_slot") != slot
                 or row.get("source_kind") != expected_kind
                 or row.get("fiscal_year") != expected_year
                 or row.get("source_url") != expected_url
@@ -760,7 +761,7 @@ def issue_history_receipt_from_index(
     # open one read transaction for the comparison and the family SELECT.
     source_fields = (
         "slot", "checked_at", "collection_mode", "source_etag",
-        "source_last_modified", "snapshot_id", "source_kind",
+        "source_last_modified", "snapshot_id", "snapshot_slot", "source_kind",
         "fiscal_year", "source_url", "extract_sha256", "size_bytes",
         "observed_at", "local_path", "rows_scanned",
     )
@@ -772,7 +773,7 @@ def issue_history_receipt_from_index(
         conn.execute("BEGIN")
         current = conn.execute(
             "SELECT c.slot,c.checked_at,c.collection_mode,c.source_etag,c.source_last_modified,"
-            "s.snapshot_id,s.source_kind,s.fiscal_year,s.source_url,s.extract_sha256,"
+            "s.snapshot_id,s.slot AS snapshot_slot,s.source_kind,s.fiscal_year,s.source_url,s.extract_sha256,"
             "s.size_bytes,s.observed_at,s.local_path,s.rows_scanned "
             "FROM current_sources c JOIN source_snapshots s "
             "ON s.snapshot_id=c.snapshot_id"
