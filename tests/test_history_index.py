@@ -110,6 +110,115 @@ class HistoryIndexTests(unittest.TestCase):
             verdict,findings=validate_history_receipts(receipt["action_ids"],[receipt])
             self.assertEqual(verdict,"HISTORY_COMPLETE",[f.code for f in findings])
 
+
+    def test_missing_original_bytes_block_complete_even_if_sqlite_status_is_approved(self):
+        # Reproduced on actual PAAM-L044: a complete fictional FY2026
+        # catalog's SQLite source path was changed to a nonexistent file,
+        # yet the old index_status still returned complete=True.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            db, _ = self.build_complete_index(root)
+            self.assertTrue(index_status(db, fiscal_year=2026, now=NOW_DT)["complete"])
+            with closing(sqlite3.connect(db)) as conn, conn:
+                conn.execute(
+                    "UPDATE source_snapshots SET local_path=? "
+                    "WHERE slot='ARCHIVE:2026'",
+                    (str(root / "MISSING_OFFICIAL_ORIGINAL.csv"),),
+                )
+            status = index_status(db, fiscal_year=2026, now=NOW_DT)
+            self.assertFalse(status["complete"])
+            self.assertIn("ARCHIVE:2026", status["unverified_slots"])
+            self.assertIn(
+                "ARCHIVE:2026", status["missing_or_mismatched_source_bytes_slots"],
+            )
+            self.assertFalse(status["local_original_hashes_verified"])
+            self.assertFalse(status["publisher_origin_independently_attested"])
+            receipt = issue_history_receipt_from_index(
+                db, solicitation_number="SOL-1", seed_notice_id="a2",
+                observed_at=NOW, fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"], "OBSERVED_ONLY")
+            self.assertFalse(receipt["evidence_payload"]["scope"]["coverage_complete"])
+            self.assertFalse(
+                receipt["evidence_payload"]["retained_original_hashes_verified"],
+            )
+            self.assertIn(
+                "FULL_ARCHIVE_CATALOG_UNVERIFIED",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+
+    def test_metadata_and_sha_tampering_never_certify_current_source(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            db, _ = self.build_complete_index(root)
+            self.assertTrue(index_status(db, fiscal_year=2026, now=NOW_DT)["complete"])
+            with closing(sqlite3.connect(db)) as conn:
+                original = dict(conn.execute(
+                    "SELECT source_url, source_kind, fiscal_year, "
+                    "extract_sha256, size_bytes, observed_at, local_path "
+                    "FROM source_snapshots WHERE slot='ARCHIVE:2026'",
+                ).fetchone())
+            variants = (
+                ("source_url", "https://attacker.example/forged.csv"),
+                ("source_kind", "ACTIVE"),
+                ("fiscal_year", 2025),
+                ("extract_sha256", "0" * 64),
+                ("size_bytes", original["size_bytes"] + 1),
+                ("observed_at", "2026-09-22T16:00:00+00:00"),
+                ("local_path", str(root / ".." / "OUTSIDE_PRIVATE_ROOT.csv")),
+            )
+            for field, bad in variants:
+                with self.subTest(field=field), closing(sqlite3.connect(db)) as conn, conn:
+                    conn.execute(
+                        f"UPDATE source_snapshots SET {field}=? "
+                        "WHERE slot='ARCHIVE:2026'",
+                        (bad,),
+                    )
+                    status = index_status(db, fiscal_year=2026, now=NOW_DT)
+                    self.assertFalse(status["complete"])
+                    self.assertIn("ARCHIVE:2026", status["unverified_slots"])
+                    conn.execute(
+                        f"UPDATE source_snapshots SET {field}=? "
+                        "WHERE slot='ARCHIVE:2026'",
+                        (original[field],),
+                    )
+            self.assertTrue(index_status(db, fiscal_year=2026, now=NOW_DT)["complete"])
+
+    def test_explicit_external_source_root_must_be_operator_supplied(self):
+        # Real operators may separately authorize an off-index private
+        # original root. SQLite's untrusted path must not self-authorize it.
+        with tempfile.TemporaryDirectory() as td:
+            parent = Path(td)
+            index_dir = parent / "index"
+            archive_dir = parent / "authorized-extracts"
+            index_dir.mkdir()
+            archive_dir.mkdir()
+            db = index_dir / "history.sqlite"
+            active = archive_dir / "active.csv"
+            write_csv(active, [row("a2")])
+            ingest_extract_file(
+                db, active, source_url=ACTIVE_DOWNLOAD, source_kind="ACTIVE",
+                observed_at=NOW, snapshot_dir=archive_dir,
+                collection_mode=APPROVED_FETCH,
+            )
+            for fy in ARCHIVE_CATALOG_YEARS:
+                original = archive_dir / f"archive{fy}.csv"
+                write_csv(original, [])
+                ingest_extract_file(
+                    db, original, source_url=ARCHIVE_DOWNLOAD.format(fy=fy),
+                    source_kind="ARCHIVE", fiscal_year=fy, observed_at=NOW,
+                    snapshot_dir=archive_dir, collection_mode=APPROVED_FETCH,
+                )
+            blocked = index_status(db, fiscal_year=2026, now=NOW_DT)
+            self.assertFalse(blocked["complete"])
+            self.assertIn("ACTIVE", blocked["missing_or_mismatched_source_bytes_slots"])
+            approved_root_read = index_status(
+                db, fiscal_year=2026, now=NOW_DT, snapshot_root=archive_dir,
+            )
+            self.assertTrue(approved_root_read["complete"])
+            self.assertTrue(approved_root_read["local_original_hashes_verified"])
+            self.assertFalse(approved_root_read["publisher_origin_independently_attested"])
+
     def test_missing_archive_slot_blocks_complete_history(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db,_=self.build_complete_index(root)
