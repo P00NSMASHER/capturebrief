@@ -1,0 +1,58 @@
+name: CaptureBrief FY2027 bounded gzip sampling (NO RETENTION)
+
+on:
+  push:
+    branches:
+      - research/fy2027-compression-sampling-20261019
+    paths:
+      - '.github/workflows/capturebrief-fy2027-compression-sample.yml'
+      - 'scripts/fy2027_archive_compression_probe.py'
+      - 'tests/test_fy2027_archive_compression_probe.py'
+  pull_request:
+    paths:
+      - '.github/workflows/capturebrief-fy2027-compression-sample.yml'
+      - 'scripts/fy2027_archive_compression_probe.py'
+      - 'tests/test_fy2027_archive_compression_probe.py'
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile bounded original-only range probe
+        run: python -m compileall -q scripts/fy2027_archive_compression_probe.py
+      - name: Exercise synthetic bounded-range and no-release negative controls
+        run: python -m unittest tests.test_fy2027_archive_compression_probe -v
+
+  public-sampling:
+    needs: offline
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Read three bounded PUBLIC original-data ranges for eight representative years
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/fy2027_archive_compression_probe.py \
+            --live-public-samples \
+            --years 2002,2007,2012,2016,2020,2023,2025,2026 \
+            --max-window-bytes 131072
+          # No raw source files are saved, logged or uploaded.
+          # This is NOT a guaranteed compression ratio, private backup,
+          # publisher-source certification or production catalog promotion.
