@@ -148,6 +148,66 @@ class HistoryIndexTests(unittest.TestCase):
             self.assertEqual(receipt["action_ids"],[])
             self.assertIn("SEED_NOTICE_NOT_IN_CURRENT_INDEX",receipt["evidence_payload"]["coverage_errors"])
 
+    def test_blank_solicitation_cannot_group_unrelated_notices_in_history(self):
+        # The real FY2027 original contains seven notices without a Sol#.
+        # A blank normalized join could otherwise manufacture a COMPLETE
+        # history from distinct notices within the same AAC/office.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            db, snapshots = self.build_complete_index(root)
+            fixture = root / "blank-sol-number-active.csv"
+            write_csv(
+                fixture,
+                [
+                    row("blank-notice-1", sol="", aac="AAC1", office="OFFICE"),
+                    row("blank-notice-2", sol="", aac="AAC1", office="OFFICE"),
+                ],
+            )
+            ingested = ingest_extract_file(
+                db,
+                fixture,
+                source_url=ACTIVE_DOWNLOAD,
+                source_kind="ACTIVE",
+                observed_at=NOW,
+                snapshot_dir=snapshots,
+                collection_mode=APPROVED_FETCH,
+            )
+            self.assertEqual(ingested["rows_scanned"], 2)
+            self.assertTrue(index_status(db, fiscal_year=2026, now=NOW_DT)["complete"])
+            with closing(sqlite3.connect(db)) as conn:
+                self.assertEqual(
+                    conn.execute(
+                        "SELECT COUNT(*) FROM opportunity_rows "
+                        "WHERE solicitation_norm='' AND snapshot_id=?",
+                        (ingested["snapshot_id"],),
+                    ).fetchone()[0],
+                    2,
+                )
+            for empty in ("", "   ", "\t", None):
+                with self.subTest(raw_solicitation=repr(empty)):
+                    with self.assertRaisesRegex(ValueError, "nonempty"):
+                        issue_history_receipt_from_index(
+                            db,
+                            solicitation_number=empty,
+                            seed_notice_id="blank-notice-1",
+                            observed_at=NOW,
+                            fiscal_year=2026,
+                        )
+
+    def test_missing_solicitation_guard_precedes_index_creation(self):
+        with tempfile.TemporaryDirectory() as td:
+            index = Path(td) / "must-not-create.sqlite"
+            with self.assertRaisesRegex(ValueError, "nonempty"):
+                issue_history_receipt_from_index(
+                    index,
+                    solicitation_number=" ",
+                    seed_notice_id="blank-notice",
+                    observed_at=NOW,
+                    fiscal_year=2026,
+                )
+            self.assertFalse(index.exists())
+
+
     def test_content_addressed_snapshots_are_reused(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db=root/"history.sqlite"; snapshots=root/"snapshots"; p=root/"active.csv"
