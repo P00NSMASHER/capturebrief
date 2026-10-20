@@ -573,13 +573,18 @@ def index_status(
                 or row.get("rows_scanned") is None
                 or type(row.get("rows_scanned")) is not int
                 or row["rows_scanned"] < 0
-                or checked is None or observed is None
-                or observed > checked + timedelta(minutes=5)):
+                or checked is None or observed is None):
             unverified.append(slot)
             continue
         max_age = ACTIVE_MAX_AGE if slot == "ACTIVE" else ARCHIVE_MAX_AGE
         if now - checked > max_age or checked > now + timedelta(minutes=5):
             stale.append(slot)
+            continue
+        # A checked_at intentionally stale predates later source observations;
+        # preserve its STALE remediation classification instead of misleading
+        # callers by relabeling the known stale slot as UNVERIFIED.
+        if observed > checked + timedelta(minutes=5):
+            unverified.append(slot)
             continue
         # Mandatory full-byte replay for *release-bearing* source coverage.
         # A previous index/cache status is insufficient to certify retained
