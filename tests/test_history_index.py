@@ -147,6 +147,65 @@ class HistoryIndexTests(unittest.TestCase):
                 receipt["evidence_payload"]["coverage_errors"],
             )
 
+
+    def test_deleted_index_action_does_not_appear_as_complete_history(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            db, _ = self.build_complete_index(root)
+            self.assertTrue(index_status(db, fiscal_year=2026, now=NOW_DT)["complete"])
+            with closing(sqlite3.connect(db)) as conn, conn:
+                current = conn.execute(
+                    "SELECT snapshot_id FROM current_sources WHERE slot='ARCHIVE:2026'"
+                ).fetchone()[0]
+                conn.execute(
+                    "DELETE FROM opportunity_rows WHERE snapshot_id=? AND row_number=1",
+                    (current,),
+                )
+            status = index_status(db, fiscal_year=2026, now=NOW_DT)
+            self.assertFalse(status["complete"])
+            self.assertIn("ARCHIVE:2026", status["indexed_row_count_mismatch_slots"])
+            self.assertIn("ARCHIVE:2026", status["unverified_slots"])
+            self.assertFalse(status["local_original_hashes_verified"])
+            receipt = issue_history_receipt_from_index(
+                db, solicitation_number="SOL-1", seed_notice_id="a2",
+                observed_at=NOW, fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"], "OBSERVED_ONLY")
+            self.assertIn(
+                "ARCHIVE:2026",
+                receipt["evidence_payload"]["indexed_row_count_mismatch_slots"],
+            )
+
+    def test_blank_identity_in_mutated_sqlite_projection_is_unverified(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            db, _ = self.build_complete_index(root)
+            with closing(sqlite3.connect(db)) as conn, conn:
+                current = conn.execute(
+                    "SELECT snapshot_id FROM current_sources WHERE slot='ARCHIVE:2026'"
+                ).fetchone()[0]
+                conn.execute(
+                    "UPDATE opportunity_rows SET notice_id='' "
+                    "WHERE snapshot_id=? AND row_number=1",
+                    (current,),
+                )
+            status = index_status(db, fiscal_year=2026, now=NOW_DT)
+            self.assertFalse(status["complete"])
+            self.assertIn("ARCHIVE:2026", status["indexed_row_count_mismatch_slots"])
+
+    def test_actual_zero_row_archive_does_not_require_fake_action(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            db, _ = self.build_complete_index(root)
+            status = index_status(db, fiscal_year=2026, now=NOW_DT)
+            self.assertTrue(status["complete"], status)
+            self.assertNotIn(
+                "ARCHIVE:1980",
+                status["indexed_row_count_mismatch_slots"],
+            )
+            self.assertTrue(status["local_original_hashes_verified"])
+            self.assertFalse(status["publisher_origin_independently_attested"])
+
     def test_metadata_and_sha_tampering_never_certify_current_source(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
