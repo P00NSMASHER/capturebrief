@@ -485,11 +485,45 @@ def ingest_extract_file(
         }
 
 
+def _retained_source_bytes_match(row: dict[str, Any], *, allowed_root: Path) -> bool:
+    """Verify one indexed ORIGINAL against its recorded source fingerprint.
+
+    SQLite declarations and a passed ingestion run do not prove a retained
+    source still exists or that nobody altered it after ingestion.
+    Restrict untrusted DB local_path fields to the private index's approved
+    source root BEFORE opening any bytes. This establishes only local
+    byte integrity, never publisher authenticity or human source approval.
+    """
+    try:
+        raw = row.get("local_path")
+        if not isinstance(raw, str) or not raw:
+            return False
+        path = Path(raw)
+        if not path.is_absolute() or path.is_symlink() or not path.is_file():
+            return False
+        candidate = path.resolve(strict=True)
+        if not candidate.is_relative_to(allowed_root):
+            return False
+        expected_bytes = row.get("size_bytes")
+        expected_sha = row.get("extract_sha256")
+        if (type(expected_bytes) is not int or expected_bytes < 1
+                or not isinstance(expected_sha, str) or len(expected_sha) != 64
+                or any(char not in "0123456789abcdef" for char in expected_sha)):
+            return False
+        if candidate.stat().st_size != expected_bytes:
+            return False
+        observed_sha, observed_size = _file_sha256(candidate)
+        return observed_size == expected_bytes and observed_sha == expected_sha
+    except (OSError, ValueError, TypeError):
+        return False
+
+
 def index_status(
     index_path: str | Path,
     *,
     fiscal_year: int | None = None,
     now: datetime | None = None,
+    snapshot_root: str | Path | None = None,
 ) -> dict[str, Any]:
     fiscal_year = fiscal_year or fiscal_year_for_datetime()
     now = now or datetime.now(timezone.utc)
@@ -498,6 +532,15 @@ def index_status(
     now = now.astimezone(timezone.utc)
     required_years = catalog_years_for_fiscal_year(fiscal_year)
     required_slots = {"ACTIVE", *{f"ARCHIVE:{year}" for year in required_years}}
+    # An index with its source bytes missing is NEVER complete. Database
+    # paths are untrusted; by default only files under the private index's
+    # containing directory are eligible. Explicit alternate source roots
+    # must be provided by the authorized operator, not read from the DB.
+    root = (Path(snapshot_root) if snapshot_root is not None
+            else Path(index_path).expanduser().absolute().parent)
+    if root.is_symlink() or not root.is_dir():
+        raise HistoryIndexError("Private retained-source root is unavailable or unsafe")
+    root = root.resolve(strict=True)
     init_index(index_path)
     with closing(_connect(index_path)) as conn:
         rows = conn.execute(
@@ -511,23 +554,41 @@ def index_status(
     missing = sorted(required_slots - present)
     stale: list[str] = []
     unverified: list[str] = []
+    missing_or_mismatched_bytes: list[str] = []
     fresh: list[str] = []
     for row in snapshots:
         slot = row["slot"]
         if slot not in required_slots:
             continue
-        if row.get("collection_mode") != APPROVED_FETCH:
-            unverified.append(slot)
-            continue
+        expected_kind = "ACTIVE" if slot == "ACTIVE" else "ARCHIVE"
+        expected_year = None if slot == "ACTIVE" else int(slot.partition(":")[2])
+        expected_url = (ACTIVE_DOWNLOAD if expected_year is None
+                        else ARCHIVE_DOWNLOAD.format(fy=expected_year))
         checked = parse_dt(row.get("checked_at"))
-        if not checked:
+        observed = parse_dt(row.get("observed_at"))
+        if (row.get("collection_mode") != APPROVED_FETCH
+                or row.get("source_kind") != expected_kind
+                or row.get("fiscal_year") != expected_year
+                or row.get("source_url") != expected_url
+                or row.get("rows_scanned") is None
+                or type(row.get("rows_scanned")) is not int
+                or row["rows_scanned"] < 0
+                or checked is None or observed is None
+                or observed > checked + timedelta(minutes=5)):
             unverified.append(slot)
             continue
         max_age = ACTIVE_MAX_AGE if slot == "ACTIVE" else ARCHIVE_MAX_AGE
         if now - checked > max_age or checked > now + timedelta(minutes=5):
             stale.append(slot)
-        else:
-            fresh.append(slot)
+            continue
+        # Mandatory full-byte replay for *release-bearing* source coverage.
+        # A previous index/cache status is insufficient to certify retained
+        # source originals at the moment a COMPLETE claim is produced.
+        if not _retained_source_bytes_match(row, allowed_root=root):
+            unverified.append(slot)
+            missing_or_mismatched_bytes.append(slot)
+            continue
+        fresh.append(slot)
     return {
         "complete": not missing and not stale and not unverified,
         "fiscal_year": fiscal_year,
@@ -540,6 +601,9 @@ def index_status(
         "missing_slots": missing,
         "stale_slots": sorted(stale),
         "unverified_slots": sorted(unverified),
+        "missing_or_mismatched_source_bytes_slots": sorted(missing_or_mismatched_bytes),
+        "local_original_hashes_verified": not missing and not stale and not unverified,
+        "publisher_origin_independently_attested": False,
         "freshness_policy": {
             "active_max_age_hours": int(ACTIVE_MAX_AGE.total_seconds() // 3600),
             "archive_max_age_hours": int(ARCHIVE_MAX_AGE.total_seconds() // 3600),
@@ -588,6 +652,7 @@ def issue_history_receipt_from_index(
     seed_notice_id: str,
     observed_at: str | None = None,
     fiscal_year: int | None = None,
+    snapshot_root: str | Path | None = None,
 ) -> dict[str, Any]:
     observed_at = observed_at or datetime.now(timezone.utc).isoformat()
     if not parse_dt(observed_at):
@@ -599,7 +664,10 @@ def issue_history_receipt_from_index(
     if not _norm(solicitation_number):
         raise ValueError("Solicitation number must be nonempty for history-family matching")
     fiscal_year = fiscal_year or fiscal_year_for_datetime()
-    coverage = index_status(index_path, fiscal_year=fiscal_year, now=parse_dt(observed_at))
+    coverage = index_status(
+        index_path, fiscal_year=fiscal_year, now=parse_dt(observed_at),
+        snapshot_root=snapshot_root,
+    )
 
     with closing(_connect(index_path)) as conn:
         rows = _current_family_rows(conn, solicitation_number)
@@ -700,6 +768,9 @@ def issue_history_receipt_from_index(
             {"notice_id": notice_id, "observations": observations}
             for notice_id, observations in sorted(by_notice.items())
         ],
+        "retained_original_hashes_verified": coverage["local_original_hashes_verified"],
+        "publisher_origin_independently_attested": False,
+        "missing_or_mismatched_source_bytes_slots": coverage["missing_or_mismatched_source_bytes_slots"],
         "source_snapshots": [
             {
                 "source_kind": row["source_kind"],
