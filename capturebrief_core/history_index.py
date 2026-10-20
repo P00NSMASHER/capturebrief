@@ -411,13 +411,22 @@ def ingest_extract_file(
             if missing:
                 raise HistoryIndexError(f"extract missing required columns: {sorted(missing)}")
             for row_number, row in enumerate(reader, start=1):
+                # Never create an apparently complete original-history
+                # snapshot containing an action with no primary NoticeId.
+                # Such a row cannot be linked or independently reviewed,
+                # even if its Sol# and agency data are present.
+                notice_id = str(row.get("NoticeId") or "").strip()
+                if not notice_id:
+                    raise HistoryIndexError(
+                        f"source original row {row_number} has empty NoticeId"
+                    )
                 rows_scanned += 1
                 raw = {k: row.get(k) for k in reader.fieldnames or []}
                 batch.append(
                     (
                         snapshot_id,
                         row_number,
-                        str(row.get("NoticeId") or "").strip(),
+                        notice_id,
                         _norm(row.get("Sol#")),
                         str(row.get("Sol#") or "").strip() or None,
                         str(row.get("CGAC") or "").strip() or None,
