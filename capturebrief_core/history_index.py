@@ -752,14 +752,46 @@ def issue_history_receipt_from_index(
     # Unapproved and future fiscal years may exist in the same SQLite index.
     # They must never enter actions for an earlier approved historical catalog.
     required_slots = set(coverage["required_slots"])
+    # The coverage check and the family SELECT used to run in different
+    # database snapshots. An approved sync could replace a current source
+    # between the two, letting a *new* notice be included under the OLD
+    # source's already-verified coverage and yield a false COMPLETE result.
+    # Pin all current-slot attributes inspected by index_status, then
+    # open one read transaction for the comparison and the family SELECT.
+    source_fields = (
+        "slot", "checked_at", "collection_mode", "source_etag",
+        "source_last_modified", "snapshot_id", "source_kind",
+        "fiscal_year", "source_url", "extract_sha256", "size_bytes",
+        "observed_at", "local_path", "rows_scanned",
+    )
+    expected_sources = {
+        item["slot"]: tuple(item.get(key) for key in source_fields)
+        for item in coverage["snapshots"] if item["slot"] in required_slots
+    }
     with closing(_connect(index_path)) as conn:
-        rows = [
+        conn.execute("BEGIN")
+        current = conn.execute(
+            "SELECT c.slot,c.checked_at,c.collection_mode,c.source_etag,c.source_last_modified,"
+            "s.snapshot_id,s.source_kind,s.fiscal_year,s.source_url,s.extract_sha256,"
+            "s.size_bytes,s.observed_at,s.local_path,s.rows_scanned "
+            "FROM current_sources c JOIN source_snapshots s "
+            "ON s.snapshot_id=c.snapshot_id"
+        ).fetchall()
+        observed_sources = {
+            item["slot"]: tuple(item[key] for key in source_fields)
+            for item in current if item["slot"] in required_slots
+        }
+        source_changed = observed_sources != expected_sources
+        rows = [] if source_changed else [
             row for row in _current_family_rows(conn, solicitation_number)
             if row.get("slot") in required_slots
         ]
+        conn.execute("ROLLBACK")
 
     seed = next((row for row in rows if row.get("notice_id") == seed_notice_id), None)
     errors: list[str] = []
+    if source_changed:
+        errors.append("SOURCE_SNAPSHOT_CHANGED_DURING_RECEIPT")
     if seed is None:
         errors.append("SEED_NOTICE_NOT_IN_CURRENT_INDEX")
         family_rows: list[dict[str, Any]] = []
