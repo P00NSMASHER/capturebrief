@@ -90,6 +90,81 @@ class DataServicesSourceBindingTests(unittest.TestCase):
                 observed_at="2026-09-21T13:00:00+00:00",
             )
 
+    def test_receipt_builder_rejects_mislabeled_snapshot_even_without_scanner(self):
+        active=scan_extract_bytes(
+            ORIGINAL,source_url=ACTIVE_DOWNLOAD,
+            source_kind="ACTIVE",solicitation_number="FICTIONAL-SOL",
+        )
+        archive=scan_extract_bytes(
+            ORIGINAL,source_url=ARCHIVE_DOWNLOAD.format(fy=2026),
+            source_kind="ARCHIVE",fiscal_year=2026,
+            solicitation_number="FICTIONAL-SOL",
+        )
+        forged=dict(archive)
+        forged["source_url"]=ACTIVE_DOWNLOAD
+        with self.assertRaises(DataServicesError):
+            issue_history_receipt_from_snapshots(
+                [active,forged],solicitation_number="FICTIONAL-SOL",
+                seed_notice_id="FICTIONAL-1",
+                scope_start_fy=2026,scope_end_fy=2026,
+                scope_confirmed=True,observed_at="2026-09-21T13:00:00+00:00",
+            )
+
+    def test_receipt_builder_rejects_duplicate_archive_slots(self):
+        active=scan_extract_bytes(
+            ORIGINAL,source_url=ACTIVE_DOWNLOAD,
+            source_kind="ACTIVE",solicitation_number="FICTIONAL-SOL",
+        )
+        archive=scan_extract_bytes(
+            ORIGINAL,source_url=ARCHIVE_DOWNLOAD.format(fy=2026),
+            source_kind="ARCHIVE",fiscal_year=2026,
+            solicitation_number="FICTIONAL-SOL",
+        )
+        with self.assertRaises(DataServicesError):
+            issue_history_receipt_from_snapshots(
+                [active,archive,dict(archive)],solicitation_number="FICTIONAL-SOL",
+                seed_notice_id="FICTIONAL-1",
+                scope_start_fy=2026,scope_end_fy=2026,
+                scope_confirmed=True,observed_at="2026-09-21T13:00:00+00:00",
+            )
+
+    def test_receipt_cannot_claim_unapproved_fy2027_scope_complete(self):
+        active=scan_extract_bytes(
+            ORIGINAL,source_url=ACTIVE_DOWNLOAD,
+            source_kind="ACTIVE",solicitation_number="FICTIONAL-SOL",
+        )
+        archive=scan_extract_bytes(
+            ORIGINAL,source_url=ARCHIVE_DOWNLOAD.format(fy=2027),
+            source_kind="ARCHIVE",fiscal_year=2027,
+            solicitation_number="FICTIONAL-SOL",
+        )
+        report=issue_history_receipt_from_snapshots(
+            [active,archive],solicitation_number="FICTIONAL-SOL",
+            seed_notice_id="FICTIONAL-1",
+            scope_start_fy=2027,scope_end_fy=2027,
+            scope_confirmed=True,observed_at="2026-10-20T13:00:00+00:00",
+        )
+        self.assertEqual(report["status"],"OBSERVED_ONLY")
+        self.assertFalse(
+            report["evidence_payload"]["scope"]["production_archive_catalog_approved"],
+        )
+
+    def test_manually_injected_unmatched_notice_cannot_pollute_receipt(self):
+        active=scan_extract_bytes(
+            ORIGINAL,source_url=ACTIVE_DOWNLOAD,
+            source_kind="ACTIVE",solicitation_number="FICTIONAL-SOL",
+        )
+        forged={**active,"matches":[
+            {**active["matches"][0],
+             "solicitation_number":"DIFFERENT-FICTIONAL-SOL"},
+        ]}
+        with self.assertRaises(DataServicesError):
+            issue_history_receipt_from_snapshots(
+                [forged],solicitation_number="FICTIONAL-SOL",
+                seed_notice_id="FICTIONAL-1",
+                observed_at="2026-09-21T13:00:00+00:00",
+            )
+
     def test_valid_header_only_archived_original_is_allowed(self):
         result=scan_extract_bytes(
             HEADER.encode("ascii"),
