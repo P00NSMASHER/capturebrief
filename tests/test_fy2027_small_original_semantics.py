@@ -75,6 +75,46 @@ class EarlyOriginalSafetyTests(unittest.TestCase):
             self.assertTrue(obj.closed)
             self.assertEqual(obj.reads,[len(data)+1])
 
+    def test_anonymized_missing_anchor_and_repeat_collision_counts(self):
+        # Fictional public-style rows only; the analysis never discloses
+        # individual notice identities, Sol numbers or office names.
+        out = io.StringIO()
+        writer = csv.DictWriter(out, fieldnames=sorted(REQUIRED_COLUMNS))
+        writer.writeheader()
+        cases = (
+            ("fake-1", "SAME-SOL", "", ""),
+            ("fake-2", "SAME-SOL", "AAC1", "OFFICE-A"),
+            ("fake-3", "SAME-SOL", "AAC1", "OFFICE-B"),
+            ("fake-4", "SAME-SOL", "AAC2", "OFFICE-B"),
+            ("fake-5", "", "AAC3", "OFFICE-C"),
+        )
+        for notice_id, sol, aac, office in cases:
+            writer.writerow({
+                "NoticeId": notice_id, "Sol#": sol,
+                "AAC Code": aac, "Office": office,
+                "PostedDate": "10/19/2026",
+                "Type": "Solicitation", "Active": "No",
+            })
+        metrics = m.inspect_original_memory(out.getvalue().encode("ascii"))
+        self.assertEqual(metrics["rows"], 5)
+        self.assertEqual(metrics["blank_solicitation_rows"], 1)
+        self.assertEqual(metrics["blank_aac_rows"], 1)
+        self.assertEqual(metrics["blank_office_rows"], 1)
+        self.assertEqual(metrics["blank_aac_and_office_rows"], 1)
+        self.assertEqual(metrics["repeated_nonblank_solicitation_groups"], 1)
+        self.assertEqual(
+            metrics["repeated_groups_with_missing_agency_or_office"], 1,
+        )
+        self.assertEqual(metrics["repeated_groups_with_multiple_known_aacs"], 1)
+        self.assertEqual(
+            metrics["repeated_groups_with_multiple_offices_inside_known_aac"], 1,
+        )
+        for notice_id, sol, aac, office in cases:
+            if notice_id:
+                self.assertNotIn(notice_id, repr(metrics))
+            if sol:
+                self.assertNotIn(sol, repr(metrics))
+
     def test_unauthorized_redirect_refused_before_source_body_read(self):
         data=csv_bytes()
         out=[]
