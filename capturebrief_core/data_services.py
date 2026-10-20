@@ -114,6 +114,17 @@ def scan_extract_bytes(
 ) -> dict[str, Any]:
     if source_kind not in {"ACTIVE", "ARCHIVE"}:
         raise ValueError("source_kind must be ACTIVE or ARCHIVE")
+    # An approved SAM URL is NOT permission to relabel an ACTIVE original
+    # as an archived year or another FY. Without exact slot binding,
+    # a missing archived original can be masked with a different file and
+    # a caller-confirmed scope can incorrectly return COMPLETE.
+    if source_kind == "ACTIVE":
+        if fiscal_year is not None or source_url != ACTIVE_DOWNLOAD:
+            raise ValueError("ACTIVE original source and fiscal-year label do not match")
+    else:
+        if (type(fiscal_year) is not int or not 1900 <= fiscal_year <= 2099
+                or source_url != ARCHIVE_DOWNLOAD.format(fy=fiscal_year)):
+            raise ValueError("ARCHIVE original fiscal year and official source URL do not match")
     require_approved_automation(source_url, expected="SAM_DATA_SERVICES_EXTRACT")
     target = _norm(solicitation_number)
     if not target:
@@ -131,12 +142,21 @@ def scan_extract_bytes(
         raise DataServicesError("extract contains duplicate, blank or reserved CSV headers")
 
     rows_scanned = 0
+    seen_original_notice_ids: set[str] = set()
     matches: list[dict[str, Any]] = []
     for row in reader:
         if "_extra" in row or any(row.get(field) is None for field in columns):
             raise DataServicesError("extract original has an invalid CSV column count")
-        if not str(row.get("NoticeId") or "").strip():
+        notice_id = str(row.get("NoticeId") or "").strip()
+        if not notice_id:
             raise DataServicesError("extract original row lacks primary NoticeId")
+        # Reject duplicate action identities within ONE original, including
+        # rows outside the requested Sol#, before a receipt can look complete.
+        # The same NoticeId may legitimately appear in different snapshots.
+        normalized_notice = _norm(notice_id)
+        if normalized_notice in seen_original_notice_ids:
+            raise DataServicesError("extract original contains duplicate NoticeId")
+        seen_original_notice_ids.add(normalized_notice)
         rows_scanned += 1
         if _norm(row.get("Sol#")) != target:
             continue
