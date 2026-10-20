@@ -62,11 +62,13 @@ jobs:
           fix/source-policy-secret-redaction-20261018:cf441e8d580af3a7d147d2884b7b3814fdf28e12
           feat/pilot-stripe-payment-reconciliation-20261019:bbbac444705b0a95ea4af12430c287a984b427ee
           fix/x402-workflow-typed-env-20261018:567c648ac91f23423a808b85ec3c617a919dcc36
+          security/fy2027-offdevice-backup-candidate-20261019:b77f48a623a622c1f297fd819290bbfda5415bdf
+          security/fy2027-compressed-disk-reserve-20261019:ef478f497472a10eeba1388ba6cfd8327e44a2b6
           PINNED
           git diff --check
           test -z "$(git status --porcelain)"
-          echo "All five exact PR heads composed locally; no GitHub branch changes."
-          git log -6 --format="%h %s"
+          echo "All seven exact PR heads composed locally; no GitHub branch changes."
+          git log -8 --format="%h %s"
       - name: Checkout immutable website candidate into its own directory
         uses: actions/checkout@v4
         with:
@@ -83,6 +85,10 @@ jobs:
           set -euo pipefail
           test "$(git -C site-candidate rev-parse HEAD)" = "2f5af397fc5d46e6f919f11b0f6e3701df69c665"
           python -m compileall -q capturebrief_core scripts
+      - name: Install pinned optional crypto dependency for fictional backup QA
+        run: python -m pip install --disable-pip-version-check cryptography==46.0.4
+      - name: Confirm exact synthetic backup crypto version
+        run: python -c "import cryptography; assert cryptography.__version__ == '46.0.4'"
       - name: Full combined Linux Product Core test corpus
         if: matrix.mode == 'linux'
         run: python -m unittest discover -s tests -v
@@ -101,6 +107,11 @@ jobs:
           tests.test_atomic_io
           tests.test_history_index
           tests.test_source_policy_data_services
+          tests.test_fy2027_encrypted_backup
+          tests.test_fy2027_archive_capacity_probe
+          tests.test_fy2027_archive_compression_probe
+          tests.test_compressed_archive_candidate
+          tests.test_source_disk_budget
           -v
       - name: Install pinned Chromium and WebKit for composed release
         if: matrix.mode == 'linux'
@@ -118,12 +129,15 @@ jobs:
           assert ARCHIVE_CATALOG_CURRENT_THROUGH_FY == 2026, "Unexpected FY2027 catalog approval"
           print(json.dumps({
               "kind": "CaptureBrief ephemeral release composition test",
-              "composed_main_prs": [51, 52, 53, 55, 54],
+              "composed_main_prs": [51, 52, 53, 55, 54, 57, 61],
               "website_pr": 50,
               "synthetic_merge_only": True,
               "independent_release_approval_proven": False,
               "real_customer_delivery_proven": False,
               "FY2027_full_catalog_certified": False,
+              "encrypted_offdevice_restore_proven": False,
+              "disk_encryption_verified": False,
+              "all_34_year_originals_retained": False,
               "real_14_day_live_watch_proven": False,
               "external_email_authorized": False,
               "real_payment_authorized": False
