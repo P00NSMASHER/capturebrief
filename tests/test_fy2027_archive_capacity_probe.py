@@ -1,7 +1,9 @@
 """Entirely synthetic tests for FY2027 source-size planning; no live downloads."""
 from __future__ import annotations
 
+import json
 import unittest
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from scripts.fy2027_archive_capacity_probe import (
@@ -123,6 +125,34 @@ class SourceCapacityTests(unittest.TestCase):
                 probe_many(years)
         with self.assertRaises(ValueError):
             inspect_archive_header(2028)
+
+
+    def test_frozen_all_year_public_metadata_receipt_is_not_source_approval(self):
+        path = Path(__file__).resolve().parents[1] / (
+            "research/fy2027_archive_capacity_observation_20261020.json"
+        )
+        receipt = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            receipt["source_actions_run"],
+            "https://github.com/P00NSMASHER/capturebrief/actions/runs/39350338311",
+        )
+        years = receipt["year_size_bytes"]
+        self.assertEqual(len(years), 34)
+        self.assertEqual(sorted(map(int, (key[2:] for key in years))),
+                         sorted(CANDIDATE_YEARS))
+        self.assertEqual(sum(years.values()), 20333624076)
+        self.assertEqual(receipt["archive_size_sum_bytes"], 20333624076)
+        self.assertEqual(receipt["bytes_read_per_year"], 1)
+        self.assertTrue(receipt["archive_metadata_years_complete"])
+        for blocked in (
+            "original_source_files_retrieved", "active_extract_included",
+            "sqlite_index_size_included", "backup_storage_included",
+            "disk_encryption_verified",
+            "source_publisher_authenticity_independently_established",
+            "independent_human_catalog_approval", "source_index_updated",
+            "full_catalog_claim_authorized", "customer_release_authorized",
+        ):
+            self.assertIs(receipt[blocked], False, blocked)
 
 
 if __name__ == "__main__":
