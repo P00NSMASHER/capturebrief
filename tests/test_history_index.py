@@ -153,6 +153,7 @@ class HistoryIndexTests(unittest.TestCase):
             db, _ = self.build_complete_index(root)
             self.assertTrue(index_status(db, fiscal_year=2026, now=NOW_DT)["complete"])
             with closing(sqlite3.connect(db)) as conn:
+                conn.row_factory = sqlite3.Row
                 original = dict(conn.execute(
                     "SELECT source_url, source_kind, fiscal_year, "
                     "extract_sha256, size_bytes, observed_at, local_path "
