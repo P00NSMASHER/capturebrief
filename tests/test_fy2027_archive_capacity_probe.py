@@ -210,5 +210,62 @@ class SourceCapacityTests(unittest.TestCase):
 
 
 
+    def test_34_year_evidence_matrix_does_not_promote_unreviewed_sources(self):
+        path=(Path(__file__).resolve().parents[1]/"research"/
+              "fy2027_candidate_source_evidence_matrix_20261020.json")
+        doc=json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(doc["schema"],
+                         "capturebrief-fy2027-unapproved-source-evidence-matrix-v1")
+        self.assertEqual(doc["fiscal_year_target"],2027)
+        self.assertEqual(doc["archive_year_count"],34)
+        self.assertEqual(len(doc["archive_evidence"]),34)
+        self.assertEqual(doc["source_data_class_counts"],{
+            "ONE_TIME_PUBLIC_FULL_BYTE_IN_MEMORY_OBSERVATION_UNAPPROVED":8,
+            "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED":25,
+            "EXACT_PRIVATE_LOCAL_ORIGINAL_RETAINED_UNAPPROVED":1,
+        })
+        self.assertEqual(doc["full_original_byte_observations_without_retention"],8)
+        self.assertEqual(doc["private_local_full_originals_durably_retained_but_unapproved"],1)
+        self.assertEqual(doc["archive_years_missing_full_original_bytes"],25)
+        self.assertEqual(doc["source_originals_with_independent_publisher_human_approval"],0)
+        self.assertEqual(
+            doc["archive_years_with_proven_independent_key_recovery_and_offdevice_restore"],0,
+        )
+        self.assertTrue(doc["required_active_source_slot_not_in_archive_matrix"])
+        self.assertFalse(doc["active_source_original_retained_and_independently_verified"])
+        self.assertEqual(doc["original_uncompressed_archive_server_declared_bytes"],20333624076)
+        rows=doc["archive_evidence"]
+        self.assertEqual(
+            [r["fiscal_year"] for r in rows],
+            sorted(CANDIDATE_YEARS),
+        )
+        self.assertEqual(
+            sum(r["server_declared_original_bytes"] for r in rows),
+            doc["original_uncompressed_archive_server_declared_bytes"],
+        )
+        approved={r["fiscal_year"] for r in rows
+                  if r["source_original_durably_retained_on_authorized_pc"]}
+        self.assertEqual(approved,{2027})
+        self.assertEqual(
+            sum(1 for r in rows if r["observed_full_original_sha256"] is not None),
+            9,
+        )
+        for row in rows:
+            self.assertFalse(row["independent_publisher_review_approved"])
+            self.assertFalse(row["independent_encrypted_offdevice_restore_verified"])
+            self.assertFalse(row["source_catalog_admitted"])
+            digest=row["observed_full_original_sha256"]
+            if digest is not None:
+                self.assertEqual(len(digest),64)
+                self.assertTrue(all(c in "0123456789abcdef" for c in digest))
+        self.assertTrue(doc["one_FY2027_local_encrypted_backup_verification_documented_but_independent_recovery_unproved"])
+        for blocked in (
+            "full_catalog_approved", "source_index_approved",
+            "disk_encryption_verified","independent_source_review_complete",
+            "customer_release_authorized","external_send_authorized",
+        ):
+            self.assertIs(doc[blocked],False,blocked)
+
+
 if __name__ == "__main__":
     unittest.main()
