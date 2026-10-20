@@ -455,3 +455,53 @@ escrow with encrypted off-device backup and actual downloaded remote
 restore, independent code approvers, real customer authorization,
 verified delivery/paid transaction, and a genuine 14-day live watch.
 The passing tests do not override these holds.
+
+
+## October 19 — agency and office anchored-family false-completeness repair
+
+On PAAM-L044, directly simulated **four** complete-but-ambiguous
+history sources (FICTIONAL bytes only) from the genuine current
+`history_index` release-candidate function:
+
+- Identical normalized solicitation and AAC with distinct Offices
+  were incorrectly grouped as one `COMPLETE` contract history.
+- Identical solicitation+A​AC with one blank/unknown Office could
+  improperly include both known/unknown office records.
+- A seed with blank AAC and a known Office could join a differently
+  coded agency merely because Office/Sol# were identical.
+- A seed with neither AAC nor Office could include unrelated
+  identifiable notices when one nonblank agency code was present.
+
+PR #51 head
+`cf15448c54cfd9245955819a22171680accb69f6`
+now rejects completion whenever these anchors do not establish a
+unique seed family: review-required errors are emitted, ambiguous
+sibling notices are excluded, and the receipt is `OBSERVED_ONLY`
+rather than `COMPLETE`. Five new invented-source negative-control
+tests passed on Linux/Windows
+([exact code #39365703690](https://github.com/P00NSMASHER/capturebrief/actions/runs/39365703690)).
+The workstation independently replayed **four** variants at the exact
+same PR source SHA using real Windows Python 3.13: **4/4 PASS**.
+
+The real retained, still-unapproved FY2027 official original contains
+1,104 rows, 119 repeated nonblank `Sol#` groups, nine blank AAC
+rows and zero blank Offices. Its repeated groups do not exhibit
+multiple nonblank Offices under the same AAC or mixed known/missing
+AAC or Office conflicts as defined above. This is a **single-year
+compatibility observation**, not independent publisher authentication
+or 34-year complete-history acceptance.
+
+Actual [eight-candidate no-deploy composition
+#39365810058](https://github.com/P00NSMASHER/capturebrief/actions/runs/39365810058),
+using exact QA workflow source commit
+`f08ed6ac3b8c1a7fcdb7b93ae9ebd214fbfe89f4`,
+passed **587 Linux tests, 190 Windows tests (one skipped)**,
+Chromium+WebKit no-send negative-controls, and eight pinned
+source-branch merges inside disposable CI workspaces.
+
+**No protected main/gh-pages merge, FY2027 catalog review/approval,
+customer communication, source bulk downloads, independent code
+approval, verified host encryption, off-device recovery or
+production deployment was performed.** A real customer case and
+14-day monitored pilot are still missing. The engineering test
+results must never be relabeled as independent approval.
