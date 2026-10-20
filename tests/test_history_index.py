@@ -918,6 +918,70 @@ class HistoryIndexTests(unittest.TestCase):
             self.assertFalse(index.exists())
 
 
+    def test_malformed_original_csv_row_shapes_block_current_source_atomically(self):
+        # DictReader otherwise silently maps extra columns to _extra,
+        # maps omitted trailing values to None, and overwrites duplicate
+        # header names. A complete index would then misrepresent the
+        # original row while still advertising the original file SHA.
+        variants = ("extra-value", "missing-value", "duplicate-header",
+                    "blank-header", "reserved-extra-header")
+        for variant in variants:
+            with self.subTest(shape=variant), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                source = root / "fictional-malformed-source.csv"
+                db = root / "fictional-private.sqlite"
+                write_csv(source, [row("FICTIONAL-1")])
+                with source.open("r", encoding="cp1252", newline="") as handle:
+                    records = list(csv.reader(handle))
+                self.assertEqual(len(records), 2)
+                if variant == "extra-value":
+                    records[1].append("FICTIONAL-EXTRA-DATA")
+                elif variant == "missing-value":
+                    records[1].pop()
+                elif variant == "duplicate-header":
+                    records[0][-1] = records[0][0]
+                elif variant == "blank-header":
+                    records[0][-1] = ""
+                else:
+                    records[0][-1] = "_extra"
+                with source.open("w", encoding="cp1252", newline="") as handle:
+                    writer = csv.writer(handle)
+                    writer.writerows(records)
+                with self.assertRaisesRegex(HistoryIndexError, "column|header"):
+                    ingest_extract_file(
+                        db, source, source_url=ACTIVE_DOWNLOAD,
+                        source_kind="ACTIVE", observed_at=NOW,
+                        collection_mode="OPERATOR_FILE", snapshot_dir=None,
+                    )
+                with closing(sqlite3.connect(db)) as conn:
+                    for table in ("source_snapshots", "current_sources",
+                                  "opportunity_rows"):
+                        self.assertEqual(
+                            conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0],
+                            0, table,
+                        )
+
+    def test_quoted_comma_source_fields_remain_valid_with_strict_csv_shapes(self):
+        # Commas in properly quoted content are valid, unlike an additional
+        # unquoted column. The parser must preserve the entire office text.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "fictional-quoted.csv"
+            db = root / "fictional-private.sqlite"
+            write_csv(source, [row("FICTIONAL-QUOTED",
+                                   office="FICTIONAL, WEST OFFICE")])
+            result = ingest_extract_file(
+                db, source, source_url=ACTIVE_DOWNLOAD,
+                source_kind="ACTIVE", observed_at=NOW,
+                collection_mode="OPERATOR_FILE", snapshot_dir=None,
+            )
+            self.assertEqual(result["rows_scanned"], 1)
+            with closing(sqlite3.connect(db)) as conn:
+                office = conn.execute(
+                    "SELECT office FROM opportunity_rows"
+                ).fetchone()[0]
+            self.assertEqual(office, "FICTIONAL, WEST OFFICE")
+
     def test_missing_notice_id_blocks_entire_original_snapshot_atomically(self):
         # A source row without NoticeId cannot be independently traced to an
         # actual notice action. Never allow a FULL_CATALOG index to look
