@@ -561,6 +561,7 @@ def index_status(
             for row in conn.execute(
                 "SELECT r.snapshot_id, COUNT(*) AS n, "
                 "MIN(r.row_number) AS first_row, MAX(r.row_number) AS last_row, "
+                "COUNT(DISTINCT r.notice_id) AS distinct_notice_ids, "
                 "SUM(CASE WHEN TRIM(r.notice_id)='' THEN 1 ELSE 0 END) AS blank_ids "
                 "FROM opportunity_rows r "
                 "WHERE r.snapshot_id IN (SELECT snapshot_id FROM current_sources) "
@@ -616,6 +617,7 @@ def index_status(
                     stats.get("first_row") != 1
                     or stats.get("last_row") != expected_count
                     or stats.get("blank_ids") != 0
+                    or stats.get("distinct_notice_ids") != expected_count
                 ))):
             unverified.append(slot)
             indexed_row_count_mismatches.append(slot)
