@@ -41,6 +41,7 @@ from capturebrief_core.source_policy import (
     open_approved_extract, require_approved_extract_delivery,
 )
 from scripts.fy2027_archive_compression_probe import frozen_unapproved_sizes
+from scripts.source_disk_budget import require_source_capacity
 
 BLOCK_BYTES = 1024 * 1024
 MAX_ORIGINAL_BYTES = 1_500_000_000
@@ -204,6 +205,10 @@ def retain_compressed_candidate(
         raise ValueError("Archive metadata byte count is outside bounded retention contract")
     observed = _utc(observed_at)
     root = _private_dir(private_dir)
+    # Must pass a conservative, source-size-bound disk budget BEFORE opening
+    # the first network response or publishing any source file. A sampled
+    # gzip ratio is never accepted as a capacity guarantee.
+    require_source_capacity(root, total)
     url = ARCHIVE_DOWNLOAD.format(fy=year)
     req = Request(url, headers={
         "User-Agent": "CaptureBrief/0.3",
