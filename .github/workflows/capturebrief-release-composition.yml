@@ -57,7 +57,7 @@ jobs:
             fi
             git merge --no-ff --no-edit "$expected"
           done <<'PINNED'
-          pilot/acceptance-evidence-gates-20261018:bbcad29f0722feb11c699f7a7e2b3e93f91e3b2a
+          pilot/acceptance-evidence-gates-20261018:21f0e188e4490a65bafd711c478b60562f794384
           feat/pilot-email-intake-bridge-20261018:c95fd399c3d3816ac02e628d86347ff96b263bdc
           fix/source-policy-secret-redaction-20261018:cf441e8d580af3a7d147d2884b7b3814fdf28e12
           feat/pilot-stripe-payment-reconciliation-20261019:bbbac444705b0a95ea4af12430c287a984b427ee
