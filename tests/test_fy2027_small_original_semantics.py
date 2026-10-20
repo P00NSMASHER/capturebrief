@@ -235,7 +235,26 @@ class EarlyOriginalSafetyTests(unittest.TestCase):
             "customer_release_authorized","external_send_authorized",
         ):
             self.assertIs(doc[flag],False,flag)
-        self.assertIs(doc["blank_aac_and_office_overlap_unmeasured"],True)
+        self.assertIs(doc["blank_aac_and_office_overlap_unmeasured"],False)
+        self.assertEqual(doc["blank_aac_and_office_rows_total"],1157)
+        self.assertEqual(doc["repeated_nonblank_solicitation_group_total"],637)
+        self.assertEqual(doc["repeated_group_with_missing_agency_or_office_total"],193)
+        self.assertEqual(doc["repeated_group_with_multiple_known_aacs_total"],2)
+        self.assertEqual(doc["repeated_group_with_multiple_offices_inside_known_aac_total"],0)
+        self.assertEqual(
+            doc["additional_family_distribution_observation_run"],
+            "https://github.com/P00NSMASHER/capturebrief/actions/runs/39367333629",
+        )
+        for fy,groups,missing,known_aac in (
+            (1999,238,75,1), (2000,165,39,0), (2001,234,79,1),
+        ):
+            with self.subTest(year=fy):
+                row=by_year[fy]
+                self.assertEqual(row["blank_aac_and_office_rows"],row["blank_aac_rows"])
+                self.assertEqual(row["repeated_nonblank_solicitation_groups"],groups)
+                self.assertEqual(row["repeated_groups_with_missing_agency_or_office"],missing)
+                self.assertEqual(row["repeated_groups_with_multiple_known_aacs"],known_aac)
+                self.assertEqual(row["repeated_groups_with_multiple_offices_inside_known_aac"],0)
 
     def test_frozen_unapproved_public_original_agency_ambiguity_observation(self):
         path=(m.ROOT/"research"/
