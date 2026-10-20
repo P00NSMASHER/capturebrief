@@ -85,8 +85,10 @@ class FY2027OfflineEncryptedBackupTests(unittest.TestCase):
             self.assertFalse(restored_result["independent_offdevice_restore_proven"])
             self.assertEqual((restored / f"FY2027-{digest}.receipt.json").read_bytes(),
                              receipt_before)
-            self.assertEqual(hashlib.sha256((restored / f"FY2027-{digest}.csv").read_bytes()).hexdigest(),
-                             digest)
+            restored_source = restored / f"FY2027-{digest}.csv"
+            self.assertEqual(hashlib.sha256(restored_source.read_bytes()).hexdigest(), digest)
+            self.assertFalse(bool(restored_source.stat().st_mode & stat.S_IWUSR),
+                             "Recovered source must be read-only on Windows and Linux")
             # A replay with the same original bytes is idempotent and preserves receipt.
             m.restore_backup(backup, restored, PASSWORD, expected_sha256=digest,
                              expected_bytes=count)
