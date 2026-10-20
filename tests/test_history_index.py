@@ -777,6 +777,52 @@ class HistoryIndexTests(unittest.TestCase):
                               if x["notice_id"]=="a2")
             self.assertEqual(len(observations),2)
 
+    def test_current_source_swap_between_status_and_family_query_fails_closed(self):
+        # A real sync may replace ACTIVE after coverage is independently
+        # checked but before the history family query reads current_sources.
+        # A row from the NEW source must never appear under the OLD source's
+        # COMPLETE coverage certificate. No artificial sleeps or races needed.
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            db,snapshots=self.build_complete_index(root)
+            previous=index_status(db,fiscal_year=2026,now=NOW_DT)
+            self.assertTrue(previous["complete"])
+            old_active=next(x for x in previous["snapshots"] if x["slot"]=="ACTIVE")
+            replacement=root/"FICTIONAL-swapped-active.csv"
+            write_csv(replacement,[
+                row("a2",sol="SOL-1",aac="AAC1",office="OFFICE"),
+                row("new-not-validated",sol="SOL-1",aac="AAC1",office="OFFICE"),
+            ])
+            from capturebrief_core import history_index as engine
+            original_status=engine.index_status
+            def swap_after_coverage(*args,**kwargs):
+                evidence=original_status(*args,**kwargs)
+                change=ingest_extract_file(
+                    db,replacement,source_url=ACTIVE_DOWNLOAD,
+                    source_kind="ACTIVE",observed_at=NOW,
+                    snapshot_dir=snapshots,collection_mode=APPROVED_FETCH,
+                )
+                self.assertNotEqual(change["snapshot_id"],old_active["snapshot_id"])
+                return evidence
+            with patch("capturebrief_core.history_index.index_status",
+                       side_effect=swap_after_coverage):
+                receipt=issue_history_receipt_from_index(
+                    db,solicitation_number="SOL-1",seed_notice_id="a2",
+                    observed_at=NOW,fiscal_year=2026,
+                )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertNotIn("new-not-validated",receipt["action_ids"])
+            self.assertIn(
+                "SOURCE_SNAPSHOT_CHANGED_DURING_RECEIPT",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+            # The old source that coverage inspected remains intact, but
+            # it must not attest the new current source's joined actions.
+            current=index_status(db,fiscal_year=2026,now=NOW_DT)
+            self.assertTrue(current["complete"])
+            now_active=next(x for x in current["snapshots"] if x["slot"]=="ACTIVE")
+            self.assertNotEqual(old_active["snapshot_id"],now_active["snapshot_id"])
+
     def test_seed_is_never_selected_from_bulk(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db,_=self.build_complete_index(root)
