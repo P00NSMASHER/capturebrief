@@ -445,6 +445,48 @@ class HistoryIndexTests(unittest.TestCase):
                 receipt["evidence_payload"]["coverage_errors"],
             )
 
+    def test_missing_seed_aac_same_office_other_agency_is_partial(self):
+        # Reproduced on PAAM-L044: missing seed AAC, same office and Sol#
+        # combined unrelated AAC notice in a COMPLETE family.
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);db,snapshots=self.build_complete_index(root)
+            path=root/"missing-seed-aac-active.csv"
+            write_csv(path,[
+                row("seed-without-aac",sol="SOL-1",aac="",office="OFFICE"),
+                row("unrelated-known-aac",sol="SOL-1",aac="OTHER-AAC",office="OFFICE"),
+            ])
+            ingest_extract_file(db,path,source_url=ACTIVE_DOWNLOAD,
+                source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots,
+                collection_mode=APPROVED_FETCH)
+            self.assertTrue(index_status(db,fiscal_year=2026,now=NOW_DT)["complete"])
+            receipt=issue_history_receipt_from_index(db,
+                solicitation_number="SOL-1",seed_notice_id="seed-without-aac",
+                observed_at=NOW,fiscal_year=2026)
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertEqual(receipt["action_ids"],["seed-without-aac"])
+            self.assertNotIn("unrelated-known-aac",receipt["action_ids"])
+            self.assertIn("FAMILY_AAC_COLLISION_REQUIRES_REVIEW",
+                receipt["evidence_payload"]["coverage_errors"])
+
+    def test_seed_missing_both_aac_and_office_cannot_claim_complete(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);db,snapshots=self.build_complete_index(root)
+            path=root/"missing-agency-office-active.csv"
+            write_csv(path,[
+                row("seed-without-both",sol="SOL-1",aac="",office=""),
+                row("other-agency-identity",sol="SOL-1",aac="AAC1",office="OFFICE"),
+            ])
+            ingest_extract_file(db,path,source_url=ACTIVE_DOWNLOAD,
+                source_kind="ACTIVE",observed_at=NOW,snapshot_dir=snapshots,
+                collection_mode=APPROVED_FETCH)
+            receipt=issue_history_receipt_from_index(db,
+                solicitation_number="SOL-1",seed_notice_id="seed-without-both",
+                observed_at=NOW,fiscal_year=2026)
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertEqual(receipt["action_ids"],["seed-without-both"])
+            self.assertIn("FAMILY_AGENCY_IDENTITY_MISSING",
+                receipt["evidence_payload"]["coverage_errors"])
+
     def test_seed_is_never_selected_from_bulk(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db,_=self.build_complete_index(root)
