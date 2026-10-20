@@ -138,7 +138,7 @@ class CompressedCandidateOfflineTests(unittest.TestCase):
             {"data": original, "transfer_encoding": "gzip"},
         )
         for variant in variants:
-            with self.subTest(variant=sorted(variant)), tempfile.TemporaryDirectory() as tmp:
+            with self.subTest(variant=sorted(variant)), private_tempdir() as tmp:
                 opened = []
                 def opener(req, *, timeout):
                     obj = FakeFullResponse(req.full_url, **variant)
