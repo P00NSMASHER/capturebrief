@@ -550,11 +550,29 @@ def index_status(
             "FROM current_sources c JOIN source_snapshots s ON s.snapshot_id=c.snapshot_id"
         ).fetchall()
     snapshots = [dict(row) for row in rows]
+    # Validate that the current SQLite projection still contains exactly the
+    # rows that the original ingest reported; otherwise a deleted/blank
+    # action could be silently omitted from a complete historical receipt.
+    # This is a cheap DB projection check in addition to full source-byte
+    # hashing, not independent publisher adjudication.
+    with closing(_connect(index_path)) as conn:
+        counts = {
+            int(row["snapshot_id"]): dict(row)
+            for row in conn.execute(
+                "SELECT r.snapshot_id, COUNT(*) AS n, "
+                "MIN(r.row_number) AS first_row, MAX(r.row_number) AS last_row, "
+                "SUM(CASE WHEN TRIM(r.notice_id)='' THEN 1 ELSE 0 END) AS blank_ids "
+                "FROM opportunity_rows r "
+                "WHERE r.snapshot_id IN (SELECT snapshot_id FROM current_sources) "
+                "GROUP BY r.snapshot_id"
+            ).fetchall()
+        }
     present = {row["slot"] for row in snapshots}
     missing = sorted(required_slots - present)
     stale: list[str] = []
     unverified: list[str] = []
     missing_or_mismatched_bytes: list[str] = []
+    indexed_row_count_mismatches: list[str] = []
     fresh: list[str] = []
     for row in snapshots:
         slot = row["slot"]
@@ -586,6 +604,22 @@ def index_status(
         if observed > checked + timedelta(minutes=5):
             unverified.append(slot)
             continue
+        # A source with a valid CSV header and no notice rows is legitimate
+        # (FY1969 and FY1981 are both header-only). Anything else must have
+        # exactly one indexed action per original row, contiguous row numbers,
+        # and nonblank primary notice identities.
+        expected_count = row["rows_scanned"]
+        stats = counts.get(int(row["snapshot_id"]), {})
+        actual_count = stats.get("n", 0)
+        if (actual_count != expected_count
+                or (expected_count and (
+                    stats.get("first_row") != 1
+                    or stats.get("last_row") != expected_count
+                    or stats.get("blank_ids") != 0
+                ))):
+            unverified.append(slot)
+            indexed_row_count_mismatches.append(slot)
+            continue
         # Mandatory full-byte replay for *release-bearing* source coverage.
         # A previous index/cache status is insufficient to certify retained
         # source originals at the moment a COMPLETE claim is produced.
@@ -607,6 +641,7 @@ def index_status(
         "stale_slots": sorted(stale),
         "unverified_slots": sorted(unverified),
         "missing_or_mismatched_source_bytes_slots": sorted(missing_or_mismatched_bytes),
+        "indexed_row_count_mismatch_slots": sorted(indexed_row_count_mismatches),
         "local_original_hashes_verified": not missing and not stale and not unverified,
         "publisher_origin_independently_attested": False,
         "freshness_policy": {
@@ -776,6 +811,7 @@ def issue_history_receipt_from_index(
         "retained_original_hashes_verified": coverage["local_original_hashes_verified"],
         "publisher_origin_independently_attested": False,
         "missing_or_mismatched_source_bytes_slots": coverage["missing_or_mismatched_source_bytes_slots"],
+        "indexed_row_count_mismatch_slots": coverage["indexed_row_count_mismatch_slots"],
         "source_snapshots": [
             {
                 "source_kind": row["source_kind"],
