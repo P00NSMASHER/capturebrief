@@ -272,6 +272,31 @@ class CompressedCandidateOfflineTests(unittest.TestCase):
             self.assertEqual(json.loads(receipt.read_bytes())["original_observed_at"],
                              "not-a-real-timeZ")
 
+    def test_writable_previous_archive_is_not_silently_accepted(self):
+        original = sample_bytes()
+        with private_tempdir() as td:
+            root = Path(td) / "private"
+            def opener(req, *, timeout):
+                return FakeFullResponse(req.full_url, original)
+            result = m.retain_compressed_candidate(
+                2027, root, opener=opener, expected_size=len(original),
+            )
+            archive = root / f"FY2027-{result['original_sha256']}.csv.gz"
+            receipt = root / f"FY2027-{result['original_sha256']}.gzip-candidate.receipt.json"
+            before_receipt = receipt.read_bytes()
+            archive.chmod(0o600)  # Simulates a crash before Windows read-only sealing.
+            with self.assertRaisesRegex(ValueError, "read-only"):
+                m.verify_compressed_candidate(
+                    2027, root, original_sha256=result["original_sha256"],
+                    synthetic_test=True,
+                )
+            with self.assertRaisesRegex(ValueError, "read-only"):
+                m.retain_compressed_candidate(
+                    2027, root, opener=opener, expected_size=len(original),
+                )
+            self.assertEqual(receipt.read_bytes(), before_receipt)
+            self.assertFalse(list(root.glob("*.tmp")))
+
     def test_no_prod_override_no_future_years_and_no_public_git_destinations(self):
         with private_tempdir() as td:
             d = Path(td)/"private"

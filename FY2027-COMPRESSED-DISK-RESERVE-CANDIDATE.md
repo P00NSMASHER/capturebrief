@@ -54,7 +54,9 @@ same directory fails **before opening an HTTP response**, rather than
 both spending the same observed free-space reserve. Crash leftovers are
 never assumed stale or automatically deleted; an authorized operator must
 independently verify that no first run remains active before resolving a
-stale lock.
+stale lock. A post-publication crash or operator modification that leaves
+an existing compressed archive writable also fails closed on retries and
+read-only verification; matching SHA-256 alone cannot silently reseal it.
 
 This guards only concurrent invocations that use the **same private root**.
 Other applications and alternate roots on the same disk may still consume

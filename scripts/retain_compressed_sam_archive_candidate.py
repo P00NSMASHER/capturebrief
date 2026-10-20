@@ -135,6 +135,14 @@ def _hash_file(file: Path) -> tuple[str, int]:
     return sha.hexdigest(), total
 
 
+def _require_readonly_archive(archive: Path) -> None:
+    """Reject unsealed archive links/permissions, including crash leftovers."""
+    if archive.is_symlink() or not archive.is_file():
+        raise ValueError("Compressed original archive path is unsafe")
+    if archive.stat().st_mode & (stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH):
+        raise ValueError("Compressed original archive is not read-only")
+
+
 def _verify_decompressed(archive: Path, expected_sha: str, expected_bytes: int) -> None:
     sha = hashlib.sha256()
     count = 0
@@ -295,6 +303,10 @@ def retain_compressed_candidate(
                 mode=0o444,
             )
             created_archive = bool(saved["created"])
+            # A Windows crash between link creation and chmod can leave an
+            # otherwise byte-identical archive writable. Never mint or trust
+            # its receipt until a human has inspected/resealed that artifact.
+            _require_readonly_archive(dest)
             receipt = {
                 "schema": "capturebrief-private-unapproved-original-gzip-retention-v1",
                 "source_entrypoint": url,
@@ -352,8 +364,7 @@ def verify_compressed_candidate(year: int, private_dir: str | Path,
     root = _private_dir(private_dir, create=False)
     archive = root / f"FY{year}-{original_sha256}.csv.gz"
     receipt_path = root / f"FY{year}-{original_sha256}.gzip-candidate.receipt.json"
-    if archive.is_symlink() or not archive.is_file():
-        raise ValueError("Compressed candidate is unavailable or unsafe")
+    _require_readonly_archive(archive)
     if receipt_path.is_symlink() or not receipt_path.is_file():
         raise ValueError("Private original-source receipt is unavailable")
     raw = receipt_path.read_bytes()
