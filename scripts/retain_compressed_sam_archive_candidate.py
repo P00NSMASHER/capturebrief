@@ -54,6 +54,11 @@ def _private_dir(directory: str | Path) -> Path:
     real = raw.resolve(strict=False)
     if real == ROOT or real.is_relative_to(ROOT):
         raise ValueError("Private source originals cannot be stored inside public Git")
+    # Known synced desktop folders are not authorized private source storage.
+    # This does NOT replace independent ACL/host-encryption verification.
+    if any(part.lower().startswith("onedrive") or part.lower() in {"dropbox", "google drive"}
+           for part in real.parts):
+        raise ValueError("Original-source storage cannot be in a cloud-sync folder")
     if real.exists() and not real.is_dir():
         raise ValueError("Retention root is not a directory")
     # The operator's private root is the only persistent destination.
@@ -270,7 +275,8 @@ def retain_compressed_candidate(
 
 
 def verify_compressed_candidate(year: int, private_dir: str | Path,
-                                 *, original_sha256: str) -> dict[str, Any]:
+                                 *, original_sha256: str,
+                                 synthetic_test: bool = False) -> dict[str, Any]:
     if type(year) is not int or year not in frozen_unapproved_sizes():
         raise ValueError("Unknown candidate archive year")
     if not isinstance(original_sha256, str) or SHA_RE.fullmatch(original_sha256) is None:
@@ -296,12 +302,19 @@ def verify_compressed_candidate(year: int, private_dir: str | Path,
             or r.get("customer_release_authorized") is not False
             or r.get("full_catalog_history_verified") is not False
             or r.get("private_source_index_updated") is not False
+            or r.get("publisher_originals_independently_reviewed") is not False
+            or r.get("offdevice_backup_verified") is not False
+            or r.get("device_encryption_verified") is not False
+            or r.get("external_send_authorized") is not False
+            or r.get("synthetic_test_override") is not synthetic_test
             or r.get("verified_decompressed_original_sha256") is not True
             or r.get("verified_decompressed_original_bytes") is not True):
         raise ValueError("Private source manifest validation failed")
     raw_size = r.get("original_bytes")
     if type(raw_size) is not int or raw_size < 1 or raw_size > MAX_ORIGINAL_BYTES:
         raise ValueError("Retained original size invalid")
+    if not synthetic_test and raw_size != frozen_unapproved_sizes()[year]:
+        raise ValueError("Retained original differs from frozen unapproved source-size metadata")
     gzip_sha, gzip_bytes = _hash_file(archive)
     if gzip_sha != r.get("gzip_sha256") or gzip_bytes != r.get("gzip_bytes"):
         raise ValueError("Compressed original differs from immutable receipt")
