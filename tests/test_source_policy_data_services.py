@@ -61,6 +61,7 @@ def row(notice, sol, aac="AAC1", active="Yes"):
 class FakeResponse:
     def __init__(self, data: bytes, url="https://objects.example/file"):
         self._io = io.BytesIO(data)
+        self.status = 200
         self.headers = {"Content-Length": str(len(data))}
         self._url = url
 
@@ -273,6 +274,87 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
                 self.headers = {"Content-Length": str(len(original) + 10)}
         with self.assertRaises(DataServicesError):
             download_extract(source, opener=lambda req, timeout=60: WrongLength())
+
+    def test_in_memory_original_http_and_encoding_checks_precede_any_read(self):
+        official = ("https://s3.amazonaws.com/falextracts/"
+                    "Contract%20Opportunities/Archived%20Data/"
+                    "FY2027_archived_opportunities.csv")
+        original = (HEADER + row("fictional1", "SOL-1")).encode("utf-8")
+        for label,status,encoding,content_range in (
+            ("partial",206,None,None),
+            ("unexpected",302,None,None),
+            ("no-status",None,None,None),
+            ("transfer-gzip",200,"gzip",None),
+            ("incorrect-range",200,None,"bytes 0-5/9999"),
+        ):
+            with self.subTest(response=label):
+                class Tracked(FakeResponse):
+                    def __init__(self):
+                        super().__init__(original,url=official)
+                        self.status = status
+                        self.read_calls = 0
+                        if encoding is not None:
+                            self.headers["Content-Encoding"] = encoding
+                        if content_range is not None:
+                            self.headers["Content-Range"] = content_range
+                    def read(self, n=-1):
+                        self.read_calls += 1
+                        return super().read(n)
+                response = Tracked()
+                def opener(req, timeout=60):
+                    self.assertEqual(req.get_header("Accept-encoding"), "identity")
+                    return response
+                with self.assertRaises(DataServicesError):
+                    download_extract(
+                        ARCHIVE_DOWNLOAD.format(fy=2027),opener=opener,
+                    )
+                self.assertEqual(response.read_calls, 0)
+
+    def test_in_memory_csv_rejects_malformed_and_lossy_source(self):
+        original = (HEADER + row("FICTIONAL-ID","SOL-1")).encode("ascii")
+        header,entry = original.split(b"\n",1)
+        malformed = (
+            # An extra original field was silently omitted from row hashes.
+            header + b"\n" + entry.rstrip(b"\n") + b",ORPHAN\n",
+            # An omitted trailing column formerly became a None field.
+            header + b"\n" + entry.rstrip(b"\n").rsplit(b",",1)[0] + b"\n",
+            HEADER.replace("Title,Sol#","NoticeId,Sol#",1).encode("ascii") + entry,
+            HEADER.replace("Title,Sol#","_extra,Sol#",1).encode("ascii") + entry,
+            HEADER.replace("Title,Sol#",",Sol#",1).encode("ascii") + entry,
+            (HEADER+row("","SOL-1")).encode("ascii"),
+        )
+        for number,data in enumerate(malformed):
+            with self.subTest(case=number),self.assertRaises(DataServicesError):
+                scan_extract_bytes(
+                    data,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                    solicitation_number="SOL-1",
+                )
+        with self.assertRaises(ValueError):
+            scan_extract_bytes(
+                original,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                solicitation_number="   ",
+            )
+        with self.assertRaises(UnicodeDecodeError):
+            scan_extract_bytes(
+                original.replace(b"FICTIONAL-ID",b"INVALID-\x81-ID"),
+                source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                solicitation_number="SOL-1",
+            )
+        with self.assertRaises(UnicodeDecodeError):
+            scan_extract_bytes(
+                b"\xef\xbb\xbf"+
+                original.replace(b"FICTIONAL-ID",b"INVALID-\xff-ID"),
+                source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                solicitation_number="SOL-1",
+            )
+        valid_cp1252=original.replace(b",Title,SOL-1",b",Tit\x96le,SOL-1")
+        self.assertIn(b"\x96",valid_cp1252)
+        output=scan_extract_bytes(
+            valid_cp1252,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+            solicitation_number="SOL-1",
+        )
+        self.assertEqual(len(output["matches"]),1)
+        self.assertEqual(output["matches"][0]["notice_id"],"FICTIONAL-ID")
 
     def test_automated_ui_manifest_is_disabled(self):
         with self.assertRaises(SourcePolicyError):
