@@ -10,6 +10,7 @@ from contextlib import contextmanager
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from scripts import retain_compressed_sam_archive_candidate as m
 
@@ -195,6 +196,81 @@ class CompressedCandidateOfflineTests(unittest.TestCase):
                     2027, d, original_sha256=out["original_sha256"],
                     synthetic_test=True,
                 )
+
+    def test_interrupted_midstream_source_leaves_no_archive_or_receipt(self):
+        original = sample_bytes()
+        class Interrupted(FakeFullResponse):
+            def read(self, amount):
+                if self.read_calls:
+                    raise ConnectionResetError("invented transport disconnect")
+                return super().read(min(amount, 128))
+        with private_tempdir() as td:
+            root = Path(td) / "private"
+            response = Interrupted(m.ARCHIVE_DOWNLOAD.format(fy=2027), original)
+            with self.assertRaises(ConnectionResetError):
+                m.retain_compressed_candidate(
+                    2027, root,
+                    opener=lambda req, timeout: response,
+                    expected_size=len(original),
+                )
+            self.assertTrue(response.closed)
+            self.assertEqual(list(root.iterdir()), [])
+
+    def test_partial_publication_recovers_only_from_identical_original(self):
+        original = sample_bytes()
+        with private_tempdir() as td:
+            root = Path(td) / "private"
+            def opener(req, *, timeout):
+                return FakeFullResponse(req.full_url, original)
+            publisher = m.ensure_exact_file
+            def interrupted_publish(*args, **kwargs):
+                publisher(*args, **kwargs)
+                raise RuntimeError("synthetic crash after archive, before receipt")
+            with patch.object(m, "ensure_exact_file", side_effect=interrupted_publish):
+                with self.assertRaises(RuntimeError):
+                    m.retain_compressed_candidate(
+                        2027, root, opener=opener, expected_size=len(original),
+                    )
+            sha = hashlib.sha256(original).hexdigest()
+            self.assertTrue((root / f"FY2027-{sha}.csv.gz").is_file())
+            self.assertFalse((root / f"FY2027-{sha}.gzip-candidate.receipt.json").exists())
+            self.assertFalse(list(root.glob("*.tmp")))
+            replay = m.retain_compressed_candidate(
+                2027, root, opener=opener, expected_size=len(original),
+            )
+            self.assertFalse(replay["archive_created"])
+            self.assertTrue(replay["receipt_created"])
+            m.verify_compressed_candidate(2027, root, original_sha256=sha,
+                                          synthetic_test=True)
+
+    def test_verify_missing_private_root_must_not_create_it(self):
+        with private_tempdir() as td:
+            missing = Path(td) / "read-only-verifier-should-not-create"
+            with self.assertRaises(ValueError):
+                m.verify_compressed_candidate(
+                    2027, missing, original_sha256="0" * 64,
+                )
+            self.assertFalse(missing.exists())
+
+    def test_malformed_canonical_receipt_timestamp_fails_closed(self):
+        original = sample_bytes()
+        with private_tempdir() as td:
+            root = Path(td) / "private"
+            def opener(req, *, timeout):
+                return FakeFullResponse(req.full_url, original)
+            retained = m.retain_compressed_candidate(
+                2027, root, opener=opener, expected_size=len(original),
+            )
+            receipt = root / f"FY2027-{retained['original_sha256']}.gzip-candidate.receipt.json"
+            data = json.loads(receipt.read_bytes())
+            data["original_observed_at"] = "not-a-real-timeZ"
+            receipt.write_bytes(m._canonical(data))
+            with self.assertRaisesRegex(ValueError, "timestamp"):
+                m.retain_compressed_candidate(
+                    2027, root, opener=opener, expected_size=len(original),
+                )
+            self.assertEqual(json.loads(receipt.read_bytes())["original_observed_at"],
+                             "not-a-real-timeZ")
 
     def test_no_prod_override_no_future_years_and_no_public_git_destinations(self):
         with private_tempdir() as td:

@@ -7,9 +7,11 @@ PR #60 proposes verified streaming original-byte gzip retention one frozen FY
 at a time. This incremental security check fails closed **before opening the
 approved SAM.gov network source** if the destination cannot demonstrate:
 
-- Enough free bytes to tolerate a worst-case **incompressible** annual
-  source (declared original size plus at least 1% / 256 KiB gzip allowance);
-- At least **4 GiB remaining unused** after that potential temp file.
+- Enough free bytes for **TWO concurrent worst-case incompressible gzip
+  copies** (each declared original size plus 1% / 256 KiB allowance): the
+  streaming compression temp and `ensure_exact_file`'s atomic publication
+  copy. A further 1 MiB budgets receipt/lock/filesystem metadata;
+- At least **4 GiB remaining unused** after both copies and that overhead.
   This reserve is deliberately separate from, and NOT enough to certify,
   the active extract, SQLite index, working files and independently encrypted
   off-device backups.
@@ -19,8 +21,8 @@ PRIVATE directory:
 
     python scripts/source_disk_budget.py --private-root PRIVATE_ARCHIVE_ROOT --year 2026
 
-Exit 0 means ONLY that the single-source transient file has adequate free
-space under the conservative 4-GiB floor. Exit 3 means insufficient local
+Exit 0 means ONLY that the two simultaneous single-source compressed copies
+plus metadata have adequate free space under the conservative 4-GiB floor. Exit 3 means insufficient local
 space; exit 2 means invalid/unavailable capacity metadata. No original CSV
 is accessed by the diagnostic. The private directory must exist.
 

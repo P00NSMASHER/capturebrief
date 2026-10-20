@@ -49,7 +49,7 @@ MAX_MANIFEST_BYTES = 8192
 SHA_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
-def _private_dir(directory: str | Path) -> Path:
+def _private_dir(directory: str | Path, *, create: bool = True) -> Path:
     raw = Path(directory).expanduser().absolute()
     for item in (raw, *raw.parents):
         junction = getattr(item, "is_junction", None)
@@ -73,7 +73,10 @@ def _private_dir(directory: str | Path) -> Path:
     if real.exists() and not real.is_dir():
         raise ValueError("Retention root is not a directory")
     # The operator's private root is the only persistent destination.
-    real.mkdir(mode=0o700, parents=True, exist_ok=True)
+    if create:
+        real.mkdir(mode=0o700, parents=True, exist_ok=True)
+    elif not real.is_dir():
+        raise ValueError("Read-only source verification requires an existing directory")
     # File mode bits are NOT an NTFS access-control proof on Windows. The
     # read-only ACL assessment uses immutable well-known broad group SIDs;
     # unknown/untranslatable trustees also block candidate retention. This
@@ -177,6 +180,12 @@ def _safe_receipt(path: Path, wanted: dict[str, Any]) -> tuple[bool, str]:
             old_stamp = previous.get("original_observed_at")
             if not isinstance(old_stamp, str) or not old_stamp.endswith("Z"):
                 raise ValueError("Existing original observation is invalid")
+            try:
+                parsed_stamp = datetime.fromisoformat(old_stamp[:-1] + "+00:00")
+            except ValueError as exc:
+                raise ValueError("Existing original observation timestamp is malformed") from exc
+            if _utc(parsed_stamp) != old_stamp:
+                raise ValueError("Existing original observation timestamp is noncanonical")
             ensure_exact_bytes(path, previous_raw, mode=0o600)
             return False, old_stamp
         ensure_exact_bytes(path, raw, mode=0o600)
@@ -340,7 +349,7 @@ def verify_compressed_candidate(year: int, private_dir: str | Path,
         raise ValueError("Unknown candidate archive year")
     if not isinstance(original_sha256, str) or SHA_RE.fullmatch(original_sha256) is None:
         raise ValueError("Invalid pinned original SHA-256")
-    root = _private_dir(private_dir)
+    root = _private_dir(private_dir, create=False)
     archive = root / f"FY{year}-{original_sha256}.csv.gz"
     receipt_path = root / f"FY{year}-{original_sha256}.gzip-candidate.receipt.json"
     if archive.is_symlink() or not archive.is_file():

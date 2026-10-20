@@ -24,7 +24,10 @@ class PrivateDiskBudgetTests(unittest.TestCase):
             worst=original+max(budget.MIN_GZIP_OVERHEAD_BYTES,
                                (original+99)//100)
             floor=budget.UNALLOCATED_RESERVE_BYTES
-            required=worst+floor
+            # Publication briefly needs TWO compressed copies: the gzip
+            # streaming temp plus ensure_exact_file's independent temp copy.
+            required=(budget.MAX_SIMULTANEOUS_GZIP_COPIES * worst
+                      + floor + budget.PUBLICATION_METADATA_ALLOWANCE_BYTES)
             for free, outcome in ((required-1,False),(required,True),
                                   (required+8192,True)):
                 with self.subTest(free=free):
@@ -33,6 +36,9 @@ class PrivateDiskBudgetTests(unittest.TestCase):
                     self.assertIs(result["single_source_disk_capacity_pass"],outcome)
                     self.assertEqual(result["required_free_bytes"],required)
                     self.assertEqual(result["unallocated_safety_reserve_bytes"],4*1024**3)
+                    self.assertEqual(result["simultaneous_gzip_publication_copies"],2)
+                    self.assertEqual(result["peak_publication_working_bytes"],
+                                     2*worst+budget.PUBLICATION_METADATA_ALLOWANCE_BYTES)
                     for prohibited in (
                         "all_34_year_archive_fits",
                         "active_extract_index_and_working_space_built",
@@ -66,8 +72,10 @@ class PrivateDiskBudgetTests(unittest.TestCase):
             return FakeFullResponse(request.full_url,original)
         with private_tempdir() as td:
             root=Path(td)/"private"
-            needed=(len(original)+max(budget.MIN_GZIP_OVERHEAD_BYTES,
-                 (len(original)+99)//100)+budget.UNALLOCATED_RESERVE_BYTES)
+            worst=len(original)+max(budget.MIN_GZIP_OVERHEAD_BYTES,
+                 (len(original)+99)//100)
+            needed=(2*worst+budget.PUBLICATION_METADATA_ALLOWANCE_BYTES
+                    + budget.UNALLOCATED_RESERVE_BYTES)
             for free in (0,needed-1):
                 with self.subTest(free=free),patch.object(
                     budget.shutil,"disk_usage",
@@ -135,8 +143,10 @@ class PrivateDiskBudgetTests(unittest.TestCase):
         calls=[]
         with private_tempdir() as td:
             d=Path(td)/"private"
-            need=(len(fake)+max(budget.MIN_GZIP_OVERHEAD_BYTES,
-                 (len(fake)+99)//100)+budget.UNALLOCATED_RESERVE_BYTES)
+            worst=len(fake)+max(budget.MIN_GZIP_OVERHEAD_BYTES,
+                 (len(fake)+99)//100)
+            need=(2*worst+budget.PUBLICATION_METADATA_ALLOWANCE_BYTES
+                  + budget.UNALLOCATED_RESERVE_BYTES)
             with patch.object(budget.shutil,"disk_usage",
                               return_value=SimpleNamespace(free=need-1)):
                 with self.assertRaisesRegex(ValueError,"Insufficient private disk reserve"):
@@ -149,6 +159,24 @@ class PrivateDiskBudgetTests(unittest.TestCase):
             self.assertEqual(list(d.iterdir()),[])
 
 
+
+    def test_crash_leftover_root_lock_requires_manual_recovery(self):
+        fake = sample_bytes()
+        called = []
+        with private_tempdir() as td:
+            root = Path(td) / "private"
+            retention._private_dir(root)
+            stale = root / ".archive-retention.lock"
+            stale.write_text("synthetic untrusted lock\n", encoding="utf-8")
+            with self.assertRaises(TimeoutError):
+                retention.retain_compressed_candidate(
+                    2027, root, expected_size=len(fake),
+                    opener=lambda req, timeout: called.append(req.full_url),
+                )
+            self.assertFalse(called)
+            self.assertTrue(stale.is_file())
+            self.assertEqual(sorted(p.name for p in root.iterdir()),
+                             [".archive-retention.lock"])
 
     def test_valid_incompressible_original_exceeds_old_4k_ceiling(self):
         # Deterministic fake original of high entropy; no real SAM bytes.

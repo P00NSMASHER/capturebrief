@@ -24,6 +24,10 @@ from scripts.fy2027_archive_compression_probe import frozen_unapproved_sizes
 UNALLOCATED_RESERVE_BYTES=4*1024**3
 MAX_ANNUAL_ORIGINAL_BYTES=1_500_000_000
 MIN_GZIP_OVERHEAD_BYTES=256*1024
+# ensure_exact_file streams the completed gzip temp to a second temporary
+# copy before hard-link publication; both compressed copies coexist briefly.
+MAX_SIMULTANEOUS_GZIP_COPIES=2
+PUBLICATION_METADATA_ALLOWANCE_BYTES=1024*1024
 
 
 
@@ -47,11 +51,13 @@ def inspect_source_capacity(
     root=Path(private_root)
     if not root.is_dir() or root.is_symlink():
         raise ValueError("Source capacity requires an existing private directory")
-    # The compressed temp file is produced WITHOUT an uncompressed temp.
-    # Allow >1% of raw size for worst-case incompressible gzip and metadata,
-    # instead of trusting sampled ratios. Do not reuse the amount as a 34-year
-    # storage promise.
-    required_free=worst_case_compressed_bytes+UNALLOCATED_RESERVE_BYTES
+    # No uncompressed source temp exists, but ensure_exact_file creates a
+    # SECOND full-size gzip copy during atomic publication. Budget both
+    # concurrent copies plus bounded receipt/lock/FS metadata overhead.
+    # Never substitute sampled ratios or infer 34-year storage feasibility.
+    publication_bytes = (MAX_SIMULTANEOUS_GZIP_COPIES * worst_case_compressed_bytes
+                         + PUBLICATION_METADATA_ALLOWANCE_BYTES)
+    required_free=publication_bytes+UNALLOCATED_RESERVE_BYTES
     if disk_usage is None:
         disk_usage=shutil.disk_usage
     usage=disk_usage(root)
@@ -62,6 +68,9 @@ def inspect_source_capacity(
         "schema": "capturebrief-fy2027-single-source-private-capacity-check-v1",
         "declared_original_bytes": declared_original_bytes,
         "worst_case_gzip_temp_bytes": worst_case_compressed_bytes,
+        "simultaneous_gzip_publication_copies": MAX_SIMULTANEOUS_GZIP_COPIES,
+        "publication_metadata_allowance_bytes": PUBLICATION_METADATA_ALLOWANCE_BYTES,
+        "peak_publication_working_bytes": publication_bytes,
         "unallocated_safety_reserve_bytes": UNALLOCATED_RESERVE_BYTES,
         "required_free_bytes": required_free,
         "available_free_bytes": free,
