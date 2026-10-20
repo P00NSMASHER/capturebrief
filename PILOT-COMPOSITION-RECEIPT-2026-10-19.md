@@ -202,3 +202,73 @@ and one local restore were completed separately on PAAM-L044, but
 their recovery key remains machine/profile bound and no off-device
 disaster recovery is proven. Compression's measured 4.60 GiB proxy
 is not guaranteed full archive storage or index/backup capacity.
+
+
+## October 19 — real FY2027 history blank-identifier regression and final integration
+
+This is a further exact-head **NO-DEPLOY** integration replay of the same
+seven proposed main-target candidate PR heads as the earlier successful
+composition, with **PR #51 source-coverage head updated** from
+`b302d137f9a562549384bbe7ea65bece2f4e8cb8` to
+`ac93aa91873629f45918c491175170adbe031689`.
+This new PR #51 head blocks normalized **blank `Sol#`** from being
+used to associate unrelated source notices into a history family.
+The official genuine FY2027 original has **seven** such missing source
+identifiers, motivating a specific regression. Its exact
+1,607,260-byte source SHA-256 remains
+`7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce`.
+
+[Actual Actions #39359448066](https://github.com/P00NSMASHER/capturebrief/actions/runs/39359448066),
+running at QA workflow SHA
+`1cfdd0693694d6a33110418d94593674322e4b21`:
+**563 Linux tests PASSED, 166 Windows tests PASSED (1 skipped)**,
+and Chromium/WebKit browser-to-case and fictional payment
+no-external-POST integration **PASSED**. PR #51's own
+[Product Core #39359171817](https://github.com/P00NSMASHER/capturebrief/actions/runs/39359171817)
+also passed Windows and Linux.
+
+On actual PAAM-L044 **Python 3.13**, the new PR #51 head and
+still-reviewed compressed security PR #61
+`ef478f497472a10eeba1388ba6cfd8327e44a2b6`
+were merged **only in a disposable local checkout**, resulting in
+unpublished local composite commit
+`1f8fb888c309869c25c0d33db8273ea75146a66e`.
+The **26 targeted Windows source/history tests PASSED**; the
+uncomposed PR #51 inherited an older Windows read-only hardlink cleanup
+bug, separately corrected in PR #53, explaining why a standalone
+PR #51 Python 3.13 run cannot substitute for actual composed testing.
+
+The exact retained FY2027 original was then parsed into a **temporary
+private disposable SQLite index**, twice. Its 1,104 notice rows,
+one source snapshot, 1,104 distinct notice IDs and 7 empty Sol#
+values were verified; the second ingest was idempotent. A specific
+actual source notice with an empty Sol# was then presented to the
+composed history-issue function; it correctly rejected that proposed
+family join. The original public catalog guard independently raised
+`ArchiveCatalogStale` because production catalog approval still ends
+at **FY2026**. The temporary index and local synthetic merge checkout
+were deleted after the tests. No real customer data was present.
+
+A separate read-only early-year semantic probe read **five tiny
+first-party SAM.gov CSV originals only in RAM**, checking the exact
+signed transport, full public content SHA-256, required schema and
+aggregate rows (FY1969: 0; FY1970: 3; FY1980: 1; FY1981: 0;
+FY1998: 85). Both FY1969 and FY1981 are identical valid header-only
+685-byte originals. The SHA-256 / sample counts are stored as
+**unapproved evidence** in PR #58's
+`research/fy2027_early_archive_full_byte_observations_20261020.json`
+and tested by PR #58's passing
+[Linux+Windows Product Core #39360108215](https://github.com/P00NSMASHER/capturebrief/actions/runs/39360108215).
+None of these five originals was durably retained or independently
+approved for the production catalog.
+
+**Decision: still NO-GO.** The real FY2027 file remains a single
+retained original, not a 34-year approved history. Encrypted local
+DPAPI-backed FY2027 backup and a genuine same-PC restore are proven,
+but independently recoverable off-device key escrow, an actual
+restoration from remotely stored ciphertext, BitLocker disk encryption,
+approved production-source index, independent PR review, verified
+customer payment and fourteen-day live case watch remain unverified.
+No main/gh-pages merge, paid customer release, actual customer
+contact, live charge, independent signoff or production deployment
+was performed.
