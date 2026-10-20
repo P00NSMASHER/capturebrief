@@ -35,7 +35,7 @@ jobs:
 
   public-metadata-only:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     needs: offline-safety
     if: github.event_name == 'push'
     steps:
@@ -45,11 +45,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Read one byte for four frozen official PUBLIC FY archive entrypoints
+      - name: Read at most one byte from each of 34 frozen PUBLIC FY archive entrypoints
         shell: bash
         run: |
           set -euo pipefail
           python scripts/fy2027_archive_capacity_probe.py \
-            --live-public-metadata --years 1969,1981,2026,2027
+            --live-public-metadata --years all
           # This is advisory metadata; no original source is saved.
           # Never interpret any reported byte size as publisher signoff.
