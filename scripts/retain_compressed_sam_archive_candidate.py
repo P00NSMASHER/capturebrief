@@ -205,126 +205,132 @@ def retain_compressed_candidate(
         raise ValueError("Archive metadata byte count is outside bounded retention contract")
     observed = _utc(observed_at)
     root = _private_dir(private_dir)
-    # Must pass a conservative, source-size-bound disk budget BEFORE opening
-    # the first network response or publishing any source file. A sampled
-    # gzip ratio is never accepted as a capacity guarantee.
-    require_source_capacity(root, total)
-    url = ARCHIVE_DOWNLOAD.format(fy=year)
-    req = Request(url, headers={
-        "User-Agent": "CaptureBrief/0.3",
-        "Accept-Encoding": "identity",
-    })
-    fd, temp_name = tempfile.mkstemp(
-        prefix=f".FY{year}-compressed-", suffix=".tmp", dir=str(root),
-    )
-    temp = Path(temp_name)
-    digest = hashlib.sha256()
-    total_read = 0
-    host = None
-    created_archive = False
-    try:
+    # ONE private-root flight lock covers disk reservation, download,
+    # integrity replay, receipt publication, and temp cleanup. Concurrent
+    # calls sharing this directory fail immediately BEFORE the space check
+    # or network open instead of both spending the same free-space reserve.
+    # The lock is never guessed stale: operator review follows a crash.
+    with exclusive_path_lock(root / ".archive-retention", timeout_seconds=0.0):
+        # Must pass a conservative, source-size-bound disk budget BEFORE opening
+        # the first network response or publishing any source file. A sampled
+        # gzip ratio is never accepted as a capacity guarantee.
+        require_source_capacity(root, total)
+        url = ARCHIVE_DOWNLOAD.format(fy=year)
+        req = Request(url, headers={
+            "User-Agent": "CaptureBrief/0.3",
+            "Accept-Encoding": "identity",
+        })
+        fd, temp_name = tempfile.mkstemp(
+            prefix=f".FY{year}-compressed-", suffix=".tmp", dir=str(root),
+        )
+        temp = Path(temp_name)
+        digest = hashlib.sha256()
+        total_read = 0
+        host = None
+        created_archive = False
         try:
-            # Guard *each* redirect before opening its target; the final host
-            # and exact FY object must match the documented SAM entrypoint.
-            response = open_approved_extract(
-                req, timeout=120.0, source_url=url, opener=opener,
-            )
-            with response:
-                delivered = response.geturl() if hasattr(response, "geturl") else url
-                host = require_approved_extract_delivery(url, delivered)
-                status = getattr(response, "status", None)
-                if status is None and hasattr(response, "getcode"):
-                    status = response.getcode()
-                if status != 200:
-                    raise ValueError("Full source-original response must be HTTP 200")
-                headers = getattr(response, "headers", None)
-                if headers is None:
-                    raise ValueError("Source response lacks trustworthy headers")
-                length = headers.get("Content-Length")
-                if length is not None and str(length).strip() != str(total):
-                    raise ValueError("Publisher-declared source size no longer matches review candidate")
-                if str(headers.get("Content-Encoding", "identity")).lower() != "identity":
-                    raise ValueError("Unexpected transparent transfer compression")
-                with os.fdopen(fd, "wb") as out:
+            try:
+                # Guard *each* redirect before opening its target; the final host
+                # and exact FY object must match the documented SAM entrypoint.
+                response = open_approved_extract(
+                    req, timeout=120.0, source_url=url, opener=opener,
+                )
+                with response:
+                    delivered = response.geturl() if hasattr(response, "geturl") else url
+                    host = require_approved_extract_delivery(url, delivered)
+                    status = getattr(response, "status", None)
+                    if status is None and hasattr(response, "getcode"):
+                        status = response.getcode()
+                    if status != 200:
+                        raise ValueError("Full source-original response must be HTTP 200")
+                    headers = getattr(response, "headers", None)
+                    if headers is None:
+                        raise ValueError("Source response lacks trustworthy headers")
+                    length = headers.get("Content-Length")
+                    if length is not None and str(length).strip() != str(total):
+                        raise ValueError("Publisher-declared source size no longer matches review candidate")
+                    if str(headers.get("Content-Encoding", "identity")).lower() != "identity":
+                        raise ValueError("Unexpected transparent transfer compression")
+                    with os.fdopen(fd, "wb") as out:
+                        fd = -1
+                        with gzip.GzipFile(filename="", mode="wb", fileobj=out,
+                                           compresslevel=6, mtime=0) as gz:
+                            while total_read < total:
+                                part = response.read(min(BLOCK_BYTES, total + 1 - total_read))
+                                if not part:
+                                    break
+                                total_read += len(part)
+                                if total_read > total:
+                                    raise ValueError("Source stream exceeded exact archive bound")
+                                digest.update(part)
+                                gz.write(part)
+                            if total_read != total or response.read(1):
+                                raise ValueError("Official original ended early or exceeded expected size")
+                        out.flush()
+                        os.fsync(out.fileno())
+            finally:
+                if fd >= 0:
+                    os.close(fd)
                     fd = -1
-                    with gzip.GzipFile(filename="", mode="wb", fileobj=out,
-                                       compresslevel=6, mtime=0) as gz:
-                        while total_read < total:
-                            part = response.read(min(BLOCK_BYTES, total + 1 - total_read))
-                            if not part:
-                                break
-                            total_read += len(part)
-                            if total_read > total:
-                                raise ValueError("Source stream exceeded exact archive bound")
-                            digest.update(part)
-                            gz.write(part)
-                        if total_read != total or response.read(1):
-                            raise ValueError("Official original ended early or exceeded expected size")
-                    out.flush()
-                    os.fsync(out.fileno())
+
+            raw_sha = digest.hexdigest()
+            if SHA_RE.fullmatch(raw_sha) is None:
+                raise ValueError("Original SHA-256 invalid")
+            _verify_decompressed(temp, raw_sha, total)
+            gz_sha, gz_size = _hash_file(temp)
+            if gz_size <= 0 or gz_size > total + 4096:
+                raise ValueError("Compressed candidate size is outside fail-closed bounds")
+            dest = root / f"FY{year}-{raw_sha}.csv.gz"
+            saved = ensure_exact_file(
+                temp, dest, expected_sha256=gz_sha, expected_size=gz_size,
+                mode=0o444,
+            )
+            created_archive = bool(saved["created"])
+            receipt = {
+                "schema": "capturebrief-private-unapproved-original-gzip-retention-v1",
+                "source_entrypoint": url,
+                "source_metadata_reference": "https://github.com/P00NSMASHER/capturebrief/actions/runs/39350338311",
+                "metadata_class": "UNREVIEWED_PUBLIC_ORIGIN_ONE_BYTE_HEADER",
+                "fiscal_year": year,
+                "original_bytes": total,
+                "original_sha256": raw_sha,
+                "gzip_sha256": gz_sha,
+                "gzip_bytes": gz_size,
+                "gzip_format": "RFC1952_DETERMINISTIC_MTIME_ZERO",
+                "verified_decompressed_original_sha256": True,
+                "verified_decompressed_original_bytes": True,
+                "original_observed_at": observed,
+                "trusted_delivery_host": host,
+                "synthetic_test_override": expected_size is not None,
+                "original_stored_uncompressed": False,
+                "catalog_approved": False,
+                "private_source_index_updated": False,
+                "full_catalog_history_verified": False,
+                "publisher_originals_independently_reviewed": False,
+                "offdevice_backup_verified": False,
+                "device_encryption_verified": False,
+                "customer_release_authorized": False,
+                "external_send_authorized": False,
+            }
+            receipt_path = root / f"FY{year}-{raw_sha}.gzip-candidate.receipt.json"
+            new_receipt, observed = _safe_receipt(receipt_path, receipt)
+            return {
+                "status": "PRIVATE_COMPRESSED_ORIGINAL_CANDIDATE_NOT_APPROVED",
+                "year": year, "original_bytes": total, "original_sha256": raw_sha,
+                "gzip_bytes": gz_size, "gzip_sha256": gz_sha,
+                "compression_ratio": round(gz_size / total, 6),
+                "archive_created": created_archive, "receipt_created": new_receipt,
+                "first_original_observed_at": observed,
+                "source_index_updated": False, "catalog_approved": False,
+                "customer_release_authorized": False, "external_send_authorized": False,
+            }
         finally:
             if fd >= 0:
                 os.close(fd)
-                fd = -1
-
-        raw_sha = digest.hexdigest()
-        if SHA_RE.fullmatch(raw_sha) is None:
-            raise ValueError("Original SHA-256 invalid")
-        _verify_decompressed(temp, raw_sha, total)
-        gz_sha, gz_size = _hash_file(temp)
-        if gz_size <= 0 or gz_size > total + 4096:
-            raise ValueError("Compressed candidate size is outside fail-closed bounds")
-        dest = root / f"FY{year}-{raw_sha}.csv.gz"
-        saved = ensure_exact_file(
-            temp, dest, expected_sha256=gz_sha, expected_size=gz_size,
-            mode=0o444,
-        )
-        created_archive = bool(saved["created"])
-        receipt = {
-            "schema": "capturebrief-private-unapproved-original-gzip-retention-v1",
-            "source_entrypoint": url,
-            "source_metadata_reference": "https://github.com/P00NSMASHER/capturebrief/actions/runs/39350338311",
-            "metadata_class": "UNREVIEWED_PUBLIC_ORIGIN_ONE_BYTE_HEADER",
-            "fiscal_year": year,
-            "original_bytes": total,
-            "original_sha256": raw_sha,
-            "gzip_sha256": gz_sha,
-            "gzip_bytes": gz_size,
-            "gzip_format": "RFC1952_DETERMINISTIC_MTIME_ZERO",
-            "verified_decompressed_original_sha256": True,
-            "verified_decompressed_original_bytes": True,
-            "original_observed_at": observed,
-            "trusted_delivery_host": host,
-            "synthetic_test_override": expected_size is not None,
-            "original_stored_uncompressed": False,
-            "catalog_approved": False,
-            "private_source_index_updated": False,
-            "full_catalog_history_verified": False,
-            "publisher_originals_independently_reviewed": False,
-            "offdevice_backup_verified": False,
-            "device_encryption_verified": False,
-            "customer_release_authorized": False,
-            "external_send_authorized": False,
-        }
-        receipt_path = root / f"FY{year}-{raw_sha}.gzip-candidate.receipt.json"
-        new_receipt, observed = _safe_receipt(receipt_path, receipt)
-        return {
-            "status": "PRIVATE_COMPRESSED_ORIGINAL_CANDIDATE_NOT_APPROVED",
-            "year": year, "original_bytes": total, "original_sha256": raw_sha,
-            "gzip_bytes": gz_size, "gzip_sha256": gz_sha,
-            "compression_ratio": round(gz_size / total, 6),
-            "archive_created": created_archive, "receipt_created": new_receipt,
-            "first_original_observed_at": observed,
-            "source_index_updated": False, "catalog_approved": False,
-            "customer_release_authorized": False, "external_send_authorized": False,
-        }
-    finally:
-        if fd >= 0:
-            os.close(fd)
-        if temp.exists():
-            if os.name == "nt":
-                os.chmod(temp, 0o600)
-            temp.unlink()
+            if temp.exists():
+                if os.name == "nt":
+                    os.chmod(temp, 0o600)
+                temp.unlink()
 
 
 def verify_compressed_candidate(year: int, private_dir: str | Path,
