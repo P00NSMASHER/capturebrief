@@ -768,9 +768,19 @@ def issue_history_receipt_from_index(
                 ]
             else:
                 family_rows = anchored
-            if any(not _norm(row.get("aac_code")) for row in rows):
-                # Unknown-AAC rows sharing this Sol# may be part of this
-                # family. They cannot be proven separate from the seed.
+            if any(
+                not _norm(row.get("aac_code"))
+                and (
+                    not _norm(row.get("office"))
+                    or _norm(row.get("office")) == seed_office
+                )
+                for row in rows
+            ):
+                # A blank-AAC sibling with the SAME or UNKNOWN office
+                # could belong to this family and blocks completeness.
+                # One with a distinct known office can be excluded by
+                # the independently supplied office anchor without
+                # creating an unnecessary false-positive review hold.
                 errors.append("FAMILY_UNANCHORED_AAC_PEER_REQUIRES_REVIEW")
         elif seed_office:
             anchored = [
