@@ -264,6 +264,67 @@ class HistoryIndexTests(unittest.TestCase):
                 )
 
 
+    def test_undecodable_original_bytes_do_not_mutate_notice_identity(self):
+        # Reproduced prior failure: the importer converted an undefined
+        # cp1252 NoticeId byte (0x81) into U+FFFD, yet indexed the
+        # apparently valid row and could certify its altered identity.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "FICTIONAL-publisher-original.csv"
+            write_csv(source, [row("VALID_FICTIONAL_ID")])
+            pristine = source.read_bytes()
+            self.assertIn(b"VALID_FICTIONAL_ID", pristine)
+            for label, prefix, invalid in (
+                ("undefined-cp1252-byte", b"", b"INVALID_\\x81_ID"),
+                ("invalid-utf8-bom-body", b"\\xef\\xbb\\xbf", b"INVALID_\\xff_ID"),
+            ):
+                with self.subTest(case=label):
+                    db = root / f"{label}.sqlite"
+                    source.write_bytes(
+                        prefix + pristine.replace(
+                            b"VALID_FICTIONAL_ID",
+                            invalid,
+                        )
+                    )
+                    with self.assertRaises(UnicodeDecodeError):
+                        ingest_extract_file(
+                            db, source,
+                            source_url=ACTIVE_DOWNLOAD,
+                            source_kind="ACTIVE",
+                            observed_at=NOW,
+                            collection_mode="OPERATOR_FILE",
+                            snapshot_dir=None,
+                        )
+                    with closing(sqlite3.connect(db)) as conn:
+                        self.assertEqual(
+                            conn.execute("SELECT COUNT(*) FROM source_snapshots").fetchone()[0], 0,
+                        )
+                        self.assertEqual(
+                            conn.execute("SELECT COUNT(*) FROM current_sources").fetchone()[0], 0,
+                        )
+                        self.assertEqual(
+                            conn.execute("SELECT COUNT(*) FROM opportunity_rows").fetchone()[0], 0,
+                        )
+
+    def test_valid_cp1252_notice_id_remains_exact_after_strict_decoding(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "invented-cp1252-source.csv"
+            db = root / "invented-source.sqlite"
+            write_csv(source, [row("FICTIONAL-CAF\\u00c9")])
+            result = ingest_extract_file(
+                db, source,
+                source_url=ACTIVE_DOWNLOAD,
+                source_kind="ACTIVE",
+                observed_at=NOW,
+                collection_mode="OPERATOR_FILE",
+                snapshot_dir=None,
+            )
+            self.assertEqual(result["rows_scanned"], 1)
+            with closing(sqlite3.connect(db)) as conn:
+                value = conn.execute("SELECT notice_id FROM opportunity_rows").fetchone()[0]
+            self.assertEqual(value, "FICTIONAL-CAF\\u00c9")
+
     def test_content_addressed_snapshots_are_reused(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db=root/"history.sqlite"; snapshots=root/"snapshots"; p=root/"active.csv"
