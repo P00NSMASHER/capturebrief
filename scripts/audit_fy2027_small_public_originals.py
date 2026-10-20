@@ -7,6 +7,7 @@ This is neither an approved 34-year catalog nor production source retention.
 """
 from __future__ import annotations
 
+import collections
 import csv
 import hashlib
 import io
@@ -74,6 +75,8 @@ def inspect_original_memory(original: bytes) -> dict:
     blank_sol = 0
     blank_aac = 0
     blank_office = 0
+    blank_aac_and_office = 0
+    grouped_solicitations = collections.defaultdict(list)
     seen: set[str] = set()
     with io.StringIO(text, newline="") as stream:
         parser = csv.DictReader(stream, restkey="_extra", strict=True)
@@ -92,12 +95,36 @@ def inspect_original_memory(original: bytes) -> dict:
                 duplicates += 1
             else:
                 seen.add(notice)
-            if not str(row.get("Sol#") or "").strip():
+            sol = " ".join(str(row.get("Sol#") or "").upper().split())
+            aac = " ".join(str(row.get("AAC Code") or "").upper().split())
+            office = " ".join(str(row.get("Office") or "").upper().split())
+            if not sol:
                 blank_sol += 1
-            if not str(row.get("AAC Code") or "").strip():
+            if not aac:
                 blank_aac += 1
-            if not str(row.get("Office") or "").strip():
+            if not office:
                 blank_office += 1
+            if not aac and not office:
+                blank_aac_and_office += 1
+            if sol:
+                grouped_solicitations[sol].append((aac, office))
+    repeated = [v for v in grouped_solicitations.values() if len(v) > 1]
+    repeated_with_missing_anchors = sum(
+        any(not aac or not office for aac, office in items)
+        for items in repeated
+    )
+    repeated_with_multiple_aacs = sum(
+        len({aac for aac, _ in items if aac}) > 1
+        for items in repeated
+    )
+    repeated_with_same_aac_office_collisions = 0
+    for items in repeated:
+        by_aac = collections.defaultdict(set)
+        for aac, office in items:
+            if aac and office:
+                by_aac[aac].add(office)
+        if any(len(offices) > 1 for offices in by_aac.values()):
+            repeated_with_same_aac_office_collisions += 1
     return {
         "rows": count, "header_columns": len(cols),
         "required_headers_present": True,
@@ -106,6 +133,13 @@ def inspect_original_memory(original: bytes) -> dict:
         "blank_solicitation_rows": blank_sol,
         "blank_aac_rows": blank_aac,
         "blank_office_rows": blank_office,
+        "blank_aac_and_office_rows": blank_aac_and_office,
+        "repeated_nonblank_solicitation_groups": len(repeated),
+        "repeated_groups_with_missing_agency_or_office": repeated_with_missing_anchors,
+        "repeated_groups_with_multiple_known_aacs": repeated_with_multiple_aacs,
+        "repeated_groups_with_multiple_offices_inside_known_aac": (
+            repeated_with_same_aac_office_collisions
+        ),
     }
 
 
