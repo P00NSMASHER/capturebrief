@@ -178,20 +178,41 @@ def _family_filter(
         if seed is None:
             raise DataServicesError("seed notice ID was not present in the supplied extract set")
 
-    seed_aac = (seed or {}).get("aac_code")
-    if seed_aac:
-        rows = [r for r in rows if r.get("aac_code") == seed_aac]
-    elif not seed_notice_id:
-        aacs = {r.get("aac_code") for r in rows if r.get("aac_code")}
-        if len(aacs) > 1:
-            raise FamilyAmbiguous(f"solicitation number spans multiple AAC codes: {sorted(aacs)}")
-        if len(aacs) == 1:
-            seed_aac = next(iter(aacs))
+    if seed is not None:
+        seed_aac = _norm(seed.get("aac_code"))
+        seed_office = _norm(seed.get("office"))
+        if not seed_aac or not seed_office:
+            raise FamilyAmbiguous("seed has no independently anchored agency and office")
+        anchored = [
+            row for row in rows
+            if _norm(row.get("aac_code")) == seed_aac
+            and _norm(row.get("office")) == seed_office
+        ]
+        anchor_notice_ids = {str(row.get("notice_id") or "") for row in anchored}
+        for row in rows:
+            row_aac = _norm(row.get("aac_code"))
+            row_office = _norm(row.get("office"))
+            if ((row_aac == seed_aac and row_office != seed_office)
+                    or (not row_aac and row_office in ("", seed_office))
+                    or (str(row.get("notice_id") or "") in anchor_notice_ids
+                        and (row_aac, row_office) != (seed_aac, seed_office))):
+                raise FamilyAmbiguous("solicitation family has conflicting agency or office identity")
+        rows = anchored
+    else:
+        # Without an anchored seed, neither an unknown AAC nor differing
+        # offices can be silently resolved by solicitation number alone.
+        known_aacs = {_norm(row.get("aac_code")) for row in rows}
+        known_offices = {_norm(row.get("office")) for row in rows}
+        if (len(known_aacs) != 1 or "" in known_aacs
+                or len(known_offices) != 1 or "" in known_offices):
+            raise FamilyAmbiguous("solicitation family needs a unique agency and office")
+        seed_aac = next(iter(known_aacs))
+        seed_office = next(iter(known_offices))
 
     family = {
         "solicitation_number": rows[0].get("solicitation_number"),
         "aac_code": seed_aac,
-        "office": (seed or rows[0]).get("office"),
+        "office": seed_office,
         "seed_notice_id": seed_notice_id,
     }
     return rows, family
