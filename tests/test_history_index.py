@@ -208,6 +208,62 @@ class HistoryIndexTests(unittest.TestCase):
             self.assertFalse(index.exists())
 
 
+    def test_missing_notice_id_blocks_entire_original_snapshot_atomically(self):
+        # A source row without NoticeId cannot be independently traced to an
+        # actual notice action. Never allow a FULL_CATALOG index to look
+        # complete after silently importing or dropping such a row.
+        for n, raw_notice in enumerate(("", " ", None)):
+            with self.subTest(raw_notice=repr(raw_notice)), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                p = root / "invented-missing-notice.csv"
+                db = root / "invented-unapproved.sqlite"
+                write_csv(
+                    p,
+                    [row("valid-fake-id"), row(raw_notice, sol="FAKE-SECOND")],
+                )
+                with self.assertRaisesRegex(HistoryIndexError, "empty NoticeId"):
+                    ingest_extract_file(
+                        db, p,
+                        source_url=ACTIVE_DOWNLOAD,
+                        source_kind="ACTIVE",
+                        observed_at=NOW,
+                        collection_mode="OPERATOR_FILE",
+                        snapshot_dir=None,
+                    )
+                with closing(sqlite3.connect(db)) as conn:
+                    for table in ("source_snapshots", "current_sources", "opportunity_rows"):
+                        count = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                        self.assertEqual(count, 0, table)
+
+    def test_header_only_archive_year_remains_valid_source_metadata(self):
+        # Genuine FY1969 and FY1981 originals are 47-column header-only
+        # CSVs, not absent files. Zero legitimate rows is distinct from an
+        # actual record whose identity is blank or unverifiable.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            p = root / "invented-valid-header-only.csv"
+            db = root / "invented-unapproved.sqlite"
+            write_csv(p, [])
+            result = ingest_extract_file(
+                db, p,
+                source_url=ARCHIVE_DOWNLOAD.format(fy=1981),
+                source_kind="ARCHIVE",
+                fiscal_year=1981,
+                observed_at=NOW,
+                collection_mode="OPERATOR_FILE",
+                snapshot_dir=None,
+            )
+            self.assertEqual(result["rows_scanned"], 0)
+            self.assertEqual(result["slot"], "ARCHIVE:1981")
+            with closing(sqlite3.connect(db)) as conn:
+                self.assertEqual(
+                    conn.execute("SELECT COUNT(*) FROM source_snapshots").fetchone()[0], 1,
+                )
+                self.assertEqual(
+                    conn.execute("SELECT COUNT(*) FROM opportunity_rows").fetchone()[0], 0,
+                )
+
+
     def test_content_addressed_snapshots_are_reused(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db=root/"history.sqlite"; snapshots=root/"snapshots"; p=root/"active.csv"
