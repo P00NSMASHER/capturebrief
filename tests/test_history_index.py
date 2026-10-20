@@ -617,6 +617,58 @@ class HistoryIndexTests(unittest.TestCase):
             verdict,_=validate_history_receipts(receipt["action_ids"],[receipt])
             self.assertEqual(verdict,"HISTORY_UNRESOLVED")
 
+    def test_unknown_aac_peer_in_different_office_is_not_false_collision(self):
+        # Normalized Sol# values may coincide across offices. When seed
+        # AAC and Office are both independently known, a different
+        # *known* peer Office can rule out an unknown-AAC row without
+        # a spurious manual-review hold.
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);db,snapshots=self.build_complete_index(root)
+            p=root/"other-office-unknown-aac.csv"
+            write_csv(p,[
+                row("a2",sol="SOL-1",aac="AAC1",office="OFFICE"),
+                row("separate-office-unknown-aac",sol="SOL-1",
+                    aac="",office="DIFFERENT OFFICE"),
+            ])
+            ingest_extract_file(
+                db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH,
+            )
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"],"COMPLETE")
+            self.assertEqual(set(receipt["action_ids"]),{"a1","a2"})
+            self.assertNotIn("separate-office-unknown-aac",receipt["action_ids"])
+            self.assertNotIn(
+                "FAMILY_UNANCHORED_AAC_PEER_REQUIRES_REVIEW",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+
+    def test_unknown_aac_peer_without_office_still_blocks_complete(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);db,snapshots=self.build_complete_index(root)
+            p=root/"unknown-aac-and-office.csv"
+            write_csv(p,[
+                row("a2",sol="SOL-1",aac="AAC1",office="OFFICE"),
+                row("unanchored-unknown-aac",sol="SOL-1",aac="",office=""),
+            ])
+            ingest_extract_file(
+                db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH,
+            )
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertEqual(set(receipt["action_ids"]),{"a1","a2"})
+            self.assertIn(
+                "FAMILY_UNANCHORED_AAC_PEER_REQUIRES_REVIEW",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+
     def test_seed_is_never_selected_from_bulk(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db,_=self.build_complete_index(root)
