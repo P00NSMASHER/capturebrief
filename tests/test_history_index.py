@@ -364,6 +364,87 @@ class HistoryIndexTests(unittest.TestCase):
                 future_seed["evidence_payload"]["coverage_errors"],
             )
 
+    def test_same_aac_different_office_never_claims_complete_history(self):
+        # Reproduced directly on PAAM-L044 using synthetic source files:
+        # same Sol# + AAC but distinct offices previously included unrelated
+        # notice identities in a status=COMPLETE family.
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db,snapshots=self.build_complete_index(root)
+            path=root/"different-office-active.csv"
+            write_csv(path,[
+                row("a2",sol="SOL-1",aac="AAC1",office="OFFICE"),
+                row("a1",sol="SOL-1",aac="AAC1",office="OFFICE"),
+                row("fictional-other-office",sol="SOL-1",aac="AAC1",office="OTHER OFFICE"),
+            ])
+            ingest_extract_file(
+                db,path,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                observed_at=NOW,snapshot_dir=snapshots,
+                collection_mode=APPROVED_FETCH,
+            )
+            self.assertTrue(index_status(db,fiscal_year=2026,now=NOW_DT)["complete"])
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertEqual(set(receipt["action_ids"]),{"a1","a2"})
+            self.assertNotIn("fictional-other-office",receipt["action_ids"])
+            self.assertIn(
+                "FAMILY_OFFICE_COLLISION_REQUIRES_REVIEW",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+            self.assertTrue(receipt["evidence_payload"]["scope"]["coverage_complete"])
+            verdict,_=validate_history_receipts(receipt["action_ids"],[receipt])
+            self.assertEqual(verdict,"HISTORY_UNRESOLVED")
+
+    def test_same_aac_mixed_missing_office_blocks_complete_history(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);db,snapshots=self.build_complete_index(root)
+            path=root/"missing-office-active.csv"
+            write_csv(path,[
+                row("a2",aac="AAC1",office="OFFICE"),
+                row("unknown-office-notice",aac="AAC1",office=""),
+            ])
+            ingest_extract_file(
+                db,path,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH,
+            )
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertEqual(set(receipt["action_ids"]),{"a1","a2"})
+            self.assertNotIn("unknown-office-notice",receipt["action_ids"])
+            self.assertIn(
+                "FAMILY_OFFICE_COLLISION_REQUIRES_REVIEW",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+
+    def test_unanchored_seed_office_returns_no_cross_office_family(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);db,snapshots=self.build_complete_index(root)
+            path=root/"ambiguous-seed-office-active.csv"
+            write_csv(path,[
+                row("seed-without-office",sol="SOL-1",aac="AAC1",office=""),
+                row("other-office-one",sol="SOL-1",aac="AAC1",office="ONE OFFICE"),
+                row("other-office-two",sol="SOL-1",aac="AAC1",office="TWO OFFICE"),
+            ])
+            ingest_extract_file(
+                db,path,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH,
+            )
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="seed-without-office",
+                observed_at=NOW,fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertEqual(receipt["action_ids"],[])
+            self.assertIn(
+                "FAMILY_OFFICE_COLLISION_REQUIRES_REVIEW",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+
     def test_seed_is_never_selected_from_bulk(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db,_=self.build_complete_index(root)
