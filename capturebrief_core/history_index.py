@@ -733,7 +733,29 @@ def issue_history_receipt_from_index(
         seed_aac = _norm(seed.get("aac_code"))
         seed_office = _norm(seed.get("office"))
         if seed_aac:
-            family_rows = [row for row in rows if _norm(row.get("aac_code")) == seed_aac]
+            anchored = [
+                row for row in rows if _norm(row.get("aac_code")) == seed_aac
+            ]
+            known_offices = {
+                _norm(row.get("office")) for row in anchored
+                if _norm(row.get("office"))
+            }
+            office_unspecified = any(
+                not _norm(row.get("office")) for row in anchored
+            )
+            # The same solicitation and AAC do not independently establish
+            # identity across distinct offices (or mixed missing offices).
+            # A reassignment may be genuine, but requires adjudication: a
+            # possibly unrelated office must never be silently represented
+            # as one COMPLETE family.
+            if len(known_offices) > 1 or (known_offices and office_unspecified):
+                errors.append("FAMILY_OFFICE_COLLISION_REQUIRES_REVIEW")
+                family_rows = [
+                    row for row in anchored
+                    if seed_office and _norm(row.get("office")) == seed_office
+                ]
+            else:
+                family_rows = anchored
         elif seed_office:
             family_rows = [row for row in rows if _norm(row.get("office")) == seed_office]
         else:
