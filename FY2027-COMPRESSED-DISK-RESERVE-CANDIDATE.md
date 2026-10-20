@@ -40,3 +40,23 @@ collection until those separate requirements are independently verified.
 **Do not auto-merge.** Independent safety review is required for each
 stacked source PR, followed by actual approved operator capacity evidence
 and a separate governed customer-release decision.
+
+
+## Simultaneous candidate-source download protection
+
+The on-demand compressed retainer also holds a **private-root-wide,
+fail-fast filesystem lock** from before disk-capacity inspection until
+compressed-source publication, provenance receipt verification, and
+temporary-file cleanup finish. A second candidate download targeting the
+same directory fails **before opening an HTTP response**, rather than
+both spending the same observed free-space reserve. Crash leftovers are
+never assumed stale or automatically deleted; an authorized operator must
+independently verify that no first run remains active before resolving a
+stale lock.
+
+This guards only concurrent invocations that use the **same private root**.
+Other applications and alternate roots on the same disk may still consume
+space independently; the capacity check and the 4 GiB reserve do not
+guarantee uninterrupted free space. Protected-main, reviewed publisher
+sources, actual disk-encryption status, authenticated off-device restore
+and customer release remain BLOCKED.
