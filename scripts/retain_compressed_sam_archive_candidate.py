@@ -41,7 +41,7 @@ from capturebrief_core.source_policy import (
     open_approved_extract, require_approved_extract_delivery,
 )
 from scripts.fy2027_archive_compression_probe import frozen_unapproved_sizes
-from scripts.source_disk_budget import require_source_capacity
+from scripts.source_disk_budget import require_source_capacity, worst_case_gzip_bytes
 
 BLOCK_BYTES = 1024 * 1024
 MAX_ORIGINAL_BYTES = 1_500_000_000
@@ -278,7 +278,7 @@ def retain_compressed_candidate(
                 raise ValueError("Original SHA-256 invalid")
             _verify_decompressed(temp, raw_sha, total)
             gz_sha, gz_size = _hash_file(temp)
-            if gz_size <= 0 or gz_size > total + 4096:
+            if gz_size <= 0 or gz_size > worst_case_gzip_bytes(total):
                 raise ValueError("Compressed candidate size is outside fail-closed bounds")
             dest = root / f"FY{year}-{raw_sha}.csv.gz"
             saved = ensure_exact_file(
