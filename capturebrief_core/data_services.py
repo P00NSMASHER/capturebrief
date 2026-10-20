@@ -47,14 +47,29 @@ def download_extract(
     require_approved_extract_delivery(url, url)
     if max_bytes <= 0:
         raise ValueError("max_bytes must be positive")
-    req = Request(url, headers={"User-Agent": "CaptureBrief/0.3"})
+    req = Request(url, headers={
+        "User-Agent": "CaptureBrief/0.3",
+        "Accept-Encoding": "identity",
+    })
     try:
         with open_approved_extract(req, timeout=timeout, source_url=url, opener=opener) as response:
             # Revalidate even when using an injected opener (test cases) and
             # before accepting ANY bytes as first-party Data Services evidence.
             final_url = response.geturl() if hasattr(response, "geturl") else url
             require_approved_extract_delivery(url, final_url)
-            declared = response.headers.get("Content-Length") if getattr(response, "headers", None) else None
+            status = getattr(response, "status", None)
+            if status is None and hasattr(response, "getcode"):
+                status = response.getcode()
+            if status != 200:
+                raise DataServicesError("Data Services full original requires HTTP 200")
+            headers = getattr(response, "headers", None)
+            if headers is None:
+                raise DataServicesError("Data Services source response lacks headers")
+            if str(headers.get("Content-Encoding", "identity")).strip().lower() != "identity":
+                raise DataServicesError("Data Services original must use identity transfer encoding")
+            if headers.get("Content-Range"):
+                raise DataServicesError("Data Services full original cannot be a byte range")
+            declared = headers.get("Content-Length")
             expected = None
             if declared not in (None, ""):
                 try:
@@ -79,10 +94,14 @@ def download_extract(
 
 
 def _decode_csv(data: bytes) -> str:
+    # A UTF-8 BOM declares encoding. Never reinterpret invalid UTF-8
+    # with a permissive fallback that changes a publisher NoticeId.
+    if data.startswith(b"\xef\xbb\xbf"):
+        return data.decode("utf-8-sig", errors="strict")
     try:
-        return data.decode("utf-8-sig")
+        return data.decode("utf-8", errors="strict")
     except UnicodeDecodeError:
-        return data.decode("cp1252", errors="replace")
+        return data.decode("cp1252", errors="strict")
 
 
 def scan_extract_bytes(
@@ -97,14 +116,27 @@ def scan_extract_bytes(
         raise ValueError("source_kind must be ACTIVE or ARCHIVE")
     require_approved_automation(source_url, expected="SAM_DATA_SERVICES_EXTRACT")
     target = _norm(solicitation_number)
-    reader = csv.DictReader(io.StringIO(_decode_csv(data)), restkey="_extra")
-    missing = REQUIRED_COLUMNS - set(reader.fieldnames or [])
+    if not target:
+        raise ValueError("Solicitation number must be nonempty for extract matching")
+    reader = csv.DictReader(
+        io.StringIO(_decode_csv(data), newline=""), restkey="_extra", strict=True,
+    )
+    columns = list(reader.fieldnames or [])
+    missing = REQUIRED_COLUMNS - set(columns)
     if missing:
         raise DataServicesError(f"extract missing columns: {sorted(missing)}")
+    if (len(columns) != len(set(columns))
+            or any(not isinstance(field, str) or not field.strip() for field in columns)
+            or "_extra" in columns):
+        raise DataServicesError("extract contains duplicate, blank or reserved CSV headers")
 
     rows_scanned = 0
     matches: list[dict[str, Any]] = []
     for row in reader:
+        if "_extra" in row or any(row.get(field) is None for field in columns):
+            raise DataServicesError("extract original has an invalid CSV column count")
+        if not str(row.get("NoticeId") or "").strip():
+            raise DataServicesError("extract original row lacks primary NoticeId")
         rows_scanned += 1
         if _norm(row.get("Sol#")) != target:
             continue
