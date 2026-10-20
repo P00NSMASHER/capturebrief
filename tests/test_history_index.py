@@ -238,6 +238,30 @@ class HistoryIndexTests(unittest.TestCase):
             self.assertTrue(status["local_original_hashes_verified"])
             self.assertFalse(status["publisher_origin_independently_attested"])
 
+    def test_mismatched_snapshot_slot_cannot_certify_a_current_source(self):
+        # The current_sources.slot lookup and its referenced
+        # source_snapshots.slot are separate SQLite values. The full
+        # original SHA/size/year can still match after corrupting the
+        # snapshot's identity field; a mismatch must block completeness.
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            db,_=self.build_complete_index(root)
+            self.assertTrue(index_status(db,fiscal_year=2026,now=NOW_DT)["complete"])
+            with closing(sqlite3.connect(db)) as conn, conn:
+                conn.execute(
+                    "UPDATE source_snapshots SET slot='ARCHIVE:2099' "
+                    "WHERE slot='ARCHIVE:2026'"
+                )
+            status=index_status(db,fiscal_year=2026,now=NOW_DT)
+            self.assertFalse(status["complete"])
+            self.assertIn("ARCHIVE:2026",status["unverified_slots"])
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertFalse(receipt["evidence_payload"]["scope"]["coverage_complete"])
+
     def test_metadata_and_sha_tampering_never_certify_current_source(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
