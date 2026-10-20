@@ -687,6 +687,44 @@ def _current_family_rows(conn: sqlite3.Connection, solicitation_number: str) -> 
     return [dict(row) for row in rows]
 
 
+def _notice_ids_have_other_solicitation(
+    conn: sqlite3.Connection,
+    notice_ids: list[str],
+    *,
+    required_slots: set[str],
+    solicitation_number: str,
+) -> bool:
+    """Find in-scope NoticeId reuse under a conflicting solicitation number.
+
+    A full catalog may contain a NoticeId in multiple current source
+    snapshots. If one snapshot assigns a DIFFERENT Sol#, selecting only
+    the requested Sol# would silently omit part of the notice's history.
+    Treat this as review-required instead of claiming completeness.
+    This is a parameter-bound read-only query; it never includes future
+    or unapproved source slots. Bound batches to older SQLite parameter
+    limits without disclosing individual notice/solicitation identifiers.
+    """
+    if not notice_ids or not required_slots:
+        return False
+    slots = sorted(required_slots)
+    for begin in range(0, len(notice_ids), 250):
+        block = notice_ids[begin:begin+250]
+        slot_markers = ",".join("?" for _ in slots)
+        id_markers = ",".join("?" for _ in block)
+        sql = (
+            "SELECT 1 FROM opportunity_rows r "
+            "JOIN current_sources c ON c.snapshot_id=r.snapshot_id "
+            f"WHERE c.slot IN ({slot_markers}) "
+            f"AND r.notice_id IN ({id_markers}) "
+            "AND r.solicitation_norm != ? LIMIT 1"
+        )
+        if conn.execute(
+            sql, (*slots, *block, _norm(solicitation_number)),
+        ).fetchone() is not None:
+            return True
+    return False
+
+
 def issue_history_receipt_from_index(
     index_path: str | Path,
     *,
@@ -845,6 +883,15 @@ def issue_history_receipt_from_index(
         by_notice.setdefault(notice_id, []).append(observation)
 
     action_ids = sorted(by_notice)
+    if action_ids:
+        with closing(_connect(index_path)) as conn:
+            if _notice_ids_have_other_solicitation(
+                conn, action_ids, required_slots=required_slots,
+                solicitation_number=solicitation_number,
+            ):
+                errors.append(
+                    "NOTICE_ID_SOLICITATION_HISTORY_CONFLICT_REQUIRES_REVIEW"
+                )
     if seed_notice_id and seed_notice_id not in action_ids:
         errors.append("SEED_NOTICE_OUTSIDE_FILTERED_FAMILY")
     if coverage["missing_slots"]:
