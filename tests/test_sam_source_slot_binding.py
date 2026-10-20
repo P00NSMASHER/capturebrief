@@ -26,7 +26,7 @@ class DataServicesSourceBindingTests(unittest.TestCase):
         for label,url,kind,year in wrong:
             with self.subTest(label=label),self.assertRaises((ValueError,DataServicesError)):
                 scan_extract_bytes(
-                    b"intentionally-invalid-synthetic-csv",
+                    ORIGINAL,
                     source_url=url,source_kind=kind,
                     fiscal_year=year,solicitation_number="FICTIONAL-SOL",
                 )
