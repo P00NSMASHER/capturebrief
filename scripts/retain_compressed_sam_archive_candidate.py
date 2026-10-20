@@ -100,6 +100,13 @@ def _private_dir(directory: str | Path) -> Path:
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise ValueError("Private NTFS ACL cannot be independently read") from exc
         if checked.returncode != 0:
+            # This diagnostic runs ONLY against isolated invented source trees
+            # in ephemeral GitHub CI. Never expose private operator path or
+            # arbitrary PowerShell/provider stderr in production use.
+            if os.environ.get("GITHUB_ACTIONS") == "true":
+                message = checked.stderr.replace(str(real), "<CI_PRIVATE_FIXTURE>")
+                message = re.sub(r"[A-Za-z]:\\\\[^\s\"']+", "<CI_PATH>", message)
+                print("SYNTHETIC_ACL_CHECK_FAILURE: " + repr(message[:650]), file=sys.stderr)
             raise ValueError(f"Private NTFS ACL not accepted (safe status {checked.returncode})")
     elif real.stat().st_mode & 0o077:
         raise ValueError("Private source directory grants group/other access")
