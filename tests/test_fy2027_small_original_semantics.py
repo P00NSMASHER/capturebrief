@@ -237,6 +237,49 @@ class EarlyOriginalSafetyTests(unittest.TestCase):
             self.assertIs(doc[flag],False,flag)
         self.assertIs(doc["blank_aac_and_office_overlap_unmeasured"],True)
 
+    def test_frozen_unapproved_public_original_agency_ambiguity_observation(self):
+        path=(m.ROOT/"research"/
+              "fy2027_1999_2001_agency_ambiguity_observation_20261020.json")
+        doc=json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            doc["schema"],
+            "capturebrief-fy2027-unapproved-public-original-agency-ambiguity-v1",
+        )
+        self.assertEqual(
+            doc["observed_from_run"],
+            "https://github.com/P00NSMASHER/capturebrief/actions/runs/39367333629",
+        )
+        years=doc["observations"]
+        self.assertEqual([entry["fy"] for entry in years], list(m.YEARS))
+        self.assertEqual(doc["original_rows"],3929)
+        self.assertEqual(doc["original_bytes_read_in_memory"],6334801)
+        self.assertEqual(doc["rows_missing_both_aac_and_office"],1157)
+        self.assertEqual(doc["repeated_nonblank_solicitation_groups"],637)
+        self.assertEqual(doc["repeated_groups_with_missing_agency_or_office"],193)
+        self.assertEqual(doc["repeated_groups_with_multiple_known_aacs"],2)
+        self.assertTrue(doc["complete_public_original_bytes_checked_for_these_three_years"])
+        self.assertFalse(doc["distinct_group_count_across_years_verified"])
+        for entry in years:
+            self.assertEqual(entry["bytes"],m.SIZES[entry["fy"]])
+            self.assertEqual(entry["blank_aac_rows"],
+                             entry["blank_both_aac_and_office_rows"])
+            self.assertEqual(entry["blank_office_rows"],
+                             entry["blank_both_aac_and_office_rows"])
+            self.assertTrue(entry["sha256"] in {
+                "def8f8be6b002dc7df31e478c68aaeb7d1bec6bed9c4fa030f24f6970c8bca8c",
+                "94eb95631fa44a401dfd1fcb4f18e1082ddb22bf45c1e3a69533c2288d37e6f1",
+                "5d6aeca22b38784626f9259f6a7973f912c485a1ebe67ea0a83acbc1597b51a5",
+            })
+        for blocked in (
+            "specific_notice_identity_emitted", "source_originals_retained",
+            "independent_publisher_human_review_completed",
+            "approved_FY2027_catalog", "all_34_year_archive_sources_covered",
+            "private_index_updated", "whole_disk_encryption_verified",
+            "offdevice_backup_with_independent_key_verified",
+            "customer_release_authorized",
+        ):
+            self.assertIs(doc[blocked],False,blocked)
+
 
 if __name__=="__main__":
     unittest.main()
