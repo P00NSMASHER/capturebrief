@@ -176,6 +176,38 @@ class HistoryIndexTests(unittest.TestCase):
                 receipt["evidence_payload"]["indexed_row_count_mismatch_slots"],
             )
 
+    def test_duplicate_notice_id_in_one_current_original_cannot_claim_complete(self):
+        # NoticeId identifies the public action. Two rows with the same ID
+        # inside one source snapshot require source adjudication, even when
+        # the total row count and immutable original file SHA match.
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db,snapshots=self.build_complete_index(root)
+            p=root/"duplicate-identifiers-invented.csv"
+            write_csv(p, [
+                row("a2",sol="SOL-1",aac="AAC1",posted="09/20/2026"),
+                row("a2",sol="SOL-1",aac="AAC1",posted="09/21/2026"),
+                row("a1",sol="SOL-1",aac="AAC1"),
+            ])
+            imported=ingest_extract_file(
+                db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                observed_at=NOW,snapshot_dir=snapshots,
+                collection_mode=APPROVED_FETCH,
+            )
+            self.assertEqual(imported["rows_scanned"],3)
+            status=index_status(db,fiscal_year=2026,now=NOW_DT)
+            self.assertFalse(status["complete"])
+            self.assertIn("ACTIVE",status["indexed_row_count_mismatch_slots"])
+            self.assertIn("ACTIVE",status["unverified_slots"])
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertIn(
+                "FULL_ARCHIVE_CATALOG_UNVERIFIED",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+
     def test_blank_identity_in_mutated_sqlite_projection_is_unverified(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
