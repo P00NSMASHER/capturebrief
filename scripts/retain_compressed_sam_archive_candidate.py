@@ -100,7 +100,7 @@ def _private_dir(directory: str | Path) -> Path:
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise ValueError("Private NTFS ACL cannot be independently read") from exc
         if checked.returncode != 0:
-            raise ValueError("Private NTFS ACL grants broad access or is unverified")
+            raise ValueError(f"Private NTFS ACL not accepted (safe status {checked.returncode})")
     elif real.stat().st_mode & 0o077:
         raise ValueError("Private source directory grants group/other access")
     return real
