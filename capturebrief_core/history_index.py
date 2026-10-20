@@ -750,14 +750,26 @@ def issue_history_receipt_from_index(
             # A reassignment may be genuine, but requires adjudication: a
             # possibly unrelated office must never be silently represented
             # as one COMPLETE family.
-            if len(known_offices) > 1 or (known_offices and office_unspecified):
+            if not seed_office:
+                # Even if all same-AAC sibling rows lack Office, their
+                # identity is not sufficiently anchored for completeness.
+                errors.append("FAMILY_SEED_OFFICE_MISSING")
+                family_rows = [
+                    row for row in anchored
+                    if row.get("notice_id") == seed_notice_id
+                ]
+            elif len(known_offices) > 1 or (known_offices and office_unspecified):
                 errors.append("FAMILY_OFFICE_COLLISION_REQUIRES_REVIEW")
                 family_rows = [
                     row for row in anchored
-                    if seed_office and _norm(row.get("office")) == seed_office
+                    if _norm(row.get("office")) == seed_office
                 ]
             else:
                 family_rows = anchored
+            if any(not _norm(row.get("aac_code")) for row in rows):
+                # Unknown-AAC rows sharing this Sol# may be part of this
+                # family. They cannot be proven separate from the seed.
+                errors.append("FAMILY_UNANCHORED_AAC_PEER_REQUIRES_REVIEW")
         elif seed_office:
             anchored = [
                 row for row in rows if _norm(row.get("office")) == seed_office
@@ -773,14 +785,17 @@ def issue_history_receipt_from_index(
             # cannot be safely linked by office name and Sol# alone.
             # Mixed known/unknown or multiple agency codes require
             # separate adjudication even if the office text matches.
+            # The seed itself has no AAC: there is no independently
+            # verifiable agency anchor. Even if every sibling is also
+            # missing AAC, their shared Office/Sol# cannot certify a
+            # complete family. Preserve only exact seed observations.
+            errors.append("FAMILY_AAC_ANCHOR_MISSING")
             if len(known_aacs) > 1 or (known_aacs and aac_unspecified):
                 errors.append("FAMILY_AAC_COLLISION_REQUIRES_REVIEW")
-                family_rows = [
-                    row for row in anchored
-                    if row.get("notice_id") == seed_notice_id
-                ]
-            else:
-                family_rows = anchored
+            family_rows = [
+                row for row in anchored
+                if row.get("notice_id") == seed_notice_id
+            ]
         else:
             # Neither an agency code nor an office name anchors this
             # seed to other notices. Permit observation of only the
