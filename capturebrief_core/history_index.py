@@ -580,6 +580,12 @@ def issue_history_receipt_from_index(
     observed_at = observed_at or datetime.now(timezone.utc).isoformat()
     if not parse_dt(observed_at):
         raise ValueError("observed_at must be timezone-aware ISO-8601")
+    # Real official SAM FY2027 archive already includes notices with blank
+    # solicitation numbers. Joining on the normalized empty string would
+    # silently group unrelated notices, even if their AAC/office matches.
+    # Reject before opening the index or constructing a history receipt.
+    if not _norm(solicitation_number):
+        raise ValueError("Solicitation number must be nonempty for history-family matching")
     fiscal_year = fiscal_year or fiscal_year_for_datetime()
     coverage = index_status(index_path, fiscal_year=fiscal_year, now=parse_dt(observed_at))
 
