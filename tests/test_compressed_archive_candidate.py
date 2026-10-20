@@ -5,12 +5,34 @@ import gzip
 import hashlib
 import json
 import os
+import subprocess
 import tempfile
+from contextlib import contextmanager
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
 from scripts import retain_compressed_sam_archive_candidate as m
+
+
+@contextmanager
+def private_tempdir():
+    """Build a genuinely ACL-restricted fake-only fixture root on Windows."""
+    with tempfile.TemporaryDirectory() as base:
+        if os.name == "nt":
+            # CI Windows temp folders may inherit broad Users/Authenticated
+            # Users grants; production source retention *correctly* rejects
+            # them. Give fictional tests their own explicitly private tree.
+            subprocess.run(
+                ["icacls", base, "/inheritance:r"],
+                check=True, capture_output=True, text=True,
+            )
+            subprocess.run(
+                ["icacls", base, "/grant:r",
+                 os.environ["USERNAME"] + ":(OI)(CI)F"],
+                check=True, capture_output=True, text=True,
+            )
+        yield base
 
 
 class FakeFullResponse:
@@ -57,7 +79,7 @@ class CompressedCandidateOfflineTests(unittest.TestCase):
             calls.append(obj)
             return obj
 
-        with tempfile.TemporaryDirectory() as tmp:
+        with private_tempdir() as tmp:
             d = Path(tmp) / "private"
             observed = datetime(2026, 10, 19, 19, 0, tzinfo=timezone.utc)
             a = m.retain_compressed_candidate(
@@ -137,7 +159,7 @@ class CompressedCandidateOfflineTests(unittest.TestCase):
         response = FakeFullResponse(
             "https://evil.example/signed?X-Amz-Credential=SENSITIVE_SECRET", data,
         )
-        with tempfile.TemporaryDirectory() as td:
+        with private_tempdir() as td:
             result = None
             try:
                 m.retain_compressed_candidate(
@@ -155,7 +177,7 @@ class CompressedCandidateOfflineTests(unittest.TestCase):
         original = sample_bytes()
         def opener(req, *, timeout):
             return FakeFullResponse(req.full_url, original)
-        with tempfile.TemporaryDirectory() as td:
+        with private_tempdir() as td:
             d = Path(td)/"private"
             out = m.retain_compressed_candidate(
                 2027, d, opener=opener, expected_size=len(original),
@@ -183,7 +205,7 @@ class CompressedCandidateOfflineTests(unittest.TestCase):
                 )
 
     def test_no_prod_override_no_future_years_and_no_public_git_destinations(self):
-        with tempfile.TemporaryDirectory() as td:
+        with private_tempdir() as td:
             d = Path(td)/"private"
             with self.assertRaises(ValueError):
                 m.retain_compressed_candidate(2028, d)
@@ -203,7 +225,7 @@ class CompressedCandidateOfflineTests(unittest.TestCase):
         data=sample_bytes()
         def opener(req, *, timeout):
             return FakeFullResponse(req.full_url, data)
-        with tempfile.TemporaryDirectory() as td:
+        with private_tempdir() as td:
             d=Path(td)/"private"
             result=m.retain_compressed_candidate(
                 2027, d, opener=opener, expected_size=len(data),
@@ -227,7 +249,7 @@ class CompressedCandidateOfflineTests(unittest.TestCase):
 
     @unittest.skipIf(os.name == "nt", "POSIX directory bits do not model NTFS ACLs")
     def test_private_directory_with_world_or_group_read_is_rejected(self):
-        with tempfile.TemporaryDirectory() as td:
+        with private_tempdir() as td:
             p = Path(td) / "world-readable-archive"
             p.mkdir()
             p.chmod(0o755)
