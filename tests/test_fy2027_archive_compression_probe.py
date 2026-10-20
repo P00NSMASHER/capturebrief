@@ -192,5 +192,44 @@ class BoundedGzipSampleTests(unittest.TestCase):
                     m.frozen_unapproved_sizes()
 
 
+    def test_frozen_34_year_actual_sample_receipt_is_explicitly_unapproved(self):
+        path = (m.REPO / "research" /
+                "fy2027_archive_gzip_sample_observation_20261020.json")
+        data = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(data["schema"],
+                         "capturebrief-fy2027-gzip-range-sample-observation-v1")
+        self.assertEqual(data["source_evidence_run"],
+                         "https://github.com/P00NSMASHER/capturebrief/actions/runs/39353747897")
+        self.assertEqual(data["candidate_year_count"], 34)
+        self.assertEqual(data["successful_sampled_year_count"], 34)
+        self.assertEqual(data["archive_declared_original_bytes"], 20333624076)
+        self.assertEqual(data["sampled_source_bytes"], 11479599)
+        self.assertEqual(data["gzip_sample_weighted_proxy_bytes"], 4937346330)
+        rows = data["year_observations"]
+        self.assertEqual(len(rows), 34)
+        self.assertEqual([row["fiscal_year"] for row in rows],
+                         list(m.CANDIDATE_YEARS))
+        self.assertEqual(sum(row["declared_original_bytes"] for row in rows),
+                         data["archive_declared_original_bytes"])
+        self.assertEqual(sum(row["sampled_source_bytes"] for row in rows),
+                         data["sampled_source_bytes"])
+        self.assertTrue(all(row["source_publisher_original_verified"] is False
+                            and 1 <= row["disjoint_range_count"] <= 3
+                            for row in rows))
+        for flag in (
+            "sampling_is_independent_original_file_digest_proof",
+            "gzip_proxy_is_actual_compressed_archive_size",
+            "gzip_proxy_is_upper_bound",
+            "capacity_fits_current_paam_verified",
+            "raw_original_bytes_durably_retained",
+            "publisher_origin_independently_approved",
+            "fiscal_year_catalog_approved",
+            "private_history_index_updated", "disk_encryption_verified",
+            "encrypted_offdevice_backup_and_key_escrow_verified",
+            "customer_release_authorized", "external_send_authorized",
+        ):
+            self.assertIs(data[flag], False, flag)
+
+
 if __name__ == "__main__":
     unittest.main()
