@@ -108,5 +108,46 @@ class PrivateDiskBudgetTests(unittest.TestCase):
                 self.assertIs(report["single_source_disk_capacity_pass"],False)
 
 
+    def test_competing_same_root_candidate_is_rejected_before_network(self):
+        """Simulate overlapping on-demand original fetches in one private root."""
+        fake=sample_bytes()
+        opened=[]
+        def opener(request, *, timeout):
+            opened.append(request.full_url)
+            return FakeFullResponse(request.full_url,fake)
+        with private_tempdir() as td:
+            d=Path(td)/"private"
+            retention._private_dir(d)  # real NTFS/POSIX security checks
+            hold=d/".archive-retention"
+            with retention.exclusive_path_lock(hold,timeout_seconds=0):
+                with self.assertRaises(TimeoutError):
+                    retention.retain_compressed_candidate(
+                        2027,d,opener=opener,expected_size=len(fake),
+                    )
+                self.assertEqual(opened,[])
+                self.assertEqual(sorted(p.name for p in d.iterdir()),
+                                 [".archive-retention.lock"])
+            self.assertEqual(list(d.iterdir()),[])
+
+    def test_reserve_checked_under_lock_and_removed_after_denial(self):
+        fake=sample_bytes()
+        calls=[]
+        with private_tempdir() as td:
+            d=Path(td)/"private"
+            need=(len(fake)+max(budget.MIN_GZIP_OVERHEAD_BYTES,
+                 (len(fake)+99)//100)+budget.UNALLOCATED_RESERVE_BYTES)
+            with patch.object(budget.shutil,"disk_usage",
+                              return_value=SimpleNamespace(free=need-1)):
+                with self.assertRaisesRegex(ValueError,"Insufficient private disk reserve"):
+                    retention.retain_compressed_candidate(
+                        2027,d,
+                        opener=lambda req, timeout: calls.append(req.full_url),
+                        expected_size=len(fake),
+                    )
+            self.assertEqual(calls,[])
+            self.assertEqual(list(d.iterdir()),[])
+
+
+
 if __name__=="__main__":
     unittest.main()
