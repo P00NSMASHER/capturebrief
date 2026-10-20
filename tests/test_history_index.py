@@ -519,6 +519,98 @@ class HistoryIndexTests(unittest.TestCase):
             self.assertIn("FAMILY_AGENCY_IDENTITY_MISSING",
                 receipt["evidence_payload"]["coverage_errors"])
 
+    def test_same_office_and_sol_cannot_complete_without_seed_aac(self):
+        # If every current sibling is also missing AAC, the old fallback
+        # would mark matching Office/Sol# as a complete multi-notice family.
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); db,snapshots=self.build_complete_index(root)
+            p=root/"invented-no-aac-active.csv"
+            write_csv(p, [
+                row("fictional-seed",sol="SOL-1",aac="",office="OFFICE"),
+                row("fictional-peer",sol="SOL-1",aac="",office="OFFICE"),
+            ])
+            ingest_extract_file(
+                db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH,
+            )
+            # Remove known AAC observations in the prior FY2026 archive;
+            # this keeps the full synthetic catalog but isolates all-blank AAC.
+            empty=root/"invented-fy2026-with-no-actions.csv"
+            write_csv(empty, [])
+            ingest_extract_file(
+                db,empty,source_url=ARCHIVE_DOWNLOAD.format(fy=2026),
+                source_kind="ARCHIVE",fiscal_year=2026,observed_at=NOW,
+                snapshot_dir=snapshots,collection_mode=APPROVED_FETCH,
+            )
+            self.assertTrue(index_status(db,fiscal_year=2026,now=NOW_DT)["complete"])
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="fictional-seed",
+                observed_at=NOW,fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertEqual(receipt["action_ids"],["fictional-seed"])
+            self.assertIn(
+                "FAMILY_AAC_ANCHOR_MISSING",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+
+    def test_same_aac_and_sol_cannot_complete_without_seed_office(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);db,snapshots=self.build_complete_index(root)
+            p=root/"invented-no-office-active.csv"
+            write_csv(p,[
+                row("fictional-seed",sol="SOL-1",aac="AAC1",office=""),
+                row("fictional-peer",sol="SOL-1",aac="AAC1",office=""),
+            ])
+            ingest_extract_file(
+                db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH,
+            )
+            empty=root/"invented-fy2026-with-no-actions.csv"
+            write_csv(empty,[])
+            ingest_extract_file(
+                db,empty,source_url=ARCHIVE_DOWNLOAD.format(fy=2026),
+                source_kind="ARCHIVE",fiscal_year=2026,observed_at=NOW,
+                snapshot_dir=snapshots,collection_mode=APPROVED_FETCH,
+            )
+            self.assertTrue(index_status(db,fiscal_year=2026,now=NOW_DT)["complete"])
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="fictional-seed",
+                observed_at=NOW,fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertEqual(receipt["action_ids"],["fictional-seed"])
+            self.assertIn(
+                "FAMILY_SEED_OFFICE_MISSING",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+
+    def test_unknown_aac_peer_blocks_complete_even_with_anchored_seed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);db,snapshots=self.build_complete_index(root)
+            p=root/"invented-unknown-aac-peer.csv"
+            write_csv(p,[
+                row("a2",sol="SOL-1",aac="AAC1",office="OFFICE"),
+                row("fictional-unanchored-peer",sol="SOL-1",aac="",office="OFFICE"),
+            ])
+            ingest_extract_file(
+                db,p,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                observed_at=NOW,snapshot_dir=snapshots,collection_mode=APPROVED_FETCH,
+            )
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertEqual(set(receipt["action_ids"]),{"a1","a2"})
+            self.assertNotIn("fictional-unanchored-peer",receipt["action_ids"])
+            self.assertIn(
+                "FAMILY_UNANCHORED_AAC_PEER_REQUIRES_REVIEW",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+            verdict,_=validate_history_receipts(receipt["action_ids"],[receipt])
+            self.assertEqual(verdict,"HISTORY_UNRESOLVED")
+
     def test_seed_is_never_selected_from_bulk(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db,_=self.build_complete_index(root)
