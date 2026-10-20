@@ -669,6 +669,57 @@ class HistoryIndexTests(unittest.TestCase):
                 receipt["evidence_payload"]["coverage_errors"],
             )
 
+    def test_same_notice_id_different_in_scope_sol_is_not_complete(self):
+        # Identical NoticeId can appear across current source snapshots.
+        # The history query filters by requested Sol#, so a second source
+        # with changed Sol# was previously silently omitted from a
+        # supposedly COMPLETE notice-family receipt.
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);db,snapshots=self.build_complete_index(root)
+            p=root/"fictional-earlier-solicitation.csv"
+            write_csv(p,[
+                row("a2",sol="EARLIER-SOL-NUMBER",aac="AAC1",office="OFFICE")
+            ])
+            ingest_extract_file(
+                db,p,source_url=ARCHIVE_DOWNLOAD.format(fy=2025),
+                source_kind="ARCHIVE",fiscal_year=2025,
+                observed_at=NOW,snapshot_dir=snapshots,
+                collection_mode=APPROVED_FETCH,
+            )
+            self.assertTrue(index_status(db,fiscal_year=2026,now=NOW_DT)["complete"])
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+            self.assertEqual(set(receipt["action_ids"]),{"a1","a2"})
+            self.assertIn(
+                "NOTICE_ID_SOLICITATION_HISTORY_CONFLICT_REQUIRES_REVIEW",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+
+    def test_out_of_scope_notice_id_other_sol_does_not_contaminate_prior_fy(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);db,snapshots=self.build_complete_index(root)
+            p=root/"fictional-unapproved-future-solicitation.csv"
+            write_csv(p,[row("a2",sol="FUTURE-OTHER-SOL",aac="AAC1",office="OFFICE")])
+            ingest_extract_file(
+                db,p,source_url=ARCHIVE_DOWNLOAD.format(fy=2027),
+                source_kind="ARCHIVE",fiscal_year=2027,
+                observed_at=NOW,snapshot_dir=snapshots,
+                collection_mode="OPERATOR_FILE",
+            )
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"],"COMPLETE")
+            self.assertEqual(set(receipt["action_ids"]),{"a1","a2"})
+            self.assertNotIn(
+                "NOTICE_ID_SOLICITATION_HISTORY_CONFLICT_REQUIRES_REVIEW",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+
     def test_seed_is_never_selected_from_bulk(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db,_=self.build_complete_index(root)
