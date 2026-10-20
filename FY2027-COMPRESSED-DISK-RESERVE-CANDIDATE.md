@@ -60,3 +60,18 @@ space independently; the capacity check and the 4 GiB reserve do not
 guarantee uninterrupted free space. Protected-main, reviewed publisher
 sources, actual disk-encryption status, authenticated off-device restore
 and customer release remain BLOCKED.
+
+
+## Exact shared gzip expansion bound
+
+The disk preflight and final immutable gzip writer use **the same**
+`worst_case_gzip_bytes(original_bytes)` function. Previously, preflight
+correctly allowed at least 1% or 256 KiB expansion, while the writer
+rejected output exceeding the original by just 4 KiB. That inconsistency
+could discard a valid large incompressible original after a successful
+download. A dedicated 16 MiB high-entropy fictional-source regression
+now requires successful lossless retention even when gzip expands by more
+than 4 KiB, while still rejecting output beyond the conservative
+preflight allowance. This change does not increase source download
+limits or weaken checksum, protected-origin, private-file, catalog or
+customer-release checks.
