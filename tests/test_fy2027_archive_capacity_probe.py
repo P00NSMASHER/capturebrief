@@ -267,5 +267,64 @@ class SourceCapacityTests(unittest.TestCase):
             self.assertIs(doc[blocked],False,blocked)
 
 
+    def test_evidence_matrix_links_every_original_sha_to_its_exact_receipt(self):
+        """Never assign a source SHA/row count to an unobserved fiscal year."""
+        root=Path(__file__).resolve().parents[1]/"research"
+        def load(name):
+            return json.loads((root/name).read_text(encoding="utf-8"))
+        sizes=load("fy2027_archive_capacity_observation_20261020.json")
+        early=load("fy2027_early_archive_full_byte_observations_20261020.json")
+        later=load("fy2027_1999_2001_public_original_observations_20261020.json")
+        ledger=load("fy2027_candidate_source_evidence_matrix_20261020.json")
+        self.assertIs(sizes["source_publisher_authenticity_independently_established"],False)
+        self.assertIs(early["source_catalog_approved"],False)
+        self.assertIs(later["independent_human_catalog_approval"],False)
+        self.assertEqual(later["source_commit"],
+                         "0a880d955d88d3fe689a0efc532834268be7ce9c")
+        observed={}
+        for o in early["observations"]:
+            self.assertNotIn(o["fiscal_year"],observed)
+            observed[o["fiscal_year"]]=(o["sha256"],o["csv_rows"],
+                    o["bytes"],"ONE_TIME_PUBLIC_FULL_BYTE_IN_MEMORY_OBSERVATION_UNAPPROVED")
+        for o in later["observations"]:
+            self.assertNotIn(o["fy"],observed)
+            observed[o["fy"]]=(o["sha256"],o["csv_rows"],
+                    o["original_bytes"],"ONE_TIME_PUBLIC_FULL_BYTE_IN_MEMORY_OBSERVATION_UNAPPROVED")
+        observed[2027]=(
+            "7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce",
+            1104,1607260,"EXACT_PRIVATE_LOCAL_ORIGINAL_RETAINED_UNAPPROVED",
+        )
+        self.assertEqual(len(observed),9)
+        archive=ledger["archive_evidence"]
+        self.assertEqual(len(archive),34)
+        for row in archive:
+            fy=row["fiscal_year"]
+            self.assertEqual(
+                row["server_declared_original_bytes"],
+                sizes["year_size_bytes"]["FY"+str(fy)],
+            )
+            self.assertFalse(row["independent_publisher_review_approved"])
+            self.assertFalse(row["source_catalog_admitted"])
+            self.assertFalse(row["independent_encrypted_offdevice_restore_verified"])
+            if fy in observed:
+                sha,rows,declared,classification=observed[fy]
+                self.assertEqual(row["observed_full_original_sha256"],sha)
+                self.assertEqual(row["observed_csv_rows"],rows)
+                self.assertEqual(row["server_declared_original_bytes"],declared)
+                self.assertEqual(row["evidence_class"],classification)
+                self.assertEqual(
+                    row["source_original_durably_retained_on_authorized_pc"],
+                    fy==2027,
+                )
+            else:
+                self.assertIsNone(row["observed_full_original_sha256"])
+                self.assertIsNone(row["observed_csv_rows"])
+                self.assertEqual(
+                    row["evidence_class"],
+                    "BOUNDED_RANGE_AND_SIZE_ONLY_UNAPPROVED",
+                )
+                self.assertFalse(row["source_original_durably_retained_on_authorized_pc"])
+
+
 if __name__ == "__main__":
     unittest.main()
