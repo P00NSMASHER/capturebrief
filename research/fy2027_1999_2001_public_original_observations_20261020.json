@@ -14,7 +14,7 @@
   "blank_solicitation_rows_total": 265,
   "blank_aac_rows_total": 1157,
   "blank_office_rows_total": 1157,
-  "blank_aac_and_office_overlap_unmeasured": true,
+  "blank_aac_and_office_overlap_unmeasured": false,
   "observations": [
     {
       "fy": 1999,
@@ -30,7 +30,12 @@
       "required_headers_present": true,
       "malformed_csv_rows": 0,
       "original_retained": false,
-      "approved": false
+      "approved": false,
+      "blank_aac_and_office_rows": 428,
+      "repeated_nonblank_solicitation_groups": 238,
+      "repeated_groups_with_missing_agency_or_office": 75,
+      "repeated_groups_with_multiple_known_aacs": 1,
+      "repeated_groups_with_multiple_offices_inside_known_aac": 0
     },
     {
       "fy": 2000,
@@ -46,7 +51,12 @@
       "required_headers_present": true,
       "malformed_csv_rows": 0,
       "original_retained": false,
-      "approved": false
+      "approved": false,
+      "blank_aac_and_office_rows": 255,
+      "repeated_nonblank_solicitation_groups": 165,
+      "repeated_groups_with_missing_agency_or_office": 39,
+      "repeated_groups_with_multiple_known_aacs": 0,
+      "repeated_groups_with_multiple_offices_inside_known_aac": 0
     },
     {
       "fy": 2001,
@@ -62,7 +72,12 @@
       "required_headers_present": true,
       "malformed_csv_rows": 0,
       "original_retained": false,
-      "approved": false
+      "approved": false,
+      "blank_aac_and_office_rows": 474,
+      "repeated_nonblank_solicitation_groups": 234,
+      "repeated_groups_with_missing_agency_or_office": 79,
+      "repeated_groups_with_multiple_known_aacs": 1,
+      "repeated_groups_with_multiple_offices_inside_known_aac": 0
     }
   ],
   "original_source_bytes_durably_retained": false,
@@ -72,5 +87,12 @@
   "source_index_updated": false,
   "offdevice_backup_verified": false,
   "customer_release_authorized": false,
-  "external_send_authorized": false
+  "external_send_authorized": false,
+  "additional_family_distribution_observation_run": "https://github.com/P00NSMASHER/capturebrief/actions/runs/39367333629",
+  "additional_family_distribution_source_commit": "ad9396d0ed5e516b271b4f897c0caec41fe8d45c",
+  "repeated_nonblank_solicitation_group_total": 637,
+  "repeated_group_with_missing_agency_or_office_total": 193,
+  "repeated_group_with_multiple_known_aacs_total": 2,
+  "repeated_group_with_multiple_offices_inside_known_aac_total": 0,
+  "blank_aac_and_office_rows_total": 1157
 }
