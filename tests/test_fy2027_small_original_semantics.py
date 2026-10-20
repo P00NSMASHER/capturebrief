@@ -148,5 +148,55 @@ class EarlyOriginalSafetyTests(unittest.TestCase):
                     m.validate_frozen_sizes()
 
 
+    def test_frozen_real_three_source_original_evidence_remains_unapproved(self):
+        """Never promote small publisher full-byte reads into catalog approval."""
+        path=(m.ROOT/"research"/
+              "fy2027_1999_2001_public_original_observations_20261020.json")
+        doc=json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            doc["schema"],
+            "capturebrief-fy2027-bounded-early-original-full-byte-evidence-v1",
+        )
+        self.assertEqual(
+            doc["observation_source"],
+            "https://github.com/P00NSMASHER/capturebrief/actions/runs/39366738245",
+        )
+        self.assertEqual(doc["source_commit"],
+                         "0a880d955d88d3fe689a0efc532834268be7ce9c")
+        by_year={o["fy"]:o for o in doc["observations"]}
+        self.assertEqual(set(by_year),set(m.YEARS))
+        self.assertEqual(doc["raw_original_bytes_read_into_memory"],m.MAX_BYTES)
+        self.assertEqual(doc["observed_rows_total"],3929)
+        self.assertEqual(doc["blank_solicitation_rows_total"],265)
+        self.assertEqual(doc["blank_aac_rows_total"],1157)
+        self.assertEqual(doc["blank_office_rows_total"],1157)
+        for fy, expected in {
+            1999:("def8f8be6b002dc7df31e478c68aaeb7d1bec6bed9c4fa030f24f6970c8bca8c",1415),
+            2000:("94eb95631fa44a401dfd1fcb4f18e1082ddb22bf45c1e3a69533c2288d37e6f1",1047),
+            2001:("5d6aeca22b38784626f9259f6a7973f912c485a1ebe67ea0a83acbc1597b51a5",1467),
+        }.items():
+            with self.subTest(year=fy):
+                row=by_year[fy]
+                self.assertEqual(row["sha256"],expected[0])
+                self.assertEqual(row["csv_rows"],expected[1])
+                self.assertEqual(row["original_bytes"],m.SIZES[fy])
+                self.assertTrue(row["required_headers_present"])
+                self.assertEqual(row["header_columns"],47)
+                self.assertEqual(row["blank_notice_id_rows"],0)
+                self.assertEqual(row["duplicate_notice_id_rows"],0)
+                self.assertFalse(row["approved"])
+                self.assertFalse(row["original_retained"])
+        for flag in (
+            "original_source_bytes_durably_retained",
+            "source_file_upstream_independently_adjudicated",
+            "independent_human_catalog_approval",
+            "complete_34_year_original_coverage",
+            "source_index_updated","offdevice_backup_verified",
+            "customer_release_authorized","external_send_authorized",
+        ):
+            self.assertIs(doc[flag],False,flag)
+        self.assertIs(doc["blank_aac_and_office_overlap_unmeasured"],True)
+
+
 if __name__=="__main__":
     unittest.main()
