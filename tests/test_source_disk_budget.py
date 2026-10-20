@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import subprocess
 import sys
 import tempfile
@@ -147,6 +148,50 @@ class PrivateDiskBudgetTests(unittest.TestCase):
             self.assertEqual(calls,[])
             self.assertEqual(list(d.iterdir()),[])
 
+
+
+    def test_valid_incompressible_original_exceeds_old_4k_ceiling(self):
+        # Deterministic fake original of high entropy; no real SAM bytes.
+        # Deflate stored-block overhead is >4 KiB for a legitimate large
+        # incompressible file. Keep one shared 1%/256KiB upper bound from
+        # the disk preflight through final immutable source publication.
+        fake = hashlib.shake_256(
+            b"CAPTUREBRIEF_FAKE_HIGH_ENTROPY_ORIGINAL"
+        ).digest(16 * 1024 * 1024)
+        seen = []
+        def opener(request, *, timeout):
+            seen.append(request.full_url)
+            return FakeFullResponse(request.full_url, fake)
+        with private_tempdir() as td:
+            dest = Path(td) / "private"
+            with patch.object(
+                budget.shutil, "disk_usage",
+                return_value=SimpleNamespace(free=100 * 2**30),
+            ):
+                result = retention.retain_compressed_candidate(
+                    2027, dest, opener=opener,
+                    expected_size=len(fake),
+                )
+            self.assertEqual(len(seen), 1)
+            self.assertEqual(result["original_sha256"],
+                             hashlib.sha256(fake).hexdigest())
+            self.assertGreater(result["gzip_bytes"], len(fake) + 4096)
+            self.assertLessEqual(
+                result["gzip_bytes"],
+                budget.worst_case_gzip_bytes(len(fake)),
+            )
+            verify = retention.verify_compressed_candidate(
+                2027, dest,
+                original_sha256=result["original_sha256"],
+                synthetic_test=True,
+            )
+            self.assertEqual(
+                verify["status"],
+                "PRIVATE_GZIP_CANDIDATE_BYTE_INTEGRITY_PASS_ONLY",
+            )
+            self.assertFalse(verify["customer_release_authorized"])
+            self.assertFalse(verify["offdevice_backup_verified"])
+            self.assertFalse(list(dest.glob("*.tmp")))
 
 
 if __name__=="__main__":
