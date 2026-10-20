@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 from capturebrief_core.data_services import REQUIRED_COLUMNS
+from capturebrief_core.source_policy import SourcePolicyError
 from scripts import audit_fy2027_small_public_originals as m
 
 
@@ -81,7 +82,7 @@ class EarlyOriginalSafetyTests(unittest.TestCase):
             x=FakeResponse("https://evil.example/signed?X-Amz-Credential=DO_NOT_LOG",data)
             out.append(x)
             return x
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(SourcePolicyError) as context:
             m.observe_public_original(1999,opener=opener,size_override=len(data))
         self.assertNotIn("DO_NOT_LOG",str(context.exception))
         self.assertEqual(out[0].reads,[])
