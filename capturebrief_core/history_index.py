@@ -754,6 +754,8 @@ def issue_history_receipt_from_index(
                 # Even if all same-AAC sibling rows lack Office, their
                 # identity is not sufficiently anchored for completeness.
                 errors.append("FAMILY_SEED_OFFICE_MISSING")
+                if len(known_offices) > 1 or (known_offices and office_unspecified):
+                    errors.append("FAMILY_OFFICE_COLLISION_REQUIRES_REVIEW")
                 family_rows = [
                     row for row in anchored
                     if row.get("notice_id") == seed_notice_id
