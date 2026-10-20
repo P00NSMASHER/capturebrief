@@ -225,5 +225,18 @@ class CompressedCandidateOfflineTests(unittest.TestCase):
                 )
 
 
+    @unittest.skipIf(os.name == "nt", "POSIX directory bits do not model NTFS ACLs")
+    def test_private_directory_with_world_or_group_read_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "world-readable-archive"
+            p.mkdir()
+            p.chmod(0o755)
+            with self.assertRaisesRegex(ValueError, "group/other"):
+                m._private_dir(p)
+            p.chmod(0o700)
+            self.assertEqual(m._private_dir(p), p.resolve())
+
+
+
 if __name__ == "__main__":
     unittest.main()
