@@ -63,6 +63,7 @@ def write_csv(path:Path, rows):
 class FakeResponse:
     def __init__(self,data:bytes):
         self._io=io.BytesIO(data)
+        self.status=200
         self.headers={"Content-Length":str(len(data))}
     def read(self,n=-1): return self._io.read(n)
     def __enter__(self): return self
@@ -347,10 +348,52 @@ class HistoryIndexTests(unittest.TestCase):
             self.assertEqual(dest.read_bytes(),b"previous")
             self.assertFalse((root/"active.csv.download.lock").exists())
 
+    def test_http_original_status_and_transfer_contract_fail_before_read(self):
+        # A signed first-party S3 URL alone is not evidence of a complete
+        # unencoded publisher original. Reject range responses, missing
+        # status, compressed transfer or a Content-Range header BEFORE
+        # reading even one byte of the source or altering existing files.
+        class TrackedOriginal(FakeResponse):
+            def __init__(self,data):
+                super().__init__(data)
+                self.read_calls=0
+            def read(self,n=-1):
+                self.read_calls+=1
+                return super().read(n)
+        variants=(
+            ("partial-response",206,None,None),
+            ("unexpected-redirect",302,None,None),
+            ("status-unavailable",None,None,None),
+            ("compressed-transfer",200,"gzip",None),
+            ("byte-range-with-200",200,None,"bytes 0-2/9"),
+        )
+        for case,status,encoding,range_header in variants:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as td:
+                root=Path(td);dest=root/"active-original.csv"
+                dest.write_bytes(b"existing-complete-private-original")
+                observed=TrackedOriginal(b"abc")
+                observed.status=status
+                if encoding is not None:
+                    observed.headers["Content-Encoding"]=encoding
+                if range_header is not None:
+                    observed.headers["Content-Range"]=range_header
+                def opener(req,timeout=120):
+                    self.assertEqual(req.get_header("Accept-encoding"),"identity")
+                    return observed
+                with self.assertRaisesRegex(HistoryIndexError,"original"):
+                    download_extract_to_file(
+                        dest,source_url=ACTIVE_DOWNLOAD,opener=opener,
+                    )
+                self.assertEqual(observed.read_calls,0)
+                self.assertEqual(dest.read_bytes(),b"existing-complete-private-original")
+                self.assertEqual(list(root.glob(".*.download")),[])
+                self.assertFalse((root/"active-original.csv.download.lock").exists())
+
     def test_truncated_content_length_is_rejected_before_publication(self):
         class TruncatedResponse(FakeResponse):
             def __init__(self):
                 self._io=io.BytesIO(b"abc")
+                self.status=200
                 self.headers={"Content-Length":"9"}
 
         with tempfile.TemporaryDirectory() as td:
@@ -370,6 +413,7 @@ class HistoryIndexTests(unittest.TestCase):
         class InvalidLengthResponse(FakeResponse):
             def __init__(self):
                 self._io=io.BytesIO(b"abc")
+                self.status=200
                 self.headers={"Content-Length":"not-an-integer"}
 
         with tempfile.TemporaryDirectory() as td:
