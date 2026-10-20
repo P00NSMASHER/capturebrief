@@ -390,3 +390,68 @@ approved full catalog or customer pilot. The full-byte check is
 I/O-intensive (proportional to genuine retained catalog size);
 do not quietly bypass it for performance without an independently
 validated alternative.
+
+
+## October 19 — eight-candidate exact original-to-index row fidelity validation
+
+A newly reproducible source-coverage false-positive was demonstrated
+with fictional inputs on PAAM-L044: an otherwise complete FY2026
+catalog could report `complete=true` even after a retained source
+original's SQLite `local_path` pointed to a nonexistent file.
+A second issue allowed a current UNAPPROVED FY2027 source notice to
+contaminate a `COMPLETE` FY2026 history-family receipt when
+solicitation number and AAC matched. PR #51 now checks every required
+retained original's SHA-256/size/private root/official source URL,
+required SQLite row counts and identifier validity, and strictly
+limits family evidence to the requested approved FY source slots.
+
+An additional independent acceptance gap existed for a *mutated
+SQLite projection with the same row count and correct complete original
+file SHA*. New DRAFT operator-only **PR #62** provides a read-only,
+on-demand row-by-row source-to-index audit. It recomputes every
+original row digest and checks exact NoticeId, normalized Sol#,
+AAC/agency/office/date/link values against one private source
+snapshot, using only an approved explicit local source root.
+
+On PAAM-L044 with the exact PR #62 head
+`47b1341ab1419b392a661ce803f60f7f7c6193e3`:
+
+- Eight synthetic adversarial source-to-row projection tests **PASSED**
+  using local Python 3.13; GitHub Actions [#39363457248](https://github.com/P00NSMASHER/capturebrief/actions/runs/39363457248)
+  independently **PASSED Linux and Windows**.
+- The real previously verified FY2027 original
+  (`1,607,260` bytes, SHA-256
+  `7b4e00e3156248db9dcca767431bb6c5d4168aeeb2abc707ab12c0f9e61d71ce`)
+  was indexed once as **UNAPPROVED OPERATOR_FILE** inside a disposable
+  SQLite test folder. The on-demand auditor verified **all 1,104
+  real notice-row projections** matched the actual original. A
+  deliberate date-field mutation to ONLY that temporary SQLite
+  record was then correctly rejected while the original full-file
+  SHA remained identical. No notice details, bytes or customer
+  records were uploaded or published. Disposable SQLite evidence was
+  deleted, original+receipt SHA remained intact.
+- PAAM's preexisting AES-256-GCM FY2027 local backup, independently
+  reverified by SHA-256, remains a *local-only* DPAPI protected
+  candidate. It is **not a remotely stored ciphertext with a
+  separately recovered key**. PAAM had about **14.70 GiB** free at
+  the last read-only original+backup check.
+
+The new eight-head, **synthetic-only, NO DEPLOY** composition included
+PR #51, #52, #53, #55, #54, #57, #61, and #62 as exact pinned
+heads; the website candidate #50 remained separate. Actual
+[GitHub Actions run #39363676788](https://github.com/P00NSMASHER/capturebrief/actions/runs/39363676788)
+at QA source head
+`5c520c0b2b56cde6dd5627cd70c064781044c287`
+**PASSED**: **582 Linux tests, 185 Windows tests (1 skipped)**,
+Chromium/WebKit integrated no-external-POST buyer and fictional
+payment checks, and clean disposable eight-branch Git merges.
+No production or protected branches were mutated.
+
+All FY2027 release gates remain explicitly **NOT APPROVED**:
+human-reviewed 34-year FY2027 source catalog and exact source
+retention/index, independent source-publisher authenticity,
+whole-device encryption, independently recoverable recovery-key
+escrow with encrypted off-device backup and actual downloaded remote
+restore, independent code approvers, real customer authorization,
+verified delivery/paid transaction, and a genuine 14-day live watch.
+The passing tests do not override these holds.
