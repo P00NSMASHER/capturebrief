@@ -324,3 +324,69 @@ restore, human publisher FY2027 catalog/source-index signoff,
 independent code/production approval and real customer + 14-day watch
 are **STILL UNVERIFIED**. No charges, customers, published claims,
 external emails or deployments were initiated by this QA.
+
+
+## October 19 — source-original byte attestation and fiscal-year isolation QA
+
+The **real PAAM-L044** source-integrity investigation reproduced
+two serious false-completeness defects with entirely **FICTIONAL**
+FY2026/FY2027 inputs:
+
+1. **Missing retained original:** After building an apparently
+   complete synthetic FY2026 source archive, changing a source's
+   SQLite `local_path` to a missing file still left
+   `index_status(..., fiscal_year=2026)["complete"] == True`.
+2. **Future-year contamination:** After adding an UNAPPROVED
+   FY2027 `OPERATOR_FILE` notice that shared a solicitation number
+   and AAC with an approved FY2026 family, the historical FY2026
+   receipt erroneously included that unapproved notice and returned
+   `COMPLETE`.
+
+PR #51 exact candidate head
+`d1fadd4779a96df3ab78e6e8af4e2a843078a35b` now:
+
+- Mandatory release-bearing source verification streams full retained
+  original-file bytes against the SHA-256 and byte count stored in the
+  source snapshot, accepts only an explicit private authorized
+  `snapshot_root` (or index containing directory), and rejects source
+  URLs, fiscal years, kinds, timestamps and filenames outside the
+  approved slot contract. Missing or mismatched original bytes become
+  `UNVERIFIED` and block `COMPLETE`, regardless of SQLite
+  `APPROVED_FETCH` flags.
+- Checks each required current SQLite snapshot's indexed action rows
+  against its recorded ingest row count, contiguous positions and
+  nonempty NoticeId values. Zero-row historical CSVs are valid, but
+  a deleted indexed action invalidates `COMPLETE`.
+- Restricts both action-family joins and emitted source evidence to the
+  **exact approved required fiscal-year slots**. Future/unapproved
+  FY2027 rows can exist in the operator's SQLite without appearing
+  in a FY2026 receipt. A future/unapproved seed cannot manufacture
+  a complete older-year family.
+
+At exact head, [Product Core
+#39362749702](https://github.com/P00NSMASHER/capturebrief/actions/runs/39362749702)
+and [#39362754058](https://github.com/P00NSMASHER/capturebrief/actions/runs/39362754058)
+passed **Linux and Windows** after a synthetic test initially held
+an SQLite write lock while reading status; the *fixture* was corrected
+without weakening production checks.
+
+The [seven-head disposable QA composition
+#39362798263](https://github.com/P00NSMASHER/capturebrief/actions/runs/39362798263)
+at QA workflow commit
+`fbcf2546b4b046a6eafba52abe2f011c2b8a26ec`
+**PASSED 574 Linux tests, 177 Windows tests (one skipped),
+Chromium + WebKit no-external-POST buyer-to-case-to-payment controls**.
+All merges remained ephemeral and the real site/approved catalog
+were unchanged.
+
+A returned `local_original_hashes_verified` covers locally retained
+bytes in **required slots only**, against locally stored fingerprints.
+It is NOT human/source-publisher attestation, does not guarantee
+immutable or independently checked SQLite row semantics against
+publisher originals in adversarial storage, and does not replace the
+required signed source evidence, encrypted off-device backup,
+independently recoverable key, device encryption, independent reviewers,
+approved full catalog or customer pilot. The full-byte check is
+I/O-intensive (proportional to genuine retained catalog size);
+do not quietly bypass it for performance without an independently
+validated alternative.
