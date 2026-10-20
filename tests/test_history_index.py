@@ -310,6 +310,60 @@ class HistoryIndexTests(unittest.TestCase):
             self.assertNotIn("z9",receipt["action_ids"])
             self.assertEqual(receipt["evidence_payload"]["family"]["aac_code"],"AAC1")
 
+    def test_unapproved_fy2027_actions_cannot_pollute_approved_fy2026_receipt(self):
+        # Reproduced earlier: inserting an OPERATOR_FILE FY2027 snapshot
+        # with the SAME solicitation and AAC caused a FY2026 receipt to
+        # include a future notice yet still assert COMPLETE. The scope and
+        # emitted evidence must both remain restricted to required FYs.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            db, _ = self.build_complete_index(root)
+            future = root / "FICTIONAL_FY2027_UNAPPROVED.csv"
+            write_csv(
+                future,
+                [row("fictional-not-approved-2027", sol="SOL-1",
+                     aac="AAC1", active="No")],
+            )
+            ingest_extract_file(
+                db, future,
+                source_url=ARCHIVE_DOWNLOAD.format(fy=2027),
+                source_kind="ARCHIVE", fiscal_year=2027,
+                observed_at=NOW, collection_mode="OPERATOR_FILE",
+            )
+            status = index_status(db, fiscal_year=2026, now=NOW_DT)
+            self.assertTrue(status["complete"])
+            self.assertIn("ARCHIVE:2027", status["present_slots"])
+            receipt = issue_history_receipt_from_index(
+                db, solicitation_number="SOL-1", seed_notice_id="a2",
+                observed_at=NOW, fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"], "COMPLETE")
+            self.assertEqual(set(receipt["action_ids"]), {"a1", "a2"})
+            self.assertNotIn("fictional-not-approved-2027", receipt["action_ids"])
+            scope = receipt["evidence_payload"]["scope"]
+            self.assertTrue(scope["out_of_scope_source_snapshots_excluded"])
+            self.assertNotIn(2027, scope["supplied_archive_fys"])
+            self.assertTrue(all(
+                row["fiscal_year"] != 2027
+                for row in receipt["evidence_payload"]["source_snapshots"]
+            ))
+            self.assertTrue(receipt["evidence_payload"]["retained_original_hashes_verified"])
+            self.assertFalse(receipt["evidence_payload"]["publisher_origin_independently_attested"])
+
+            # Using the unapproved future notice as seed for FY2026 must
+            # not use that row to manufacture an in-scope history family.
+            future_seed = issue_history_receipt_from_index(
+                db, solicitation_number="SOL-1",
+                seed_notice_id="fictional-not-approved-2027",
+                observed_at=NOW, fiscal_year=2026,
+            )
+            self.assertEqual(future_seed["status"], "OBSERVED_ONLY")
+            self.assertEqual(future_seed["action_ids"], [])
+            self.assertIn(
+                "SEED_NOTICE_NOT_IN_CURRENT_INDEX",
+                future_seed["evidence_payload"]["coverage_errors"],
+            )
+
     def test_seed_is_never_selected_from_bulk(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db,_=self.build_complete_index(root)
