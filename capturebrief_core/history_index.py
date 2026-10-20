@@ -405,7 +405,10 @@ def ingest_extract_file(
         rows_scanned = 0
         batch: list[tuple[Any, ...]] = []
 
-        with retained_path.open("r", encoding=_encoding(retained_path), errors="replace", newline="") as handle:
+        # Fail closed on undecodable publisher bytes. Replacement characters can
+        # silently alter NoticeId, solicitation and source-row digests while
+        # leaving a superficially complete source index.
+        with retained_path.open("r", encoding=_encoding(retained_path), errors="strict", newline="") as handle:
             reader = csv.DictReader(handle, restkey="_extra")
             missing = REQUIRED_COLUMNS - set(reader.fieldnames or [])
             if missing:
