@@ -272,3 +272,55 @@ customer payment and fourteen-day live case watch remain unverified.
 No main/gh-pages merge, paid customer release, actual customer
 contact, live charge, independent signoff or production deployment
 was performed.
+
+
+## October 19 — NoticeId and strict original-byte decoding final composition
+
+The verified live original FY2027 source contains **1,104 notices**,
+seven blank `Sol#` fields, **zero blank `NoticeId` fields**, and
+no observed undecodable values. A separate invented-byte regression
+proved that the earlier importer would nevertheless accept an absent
+`NoticeId` as an indexed record and silently replace undefined cp1252
+bytes inside `NoticeId` with U+FFFD. Both paths could corrupt
+source-to-notice identity in a history mistakenly reported complete.
+
+The final PR #51 candidate source at
+`21f0e188e4490a65bafd711c478b60562f794384` now:
+- Rejects blank normalized `Sol#` input **before a family join**;
+- Rejects source rows missing their primary `NoticeId` before any
+  row can be registered as a current source snapshot, with atomic
+  SQLite rollback;
+- Rejects invalid CSV characters via `errors="strict"` instead of
+  silently altering evidence identifiers;
+- Preserves legitimate zero-row header-only archives and valid
+  Windows-1252 accented text without alteration.
+
+[Product Core #39360792881](https://github.com/P00NSMASHER/capturebrief/actions/runs/39360792881)
+passed Linux and Windows at this exact PR #51 head. Genuine local
+PAAM-L044 read-only testing confirmed that the authentic FY2027 source
+still strictly decodes, ingests exactly 1,104 rows into an ephemeral
+unapproved SQLite source index and replays idempotently. The temporary
+database was removed, and full-coverage checks still blocked due to
+an approved catalog ending at FY2026. On-demand guarded source checks
+of five small official FY original CSVs (1969, 1970, 1980, 1981,
+1998) also passed strict text decoding, verified required headers
+and remained **in-memory only**, with no durable source retention.
+
+The combined [NO-DEPLOY acceptance run
+#39360914919](https://github.com/P00NSMASHER/capturebrief/actions/runs/39360914919)
+at QA workflow head
+`c36406f76d6d3389c517e73cb205a652bc554e73`
+passed **567 actual Linux tests; 170 actual Windows tests with
+one skip; Chromium and WebKit no-send integrated case tests**.
+All seven exact candidate heads were merged only inside disposable
+CI workspaces. Existing latest candidate guards for source transport,
+private encrypted backup, compressed archival sizing, strict source
+originals, invoice/buyer flow and payment reconciliation remained
+compatible. **No main or gh-pages branch was modified.**
+
+Actual independently verified whole-device encryption, encrypted
+off-device original AND independent recovery key with proved remote
+restore, human publisher FY2027 catalog/source-index signoff,
+independent code/production approval and real customer + 14-day watch
+are **STILL UNVERIFIED**. No charges, customers, published claims,
+external emails or deployments were initiated by this QA.
