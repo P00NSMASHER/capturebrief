@@ -20,6 +20,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import stat
 import subprocess
 import sys
@@ -90,9 +91,16 @@ def _private_dir(directory: str | Path) -> Path:
             "if($sid -in $groups){exit 4}"
             "};exit 0"
         )
+        # GitHub's Windows CI images run PowerShell 7; their legacy Windows
+        # PowerShell 5.1 install may refuse to autoload Security/Get-Acl.
+        # Prefer the supported pwsh module environment, falling back to the
+        # local operator's Windows PowerShell only where pwsh is unavailable.
+        shell = shutil.which("pwsh.exe") or shutil.which("powershell.exe")
+        if shell is None:
+            raise ValueError("No supported Windows ACL inspector available")
         try:
             checked = subprocess.run(
-                ["powershell.exe", "-NoProfile", "-NonInteractive",
+                [shell, "-NoProfile", "-NonInteractive",
                  "-Command", ps],
                 input=str(real), text=True, capture_output=True,
                 check=False, timeout=20,
@@ -100,14 +108,7 @@ def _private_dir(directory: str | Path) -> Path:
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise ValueError("Private NTFS ACL cannot be independently read") from exc
         if checked.returncode != 0:
-            # This diagnostic runs ONLY against isolated invented source trees
-            # in ephemeral GitHub CI. Never expose private operator path or
-            # arbitrary PowerShell/provider stderr in production use.
-            if os.environ.get("GITHUB_ACTIONS") == "true":
-                message = checked.stderr.replace(str(real), "<CI_PRIVATE_FIXTURE>")
-                message = re.sub(r"[A-Za-z]:\\\\[^\s\"']+", "<CI_PATH>", message)
-                print("SYNTHETIC_ACL_CHECK_FAILURE: " + repr(message[:650]), file=sys.stderr)
-            raise ValueError(f"Private NTFS ACL not accepted (safe status {checked.returncode})")
+            raise ValueError("Private NTFS ACL grants broad access or is unverified")
     elif real.stat().st_mode & 0o077:
         raise ValueError("Private source directory grants group/other access")
     return real
