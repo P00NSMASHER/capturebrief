@@ -409,11 +409,26 @@ def ingest_extract_file(
         # silently alter NoticeId, solicitation and source-row digests while
         # leaving a superficially complete source index.
         with retained_path.open("r", encoding=_encoding(retained_path), errors="strict", newline="") as handle:
-            reader = csv.DictReader(handle, restkey="_extra")
-            missing = REQUIRED_COLUMNS - set(reader.fieldnames or [])
+            reader = csv.DictReader(handle, restkey="_extra", strict=True)
+            columns = list(reader.fieldnames or [])
+            missing = REQUIRED_COLUMNS - set(columns)
             if missing:
                 raise HistoryIndexError(f"extract missing required columns: {sorted(missing)}")
+            if (len(columns) != len(set(columns))
+                    or any(not isinstance(name, str) or not name.strip()
+                           for name in columns)
+                    or "_extra" in columns):
+                raise HistoryIndexError("extract contains duplicate, blank or reserved CSV headers")
             for row_number, row in enumerate(reader, start=1):
+                # A row containing extra fields is exposed under DictReader's
+                # _extra key, which is intentionally not included in raw-row
+                # canonicalization below. An omitted trailing column becomes
+                # None and otherwise silently changes the original evidence.
+                # Reject both before a source snapshot can be committed.
+                if "_extra" in row or any(row.get(name) is None for name in columns):
+                    raise HistoryIndexError(
+                        f"source original row {row_number} has an invalid column count"
+                    )
                 # Never create an apparently complete original-history
                 # snapshot containing an action with no primary NoticeId.
                 # Such a row cannot be linked or independently reviewed,
