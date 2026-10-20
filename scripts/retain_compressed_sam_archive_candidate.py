@@ -20,6 +20,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 import sys
 import tempfile
 from datetime import datetime, timezone
@@ -51,6 +52,13 @@ def _private_dir(directory: str | Path) -> Path:
         junction = getattr(item, "is_junction", None)
         if item.is_symlink() or (junction is not None and junction()):
             raise ValueError("Private source destination includes an unsafe reparse point")
+        # Python 3.11 does not expose Path.is_junction() on Windows. The
+        # file-attributes bit still catches junctions and other reparse
+        # points on that interpreter, instead of silently following them.
+        if os.name == "nt" and item.exists():
+            flags = getattr(item.lstat(), "st_file_attributes", 0)
+            if flags & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400):
+                raise ValueError("Original-source destination has Windows reparse point")
     real = raw.resolve(strict=False)
     if real == ROOT or real.is_relative_to(ROOT):
         raise ValueError("Private source originals cannot be stored inside public Git")
@@ -292,12 +300,34 @@ def verify_compressed_candidate(year: int, private_dir: str | Path,
     if not 0 < len(raw) <= MAX_MANIFEST_BYTES:
         raise ValueError("Private source manifest outside size bound")
     r = json.loads(raw.decode("utf-8"), object_pairs_hook=_decode_unique)
-    if not isinstance(r, dict) or _canonical(r) != raw:
+    required_fields = {
+        "schema", "source_entrypoint", "source_metadata_reference",
+        "metadata_class", "fiscal_year", "original_bytes", "original_sha256",
+        "gzip_sha256", "gzip_bytes", "gzip_format",
+        "verified_decompressed_original_sha256",
+        "verified_decompressed_original_bytes", "original_observed_at",
+        "trusted_delivery_host", "synthetic_test_override",
+        "original_stored_uncompressed", "catalog_approved",
+        "private_source_index_updated", "full_catalog_history_verified",
+        "publisher_originals_independently_reviewed",
+        "offdevice_backup_verified", "device_encryption_verified",
+        "customer_release_authorized", "external_send_authorized",
+    }
+    if (not isinstance(r, dict) or set(r) != required_fields
+            or _canonical(r) != raw):
         raise ValueError("Private source manifest is not canonical")
     if (r.get("schema") != "capturebrief-private-unapproved-original-gzip-retention-v1"
             or r.get("fiscal_year") != year
             or r.get("original_sha256") != original_sha256
             or r.get("source_entrypoint") != ARCHIVE_DOWNLOAD.format(fy=year)
+            or r.get("source_metadata_reference") !=
+                "https://github.com/P00NSMASHER/capturebrief/actions/runs/39350338311"
+            or r.get("metadata_class") != "UNREVIEWED_PUBLIC_ORIGIN_ONE_BYTE_HEADER"
+            or r.get("gzip_format") != "RFC1952_DETERMINISTIC_MTIME_ZERO"
+            or r.get("original_stored_uncompressed") is not False
+            or r.get("trusted_delivery_host") not in {
+                "sam.gov", "s3.amazonaws.com", "falextracts.s3.amazonaws.com",
+            }
             or r.get("catalog_approved") is not False
             or r.get("customer_release_authorized") is not False
             or r.get("full_catalog_history_verified") is not False
