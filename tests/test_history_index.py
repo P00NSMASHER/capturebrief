@@ -720,6 +720,63 @@ class HistoryIndexTests(unittest.TestCase):
                 receipt["evidence_payload"]["coverage_errors"],
             )
 
+    def test_same_notice_id_source_versions_with_aac_drift_are_not_complete(self):
+        # Directly reproduced on PAAM-L044 at the earlier PR #51 head:
+        # the ACTIVE observation of a2 had different AAC from an
+        # archived observation with identical NoticeId/Sol#, yet
+        # filtering on the seed AAC hid the archive action and
+        # returned COMPLETE. Reassessment is mandatory.
+        for new_aac, new_office in (
+            ("DIFFERENT-AAC", "OFFICE"),
+            ("AAC1", "DIFFERENT OFFICE"),
+            ("", "OFFICE"),
+        ):
+            with self.subTest(aac=new_aac, office=new_office), tempfile.TemporaryDirectory() as td:
+                root=Path(td)
+                db,snapshots=self.build_complete_index(root)
+                revised=root/"NEW-ACTIVE-SAME-NOTICE-FICTIONAL.csv"
+                write_csv(revised,[
+                    row("a2",sol="SOL-1",aac=new_aac,office=new_office),
+                    row("a1",sol="SOL-1",aac="AAC1",office="OFFICE"),
+                ])
+                ingest_extract_file(
+                    db,revised,source_url=ACTIVE_DOWNLOAD,
+                    source_kind="ACTIVE",observed_at=NOW,
+                    snapshot_dir=snapshots,collection_mode=APPROVED_FETCH,
+                )
+                status=index_status(db,fiscal_year=2026,now=NOW_DT)
+                self.assertTrue(status["complete"])
+                receipt=issue_history_receipt_from_index(
+                    db,solicitation_number="SOL-1",seed_notice_id="a2",
+                    observed_at=NOW,fiscal_year=2026,
+                )
+                self.assertEqual(receipt["status"],"OBSERVED_ONLY")
+                self.assertIn(
+                    "NOTICE_ID_SOURCE_IDENTITY_DRIFT_REQUIRES_REVIEW",
+                    receipt["evidence_payload"]["coverage_errors"],
+                )
+                verdict,_=validate_history_receipts(receipt["action_ids"],[receipt])
+                self.assertEqual(verdict,"HISTORY_UNRESOLVED")
+
+    def test_identical_notice_identity_across_source_versions_remains_eligible(self):
+        # Baseline: repeated identical NoticeId, AAC, office and Sol#
+        # across ACTIVE and an archived FY is normal evidence, not drift.
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            db,_=self.build_complete_index(root)
+            receipt=issue_history_receipt_from_index(
+                db,solicitation_number="SOL-1",seed_notice_id="a2",
+                observed_at=NOW,fiscal_year=2026,
+            )
+            self.assertEqual(receipt["status"],"COMPLETE")
+            self.assertNotIn(
+                "NOTICE_ID_SOURCE_IDENTITY_DRIFT_REQUIRES_REVIEW",
+                receipt["evidence_payload"]["coverage_errors"],
+            )
+            observations=next(x["observations"] for x in receipt["evidence_payload"]["actions"]
+                              if x["notice_id"]=="a2")
+            self.assertEqual(len(observations),2)
+
     def test_seed_is_never_selected_from_bulk(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); db,_=self.build_complete_index(root)
