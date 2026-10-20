@@ -41,6 +41,7 @@ class FakeResponse:
     def __init__(self, contents=FAKE_CSV, url=OFFICIAL_S3, declared=None):
         self.contents = io.BytesIO(contents)
         self.url = url
+        self.status = 200  # Complete fictional original, not a partial response.
         self.headers = {
             "Content-Length": str(len(contents) if declared is None else declared),
             "ETag": "test-only-etag",
