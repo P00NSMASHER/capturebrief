@@ -16,6 +16,7 @@ from pathlib import Path
 
 from scripts.batch_import_request_drafts import batch_import
 from scripts.process_private_order_queue import process_private_order_queue
+from scripts.save_private_checkout_association import save_private_checkout_association
 from scripts.inspect_private_order_fulfillment import inspect_fulfillment, source_catalog_preflight
 from tests.test_private_order_os import stripe_records, provider_for
 from tests.test_request_draft import draft
@@ -235,6 +236,89 @@ class PrivateOrderPipelineTests(unittest.TestCase):
             self.assertEqual(check["blocked"],0)
             self.assertEqual(calls,[])
             self.assertFalse(db.exists())
+
+    def test_safe_association_builder_creates_and_reuses_one_mapping(self):
+        with tempfile.TemporaryDirectory() as td:
+            inbox,cases,assoc,db=self.setup_dirs(td)
+            digest=self.build_association(inbox,cases,assoc)
+            manual=assoc/f"request-{digest}.order.json"
+            manual.unlink()
+            case=cases/f"request-{digest}.case.json"
+            before={p.name:p.read_bytes() for p in cases.iterdir()}
+            saved=save_private_checkout_association(case,assoc,"cs_live_REGISTRATION")
+            self.assertEqual(saved["status"],"PRIVATE_ASSOCIATION_SAVED_UNVERIFIED")
+            self.assertFalse(saved["stripe_payment_verified"])
+            self.assertFalse(saved["external_send_authorized"])
+            self.assertFalse(saved["customer_release_authorized"])
+            original=manual.read_bytes()
+            again=save_private_checkout_association(case,assoc,"cs_live_REGISTRATION")
+            self.assertEqual(again["status"],"PRIVATE_ASSOCIATION_ALREADY_SAVED_UNVERIFIED")
+            self.assertEqual(original,manual.read_bytes())
+            preview,calls=self.synthetic(cases,assoc,db,preview=True)
+            self.assertEqual(preview["preview_ready"],1)
+            self.assertEqual(calls,[])
+            self.assertFalse(db.exists())
+            self.assertEqual(before,{p.name:p.read_bytes() for p in cases.iterdir()})
+            self.assertFalse(list(assoc.glob("*.lock")))
+            self.assertNotIn("cs_live_REGISTRATION",json.dumps(saved))
+
+    def test_builder_rejects_same_checkout_session_assigned_to_two_cases(self):
+        with tempfile.TemporaryDirectory() as td:
+            inbox,cases,assoc,db=self.setup_dirs(td)
+            first_sha=self.build_association(inbox,cases,assoc)
+            first=assoc/f"request-{first_sha}.order.json"
+            first.unlink()
+            case_first=cases/f"request-{first_sha}.case.json"
+            save_private_checkout_association(case_first,assoc,"cs_live_ONEPAYMENT")
+            self.build_association(inbox,cases,assoc,
+                filename="second.txt",
+                message=draft(company="Fictional Other Buyer"))
+            second=next(p for p in cases.glob("*.case.json") if p != case_first)
+            previous={p.name:p.read_bytes() for p in assoc.iterdir()}
+            with self.assertRaisesRegex(ValueError,"another request"):
+                save_private_checkout_association(second,assoc,"cs_live_ONEPAYMENT")
+            self.assertEqual(previous,{p.name:p.read_bytes() for p in assoc.iterdir()})
+            self.assertFalse(db.exists())
+
+    def test_builder_conflicting_mapping_or_malformed_neighbor_cannot_overwrite(self):
+        for issue in ("conflict","malformed_neighbor","altered_case"):
+            with self.subTest(issue=issue),tempfile.TemporaryDirectory() as td:
+                inbox,cases,assoc,db=self.setup_dirs(td)
+                digest=self.build_association(inbox,cases,assoc)
+                mapped=assoc/f"request-{digest}.order.json"
+                case=cases/f"request-{digest}.case.json"
+                if issue=="conflict":
+                    attempted="cs_live_WRONG"
+                elif issue=="malformed_neighbor":
+                    (assoc/"request-missing.order.json.tmp").write_text("unfinished",encoding="utf-8")
+                    attempted="cs_live_REGISTRATION"
+                else:
+                    case.write_text("tampered original synthetic case",encoding="utf-8")
+                    attempted="cs_live_REGISTRATION"
+                snapshot={p.name:p.read_bytes() for p in assoc.iterdir()}
+                with self.assertRaises(ValueError):
+                    save_private_checkout_association(case,assoc,attempted)
+                self.assertEqual(snapshot,{p.name:p.read_bytes() for p in assoc.iterdir()})
+                self.assertFalse(db.exists())
+
+    def test_noninteractive_builder_cli_without_id_does_not_guess_checkout(self):
+        with tempfile.TemporaryDirectory() as td:
+            inbox,cases,assoc,db=self.setup_dirs(td)
+            digest=self.build_association(inbox,cases,assoc)
+            mapping=assoc/f"request-{digest}.order.json"
+            mapping.unlink()
+            case=cases/f"request-{digest}.case.json"
+            run=subprocess.run(
+                [sys.executable,str(Path(__file__).resolve().parents[1]
+                /"scripts"/"save_private_checkout_association.py"),
+                str(case),"--associations-dir",str(assoc)],
+                capture_output=True,text=True,input="cs_live_FICTIONAL_TTY\n",
+            )
+            self.assertEqual(run.returncode,3)
+            self.assertFalse(mapping.exists())
+            self.assertFalse(db.exists())
+            self.assertNotIn("cs_live_FICTIONAL_TTY",run.stdout)
+            self.assertNotIn(str(case),run.stdout)
 
     def test_empty_pipeline_and_no_live_key_do_not_create_registry(self):
         with tempfile.TemporaryDirectory() as td:
