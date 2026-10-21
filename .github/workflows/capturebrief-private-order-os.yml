@@ -8,6 +8,7 @@ on:
       - capturebrief_core/private_order_registry.py
       - capturebrief_core/payment_reconciliation.py
       - scripts/register_private_order.py
+      - scripts/save_private_checkout_association.py
       - scripts/process_private_order_queue.py
       - scripts/inspect_private_order_fulfillment.py
       - tests/test_private_order_pipeline.py
@@ -21,6 +22,7 @@ on:
       - capturebrief_core/private_order_registry.py
       - capturebrief_core/payment_reconciliation.py
       - scripts/register_private_order.py
+      - scripts/save_private_checkout_association.py
       - scripts/process_private_order_queue.py
       - scripts/inspect_private_order_fulfillment.py
       - tests/test_private_order_pipeline.py
