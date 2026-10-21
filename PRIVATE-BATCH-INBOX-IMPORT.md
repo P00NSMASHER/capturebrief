@@ -34,6 +34,42 @@ default; `--max-files N` can reduce that cap, not increase it above 100.
 If the input contains more candidates than permitted, it fails *before*
 creating any case or receipt. Non-text files are ignored and counted.
 
+## Preview before importing
+
+Before creating case files, inspect the **read-only preview**:
+
+```powershell
+py -3 scripts/batch_import_request_drafts.py --preview --input-dir "$env:LOCALAPPDATA\CaptureBrief\private-inbox" --output-dir "$env:LOCALAPPDATA\CaptureBrief\private-cases"
+```
+
+The preview parses and validates every eligible saved draft against the
+same existing buyer-intake contract, identifies exact duplicates and counts
+requests needing attention. It **does not create, repair, delete, or overwrite
+any case, receipt, lock, or source draft**. Its states are:
+
+- `NEW_VALIDATED`: syntactically valid input with no existing named output.
+- `EXISTING_UNVERIFIED`: both destination files exist; the preview has **not**
+  verified their contents, customer identity, or payment.
+- `PARTIAL_UNVERIFIED`: one destination artifact exists; a subsequent actual
+  import might be able to recover it, but preview never attempts recovery.
+- `DUPLICATE`: an identical saved request was already observed earlier in
+  this preview invocation; it is not an additional unique request.
+- `BLOCKED`: invalid, linked, oversized, or otherwise unreadable input.
+
+Preview results use `BATCH_PREVIEW_READY_FOR_REVIEW`,
+`BATCH_PREVIEW_PARTIAL_REVIEW_REQUIRED`, or `BATCH_PREVIEW_NO_REQUESTS`.
+They carry `preview_only=true`, all actual-import counters set to zero,
+and separate counters `preview_new`, `preview_existing_unverified` and
+`preview_partial_unverified`. Partial previews exit with code 3, as actual
+imports do, so an operator cannot mistake rejected requests for acceptance.
+The preview validates only **local input syntax and path existence**; it
+does not establish payment, source authenticity, delivery, recovery, or
+that a future import will succeed if a file changes.
+
+After reviewing preview results, run the regular command **without**
+`--preview` to attempt publication with the existing per-file locking,
+fingerprint consistency and complete on-disk integrity validation.
+
 ## Expected output
 
 The utility writes a private pair per **distinct exact input byte sequence**:
