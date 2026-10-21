@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -146,6 +148,52 @@ class BatchDraftTests(unittest.TestCase):
             )
             self.assertEqual(created["request_sha256"], original)
             self.assertEqual(json.loads((output / "receipt.json").read_text())["request_sha256"], original)
+
+
+    def test_batch_cli_outputs_review_summary_without_buyer_details(self):
+        with tempfile.TemporaryDirectory() as td:
+            incoming, output = self.roots(td)
+            (incoming / "one.txt").write_text(
+                draft(paid=True, company="Fictional Private Buyer"),
+                encoding="utf-8",
+            )
+            command = [
+                sys.executable,
+                str(Path(__file__).resolve().parents[1]
+                    / "scripts" / "batch_import_request_drafts.py"),
+                "--input-dir", str(incoming), "--output-dir", str(output),
+            ]
+            first = subprocess.run(command, capture_output=True, text=True)
+            self.assertEqual(first.returncode, 0, first.stderr)
+            report = json.loads(first.stdout)
+            self.assertEqual(report["created"], 1)
+            self.assertFalse(report["payment_verified"])
+            self.assertFalse(report["customer_release_authorized"])
+            self.assertNotIn("Fictional Private Buyer", first.stdout)
+            self.assertNotIn("buyer@example.com", first.stdout)
+            self.assertNotIn(str(incoming), first.stdout)
+            again = subprocess.run(command, capture_output=True, text=True)
+            self.assertEqual(again.returncode, 0, again.stderr)
+            self.assertEqual(json.loads(again.stdout)["reused"], 1)
+
+    def test_batch_cli_partial_import_is_explicitly_nonzero(self):
+        with tempfile.TemporaryDirectory() as td:
+            incoming, output = self.roots(td)
+            (incoming / "valid.txt").write_text(draft(), encoding="utf-8")
+            (incoming / "bad.txt").write_text("unstructured fictional text", encoding="utf-8")
+            run = subprocess.run([
+                sys.executable,
+                str(Path(__file__).resolve().parents[1]
+                    / "scripts" / "batch_import_request_drafts.py"),
+                "--input-dir", str(incoming), "--output-dir", str(output),
+            ], capture_output=True, text=True)
+            self.assertEqual(run.returncode, 3, run.stderr)
+            result = json.loads(run.stdout)
+            self.assertEqual(result["created"], 1)
+            self.assertEqual(result["blocked"], 1)
+            self.assertEqual(result["status"], "BATCH_PARTIAL_REVIEW_REQUIRED")
+            self.assertFalse(result["external_send_authorized"])
+
 
 
 if __name__ == "__main__":
