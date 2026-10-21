@@ -10,7 +10,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from scripts.package_public_release import PUBLIC_FILES, package_release
+from scripts.package_public_release import PUBLIC_FILES, PUBLIC_SOURCE_ALIASES, package_release
 
 
 class PublicReleaseTests(unittest.TestCase):
@@ -22,7 +22,8 @@ class PublicReleaseTests(unittest.TestCase):
         self.git("init", "--quiet")
         self.git("config", "user.name", "Release Test")
         self.git("config", "user.email", "release-test@example.invalid")
-        for name in PUBLIC_FILES:
+        for name in sorted({PUBLIC_SOURCE_ALIASES.get(name, name)
+                            for name in PUBLIC_FILES}):
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("Test public content: " + name, encoding="utf-8")
@@ -34,7 +35,7 @@ class PublicReleaseTests(unittest.TestCase):
         for name in PUBLIC_FILES:
             dest = dist / name
             dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(self.root / name, dest)
+            shutil.copyfile(self.root / PUBLIC_SOURCE_ALIASES.get(name, name), dest)
 
     def tearDown(self):
         self.temp.cleanup()
@@ -80,6 +81,23 @@ class PublicReleaseTests(unittest.TestCase):
         }
         self.assertTrue(expected.issubset(PUBLIC_FILES),
                         f"reviewed discovery entries missing: {sorted(expected - PUBLIC_FILES)}")
+
+    def test_discovery_aliases_match_only_reviewed_product_source(self):
+        self.assertEqual({
+            ".well-known/x402": "x402/pa-entity/.well-known/x402",
+            "openapi.json": "x402/pa-entity/openapi.json",
+        }, PUBLIC_SOURCE_ALIASES)
+        for alias, source in PUBLIC_SOURCE_ALIASES.items():
+            alias_file = self.root / "dist" / alias
+            self.assertEqual(alias_file.read_bytes(),
+                             (self.root / "dist" / source).read_bytes())
+            original = alias_file.read_bytes()
+            alias_file.write_bytes(b"unreviewed public metadata")
+            try:
+                with self.assertRaisesRegex(ValueError, "pinned source"):
+                    self.package()
+            finally:
+                alias_file.write_bytes(original)
 
     def test_internal_file_is_rejected(self):
         (self.root / "dist" / "OUTBOUND-COMMUNICATIONS.md").write_text("internal policy")
