@@ -86,16 +86,30 @@ def process_private_order_queue(
             or db.is_relative_to(mappings)):
         raise ValueError("Case, Checkout association and registry roots must be distinct")
     entries = sorted(mappings.iterdir(), key=lambda p:(p.name.casefold(),p.name))
-    candidates = [p for p in entries if p.name.casefold().startswith("request-") and p.name.casefold().endswith(".json")]
+    candidates: list[Path] = []
+    ignored_non_association_entries = 0
+    for entry in entries:
+        lower = entry.name.casefold()
+        if (lower.startswith("request-")
+                or lower.endswith((".order.json", ".order.json.tmp",
+                                   ".order.json.lock", ".order.jsn"))):
+            # Invalid and interrupted association-looking files are blockers.
+            # Otherwise a mistyped file or partial save could make the queue
+            # misleadingly report EMPTY while the operator expects an order.
+            candidates.append(entry)
+        else:
+            ignored_non_association_entries += 1
     if len(candidates) > max_associations:
         raise ValueError("Too many private association files")
     statuses = {"preview_ready":0, "registered":0, "reused":0, "blocked":0}
+    unexpected_association_entries = 0
     rows: list[dict[str, str]] = []
     for file in candidates:
         tag = hashlib.sha256(file.name.encode()).hexdigest()[:12]
         try:
             match = _MATCH.fullmatch(file.name)
             if not match:
+                unexpected_association_entries += 1
                 raise ValueError("Invalid case-association file name")
             digest = match.group(1)
             assoc = _private_association(file, digest)
@@ -137,6 +151,8 @@ def process_private_order_queue(
                    else "PRIVATE_ORDER_QUEUE_REVIEW_REQUIRED"),
         "preview_only": preview_only,
         "input_associations": len(candidates),
+        "unexpected_association_entries": unexpected_association_entries,
+        "ignored_non_association_entries": ignored_non_association_entries,
         **statuses,
         "items": rows,
         "private_registry_read_only_state": order_summary(db)["status"],
