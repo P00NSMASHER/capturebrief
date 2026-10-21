@@ -53,6 +53,18 @@ A repeated request retains the original case ID and unchanged artifact bytes;
 a different request, altered existing artifact, or conflicting explicit
 `--imported-at` stops with no overwrite. This is same-output-path
 idempotence, not deduplication across separately chosen case directories.
+
+**Concurrent operator imports:** Two workers targeting the same case and/or
+receipt path are now serialized using private, short-lived
+`.intake.lock` files, acquired in a stable order. The second worker
+re-reads the first worker's completed case/receipt and reuses its
+recorded timestamp; an interrupted pair can still be retried without
+creating a new case. Unrelated cases use different lock paths and
+remain independent. If a live or abandoned lock prevents progress,
+the import fails rather than risking two conflicting case identities.
+An operator should confirm no job is active before resolving an
+abandoned lock. Locks contain only process/time metadata, never buyer
+details, request text, or payment evidence.
  Keep filesystem and provider
 access controls, retention policy, and backup practices appropriate for
 client contact details. An import error never triggers a message.
