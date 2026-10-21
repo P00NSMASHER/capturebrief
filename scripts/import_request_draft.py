@@ -33,6 +33,56 @@ def _private_file(path: str) -> Path:
     return dest
 
 
+
+def _bounded_record(path: Path, maximum: int) -> dict:
+    """Parse an existing private case/receipt only to recover its import time."""
+    if not path.is_file() or path.stat().st_size > maximum:
+        raise ValueError("Existing private intake artifact is missing or oversized")
+    try:
+        result = json.loads(path.read_text(encoding="utf-8"))
+    except (ValueError, UnicodeError, OSError) as exc:
+        raise ValueError("Existing private intake artifact is malformed") from None
+    if not isinstance(result, dict):
+        raise ValueError("Existing private intake artifact must be an object")
+    return result
+
+
+def _existing_intake_time(case_output: Path, receipt_output: Path,
+                          request_sha256: str) -> datetime | None:
+    """Recover the original imported_at for a byte-identical retry.
+
+    Both outputs use one stable timestamp; otherwise a second run with an
+    implicit current time would generate a different case identity. Existing
+    artifacts are UNTRUSTED until the caller recreates and compares their
+    complete expected bytes. Never use prior payment or approval claims.
+    """
+    if receipt_output.exists():
+        record = _bounded_record(receipt_output, 16 * 1024)
+        if (record.get("schema") != "capturebrief-private-intake-receipt-v1"
+                or record.get("request_sha256") != request_sha256):
+            raise ValueError("Existing intake receipt belongs to a different request")
+        observed = record.get("imported_at")
+    elif case_output.exists():
+        record = _bounded_record(case_output, 128 * 1024)
+        try:
+            observed = record["intake"]["submitted_at"]
+        except (KeyError, TypeError):
+            raise ValueError("Existing intake case has no recorded import timestamp") from None
+    else:
+        return None
+    if not isinstance(observed, str) or not observed.endswith("Z"):
+        raise ValueError("Existing import timestamp is invalid")
+    try:
+        timestamp = datetime.fromisoformat(observed.replace("Z", "+00:00"))
+    except ValueError:
+        raise ValueError("Existing import timestamp is invalid") from None
+    if (timestamp.utcoffset() is None
+            or timestamp.astimezone(timezone.utc).isoformat().replace("+00:00", "Z") != observed):
+        raise ValueError("Existing import timestamp is not canonical UTC")
+    return timestamp
+
+
+
 def import_request(message_path: str, case_path: str, receipt_path: str, *,
                    imported_at: datetime | None = None) -> dict:
     checked_at = imported_at or datetime.now(timezone.utc)
@@ -49,6 +99,12 @@ def import_request(message_path: str, case_path: str, receipt_path: str, *,
     if len(raw) > MAX_REQUEST_TEXT * 4:
         raise ValueError("Input draft exceeds byte limit")
     message = raw.decode("utf-8")
+    request_sha = hashlib.sha256(raw).hexdigest()
+    if imported_at is None:
+        # Reuse the timestamp of a previously imported byte-identical
+        # request, including after interruption between the two file writes.
+        # Explicit --imported-at retains its original exact-time semantics.
+        checked_at = _existing_intake_time(case_output, receipt_output, request_sha) or checked_at
     case, claims = create_unverified_case(
         message,
         submitted_at=checked_at.isoformat().replace("+00:00", "Z"),
@@ -65,7 +121,7 @@ def import_request(message_path: str, case_path: str, receipt_path: str, *,
         "case_id": case["case_id"],
         "case_sha256": case_sha,
         "case_file_sha256": case_file_sha,
-        "request_sha256": hashlib.sha256(raw).hexdigest(),
+        "request_sha256": request_sha,
         "imported_at": checked_at.isoformat().replace("+00:00", "Z"),
         "case_submitted_at_is_email_delivery_proof": False,
         **claims,
@@ -74,7 +130,13 @@ def import_request(message_path: str, case_path: str, receipt_path: str, *,
         "case_release_authorized": False,
     }
     receipt_bytes = (json.dumps(receipt, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode("utf-8")
-    # Hash-based idempotence; no silent overwrite or symlink traversal.
+    # Preflight BOTH existing artifacts before any write. A corrupt receipt
+    # must not cause us to create a new case when only its partner is missing.
+    # ensure_exact_bytes then provides the existing atomic, no-overwrite
+    # publication and identical-content retry contract.
+    for output, expected in ((case_output, case_bytes), (receipt_output, receipt_bytes)):
+        if output.exists() and (not output.is_file() or output.read_bytes() != expected):
+            raise ValueError("Existing private intake artifact conflicts with request")
     ensure_exact_bytes(case_output, case_bytes)
     ensure_exact_bytes(receipt_output, receipt_bytes)
     return {
