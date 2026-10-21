@@ -86,7 +86,8 @@ def _existing_intake_time(case_output: Path, receipt_output: Path,
 
 def import_request(message_path: str, case_path: str, receipt_path: str, *,
                    imported_at: datetime | None = None,
-                   lock_timeout_seconds: float = 5.0) -> dict:
+                   lock_timeout_seconds: float = 5.0,
+                   expected_request_sha256: str | None = None) -> dict:
     checked_at = imported_at or datetime.now(timezone.utc)
     if not isinstance(checked_at, datetime) or checked_at.utcoffset() is None:
         raise ValueError("Import time must be timezone aware")
@@ -110,12 +111,14 @@ def import_request(message_path: str, case_path: str, receipt_path: str, *,
             ))
         return _import_request_locked(
             src, case_output, receipt_output, checked_at, imported_at,
+            expected_request_sha256,
         )
 
 
 def _import_request_locked(
     src: Path, case_output: Path, receipt_output: Path,
     checked_at: datetime, imported_at: datetime | None,
+    expected_request_sha256: str | None,
 ) -> dict:
     """Build and publish one customer request while both output locks are held."""
     # Bounded read; no user request text, credentials or contact details in logs.
@@ -125,6 +128,15 @@ def _import_request_locked(
         raise ValueError("Input draft exceeds byte limit")
     message = raw.decode("utf-8")
     request_sha = hashlib.sha256(raw).hexdigest()
+    # Batch file names are based on an earlier bounded read of the same
+    # local request. Bind the second read to that exact source fingerprint
+    # before any case or receipt can be published under its digest path.
+    if expected_request_sha256 is not None:
+        if (not isinstance(expected_request_sha256, str)
+                or len(expected_request_sha256) != 64
+                or any(ch not in "0123456789abcdef" for ch in expected_request_sha256)
+                or request_sha != expected_request_sha256):
+            raise ValueError("Buyer request changed before private import")
     if imported_at is None:
         # Reuse the timestamp of a previously imported byte-identical
         # request, including after interruption between the two file writes.
