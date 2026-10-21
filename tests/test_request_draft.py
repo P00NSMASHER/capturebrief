@@ -252,7 +252,7 @@ class RequestDraftTests(unittest.TestCase):
             original_writer = module.ensure_exact_bytes
 
             def delayed_first_writer(path, data, **kwargs):
-                if threading.current_thread().name == "first-import" and Path(path) == case:
+                if threading.current_thread().name == "first-import" and Path(path).resolve() == case.resolve():
                     first_at_write.set()
                     if not release_first.wait(5):
                         raise AssertionError("Parallel test writer was never released")
@@ -274,7 +274,7 @@ class RequestDraftTests(unittest.TestCase):
                                           name="second-import")
                 first.start()
                 try:
-                    ready = first_at_write.wait(12)
+                    ready = first_at_write.wait(6)
                     if not ready:
                         # Diagnostic contains only Python function names/line
                         # numbers, never private paths or fictional buyer data.
