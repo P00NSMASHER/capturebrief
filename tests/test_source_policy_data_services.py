@@ -1,5 +1,10 @@
 import io
 import unittest
+import traceback
+from urllib.error import URLError
+from datetime import datetime, timedelta, timezone
+from urllib.parse import urlencode
+from urllib.request import Request
 
 from capturebrief_core.current_api import (
     SEARCH_URL,
@@ -11,6 +16,8 @@ from capturebrief_core.data_services import (
     ACTIVE_DOWNLOAD,
     ARCHIVE_DOWNLOAD,
     FamilyAmbiguous,
+    download_extract,
+    DataServicesError,
     issue_history_receipt_from_snapshots,
     scan_extract_bytes,
 )
@@ -20,8 +27,10 @@ from capturebrief_core.manifest import (
 )
 from capturebrief_core.source_policy import (
     SourcePolicyError,
+    _OfficialExtractRedirectGuard,
     classify_sam_url,
     require_approved_automation,
+    require_approved_extract_delivery,
 )
 
 NOW = "2026-09-21T13:00:00+00:00"
@@ -52,6 +61,7 @@ def row(notice, sol, aac="AAC1", active="Yes"):
 class FakeResponse:
     def __init__(self, data: bytes, url="https://objects.example/file"):
         self._io = io.BytesIO(data)
+        self.status = 200
         self.headers = {"Content-Length": str(len(data))}
         self._url = url
 
@@ -88,6 +98,263 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
             require_approved_automation(
                 "https://sam.gov/api/prod/opps/v3/opportunities/abc/resources"
             )
+
+    def test_source_policy_rejects_credentials_fragments_and_nonstandard_ports(self):
+        approved = ACTIVE_DOWNLOAD
+        self.assertEqual(classify_sam_url(approved), "SAM_DATA_SERVICES_EXTRACT")
+        self.assertEqual(classify_sam_url(ARCHIVE_DOWNLOAD.format(fy=2027)),
+                         "SAM_DATA_SERVICES_EXTRACT")
+        bad = [
+            approved.replace("https://sam.gov", "https://user:secret@sam.gov"),
+            approved.replace("https://sam.gov", "https://sam.gov:8443"),
+            approved + "#client-secret",
+            approved + "&extra=private",
+            approved.replace("privacy=Public", "privacy=Private"),
+            approved.replace("ContractOpportunitiesFullCSV.csv", "file.csv"),
+            approved.replace("ContractOpportunitiesFullCSV.csv", "file.csv/../ContractOpportunitiesFullCSV.csv"),
+            "https://[not-a-host",
+            "https://api.sam.gov:badport/opportunities/v2/search",
+        ]
+        for value in bad:
+            with self.subTest(url=value):
+                self.assertEqual(classify_sam_url(value), "UNAPPROVED")
+                with self.assertRaises(SourcePolicyError):
+                    require_approved_automation(value)
+
+    def test_rejected_urls_cannot_leak_signed_query_or_userinfo(self):
+        sensitive = ("https://user:password-value@sam.gov/api/prod/opps/v3/"
+                     "opportunities/secret-id/resources?api_key=do-not-print&signature=another-secret")
+        with self.assertRaises(SourcePolicyError) as caught:
+            require_approved_automation(sensitive)
+        error = str(caught.exception)
+        for secret in ("password-value", "do-not-print", "another-secret", "secret-id", "api_key"):
+            self.assertNotIn(secret, error)
+        self.assertIn("UNAPPROVED", error)
+
+    def test_official_sam_extract_redirect_is_exact_resource_bound_only(self):
+        active_s3 = ("https://s3.amazonaws.com/falextracts/Contract%20Opportunities/"
+                     "datagov/ContractOpportunitiesFullCSV.csv")
+        archive_s3 = ("https://s3.amazonaws.com/falextracts/Contract%20Opportunities/"
+                      "Archived%20Data/FY2027_archived_opportunities.csv")
+        self.assertEqual(require_approved_extract_delivery(ACTIVE_DOWNLOAD, ACTIVE_DOWNLOAD), "sam.gov")
+        self.assertEqual(require_approved_extract_delivery(ACTIVE_DOWNLOAD, active_s3), "s3.amazonaws.com")
+        self.assertEqual(require_approved_extract_delivery(ARCHIVE_DOWNLOAD.format(fy=2027), archive_s3),
+                         "s3.amazonaws.com")
+        self.assertEqual(classify_sam_url(active_s3), "UNAPPROVED",
+                         "S3 is a guarded redirect target, not a new direct collection surface")
+        for bad in (
+            "https://evil.example/redirect",
+            "https://s3.amazonaws.com/other-bucket/Contract%20Opportunities/"
+            "Archived%20Data/FY2027_archived_opportunities.csv",
+            archive_s3.replace("FY2027_", "FY2026_"),
+            archive_s3.replace("https://", "http://"),
+            archive_s3.replace("s3.amazonaws.com", "s3.amazonaws.com.evil.example"),
+            archive_s3 + "?api_key=leak-me",
+            archive_s3 + "#fragment",
+            archive_s3.replace("s3.amazonaws.com", "user:pw@s3.amazonaws.com"),
+            "https://s3.amazonaws.com:8443" + archive_s3.split("s3.amazonaws.com")[1],
+        ):
+            with self.subTest(bad=bad), self.assertRaises(SourcePolicyError) as result:
+                require_approved_extract_delivery(ARCHIVE_DOWNLOAD.format(fy=2027), bad)
+            self.assertNotIn("leak-me", str(result.exception))
+            self.assertNotIn("user:pw", str(result.exception))
+
+    def test_every_http_redirect_hop_is_guarded_before_following(self):
+        start = ARCHIVE_DOWNLOAD.format(fy=2027)
+        guard = _OfficialExtractRedirectGuard(start)
+        request = Request(start)
+        for bad in (
+            "https://evil.example/temporary-redirect",
+            "https://sam.gov/api/prod/fileextractservices/v1/api/download/"
+            "Contract%20Opportunities/Archived%20Data/FY2026_archived_opportunities.csv?privacy=Public",
+            "https://s3.amazonaws.com/falextracts/Contract%20Opportunities/"
+            "Archived%20Data/FY2028_archived_opportunities.csv",
+        ):
+            with self.subTest(bad=bad), self.assertRaises(SourcePolicyError):
+                guard.redirect_request(request, None, 302, "Found", {}, bad)
+        approved = ("https://s3.amazonaws.com/falextracts/Contract%20Opportunities/"
+                    "Archived%20Data/FY2027_archived_opportunities.csv")
+        redirected = guard.redirect_request(request, None, 302, "Found", {}, approved)
+        self.assertEqual(redirected.full_url, approved)
+
+    @staticmethod
+    def _fake_sam_presigned_archive(*, when=None, expiry=300, year=2027):
+        dt = when or datetime.now(timezone.utc)
+        date = dt.strftime("%Y%m%dT%H%M%SZ")
+        query = urlencode({
+            "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+            "X-Amz-Date": date,
+            "X-Amz-SignedHeaders": "host",
+            "X-Amz-Credential": "A"*20 + "/" + date[:8] + "/us-east-1/s3/aws4_request",
+            "X-Amz-Expires": str(expiry),
+            "X-Amz-Signature": "a"*64,
+        })
+        return (
+            "https://falextracts.s3.amazonaws.com/Contract%20Opportunities/"
+            f"Archived%20Data/FY{year}_archived_opportunities.csv?" + query
+        )
+
+    def test_real_sam_signed_redirect_contract_exact_object_and_v4_schema(self):
+        origin = ARCHIVE_DOWNLOAD.format(fy=2027)
+        signed = self._fake_sam_presigned_archive()
+        self.assertEqual(require_approved_extract_delivery(origin, signed),
+                         "falextracts.s3.amazonaws.com")
+        self.assertEqual(classify_sam_url(signed), "UNAPPROVED")
+        guard = _OfficialExtractRedirectGuard(origin)
+        redirected = guard.redirect_request(Request(origin), None, 303, "See Other", {}, signed)
+        self.assertEqual(redirected.full_url, signed)
+
+    def test_signed_redirect_never_accepts_wrong_fy_bucket_unsigned_or_unbounded(self):
+        start = ARCHIVE_DOWNLOAD.format(fy=2027)
+        exact = self._fake_sam_presigned_archive()
+        corrupted = (
+            exact.replace("FY2027_", "FY2026_"),
+            exact.replace("falextracts.s3.amazonaws.com",
+                          "falextracts.s3.amazonaws.com.evil.example"),
+            exact.replace("falextracts.s3.amazonaws.com",
+                          "otherbucket.s3.amazonaws.com"),
+            exact.replace("https://", "http://"),
+            exact + "&X-Amz-Signature=" + "a"*64,
+            exact + "&api_key=LEAK-ME",
+            exact + "#evil",
+            exact.replace("X-Amz-Algorithm=AWS4-HMAC-SHA256",
+                          "X-Amz-Algorithm=invalid"),
+            exact.replace("X-Amz-SignedHeaders=host", "X-Amz-SignedHeaders=host%3Bcookie"),
+            exact.replace("X-Amz-Signature=" + "a"*64, "X-Amz-Signature=INVALID"),
+            self._fake_sam_presigned_archive(expiry=3601),
+            self._fake_sam_presigned_archive(when=datetime.now(timezone.utc)-timedelta(hours=2)),
+            self._fake_sam_presigned_archive(when=datetime.now(timezone.utc)+timedelta(hours=1)),
+            "https://falextracts.s3.amazonaws.com/Contract%20Opportunities/"
+            "Archived%20Data/FY2027_archived_opportunities.csv",
+        )
+        for bad in corrupted:
+            with self.subTest(value=bad.split("?")[0]), self.assertRaises(SourcePolicyError) as seen:
+                require_approved_extract_delivery(start, bad)
+            self.assertNotIn("LEAK-ME", str(seen.exception))
+            self.assertNotIn("a"*64, str(seen.exception))
+        # A valid signature for a different public FY MUST NOT borrow this
+        # source slot's approval.
+        with self.assertRaises(SourcePolicyError):
+            require_approved_extract_delivery(start, self._fake_sam_presigned_archive(year=2026))
+
+    def test_signed_redirect_transport_failure_is_not_printable_in_traceback(self):
+        secret = "X-Amz-Signature=NEVER_PRINT_THIS"
+        def fail(req, timeout=60):
+            raise URLError("signed URL failed: "+secret)
+        try:
+            download_extract(ARCHIVE_DOWNLOAD.format(fy=2027), opener=fail)
+        except DataServicesError as exc:
+            self.assertEqual(str(exc), "Data Services extract transport failure")
+            self.assertNotIn(secret, traceback.format_exc())
+        else:
+            self.fail("Signed URL transport exception must be controlled")
+
+    def test_in_memory_download_accepts_only_explicit_sam_binding_and_bytes(self):
+        original = (HEADER + row("notice1", "SOL-123")).encode("utf-8")
+        source = ARCHIVE_DOWNLOAD.format(fy=2027)
+        official = ("https://s3.amazonaws.com/falextracts/Contract%20Opportunities/"
+                    "Archived%20Data/FY2027_archived_opportunities.csv")
+        result = download_extract(
+            source, opener=lambda req, timeout=60: FakeResponse(original, url=official),
+        )
+        self.assertEqual(result, original)
+        touched = []
+        def no_read_if_redirect_bad(req, timeout=60):
+            class Dangerous(FakeResponse):
+                def read(self, n=-1):
+                    touched.append(True)
+                    return super().read(n)
+            return Dangerous(original, url="https://evil.example/data?password=SECRET")
+        with self.assertRaises(SourcePolicyError):
+            download_extract(source, opener=no_read_if_redirect_bad)
+        self.assertEqual(touched, [], "Unapproved redirect bytes must not even be read")
+        class WrongLength(FakeResponse):
+            def __init__(self):
+                super().__init__(original, url=official)
+                self.headers = {"Content-Length": str(len(original) + 10)}
+        with self.assertRaises(DataServicesError):
+            download_extract(source, opener=lambda req, timeout=60: WrongLength())
+
+    def test_in_memory_original_http_and_encoding_checks_precede_any_read(self):
+        official = ("https://s3.amazonaws.com/falextracts/"
+                    "Contract%20Opportunities/Archived%20Data/"
+                    "FY2027_archived_opportunities.csv")
+        original = (HEADER + row("fictional1", "SOL-1")).encode("utf-8")
+        for label,status,encoding,content_range in (
+            ("partial",206,None,None),
+            ("unexpected",302,None,None),
+            ("no-status",None,None,None),
+            ("transfer-gzip",200,"gzip",None),
+            ("incorrect-range",200,None,"bytes 0-5/9999"),
+        ):
+            with self.subTest(response=label):
+                class Tracked(FakeResponse):
+                    def __init__(self):
+                        super().__init__(original,url=official)
+                        self.status = status
+                        self.read_calls = 0
+                        if encoding is not None:
+                            self.headers["Content-Encoding"] = encoding
+                        if content_range is not None:
+                            self.headers["Content-Range"] = content_range
+                    def read(self, n=-1):
+                        self.read_calls += 1
+                        return super().read(n)
+                response = Tracked()
+                def opener(req, timeout=60):
+                    self.assertEqual(req.get_header("Accept-encoding"), "identity")
+                    return response
+                with self.assertRaises(DataServicesError):
+                    download_extract(
+                        ARCHIVE_DOWNLOAD.format(fy=2027),opener=opener,
+                    )
+                self.assertEqual(response.read_calls, 0)
+
+    def test_in_memory_csv_rejects_malformed_and_lossy_source(self):
+        original = (HEADER + row("FICTIONAL-ID","SOL-1")).encode("ascii")
+        header,entry = original.split(b"\n",1)
+        malformed = (
+            # An extra original field was silently omitted from row hashes.
+            header + b"\n" + entry.rstrip(b"\n") + b",ORPHAN\n",
+            # An omitted trailing column formerly became a None field.
+            header + b"\n" + entry.rstrip(b"\n").rsplit(b",",1)[0] + b"\n",
+            HEADER.replace("Title,Sol#","NoticeId,Sol#",1).encode("ascii") + entry,
+            HEADER.replace("Title,Sol#","_extra,Sol#",1).encode("ascii") + entry,
+            HEADER.replace("Title,Sol#",",Sol#",1).encode("ascii") + entry,
+            (HEADER+row("","SOL-1")).encode("ascii"),
+        )
+        for number,data in enumerate(malformed):
+            with self.subTest(case=number),self.assertRaises(DataServicesError):
+                scan_extract_bytes(
+                    data,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                    solicitation_number="SOL-1",
+                )
+        with self.assertRaises(ValueError):
+            scan_extract_bytes(
+                original,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                solicitation_number="   ",
+            )
+        with self.assertRaises(UnicodeDecodeError):
+            scan_extract_bytes(
+                original.replace(b"FICTIONAL-ID",b"INVALID-\x81-ID"),
+                source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                solicitation_number="SOL-1",
+            )
+        with self.assertRaises(UnicodeDecodeError):
+            scan_extract_bytes(
+                b"\xef\xbb\xbf"+
+                original.replace(b"FICTIONAL-ID",b"INVALID-\xff-ID"),
+                source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                solicitation_number="SOL-1",
+            )
+        valid_cp1252=original.replace(b",Title,SOL-1",b",Tit\x96le,SOL-1")
+        self.assertIn(b"\x96",valid_cp1252)
+        output=scan_extract_bytes(
+            valid_cp1252,source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+            solicitation_number="SOL-1",
+        )
+        self.assertEqual(len(output["matches"]),1)
+        self.assertEqual(output["matches"][0]["notice_id"],"FICTIONAL-ID")
 
     def test_automated_ui_manifest_is_disabled(self):
         with self.assertRaises(SourcePolicyError):
@@ -194,6 +461,88 @@ class SourcePolicyDataServicesTests(unittest.TestCase):
                 [snapshot],
                 solicitation_number="SOL-1",
                 observed_at=NOW,
+            )
+
+    def test_memory_only_history_declared_range_rejects_colliding_agency_offices(self):
+        # A caller-declared fiscal range cannot turn an ambiguous source
+        # family into COMPLETE merely because Sol# strings coincide.
+        source = ACTIVE_DOWNLOAD
+        base = row("fictional-seed","SOL-1",aac="AAC1")
+        for name,peer in (
+            ("different-office",
+             row("fictional-peer","SOL-1",aac="AAC1").replace(
+                 ",Office,AAC1,",",OTHER OFFICE,AAC1,",1)),
+            ("missing-office",
+             row("fictional-peer","SOL-1",aac="AAC1").replace(
+                 ",Office,AAC1,",",,AAC1,",1)),
+            ("missing-aac",
+             row("fictional-peer","SOL-1",aac="")),
+        ):
+            with self.subTest(case=name):
+                current=scan_extract_bytes(
+                    (HEADER+base+peer).encode("utf-8"),
+                    source_url=source,source_kind="ACTIVE",
+                    solicitation_number="SOL-1",
+                )
+                with self.assertRaises(FamilyAmbiguous):
+                    issue_history_receipt_from_snapshots(
+                        [current],solicitation_number="SOL-1",
+                        seed_notice_id="fictional-seed",observed_at=NOW,
+                        scope_start_fy=2026,scope_end_fy=2026,
+                        scope_confirmed=True,
+                    )
+        # Even an unseeded selection cannot resolve a cross-office
+        # source by guessing the first listed row's identity.
+        different = row("foreign","SOL-1",aac="AAC1").replace(
+            ",Office,AAC1,",",OTHER OFFICE,AAC1,",1,
+        )
+        current=scan_extract_bytes(
+            (HEADER+base+different).encode("utf-8"),
+            source_url=source,source_kind="ACTIVE",
+            solicitation_number="SOL-1",
+        )
+        with self.assertRaises(FamilyAmbiguous):
+            issue_history_receipt_from_snapshots(
+                [current],solicitation_number="SOL-1",observed_at=NOW,
+                scope_start_fy=2026,scope_end_fy=2026,scope_confirmed=True,
+            )
+
+    def test_memory_only_history_requires_seed_agency_and_office_anchors(self):
+        for kind,seed in (
+            ("missing-aac",row("fictional-seed","SOL-1",aac="")),
+            ("missing-office",row("fictional-seed","SOL-1",aac="AAC1").replace(
+                ",Office,AAC1,",",,AAC1,",1)),
+        ):
+            with self.subTest(case=kind):
+                current=scan_extract_bytes(
+                    (HEADER+seed+row("fictional-peer","SOL-1")).encode("utf-8"),
+                    source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+                    solicitation_number="SOL-1",
+                )
+                with self.assertRaises(FamilyAmbiguous):
+                    issue_history_receipt_from_snapshots(
+                        [current],solicitation_number="SOL-1",
+                        seed_notice_id="fictional-seed",observed_at=NOW,
+                        scope_start_fy=2026,scope_end_fy=2026,scope_confirmed=True,
+                    )
+
+    def test_memory_only_history_rejects_same_notice_across_agencies(self):
+        current=scan_extract_bytes(
+            (HEADER+row("one-id","SOL-1",aac="AAC1")).encode("utf-8"),
+            source_url=ACTIVE_DOWNLOAD,source_kind="ACTIVE",
+            solicitation_number="SOL-1",
+        )
+        archived=scan_extract_bytes(
+            (HEADER+row("one-id","SOL-1",aac="AAC2")).encode("utf-8"),
+            source_url=ARCHIVE_DOWNLOAD.format(fy=2026),
+            source_kind="ARCHIVE",fiscal_year=2026,
+            solicitation_number="SOL-1",
+        )
+        with self.assertRaises(FamilyAmbiguous):
+            issue_history_receipt_from_snapshots(
+                [current,archived],solicitation_number="SOL-1",
+                seed_notice_id="one-id",observed_at=NOW,
+                scope_start_fy=2026,scope_end_fy=2026,scope_confirmed=True,
             )
 
     def test_current_receipt_must_bind_to_history(self):

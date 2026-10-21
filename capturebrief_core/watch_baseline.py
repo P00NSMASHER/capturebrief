@@ -199,6 +199,23 @@ def _public_state(case:dict[str,Any],*,now:datetime)->dict[str,Any]:
             "reviewed_at":row.get("reviewed_at"),
         }
 
+    # Track content fingerprints for *each* observed source, rather than
+    # treating one advancing global watermark as proof all sources refreshed.
+    # Never retain URLs, customer intake, or source text in the watch baseline.
+    source_checks={}
+    for row in case.get("sources") or []:
+        if isinstance(row,dict) and row.get("source_id"):
+            sid=str(row["source_id"])
+            seen_at=parse_dt(row.get("observed_at"))
+            prev=parse_dt((source_checks.get(sid) or {}).get("observed_at"))
+            if sid not in source_checks or (seen_at is not None and (prev is None or seen_at>prev)):
+                source_checks[sid]={
+                    "content_sha256":row.get("content_sha256"),
+                    "artifact_state":row.get("artifact_state"),
+                    "authority":row.get("authority"),
+                    "observed_at":row.get("observed_at"),
+                }
+
     assumptions={
         str(row.get("assumption_id")):row
         for row in case.get("assumptions") or []
@@ -225,9 +242,15 @@ def _public_state(case:dict[str,Any],*,now:datetime)->dict[str,Any]:
             for link in review.get("rule_links") or []
             if isinstance(link,dict) and rules.get(str(link.get("rule_version_id")),{}).get("rule_key")
         })
+        source_ids=sorted({
+            str(snapshots.get(str(c.get("snapshot_id")),{}).get("source_id"))
+            for c in review.get("citations") or []
+            if isinstance(c,dict) and snapshots.get(str(c.get("snapshot_id")),{}).get("source_id")
+        })
         dependencies.append({
             "assumption_id":aid,
             "source_keys":source_keys,
+            "source_ids":source_ids,
             "rule_keys":rule_keys,
             "deviation_source_ids":sorted(deviation_ids_by_assumption.get(aid,set())),
             "case_reopen_triggers":sorted({str(x) for x in (assumptions.get(aid) or {}).get("reopen_triggers") or [] if str(x)}),
@@ -236,6 +259,7 @@ def _public_state(case:dict[str,Any],*,now:datetime)->dict[str,Any]:
 
     return {
         "observation_watermark":_observation_watermark(case),
+        "source_checks":{k:v for k,v in sorted(source_checks.items())},
         "currentness_verdict":currentness,
         "current_action_id":current_action,
         "history_verdict":history_verdict,
@@ -300,6 +324,7 @@ def compare_watch_baseline(
     case:dict[str,Any],
     *,
     now:datetime|None=None,
+    previous_observation:dict[str,Any]|None=None,
 )->dict[str,Any]:
     now=_aware(now or datetime.now(timezone.utc))
     _validate_baseline(baseline)
@@ -313,6 +338,39 @@ def compare_watch_baseline(
         raise ValueError("watch observation cannot precede baseline creation")
     before=baseline["state"]; after=_public_state(case,now=now)
     events=[]
+    # A fresh observation compared only with DELIVERY would incorrectly pass
+    # again tomorrow even when its source timestamps have not advanced.
+    # Validate and chain the PREVIOUS check before assessing this one.
+    previous_sources=None
+    if previous_observation is not None:
+        prev=previous_observation
+        if not isinstance(prev,dict) or prev.get("schema_version")!=WATCH_SCHEMA:
+            raise ValueError("unsupported preceding watch receipt")
+        prev_body={k:v for k,v in prev.items() if k!="observation_sha256"}
+        if digest(canonical(prev_body))!=prev.get("observation_sha256"):
+            raise ValueError("preceding watch receipt hash mismatch")
+        if (prev.get("case_id"),prev.get("family_id"),prev.get("baseline_sha256")) != (
+            baseline.get("case_id"),baseline.get("family_id"),baseline.get("baseline_sha256")
+        ):
+            raise ValueError("preceding watch receipt belongs to a different pursuit/baseline")
+        prev_time=parse_dt(prev.get("observed_at"))
+        if prev_time is None or prev_time<created or prev_time>=now:
+            raise ValueError("preceding receipt is not earlier than this watch check")
+        previous_sources=prev.get("source_checks")
+        if not isinstance(previous_sources,dict) or not previous_sources:
+            raise ValueError("preceding receipt lacks per-source freshness state")
+        if prev.get("watch_status")!="NO_CHANGE_OBSERVED" or prev.get("requires_human_review") is not False:
+            events.append({
+                "type":"WATCH_PREVIOUS_REVIEW_UNRESOLVED",
+                "key":"WATCH_PRIOR_REVIEW",
+                "reason":"A previous watch event requires recorded human disposition; a later automatic clean status is unsafe.",
+                "previous_observation_sha256":prev.get("observation_sha256"),
+            })
+        # Never accept a prior receipt that reports future or invalid times.
+        if any(parse_dt(row.get("observed_at")) is None or
+               parse_dt(row.get("observed_at"))>prev_time
+               for row in previous_sources.values() if isinstance(row,dict)):
+            raise ValueError("preceding watch source timestamps are invalid")
 
     def event(kind,key,before_value,after_value,*,alias_keys=None,**extra):
         if before_value!=after_value:
@@ -336,6 +394,26 @@ def compare_watch_baseline(
         now==created or
         (baseline_watermark is not None and current_watermark is not None and current_watermark>baseline_watermark)
     )
+    if previous_sources is not None:
+        advanced=True
+        current_sources=after.get("source_checks") or {}
+        for source_id, prior in sorted(previous_sources.items()):
+            updated=current_sources.get(source_id) or {}
+            old_ts=parse_dt(prior.get("observed_at")) if isinstance(prior,dict) else None
+            new_ts=parse_dt(updated.get("observed_at"))
+            if old_ts is None or new_ts is None or new_ts<=old_ts or new_ts>now:
+                advanced=False
+                events.append({
+                    "type":"WATCH_SOURCE_NOT_REFRESHED_SINCE_PREVIOUS_CHECK",
+                    "key":f"SOURCE_CHECK:{source_id}",
+                    "source_id":source_id,
+                    "before":prior.get("observed_at") if isinstance(prior,dict) else None,
+                    "after":updated.get("observed_at"),
+                    "reason":"No newer verified observation of this source since the immediately preceding check.",
+                })
+        if not previous_sources.keys()<=current_sources.keys():
+            advanced=False
+        fresh_observation = fresh_observation and advanced
     if now>created and not fresh_observation:
         events.append({
             "type":"WATCH_NO_FRESH_OBSERVATION",
@@ -344,6 +422,32 @@ def compare_watch_baseline(
             "after":after.get("observation_watermark"),
             "reason":"No retained public-source observation advanced after the delivered baseline.",
         })
+    # A later clean result requires every previously tracked source to have
+    # a newly retained observation. Missing/unchanged timestamps are an
+    # explicit human-review event even if another source was refreshed.
+    if now>created:
+        prior_sources=before.get("source_checks") or {}
+        fresh_sources=after.get("source_checks") or {}
+        if not prior_sources:
+            events.append({
+                "type":"WATCH_SOURCE_REFRESH_NOT_PROVEN",
+                "key":"WATCH_SOURCE_REFRESH",
+                "reason":"Baseline has no per-source freshness inventory.",
+            })
+        for source_id, prior in sorted(prior_sources.items()):
+            updated=fresh_sources.get(source_id) or {}
+            prior_time=parse_dt(prior.get("observed_at"))
+            current_time=parse_dt(updated.get("observed_at"))
+            if (prior_time is None or current_time is None or
+                    current_time<=prior_time or current_time>now):
+                events.append({
+                    "type":"WATCH_SOURCE_NOT_REFRESHED",
+                    "key":f"SOURCE_CHECK:{source_id}",
+                    "source_id":source_id,
+                    "before":prior.get("observed_at"),
+                    "after":updated.get("observed_at"),
+                    "reason":"No newer valid observation for this monitored source.",
+                })
     expired=now>watch_until
     if expired:
         events.append({
@@ -391,6 +495,21 @@ def compare_watch_baseline(
         for ident in sorted(set(bmap)|set(amap)):
             event(kind,f"DEVIATION:{ident}",bmap.get(ident),amap.get(ident),deviation_source_id=ident)
 
+    # A changed source fingerprint reopens the review even when the trace's
+    # stored snapshot/version metadata was not refreshed yet.
+    for source_id in sorted(set(before.get("source_checks") or {}) | set(after.get("source_checks") or {})):
+        prior=(before.get("source_checks") or {}).get(source_id) or {}
+        current=(after.get("source_checks") or {}).get(source_id) or {}
+        fields=("content_sha256","artifact_state","authority")
+        if tuple(prior.get(x) for x in fields)!=tuple(current.get(x) for x in fields):
+            events.append({
+                "type":"SOURCE_RECORD_CHANGED",
+                "key":f"SOURCE_RECORD:{source_id}",
+                "source_id":source_id,
+                "before":{x:prior.get(x) for x in fields},
+                "after":{x:current.get(x) for x in fields},
+            })
+
     keys={e["key"] for e in events}
     for e in events:
         keys.update(e.get("alias_keys") or [])
@@ -400,6 +519,16 @@ def compare_watch_baseline(
         matched.update(
             f"SOURCE:{key}" for key in dep.get("source_keys") or []
             if f"SOURCE:{key}" in keys
+        )
+        matched.update(
+            f"SOURCE_RECORD:{source_id}" for source_id in dep.get("source_ids") or []
+            if f"SOURCE_RECORD:{source_id}" in keys
+        )
+        # A stale source check is itself actionable for every assumption
+        # that relied on that source, even without a changed digest.
+        matched.update(
+            f"SOURCE_CHECK:{source_id}" for source_id in dep.get("source_ids") or []
+            if f"SOURCE_CHECK:{source_id}" in keys
         )
         matched.update(
             f"RULE:{key}" for key in dep.get("rule_keys") or []
@@ -433,6 +562,16 @@ def compare_watch_baseline(
         "fresh_observation_evidenced":fresh_observation,
         "baseline_observation_watermark":before.get("observation_watermark"),
         "current_observation_watermark":after.get("observation_watermark"),
+        "source_checks":{k:{
+            "observed_at":v.get("observed_at"),
+            "content_sha256":v.get("content_sha256"),
+            "artifact_state":v.get("artifact_state"),
+            "authority":v.get("authority"),
+        } for k,v in sorted((after.get("source_checks") or {}).items())},
+        "previous_observation_sha256":(
+            previous_observation.get("observation_sha256")
+            if previous_observation is not None else None
+        ),
         "events":events,
         "reopened_assumptions":reopened,
         "integrity_findings":integrity_findings,

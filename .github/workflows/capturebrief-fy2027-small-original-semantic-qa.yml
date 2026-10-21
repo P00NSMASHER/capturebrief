@@ -1,0 +1,54 @@
+name: CaptureBrief FY1999-2001 original byte semantics (PUBLIC, NO RETENTION)
+
+on:
+  push:
+    branches:
+      - research/fy2027-archive-capacity-probe-20261019
+    paths:
+      - '.github/workflows/capturebrief-fy2027-small-original-semantic-qa.yml'
+      - 'scripts/audit_fy2027_small_public_originals.py'
+      - 'tests/test_fy2027_small_original_semantics.py'
+  pull_request:
+    paths:
+      - '.github/workflows/capturebrief-fy2027-small-original-semantic-qa.yml'
+      - 'scripts/audit_fy2027_small_public_originals.py'
+      - 'tests/test_fy2027_small_original_semantics.py'
+
+permissions:
+  contents: read
+
+jobs:
+  fictional-negative-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile guarded public-original memory-only audit
+        run: python -m compileall -q scripts/audit_fy2027_small_public_originals.py
+      - name: Test artificial source responses, corrupted bytes, and forbidden redirects
+        run: python -m unittest tests.test_fy2027_small_original_semantics -v
+
+  bounded-public-originals:
+    needs: fictional-negative-controls
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: In-memory official FY1999/2000/2001 original-only checks (6.33 MB total)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/audit_fy2027_small_public_originals.py
+          # Never log source rows, signed URLs or customer information.
+          # No source artifacts, uploads, indexing or catalog approval.

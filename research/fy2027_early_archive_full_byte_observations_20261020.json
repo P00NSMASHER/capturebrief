@@ -1,0 +1,80 @@
+{
+  "schema": "capturebrief-fy2027-unapproved-early-archive-full-byte-observation-v1",
+  "observation_utc_calendar_date": "2026-10-20",
+  "observed_from": "PAAM-L044 read-only public SAM Data Services exact archived-extract requests via PR53 signed-redirect validation",
+  "mode": "BOUNDED_ONE_TIME_IN_MEMORY_PUBLIC_ORIGINAL_BYTE_READ_NO_RETENTION",
+  "trusted_transport_host": "falextracts.s3.amazonaws.com",
+  "candidate_year_inventory_from": "https://github.com/P00NSMASHER/capturebrief/actions/runs/39350338311",
+  "reconciled_metadata_original_bytes": 101788,
+  "observed_original_bytes": 101788,
+  "observed_csv_rows_total": 89,
+  "required_headers_present_every_year": true,
+  "header_fields_each": 47,
+  "any_csv_structural_error": false,
+  "read_bytes_persistently_stored": false,
+  "all_34_year_originals_observed": false,
+  "publisher_originals_independently_reviewed": false,
+  "source_catalog_approved": false,
+  "private_history_index_updated": false,
+  "disk_encryption_verified": false,
+  "encrypted_offdevice_backup_verified": false,
+  "customer_release_authorized": false,
+  "external_send_authorized": false,
+  "observations": [
+    {
+      "fiscal_year": 1969,
+      "bytes": 685,
+      "sha256": "933e41c8c32c5bb1875d21427c368ff8ea07343317ad697eba698fe5603c5be6",
+      "csv_rows": 0,
+      "required_headers_present": true,
+      "extra_columns_rows": 0,
+      "short_rows": 0,
+      "original_bytes_retained": false,
+      "approved": false
+    },
+    {
+      "fiscal_year": 1970,
+      "bytes": 2712,
+      "sha256": "bfbe158c899f217495f4ebc6b913267e193b374a2d476ab931a5bc254f9d68f2",
+      "csv_rows": 3,
+      "required_headers_present": true,
+      "extra_columns_rows": 0,
+      "short_rows": 0,
+      "original_bytes_retained": false,
+      "approved": false
+    },
+    {
+      "fiscal_year": 1980,
+      "bytes": 1157,
+      "sha256": "e58ba87346ce332d63a04c8376525ce996bce0c1135a4dadae71db9c4d716511",
+      "csv_rows": 1,
+      "required_headers_present": true,
+      "extra_columns_rows": 0,
+      "short_rows": 0,
+      "original_bytes_retained": false,
+      "approved": false
+    },
+    {
+      "fiscal_year": 1981,
+      "bytes": 685,
+      "sha256": "933e41c8c32c5bb1875d21427c368ff8ea07343317ad697eba698fe5603c5be6",
+      "csv_rows": 0,
+      "required_headers_present": true,
+      "extra_columns_rows": 0,
+      "short_rows": 0,
+      "original_bytes_retained": false,
+      "approved": false
+    },
+    {
+      "fiscal_year": 1998,
+      "bytes": 96549,
+      "sha256": "854bf64d57d07845b8a94eb26f8deb68a35c04dbd3e855f7776e103bfa1ad187",
+      "csv_rows": 85,
+      "required_headers_present": true,
+      "extra_columns_rows": 0,
+      "short_rows": 0,
+      "original_bytes_retained": false,
+      "approved": false
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+name: CaptureBrief FY2027 archive capacity observer (METADATA ONLY)
+
+on:
+  push:
+    branches:
+      - research/fy2027-archive-capacity-probe-20261019
+    paths:
+      - '.github/workflows/capturebrief-fy2027-capacity-probe.yml'
+      - 'scripts/fy2027_archive_capacity_probe.py'
+      - 'tests/test_fy2027_archive_capacity_probe.py'
+  pull_request:
+    paths:
+      - '.github/workflows/capturebrief-fy2027-capacity-probe.yml'
+      - 'scripts/fy2027_archive_capacity_probe.py'
+      - 'tests/test_fy2027_archive_capacity_probe.py'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile metadata-only Python code
+        run: python -m compileall -q scripts/fy2027_archive_capacity_probe.py
+      - name: Exact source contract, malicious redirect and no-release regressions
+        run: python -m unittest tests.test_fy2027_archive_capacity_probe -v
+
+  public-metadata-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    needs: offline-safety
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Read at most one byte from each of 34 frozen PUBLIC FY archive entrypoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/fy2027_archive_capacity_probe.py \
+            --live-public-metadata --years all
+          # This is advisory metadata; no original source is saved.
+          # Never interpret any reported byte size as publisher signoff.

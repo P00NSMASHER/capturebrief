@@ -1,0 +1,63 @@
+name: CaptureBrief private order registration (fictional acceptance)
+
+on:
+  push:
+    branches:
+      - feat/private-order-os-20261021
+    paths:
+      - capturebrief_core/private_order_registry.py
+      - capturebrief_core/payment_reconciliation.py
+      - scripts/register_private_order.py
+      - scripts/save_private_checkout_association.py
+      - scripts/process_private_order_queue.py
+      - scripts/inspect_private_order_fulfillment.py
+      - tests/test_private_order_pipeline.py
+      - scripts/run_private_order_acceptance.py
+      - scripts/reconcile_stripe_checkout.py
+      - tests/test_private_order_os.py
+      - tests/test_payment_reconciliation.py
+      - .github/workflows/capturebrief-private-order-os.yml
+  pull_request:
+    paths:
+      - capturebrief_core/private_order_registry.py
+      - capturebrief_core/payment_reconciliation.py
+      - scripts/register_private_order.py
+      - scripts/save_private_checkout_association.py
+      - scripts/process_private_order_queue.py
+      - scripts/inspect_private_order_fulfillment.py
+      - tests/test_private_order_pipeline.py
+      - scripts/run_private_order_acceptance.py
+      - scripts/reconcile_stripe_checkout.py
+      - tests/test_private_order_os.py
+      - tests/test_payment_reconciliation.py
+      - .github/workflows/capturebrief-private-order-os.yml
+permissions:
+  contents: read
+jobs:
+  order-contract:
+    name: Offline synthetic Stripe + case to private registry / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONPATH: "."
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Provider-state and order integrity contract tests
+        run: python -m unittest tests.test_payment_reconciliation tests.test_private_order_os tests.test_private_order_pipeline -v
+      - name: Run actual fictional buyer-to-bundle-and-watch laboratory
+        run: python scripts/run_private_order_acceptance.py
+      - name: Existing private buyer intake remains intact
+        run: python -m unittest tests.test_request_draft tests.test_private_case_review_queue -q
+      - name: Safety declaration
+        run: >-
+          python -c "print('FICTIONAL payment records only; no account keys, customers, charges, source downloads, delivery, or external sends.')"

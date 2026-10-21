@@ -1,0 +1,48 @@
+name: CaptureBrief private intake concurrency (FICTIONAL CASES)
+
+on:
+  push:
+    branches:
+      - feat/pilot-email-intake-bridge-20261018
+    paths:
+      - scripts/import_request_draft.py
+      - tests/test_request_draft.py
+      - .github/workflows/capturebrief-private-intake-concurrency.yml
+  pull_request:
+    paths:
+      - scripts/import_request_draft.py
+      - tests/test_request_draft.py
+      - .github/workflows/capturebrief-private-intake-concurrency.yml
+
+permissions:
+  contents: read
+
+jobs:
+  duplicate-import:
+    name: Simultaneous case/receipt retry / ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, windows-latest]
+    timeout-minutes: 12
+    env:
+      PYTHONPATH: "."
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Reproduce only private fictional-case concurrency
+        run: >-
+          python -m unittest
+          tests.test_request_draft.RequestDraftTests.test_concurrent_importers_share_one_case_identity
+          tests.test_request_draft.RequestDraftTests.test_locked_intake_path_refuses_a_second_import_without_writing
+          tests.test_request_draft.RequestDraftTests.test_partial_case_or_receipt_recovery_reuses_original_timestamp
+          -v
+      - name: Make sure no service or customer is launched
+        run: >-
+          python -c "print('Fictional temporary intake files only; no customer emails, charges, source downloads, deployments, or release approval.')"

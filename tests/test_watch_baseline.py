@@ -66,6 +66,130 @@ class WatchBaselineTests(unittest.TestCase):
         self.assertFalse(baseline["contains_raw_case"])
         self.assertFalse(baseline["contains_source_text"])
 
+
+    def test_second_check_needs_each_source_newer_than_previous_not_just_delivery(self):
+        from datetime import timedelta
+        case = ready_case()
+        baseline = build_watch_baseline(case, now=NOW)
+        day_one = NOW + timedelta(minutes=20)
+        day_two = NOW + timedelta(minutes=40)
+        once = copy.deepcopy(case)
+        for source in once["sources"]:
+            source["observed_at"] = day_one.isoformat()
+        first = compare_watch_baseline(baseline, once, now=day_one)
+        self.assertEqual(first["source_checks"]["trace-source"]["observed_at"],
+                         day_one.isoformat())
+        # A second comparison with only the delivered baseline could
+        # mistakenly treat yesterday's timestamps as fresh.
+        repeated = compare_watch_baseline(
+            baseline, once, now=day_two, previous_observation=first,
+        )
+        self.assertIn("WATCH_SOURCE_NOT_REFRESHED_SINCE_PREVIOUS_CHECK",
+                      {event["type"] for event in repeated["events"]})
+        self.assertFalse(repeated["fresh_observation_evidenced"])
+        self.assertTrue(repeated["requires_human_review"])
+        self.assertEqual(repeated["previous_observation_sha256"],
+                         first["observation_sha256"])
+        self.assertFalse(repeated["automatic_decision_change"])
+
+    def test_previous_watch_receipt_must_be_untampered_and_chronologically_before(self):
+        from datetime import timedelta
+        case = ready_case()
+        baseline = build_watch_baseline(case, now=NOW)
+        newer = NOW + timedelta(minutes=15)
+        first = compare_watch_baseline(baseline, case, now=newer)
+        forged = copy.deepcopy(first)
+        forged["source_checks"]["trace-source"]["observed_at"] = (
+            newer + timedelta(days=1)).isoformat()
+        with self.assertRaisesRegex(ValueError, "hash mismatch"):
+            compare_watch_baseline(baseline, case,
+                                   now=newer + timedelta(minutes=2),
+                                   previous_observation=forged)
+        with self.assertRaisesRegex(ValueError, "not earlier"):
+            compare_watch_baseline(baseline, case, now=newer,
+                                   previous_observation=first)
+        wrong = copy.deepcopy(first)
+        wrong["baseline_sha256"] = "0"*64
+        wrong["observation_sha256"] = digest(canonical({
+            k:v for k,v in wrong.items() if k!="observation_sha256"
+        }))
+        with self.assertRaisesRegex(ValueError, "different pursuit/baseline"):
+            compare_watch_baseline(baseline, case,
+                                   now=newer + timedelta(minutes=2),
+                                   previous_observation=wrong)
+
+    def test_simulated_14_day_replay_never_falsely_clears_stale_sources(self):
+        from datetime import timedelta
+        case = ready_case()
+        baseline = build_watch_baseline(case, now=NOW)
+        previous = None
+        # Clock-replayed QA only: this is not actual 14 elapsed calendar days.
+        for day in range(1, 15):
+            when = NOW + timedelta(days=day)
+            result = compare_watch_baseline(
+                baseline, case, now=when, previous_observation=previous,
+            )
+            self.assertEqual(result["watch_status"], "REVIEW_REQUIRED")
+            self.assertTrue(result["requires_human_review"])
+            self.assertFalse(result["fresh_observation_evidenced"])
+            self.assertFalse(result["automatic_decision_change"])
+            self.assertTrue(result["previous_decision_preserved"])
+            previous = result
+        expired = compare_watch_baseline(
+            baseline, case,
+            now=NOW + timedelta(days=14, seconds=1),
+            previous_observation=previous,
+        )
+        self.assertEqual(expired["watch_status"], "EXPIRED")
+        self.assertTrue(expired["requires_human_review"])
+        self.assertFalse(expired["automatic_decision_change"])
+
+    def test_one_fresh_source_does_not_clear_other_stale_sources(self):
+        from datetime import timedelta
+        case=ready_case()
+        baseline=build_watch_baseline(case,now=NOW)
+        after=copy.deepcopy(case)
+        later=NOW+timedelta(minutes=20)
+        after["sources"][0]["observed_at"]=later.isoformat()
+        result=compare_watch_baseline(baseline,after,now=later)
+        stale={e["source_id"] for e in result["events"] if e["type"]=="WATCH_SOURCE_NOT_REFRESHED"}
+        self.assertIn("trace-source",stale)
+        self.assertNotIn("sam-current",stale)
+        # An assumption citing the unrefreshed source cannot keep its
+        # prior reviewed state without reopening to human inspection.
+        reopen = next(item for item in result["reopened_assumptions"]
+                      if item["assumption_id"] == "A1")
+        self.assertIn("SOURCE_CHECK:trace-source", reopen["matched_dependencies"])
+        self.assertTrue(reopen["previous_decision_preserved"])
+        self.assertTrue(result["requires_human_review"])
+        self.assertNotEqual(result["watch_status"],"NO_CHANGE_OBSERVED")
+
+    def test_raw_source_fingerprint_change_reopens_trace_dependency(self):
+        case=ready_case()
+        baseline=build_watch_baseline(case,now=NOW)
+        after=copy.deepcopy(case)
+        for source in after["sources"]:
+            if source["source_id"]=="trace-source":
+                source["content_sha256"]="f"*64
+        result=compare_watch_baseline(baseline,after,now=NOW)
+        self.assertIn("SOURCE_RECORD:trace-source",{e["key"] for e in result["events"]})
+        reopened=next(r for r in result["reopened_assumptions"] if r["assumption_id"]=="A1")
+        self.assertIn("SOURCE_RECORD:trace-source",reopened["matched_dependencies"])
+        self.assertTrue(result["requires_human_review"])
+        self.assertFalse(result["automatic_decision_change"])
+
+    def test_future_dated_source_refresh_is_not_valid_freshness(self):
+        from datetime import timedelta
+        case=ready_case()
+        baseline=build_watch_baseline(case,now=NOW)
+        after=copy.deepcopy(case)
+        later=NOW+timedelta(minutes=1)
+        for source in after["sources"]:
+            source["observed_at"]=(later+timedelta(days=1)).isoformat()
+        result=compare_watch_baseline(baseline,after,now=later)
+        self.assertEqual(sum(e["type"]=="WATCH_SOURCE_NOT_REFRESHED" for e in result["events"]),len(after["sources"]))
+        self.assertTrue(result["requires_human_review"])
+
     def test_baseline_tamper_is_rejected(self):
         case=ready_case()
         baseline=build_watch_baseline(case,now=NOW)
