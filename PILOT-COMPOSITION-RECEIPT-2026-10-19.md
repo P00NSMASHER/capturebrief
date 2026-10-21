@@ -606,3 +606,47 @@ off-device recovery took place. The real website/customer system has
 not been claimed updated from these unmerged candidates. Protected-main
 and independent user/source-release gates remain separate from this
 functional improvement.
+
+
+## October 21 — concurrent buyer-import replay and Windows QA clarification
+
+The Python importer previously assigned a fresh local `submitted_at`
+timestamp on each attempt before publishing private case/receipt files.
+Two simultaneous copies of the same buyer request could race into
+different case identifiers even when targeting identical private paths.
+The source and test suite reproduced the conflict in [negative-control
+Product Core #39549345568](https://github.com/P00NSMASHER/capturebrief/actions/runs/39549345568)
+using only fictional buyer data.
+
+Current PR #52 candidate
+`d445ee6fe21513b48ead4d956b15ff333ddb9013` wraps
+both case and receipt paths in bounded, deterministically ordered,
+private `.intake.lock` critical sections. A second simultaneous job
+replays the *original* recorded UTC timestamp, validates the exact
+case and receipt bytes, and never silently replaces the original.
+Partial publication remains recoverable; a held lock safely blocks.
+
+The initial Windows **test harness** compared its short temporary
+file path to the separately normalized output path, missing its
+artificial pause checkpoint (while Linux passed). The harness was
+corrected to compare resolved paths; that does not weaken production
+locking. The final targeted [Linux+Windows concurrency and interrupted
+publication #39550263273](https://github.com/P00NSMASHER/capturebrief/actions/runs/39550263273)
+**PASSED**. [Exact-head Product Core #39550265437](https://github.com/P00NSMASHER/capturebrief/actions/runs/39550265437)
+also passed. PAAM-L044 ran **17/17** source-locked Windows Python
+3.13 intake unit tests, confirming the final retry logic; its isolated
+test checkout was removed and the retained real original/receipt SHA
+remained identical.
+
+At the revised QA source commit
+`a8520a67eb3c050d34a47da102d2387c6abc7ca1`,
+[full ten-candidate no-deploy composition #39550329639](https://github.com/P00NSMASHER/capturebrief/actions/runs/39550329639)
+**PASSED 644 Linux tests and 247 Windows tests (one skipped)** plus
+Chromium/WebKit no-send buyer-to-Python/fictional-Stripe integration.
+All ten candidate Git merges took place only inside disposable CI
+workspaces. The public website PR #50 was checked out separately
+at its immutable `2e35b30c` head, not deployed. No actual customer
+records, charges, email sends, source catalog promotion or main/gh-pages
+merge were performed. This evidence does not independently approve
+publisher authenticity, full FY2027 coverage, disaster recovery or
+production release.
