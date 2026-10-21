@@ -48,7 +48,8 @@ jobs:
           python -m capturebrief_core.cli outcome-summary /tmp/capturebrief-outcomes.jsonl -o /tmp/outcome-summary.json
       - name: Build and independently reopen the command-produced delivery
         run: |
-          python -m capturebrief_core.trace_cli bundle fixtures/ready_trace_case.json -o /tmp/capturebrief-delivery.zip > /tmp/capturebrief-delivery-receipt.json
+          python -m tests.synthetic_ready_case --output /tmp/capturebrief-fresh-synthetic-case.json
+          python -m capturebrief_core.trace_cli bundle /tmp/capturebrief-fresh-synthetic-case.json -o /tmp/capturebrief-delivery.zip > /tmp/capturebrief-delivery-receipt.json
           python - <<'PY'
           import hashlib, json, zipfile
           from pathlib import Path
