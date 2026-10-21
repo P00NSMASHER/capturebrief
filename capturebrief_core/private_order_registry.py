@@ -11,6 +11,7 @@ import hashlib
 import os
 import re
 import sqlite3
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -162,7 +163,7 @@ def register_order(
     if new_file:
         fd = os.open(db_file, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         os.close(fd)
-    with sqlite3.connect(db_file, timeout=5, isolation_level=None) as conn:
+    with closing(sqlite3.connect(db_file, timeout=5, isolation_level=None)) as conn:
         conn.row_factory = sqlite3.Row
         try:
             conn.execute("PRAGMA busy_timeout = 5000")
@@ -230,7 +231,7 @@ def order_summary(database_path: str | Path) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     invalid = 0
     if conn:
-        with conn:
+        with closing(conn):
             try:
                 data = conn.execute("SELECT * FROM orders ORDER BY created_at,session_ref").fetchall()
             except sqlite3.DatabaseError:
@@ -252,7 +253,6 @@ def order_summary(database_path: str | Path) -> dict[str, Any]:
                     "last_payment_observed_at": row["last_observed_at"],
                     "customer_release_authorized": False,
                 })
-        conn.close()
     return {
         "status": "PRIVATE_ORDER_REGISTRY_BLOCKED" if invalid
                   else "PRIVATE_ORDER_REVIEW_PENDING" if rows
