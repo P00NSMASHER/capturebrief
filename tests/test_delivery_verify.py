@@ -216,7 +216,8 @@ class DeliveryVerifyTests(unittest.TestCase):
         receipt_path = self.root / "cli-receipt.json"
         with receipt_path.open("w") as receipt_stream:
             result = subprocess.run([sys.executable, "-m", "capturebrief_core.trace_cli", "bundle",
-                str(ROOT / "fixtures/ready_trace_case.json"), "-o", str(target)], cwd=ROOT,
+                str(ROOT / "fixtures/ready_trace_case.json"), "-o", str(target),
+                "--fixture-as-of", "2026-09-21T17:30:00Z"], cwd=ROOT,
                 stdout=receipt_stream, stderr=subprocess.PIPE, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stderr)
         receipt = json.loads(receipt_path.read_text())
