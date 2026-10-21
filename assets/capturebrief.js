@@ -84,6 +84,20 @@
   const publicOnly = document.getElementById('public-only');
   const copyButton = document.getElementById('copy-request');
   const status = document.getElementById('request-status');
+  const manualCopy = document.getElementById('request-manual-copy');
+  const manualText = document.getElementById('request-plaintext');
+
+  const resetManualCopy = () => {
+    manualText.value = '';
+    manualCopy.hidden = true;
+  };
+
+  const revealManualCopy = (plain) => {
+    manualText.value = plain;
+    manualCopy.hidden = false;
+    manualText.focus();
+    manualText.select();
+  };
 
   form.hidden = false;
 
@@ -215,6 +229,8 @@
       control.setCustomValidity('');
       status.textContent = '';
       delete status.dataset.state;
+      // A revised field invalidates any previously displayed manual draft.
+      resetManualCopy();
     });
   });
 
@@ -238,6 +254,7 @@
     try {
       if (!navigator.clipboard) throw new Error('Clipboard unavailable');
       await navigator.clipboard.writeText(draft.plain);
+      resetManualCopy();
       setStatus('Request copied. Paste it into your email service and review it before sending.');
     } catch (_) {
       const helper = document.createElement('textarea');
@@ -246,15 +263,24 @@
       helper.style.position = 'fixed';
       helper.style.opacity = '0';
       document.body.appendChild(helper);
-      helper.select();
-      const copied = document.execCommand && document.execCommand('copy');
-      helper.remove();
-      setStatus(
-        copied
-          ? 'Request copied. Paste it into your email service and review it before sending.'
-          : 'Copy was unavailable. Use “Email JP Enterprises” below instead.',
-        !copied
-      );
+      let copied = false;
+      try {
+        helper.select();
+        copied = !!(document.execCommand && document.execCommand('copy'));
+      } catch (_) {
+        // Some privacy configurations throw instead of returning false.
+      } finally {
+        helper.remove();
+      }
+      if (copied) {
+        resetManualCopy();
+        setStatus('Request copied. Paste it into your email service and review it before sending.');
+      } else {
+        // Never strand a complete five-assumption request just because both
+        // clipboard APIs are unavailable; show only a local selectable draft.
+        revealManualCopy(draft.plain);
+        setStatus('Automatic copying is unavailable. Your complete request is selected below for manual copying. Nothing was sent.', true);
+      }
     }
   });
 })();
