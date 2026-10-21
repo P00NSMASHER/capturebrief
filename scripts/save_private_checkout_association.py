@@ -102,7 +102,8 @@ def save_private_checkout_association(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("case", help="Private request-<SHA256>.case.json path")
+    parser.add_argument("case", nargs="?", help="Private request-<SHA256>.case.json path")
+    parser.add_argument("--cases-dir", help="Interactive case selection from this private directory")
     parser.add_argument("--associations-dir", required=True)
     parser.add_argument(
         "--session-id",
@@ -110,6 +111,18 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     try:
+        if args.case is None:
+            if not args.cases_dir or not sys.stdin.isatty():
+                raise ValueError("Interactive case selection requires a local terminal and --cases-dir")
+            folder = _private_directory(args.cases_dir)
+            digest = input("Paste the exact 64-lowercase-hex case fingerprint: ").strip()
+            if not re.fullmatch(r"[0-9a-f]{64}", digest):
+                raise ValueError("Case fingerprint must contain 64 lowercase hex characters")
+            case = folder / f"request-{digest}.case.json"
+        else:
+            if args.cases_dir is not None:
+                raise ValueError("Provide either an explicit case path or --cases-dir")
+            case = args.case
         if args.session_id is None:
             if not sys.stdin.isatty():
                 raise ValueError("Interactive terminal required for private Checkout Session input")
@@ -117,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             session_id = args.session_id
         result = save_private_checkout_association(
-            args.case, args.associations_dir, session_id,
+            case, args.associations_dir, session_id,
         )
         print(json.dumps(result, sort_keys=True, indent=2))
         return 0
