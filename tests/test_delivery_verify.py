@@ -17,6 +17,7 @@ from unittest.mock import patch
 
 from capturebrief_core.delivery_bundle import build_delivery_bundle
 from capturebrief_core.delivery_verify import verify_delivery_bundle
+from tests.synthetic_ready_case import write_current_synthetic_case
 
 ROOT = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 9, 21, 17, 30, tzinfo=timezone.utc)
@@ -214,9 +215,10 @@ class DeliveryVerifyTests(unittest.TestCase):
     def test_bundle_and_receipt_can_be_kept_as_separate_files(self):
         target = self.root / "cli-delivery.zip"
         receipt_path = self.root / "cli-receipt.json"
+        fresh_case = write_current_synthetic_case(self.root / "fresh-synthetic-case.json")
         with receipt_path.open("w") as receipt_stream:
             result = subprocess.run([sys.executable, "-m", "capturebrief_core.trace_cli", "bundle",
-                str(ROOT / "fixtures/ready_trace_case.json"), "-o", str(target)], cwd=ROOT,
+                str(fresh_case), "-o", str(target)], cwd=ROOT,
                 stdout=receipt_stream, stderr=subprocess.PIPE, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stderr)
         receipt = json.loads(receipt_path.read_text())
@@ -226,8 +228,8 @@ class DeliveryVerifyTests(unittest.TestCase):
 
     def test_bundle_command_rejects_input_path_aliases(self):
         source = self.root / "case.json"
-        original = (ROOT / "fixtures/ready_trace_case.json").read_bytes()
-        source.write_bytes(original)
+        write_current_synthetic_case(source)
+        original = source.read_bytes()
         aliases = [self.root / "hardlink.zip"]
         os.link(source, aliases[0])
         symlink = self.root / "symlink.zip"
