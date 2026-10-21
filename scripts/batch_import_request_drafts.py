@@ -124,7 +124,8 @@ def batch_import(
 
     return {
         "schema": "capturebrief-private-batch-intake-v1",
-        "status": ("BATCH_PARTIAL_REVIEW_REQUIRED" if counters["blocked"]
+        "status": ("BATCH_NO_REQUESTS" if not eligible
+                   else "BATCH_PARTIAL_REVIEW_REQUIRED" if counters["blocked"]
                    else "BATCH_ACCEPTED_REVIEW_REQUIRED"),
         "processed_txt": len(eligible),
         "ignored_non_txt": len(all_entries) - len(eligible),
