@@ -1,0 +1,47 @@
+name: CaptureBrief private batch intake (FICTIONAL ONLY)
+
+on:
+  push:
+    branches:
+      - feat/private-batch-buyer-intake-20261021
+    paths:
+      - .github/workflows/capturebrief-private-batch-intake.yml
+      - scripts/batch_import_request_drafts.py
+      - scripts/import_request_draft.py
+      - tests/test_batch_request_drafts.py
+  pull_request:
+    paths:
+      - .github/workflows/capturebrief-private-batch-intake.yml
+      - scripts/batch_import_request_drafts.py
+      - scripts/import_request_draft.py
+      - tests/test_batch_request_drafts.py
+
+permissions:
+  contents: read
+
+jobs:
+  offline-draft-batch:
+    name: Private batch, duplicate and replay / ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, windows-latest]
+    env:
+      PYTHONPATH: "."
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run invented customer batch intake and exact dedupe regressions
+        run: python -m unittest tests.test_batch_request_drafts -v
+      - name: Existing single-draft intake regression remains valid
+        run: python -m unittest tests.test_request_draft -q
+      - name: No actual customer side effects
+        run: >-
+          python -c "print('Fictional drafts only; no inbox access, source fetch, Stripe charge, emails, or release.')"
