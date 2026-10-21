@@ -52,9 +52,12 @@ tags and generic failure types for individual results. **No buyer names, work
 emails, private paths or request text are printed.** The hashed filename tags
 can be matched locally if an operator needs to investigate a blocked file.
 
-The exit code is **0** when every eligible draft was accepted/reused or safely
-deduplicated; **3** when some drafts were blocked (valid drafts may still have
-been imported); **2** for an invalid batch configuration. A blocked input is
+An empty inbox (or a folder containing no `.txt` drafts) reports
+`BATCH_NO_REQUESTS` so it is not mistaken for admitted customer work.
+
+The exit code is **0** when there are no requests or when every eligible draft
+was accepted/reused or safely deduplicated; **3** when some drafts were blocked
+(valid drafts may still have been imported); **2** for an invalid batch configuration. A blocked input is
 never categorized as an accepted case. If a source changes between the batch
 fingerprint and the single-request importer's second read, the batch refuses
 publication under an incorrect request digest.
