@@ -111,9 +111,9 @@ jobs:
           python -m capturebrief_core.cli fulfillment-plan /tmp/capturebrief-fresh-fulfillment-case.json -o /tmp/traced-plan.json
           grep -q '"delivery_bundle_eligible": true' /tmp/traced-plan.json
       - name: Validate releasable fixture
-        run: python -m capturebrief_core.cli validate fixtures/ready_case.json
+        run: python -m capturebrief_core.cli validate /tmp/capturebrief-fresh-fulfillment-case.json
       - name: Render releasable fixture
-        run: python -m capturebrief_core.cli render fixtures/ready_case.json -o /tmp/capturebrief.md
+        run: python -m capturebrief_core.cli render /tmp/capturebrief-fresh-fulfillment-case.json -o /tmp/capturebrief.md
       - name: Exercise targeted change watch
         run: python -m capturebrief_core.cli diff fixtures/ready_case.json fixtures/changed_case.json > /tmp/change.json
 
