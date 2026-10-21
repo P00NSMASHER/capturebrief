@@ -68,7 +68,7 @@ jobs:
           research/fy2027-archive-capacity-probe-20261019:7ddba048416bd059c80b02d84accde4e69f743fa
           security/independent-source-row-projection-audit-20261019:2e3ae7f5300d50842d30186f488752519b5a8f34
           security/sam-original-slot-binding-20261020:3280cf9f3fc6abb9b1956004c98f010a6543cf95
-          feat/private-order-os-20261021:eb64e540bc1e831eee8ab9f2cf530dfef1638cdc
+          feat/private-order-os-20261021:0eee01ec4522530430c394e5d158c019f0da4e58
           PINNED
           git diff --check
           test -z "$(git status --porcelain)"
