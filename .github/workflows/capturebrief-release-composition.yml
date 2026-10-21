@@ -66,7 +66,7 @@ jobs:
           security/fy2027-compressed-disk-reserve-20261019:ef53c49b1ac63124256701e52a3bd5513c02e82a
           research/fy2027-archive-capacity-probe-20261019:7ddba048416bd059c80b02d84accde4e69f743fa
           security/independent-source-row-projection-audit-20261019:47b1341ab1419b392a661ce803f60f7f7c6193e3
-          security/sam-original-slot-binding-20261020:63f9f6f7841420608d919bc8ca293d1886cc6208
+          security/sam-original-slot-binding-20261020:3280cf9f3fc6abb9b1956004c98f010a6543cf95
           PINNED
           git diff --check
           test -z "$(git status --porcelain)"
