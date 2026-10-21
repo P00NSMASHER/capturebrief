@@ -2,17 +2,19 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import sqlite3
 import tempfile
 import unittest
+from unittest.mock import patch
 from contextlib import closing
 from pathlib import Path
 
 from capturebrief_core.data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD
 from capturebrief_core.history_index import OPERATOR_FILE, ingest_extract_file
 from scripts.audit_original_index_projection import (
-    IndexSourceMismatch, audit_row_projection,
+    IndexSourceMismatch, _original_sha_and_size, audit_row_projection,
 )
 from tests.test_history_index import FIELDS, NOW, row, write_csv
 
@@ -162,6 +164,50 @@ class OriginalProjectionAuditTests(unittest.TestCase):
             source.write_bytes(data.replace(b"fictional-id-1",b"fictional-id-X"))
             with self.assertRaises(IndexSourceMismatch):
                 audit_row_projection(db,slot=slot,snapshot_root=root)
+
+
+
+    def test_source_swap_between_hash_and_sqlite_comparison_fails_closed(self):
+        # The local original is A when its SHA is checked, but switches to
+        # B (the tampered SQLite projection) before the CSV scan. A single
+        # pre-scan hash would falsely certify a forged source projection.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            db, original, slot = self.fake_source(
+                root, rows=[row("fictional-id-1")],
+            )
+            indexed_bytes = original.read_bytes()  # B: indexed CSV
+            authentic_bytes = indexed_bytes.replace(
+                b"fictional-id-1", b"fictional-id-X",
+            )  # A: locally fingerprinted original
+            self.assertNotEqual(authentic_bytes, indexed_bytes)
+            self.assertEqual(len(authentic_bytes), len(indexed_bytes))
+            original.write_bytes(authentic_bytes)
+            with closing(sqlite3.connect(db)) as conn, conn:
+                conn.execute(
+                    "UPDATE source_snapshots SET extract_sha256=?, size_bytes=? "
+                    "WHERE snapshot_id=(SELECT snapshot_id FROM current_sources WHERE slot=?)",
+                    (hashlib.sha256(authentic_bytes).hexdigest(), len(authentic_bytes), slot),
+                )
+
+            changed = False
+
+            def switch_after_first_verified_hash(path):
+                nonlocal changed
+                digest, size = _original_sha_and_size(path)
+                if not changed:
+                    original.write_bytes(indexed_bytes)
+                    changed = True
+                return digest, size
+
+            with patch(
+                "scripts.audit_original_index_projection._original_sha_and_size",
+                side_effect=switch_after_first_verified_hash,
+            ):
+                with self.assertRaises(IndexSourceMismatch):
+                    audit_row_projection(db, slot=slot, snapshot_root=root)
+            self.assertTrue(changed)
+
 
 
 if __name__ == "__main__":
