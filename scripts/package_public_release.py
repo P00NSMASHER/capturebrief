@@ -14,12 +14,22 @@ import zipfile
 from pathlib import Path
 
 PUBLIC_FILES = frozenset({
+    ".well-known/x402", "openapi.json",
+    "x402/pa-entity/.well-known/x402", "x402/pa-entity/openapi.json",
     "404.html", "_headers", "_redirects", "data-handling.html",
     "decision-evidence-sample.html", "favicon.svg", "index.html", "privacy.html",
     "robots.txt", "sample.html", "site.webmanifest", "sitemap.xml", "terms.html",
     "thanks.html", "assets/main.js", "assets/og-capturebrief.png",
     "assets/styles.css", "assets/v5.css",
 })
+# These two discovery aliases are intentionally published at both the
+# origin root and the product-prefixed path. Neither root alias is a
+# separately tracked source file; always verify its exact bytes against the
+# same reviewed producer file pinned to the release commit.
+PUBLIC_SOURCE_ALIASES = {
+    ".well-known/x402": "x402/pa-entity/.well-known/x402",
+    "openapi.json": "x402/pa-entity/openapi.json",
+}
 _FIXED_TIME = (1980, 1, 1, 0, 0, 0)
 
 
@@ -55,7 +65,8 @@ def package_release(root: Path, output_dir: Path, source_sha: str) -> dict:
         data = (dist / name).read_bytes()
         if not data:
             raise ValueError("empty public file: " + name)
-        if data != _git(root, "show", f"{source_sha}:{name}"):
+        source_name = PUBLIC_SOURCE_ALIASES.get(name, name)
+        if data != _git(root, "show", f"{source_sha}:{source_name}"):
             raise ValueError("built file does not match pinned source: " + name)
         files[name] = data
     rows = [{"path": name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
