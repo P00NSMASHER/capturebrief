@@ -711,3 +711,61 @@ PR #52. No main/gh-pages changes, private buyer requests, mail
 delivery, live payment, complete FY2027 source catalog, off-device
 recovery, independent release approval or actual customer fulfillment
 are established by these synthetic developer tests.
+
+
+## October 21 — private batch dry-run preview and operator handoff
+
+**Product-only advancement, still NO DEPLOY.** Draft stacked PR #64 adds a
+read-only operator preview mode to the previously accepted private saved
+request batch importer. At exact PR #64 head
+`137f0963cf83c2257f1245143e9938911626c572`,
+`--preview` applies the same strict local buyer-draft syntax validation as
+importing but **does not publish, repair, overwrite or delete** private
+cases or receipts. It counts exact duplicate input bytes and labels
+pre-existing saved output pairs `EXISTING_UNVERIFIED` and incomplete
+pairs `PARTIAL_UNVERIFIED`. These labels DO NOT attest that the
+previous case/receipt bytes are valid; the actual locked import is
+still responsible for integrity checks. Invalid drafts report a
+nonzero partial-preview status, and an empty inbox says
+`BATCH_PREVIEW_NO_REQUESTS` rather than falsely saying a customer
+was accepted.
+
+**Verified exact source head:** [Linux/Windows private-batch QA
+#39560683272](https://github.com/P00NSMASHER/capturebrief/actions/runs/39560683272),
+[Product Core
+#39560683558](https://github.com/P00NSMASHER/capturebrief/actions/runs/39560683558),
+and [intake concurrency
+#39560683494](https://github.com/P00NSMASHER/capturebrief/actions/runs/39560683494)
+all **PASSED**, using fictional buyer data only.
+
+**Integrated exact-code composition:** [NO-DEPLOY GitHub Actions
+#39561057406](https://github.com/P00NSMASHER/capturebrief/actions/runs/39561057406)
+at QA workflow source
+`01334b146e07e9aa40a81c2d9ce2024a036eb7c8`
+**PASSED 657 Linux tests, 260 Windows tests (one skipped)**, Chromium/WebKit
+fictional buyer-to-private-case/Stripe safety checks, and all eleven
+pinned candidate Git merges inside disposable CI workspaces. No public
+branch, customer record, payment processor state, private source
+storage or live site was mutated.
+
+**Real authorized Windows device replay:** The online PAAM-L044
+checkout was updated to the same pinned PR #64 code SHA, and
+**30 Python 3.13 batch/intake tests ran successfully (one Windows
+symlink-permission skip)**. An empty real private inbox preview
+returned `BATCH_PREVIEW_NO_REQUESTS` and produced zero files. A
+separate isolated, entirely fictional three-draft CLI exercise
+(duplicate + malformed + one valid draft) verified the preview
+created **no case files**, that explicitly running the importer
+created exactly one fictional case/receipt, and that another preview
+classified the existing pair `EXISTING_UNVERIFIED`.
+The separate disposable test directory was destroyed. Pinned
+`Preview-CaptureBrief-Private-Batch.cmd` and
+`Start-CaptureBrief-Private-Batch.cmd` remain in local app data,
+with both real private inbox/output folders still empty.
+
+**Not accepted by these tests:** actual buyer identity/email delivery,
+live $149 Stripe payment, official FY2027 full source catalog and
+genuine source authority, independent code/production review,
+off-device encrypted disaster recovery with an independently retrieved
+key, and a real 14-day customer watch. No main/gh-pages merge,
+external send, payment, or customer release occurred.
