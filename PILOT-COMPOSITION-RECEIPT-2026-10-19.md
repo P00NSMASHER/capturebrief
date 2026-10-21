@@ -505,3 +505,53 @@ approval, verified host encryption, off-device recovery or
 production deployment was performed.** A real customer case and
 14-day monitored pilot are still missing. The engineering test
 results must never be relabeled as independent approval.
+
+
+## October 20 — additional source-slot and stable-original release-gate QA
+
+**Scope: source-security engineering only; NOT customer-release approval.**
+
+1. DRAFT PR #63, exact source head
+   `3280cf9f3fc6abb9b1956004c98f010a6543cf95`, now applies the same
+   official active/archive fiscal-year/URL binding to **both** the
+   in-memory Data Services scanner and the disk-based SQLite importer.
+   Six new fictional bad-label cases reject an ACTIVE source mislabeled
+   as an archived year, archived URLs mislabeled as ACTIVE or another FY,
+   and accidental coercion of boolean/string year parameters **before
+   private retention or index mutation**. [Exact-head Product Core
+   #39524307326](https://github.com/P00NSMASHER/capturebrief/actions/runs/39524307326)
+   passed Linux and Windows.
+2. DRAFT PR #62, exact source head
+   `2e3ae7f5300d50842d30186f488752519b5a8f34`, adds a synthetic
+   regression where an on-disk source original changes **between**
+   its initial matching SHA-256 and the read-only SQLite projection
+   comparison. Its operator-only audit now rehashes full source bytes
+   after row comparison and refuses a PASS for the changed source.
+   [Exact-head audit #39524744813](https://github.com/P00NSMASHER/capturebrief/actions/runs/39524744813)
+   passed Linux and Windows. This costs one additional sequential source
+   read and does NOT prove safety against a fully malicious host.
+3. The ten-source-candidate, **NO DEPLOY** composition at QA workflow
+   source `12d4ccc7bb0497108110a3137bcf52ebd3b8c607`
+   [#39524768027](https://github.com/P00NSMASHER/capturebrief/actions/runs/39524768027)
+   **PASSED**: **639 Linux tests, 242 Windows tests (one skipped)**,
+   Chromium and WebKit fictional site-to-private-case/Stripe safety
+   checks, and all ten exact branch merges in isolated CI workspaces.
+   The public website PR #50 was checked out separately at its existing
+   immutable candidate SHA, not published.
+4. This document addendum does not advance the fixed FY2026 production
+   archive catalog or claim authenticated 34-year FY2027 history.
+   PAAM-L044 was **offline** during this source review. New code has
+   not been replayed against the private FY2027 original on the host.
+   Local original retention, local backup and preexisting receipt
+   observations are historical, not remotely escrowed/restore-tested
+   proof. The unrelated `pa-entity-discovery.yml` branch-push
+   workflow remains invalid on unmerged branches until the separately
+   green PR #54 is independently approved and integrated.
+
+**Release decision: NO-GO.** Independent human source/catalog/code
+review, immutable complete archive coverage + current ACTIVE file,
+independently recoverable encrypted off-device backup and actual
+remote restore, verified device encryption, payment/case/delivery
+acceptance and real 14-day monitoring are still unproven. No main or
+gh-pages merge, actual billing, private original upload, customer
+communication, or production deployment is authorized by this receipt.
