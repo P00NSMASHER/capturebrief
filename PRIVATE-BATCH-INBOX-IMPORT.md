@@ -150,8 +150,17 @@ are only local, unverified suggestions.
 
 `PRIVATE_CASE_REVIEW_PENDING` means original intake pairs are intact
 **but still unverified and not releasable**. `PRIVATE_CASE_REVIEW_BLOCKED`
-means at least one incomplete, tampered or locked case. `PRIVATE_CASE_REVIEW_EMPTY`
-means no matching imported cases. A blocked report exits with code 3; an
+means at least one incomplete, tampered, unexpectedly named, or locked
+case-like artifact. **An importer lock is a blocker even before the first
+case JSON exists**, so an in-progress or abandoned import cannot be mistaken
+for an empty queue. A malformed `request-*.case.json` or
+`request-*.receipt.json` filename is also counted as an unexpected artifact,
+not silently ignored. The report includes privacy-safe counts
+`unexpected_case_entries`, `active_import_locks`, and
+`orphan_import_locks`; names, buyer details and paths remain private.
+Ordinary unrelated notes/PDFs are ignored. `PRIVATE_CASE_REVIEW_EMPTY`
+means no recognizable cases, suspicious case-like artifacts, or importer
+locks are present. A blocked report exits with code 3; an
 invalid configuration exits with code 2. The reviewer is limited to 100
 case handles per run, and produces no output files. `--now` accepts a
 timezone-aware clock value for reproducible synthetic tests only.
