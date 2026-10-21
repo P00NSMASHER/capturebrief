@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from capturebrief_core.ledger import (
     LEDGER_VERSION, GENESIS, _ledger_lock, append_record,
@@ -59,6 +60,39 @@ class ImmutableHandoffTests(unittest.TestCase):
         snapshot = read_verified_outcome_snapshot(self.path)
         self.assertEqual(1, snapshot["content"].count(b"\n"))
         self.assertIn("CB-UNICODE-", snapshot["content"].decode("utf-8"))
+
+    def test_same_second_snapshot_keeps_fractional_record_causality(self):
+        """RETALLY must not see a just-appended record as from the future."""
+        written_at = "2026-10-21T16:00:00.987123+00:00"
+        captured_at = datetime(2026, 10, 21, 16, 0, 0, 987654,
+                               tzinfo=timezone.utc)
+        event = make_outcome_event(
+            case_id="CB-SAME-SECOND",
+            case_sha256="a" * 64,
+            event_type="EFFORT",
+            event_at="2026-10-21T16:00:00.987000+00:00",
+            data={"stage": "OTHER", "minutes": 1,
+                  "effort_evidence_ref": "timer:synthetic:same-second"},
+        )
+        append_record(
+            self.path,
+            record_type="CAPTUREBRIEF_OUTCOME_EVENT",
+            payload=event,
+            recorded_at=written_at,
+        )
+
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                self.assertEqual(tz, timezone.utc)
+                return captured_at
+
+        with patch("capturebrief_core.ledger.datetime", FixedDatetime):
+            snapshot = read_verified_outcome_snapshot(self.path)
+        observed = datetime.fromisoformat(snapshot["observed_at"].replace("Z", "+00:00"))
+        self.assertGreaterEqual(observed, datetime.fromisoformat(written_at))
+        self.assertEqual(observed, captured_at)
+        self.assertEqual(snapshot["content"], self.path.read_bytes())
 
     def test_missing_source_never_claims_empty_or_creates_parent(self):
         absent = self.path.parent / "never-created" / "outcome.jsonl"
