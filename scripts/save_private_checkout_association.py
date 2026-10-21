@@ -90,7 +90,7 @@ def save_private_checkout_association(
         "status": ("PRIVATE_ASSOCIATION_SAVED_UNVERIFIED" if result["created"]
                    else "PRIVATE_ASSOCIATION_ALREADY_SAVED_UNVERIFIED"),
         "opaque_item_tag": _tag(digest),
-        "operator_retrieved_reference": True,
+        "operator_supplied_reference_not_authenticated": True,
         "stripe_payment_verified": False,
         "sender_authenticated": False,
         "registered_order_created": False,
