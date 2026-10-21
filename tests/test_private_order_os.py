@@ -161,6 +161,31 @@ class PrivateOrderOsTests(unittest.TestCase):
                 self.assertFalse(db.exists())
                 self.assertEqual(order_summary(db)["orders"], [])
 
+    def test_refund_after_registration_persists_separate_payment_hold(self):
+        with tempfile.TemporaryDirectory() as td:
+            inbox, cases, db = self.root(td)
+            case = self.create_case(inbox, cases)
+            initial, _ = self.register(case, db, stripe_records("REVERSAL"))
+            self.assertEqual(initial["status"], "PRIVATE_ORDER_REGISTERED_REVIEW_REQUIRED")
+            records = list(stripe_records("REVERSAL"))
+            records[2]["refunded"] = True
+            records[2]["amount_refunded"] = 14900
+            rejected, _ = self.register(case, db, records)
+            self.assertEqual(rejected["status"], "PAYMENT_RECONCILIATION_BLOCKED")
+            self.assertTrue(rejected["existing_order_recheck_marked"])
+            summary = order_summary(db)
+            self.assertEqual(summary["status"], "PRIVATE_ORDER_PAYMENT_RECHECK_BLOCKED")
+            self.assertEqual(len(summary["orders"]), 1)
+            self.assertTrue(summary["orders"][0]["payment_recheck_blocked"])
+            self.assertEqual(summary["orders"][0]["payment_state"],
+                             "PAYMENT_RECHECK_BLOCKED_REVIEW_REQUIRED")
+            # No silent re-promotion if a later synthetic record looks paid.
+            with self.assertRaises(OrderConflict):
+                self.register(case, db, stripe_records("REVERSAL"))
+            self.assertEqual(len(order_summary(db)["orders"]), 1)
+            self.assertNotIn("buyer@example.com", json.dumps(summary))
+            self.assertFalse(summary["any_external_send_authorized"])
+
     def test_fake_key_and_untrusted_provider_modes_block_without_io(self):
         with tempfile.TemporaryDirectory() as td:
             inbox, cases, db = self.root(td)
