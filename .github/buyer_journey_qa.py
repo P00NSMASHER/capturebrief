@@ -147,6 +147,39 @@ try:
                     check(page.url == original_page_url and "too long" in page.locator("#request-status").inner_text(),
                           "Oversized mailto is blocked with copy fallback, no navigation or external action")
 
+                    # Some browsers/privacy modes deny BOTH Clipboard API
+                    # and execCommand. Do not silently lose an entire buyer
+                    # request or ask them to retype five long assumptions.
+                    blocked_requests = len(requests_before)
+                    page.evaluate("""() => {
+                        Object.defineProperty(navigator, 'clipboard', {
+                            value: undefined, configurable: true
+                        });
+                        document.execCommand = () => false;
+                    }""")
+                    page.locator("#copy-request").click()
+                    manual = page.locator("#request-manual-copy")
+                    check(manual.count() == 1 and manual.is_visible(),
+                          "The complete request remains selectable when both clipboard APIs fail")
+                    if manual.count():
+                        full_plain = manual.locator("#request-plaintext").input_value()
+                        check(all((f"{i+1}. " + chr(65+i)*500) in full_plain for i in range(5)),
+                              "Manual copy fallback retains all five full 500-character assumptions")
+                        check("To: jayp19386@gmail.com" in full_plain,
+                              "Manual fallback includes recipient and subject for ordinary email")
+                        page.locator("#assumptions").fill("Edited after failed copy")
+                        check(not manual.is_visible()
+                              and manual.locator("#request-plaintext").input_value() == "",
+                              "Editing clears the previously displayed draft for privacy")
+                    check(len(requests_before) == blocked_requests,
+                          "No POST or other network request during manual copy fallback")
+                    page.evaluate("""() => {
+                        Object.defineProperty(navigator, 'clipboard', {
+                            value: {writeText:async t=>{window.__qaCopied=t}},
+                            configurable: true
+                        });
+                    }""")
+
                     page.locator("#assumptions").fill("One\nTwo\nThree\nFour\nFive\nSix")
                     page.locator("#copy-request").click()
                     check("five assumptions or fewer" in page.locator("#request-status").inner_text(), "Sixth assumption is blocked")
