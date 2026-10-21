@@ -182,6 +182,60 @@ class PrivateOrderPipelineTests(unittest.TestCase):
             self.assertEqual(r["blocked"],1)
             self.assertFalse(r["external_send_authorized"])
 
+    def test_malformed_checkout_mapping_never_masquerades_as_empty_queue(self):
+        # A user may save a JSON file with an incomplete digest, old name,
+        # or .tmp suffix. It must be visible as BLOCKED, not an empty inbox.
+        for filename in (
+            "request-too-short.order.json",
+            "request-" + ("a" * 64) + ".order.json.tmp",
+            "Request-" + ("b" * 64) + ".order.json",
+            "request-" + ("c" * 64) + ".order.jsn",
+            "wrongprefix.order.json",
+        ):
+            with self.subTest(filename_kind=filename.rsplit(".", 1)[-1]), tempfile.TemporaryDirectory() as td:
+                inbox,cases,assoc,db=self.setup_dirs(td)
+                invalid=assoc/filename
+                invalid.write_text('{"untrusted":"fictional"}',encoding="utf-8")
+                before=invalid.read_bytes()
+                check, calls=self.synthetic(cases,assoc,db,preview=True)
+                self.assertEqual(check["status"],"PRIVATE_ORDER_QUEUE_BLOCKED")
+                self.assertEqual(check["blocked"],1)
+                self.assertEqual(check["unexpected_association_entries"],1)
+                self.assertEqual(check["input_associations"],1)
+                self.assertEqual(check["registered"],0)
+                self.assertFalse(db.exists())
+                self.assertEqual(calls,[])
+                self.assertEqual(invalid.read_bytes(),before)
+                self.assertNotIn(filename,json.dumps(check))
+
+    def test_malformed_checkout_mapping_blocks_with_valid_neighbor_without_side_effects(self):
+        with tempfile.TemporaryDirectory() as td:
+            inbox,cases,assoc,db=self.setup_dirs(td)
+            self.build_association(inbox,cases,assoc)
+            stale=assoc/"request-pending.order.json.tmp"
+            stale.write_text("partial fictional association",encoding="utf-8")
+            check,calls=self.synthetic(cases,assoc,db,preview=True)
+            self.assertEqual(check["preview_ready"],1)
+            self.assertEqual(check["blocked"],1)
+            self.assertEqual(check["unexpected_association_entries"],1)
+            self.assertEqual(check["status"],"PRIVATE_ORDER_QUEUE_BLOCKED")
+            self.assertFalse(db.exists())
+            self.assertEqual(calls,[])
+            self.assertFalse(check["any_customer_release_authorized"])
+
+    def test_unrelated_notes_are_ignored_not_false_orders(self):
+        with tempfile.TemporaryDirectory() as td:
+            inbox,cases,assoc,db=self.setup_dirs(td)
+            (assoc/"notes.txt").write_text("fictional private operator notes",encoding="utf-8")
+            (assoc/"readme.pdf").write_bytes(b"fictional")
+            check,calls=self.synthetic(cases,assoc,db,preview=True)
+            self.assertEqual(check["status"],"PRIVATE_ORDER_QUEUE_EMPTY")
+            self.assertEqual(check["ignored_non_association_entries"],2)
+            self.assertEqual(check["unexpected_association_entries"],0)
+            self.assertEqual(check["blocked"],0)
+            self.assertEqual(calls,[])
+            self.assertFalse(db.exists())
+
     def test_empty_pipeline_and_no_live_key_do_not_create_registry(self):
         with tempfile.TemporaryDirectory() as td:
             inbox,cases,assoc,db=self.setup_dirs(td)
