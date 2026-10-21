@@ -10,7 +10,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from scripts.package_public_release import PUBLIC_FILES, package_release
+from scripts.package_public_release import PUBLIC_FILES, PUBLIC_SOURCE_PATHS, package_release
 
 
 class PublicReleaseTests(unittest.TestCase):
@@ -22,7 +22,7 @@ class PublicReleaseTests(unittest.TestCase):
         self.git("init", "--quiet")
         self.git("config", "user.name", "Release Test")
         self.git("config", "user.email", "release-test@example.invalid")
-        for name in PUBLIC_FILES:
+        for name in {PUBLIC_SOURCE_PATHS.get(name, name) for name in PUBLIC_FILES}:
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("Test public content: " + name, encoding="utf-8")
@@ -34,7 +34,7 @@ class PublicReleaseTests(unittest.TestCase):
         for name in PUBLIC_FILES:
             dest = dist / name
             dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(self.root / name, dest)
+            shutil.copyfile(self.root / PUBLIC_SOURCE_PATHS.get(name, name), dest)
 
     def tearDown(self):
         self.temp.cleanup()
@@ -67,6 +67,46 @@ class PublicReleaseTests(unittest.TestCase):
                 data = z.read(row["path"])
                 self.assertEqual(row["sha256"], hashlib.sha256(data).hexdigest())
                 self.assertEqual(row["bytes"], len(data))
+
+    def test_x402_discovery_aliases_are_pinned_to_the_only_approved_sources(self):
+        self.assertEqual({
+            ".well-known/x402": "x402/pa-entity/.well-known/x402",
+            "openapi.json": "x402/pa-entity/openapi.json",
+        }, PUBLIC_SOURCE_PATHS)
+        receipt = self.package()
+        with zipfile.ZipFile(self.output / receipt["archive"]) as archive:
+            for alias, source in PUBLIC_SOURCE_PATHS.items():
+                self.assertEqual(archive.read(alias), archive.read(source))
+                self.assertEqual(archive.read(alias), (self.root / source).read_bytes())
+            self.assertFalse(receipt["deployed"])
+            self.assertFalse(receipt["contains_internal_product_files"])
+
+    def test_tampered_x402_discovery_alias_or_canonical_file_is_rejected(self):
+        for path in ("openapi.json", ".well-known/x402",
+                     "x402/pa-entity/openapi.json",
+                     "x402/pa-entity/.well-known/x402"):
+            with self.subTest(path=path):
+                target = self.root / "dist" / path
+                original = target.read_bytes()
+                try:
+                    target.write_bytes(b"unexpected x402 copy")
+                    with self.assertRaisesRegex(ValueError, "pinned source"):
+                        self.package()
+                finally:
+                    target.write_bytes(original)
+
+    def test_extra_x402_discovery_path_does_not_expand_public_allowlist(self):
+        path = self.root / "dist" / "x402" / "unreviewed-secret.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("{}")
+        with self.assertRaisesRegex(ValueError, "allowlist mismatch"):
+            self.package()
+
+    def test_edited_x402_origin_cannot_be_packaged_from_old_commit(self):
+        source = self.root / "x402/pa-entity/openapi.json"
+        source.write_text("changed uncommitted discovery content")
+        with self.assertRaisesRegex(ValueError, "uncommitted changes"):
+            self.package()
 
     def test_rebuild_is_byte_deterministic(self):
         first = self.package()
