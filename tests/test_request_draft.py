@@ -5,13 +5,17 @@ import hashlib
 import json
 import os
 import subprocess
+import threading
+import time
 import sys
 import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from capturebrief_core.audit import audit_case
+from capturebrief_core.atomic_io import ArtifactLockedError, exclusive_path_lock
 from capturebrief_core.intake import IntakeError
 from capturebrief_core.model import canonical_json
 from capturebrief_core.request_draft import (
@@ -229,6 +233,86 @@ class RequestDraftTests(unittest.TestCase):
                 import_request(str(src), str(case_file), str(receipt_file))
             self.assertEqual(case_file.read_bytes(), old_case)
             self.assertEqual(receipt_file.read_text(), "tampered")
+
+
+    def test_concurrent_importers_share_one_case_identity(self):
+        """A duplicated simultaneous inbox job must not create conflicting case IDs."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source, case, receipt = (
+                root / "request.txt", root / "case.json", root / "receipt.json"
+            )
+            source.write_text(draft(paid=True), encoding="utf-8")
+            first_at_write = threading.Event()
+            release_first = threading.Event()
+            outcomes: dict[str, dict] = {}
+            failures: list[BaseException] = []
+            from scripts import import_request_draft as module
+            original_writer = module.ensure_exact_bytes
+
+            def delayed_first_writer(path, data, **kwargs):
+                if threading.current_thread().name == "first-import" and Path(path) == case:
+                    first_at_write.set()
+                    if not release_first.wait(5):
+                        raise AssertionError("Parallel test writer was never released")
+                return original_writer(path, data, **kwargs)
+
+            def run(label):
+                try:
+                    outcomes[label] = import_request(
+                        str(source), str(case), str(receipt),
+                    )
+                except BaseException as exc:
+                    failures.append(exc)
+
+            with patch("scripts.import_request_draft.ensure_exact_bytes",
+                       side_effect=delayed_first_writer):
+                first = threading.Thread(target=run, args=("first",),
+                                         name="first-import")
+                second = threading.Thread(target=run, args=("second",),
+                                          name="second-import")
+                first.start()
+                try:
+                    self.assertTrue(first_at_write.wait(5),
+                                    "First import never reached case publication")
+                    second.start()
+                    time.sleep(0.15)
+                finally:
+                    release_first.set()
+                    first.join(timeout=8)
+                    if second.ident is not None:
+                        second.join(timeout=8)
+            self.assertFalse(first.is_alive())
+            self.assertFalse(second.is_alive())
+            self.assertEqual(failures, [])
+            self.assertEqual(outcomes["first"], outcomes["second"])
+            saved_case = json.loads(case.read_text(encoding="utf-8"))
+            saved_receipt = json.loads(receipt.read_text(encoding="utf-8"))
+            self.assertEqual(saved_case["case_id"], saved_receipt["case_id"])
+            self.assertEqual(
+                saved_receipt["case_file_sha256"],
+                hashlib.sha256(case.read_bytes()).hexdigest(),
+            )
+            self.assertFalse(saved_receipt["purchase_claim_verified"])
+            self.assertEqual(list(root.glob("*.intake.lock")), [])
+
+    def test_locked_intake_path_refuses_a_second_import_without_writing(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            request, case, receipt = (
+                root / "request.txt", root / "case.json", root / "receipt.json"
+            )
+            request.write_text(draft(), encoding="utf-8")
+            with exclusive_path_lock(case, suffix=".intake.lock",
+                                     timeout_seconds=0.05):
+                with self.assertRaises(ArtifactLockedError):
+                    import_request(
+                        str(request), str(case), str(receipt),
+                        lock_timeout_seconds=0.05,
+                    )
+                self.assertFalse(case.exists())
+                self.assertFalse(receipt.exists())
+            self.assertFalse(case.with_name(case.name + ".intake.lock").exists())
 
     def test_private_destination_rejects_public_repo_and_overwrite(self):
         with tempfile.TemporaryDirectory() as td:
