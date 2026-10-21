@@ -42,7 +42,18 @@ proof of when the customer originally sent an email; the case records this
 basis explicitly.
 
 The output paths must be distinct, outside the public repository, and
-cannot silently overwrite different bytes. Keep filesystem and provider
+cannot silently overwrite different bytes.
+
+**Safe retry and interrupted imports:** Run the identical command again with
+the same source request bytes and output paths. When `--imported-at` is omitted,
+the importer recovers the original UTC import timestamp from an existing
+receipt (or case if the receipt was not yet written). It reconstructs and
+checks the exact case and receipt contents before publishing any missing file.
+A repeated request retains the original case ID and unchanged artifact bytes;
+a different request, altered existing artifact, or conflicting explicit
+`--imported-at` stops with no overwrite. This is same-output-path
+idempotence, not deduplication across separately chosen case directories.
+ Keep filesystem and provider
 access controls, retention policy, and backup practices appropriate for
 client contact details. An import error never triggers a message.
 
