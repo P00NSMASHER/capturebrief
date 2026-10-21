@@ -59,7 +59,9 @@ def run_acceptance() -> dict:
         imported = batch_import(inbox, cases)
         _check(imported["created"] == 2 and imported["blocked"] == 1
                and imported["duplicates"] == 1, "private intake and exact dedup")
-        sha = hashlib.sha256(message.encode("utf-8")).hexdigest()
+        # Windows text mode writes CRLF. Hash the exact actual private draft
+        # bytes consumed by the importer, never a reconstructed LF string.
+        sha = hashlib.sha256((inbox / "a.txt").read_bytes()).hexdigest()
         association = {
             "schema": "capturebrief-private-checkout-association-v1",
             "request_sha256": sha,
