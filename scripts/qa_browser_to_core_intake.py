@@ -264,7 +264,7 @@ def run():
                           and manual.locator("#request-plaintext").input_value() == "",
                           "stale manual request text remained visible after buyer edit")
                     checks.append(browser_name + ": old manual preview clears on edit")
-                    fill(page, purchase="PAID", assumptions="\\n".join(lines))
+                    fill(page, purchase="PAID", assumptions="\n".join(lines))
 
                     # Email clients may reject long mailto URLs. The site must
                     # not navigate or attempt a send when the draft is too long.
