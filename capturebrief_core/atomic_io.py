@@ -270,7 +270,13 @@ def ensure_exact_file(
     copied_size=0
     try:
         try:
-            if hasattr(os,"fchmod"):
+            # On Windows, chmod of a temporary file maps to a filesystem
+            # read-only attribute. Removing its hard link after publishing
+            # then raises PermissionError (WinError 5), leaving a stray
+            # temporary file and preventing the independent receipt.
+            # Defer Windows read-only publication until the temporary hard
+            # link is removed; Linux/macOS retain their original fchmod.
+            if hasattr(os,"fchmod") and os.name!="nt":
                 os.fchmod(fd,mode)
             with source.open("rb") as inp, os.fdopen(fd,"wb",closefd=False) as out:
                 while True:
@@ -296,7 +302,13 @@ def ensure_exact_file(
         except FileExistsError:
             return existing_result()
         else:
+            # Windows hard links share the read-only attribute. Ensure the
+            # temporary link can be removed *before* sealing the final path.
+            if os.name=="nt":
+                os.chmod(temp,0o600)
             temp.unlink()
+            if os.name=="nt":
+                os.chmod(target,mode)
             _fsync_directory(target.parent)
             return {
                 "path":str(target),
@@ -306,4 +318,6 @@ def ensure_exact_file(
             }
     finally:
         if temp.exists():
+            if os.name=="nt":
+                os.chmod(temp,0o600)
             temp.unlink()

@@ -228,10 +228,21 @@ class DeviationWatchTests(unittest.TestCase):
         )
         types={x["type"] for x in result["events"]}
         self.assertIn("DEVIATION_ARTIFACT_CHANGED",types)
-        self.assertEqual([x["assumption_id"] for x in result["reopened_assumptions"]],["A1"])
+        reopened={x["assumption_id"]:x for x in result["reopened_assumptions"]}
+        # Both assumptions cite the still-unrefreshed solicitation; only A1
+        # depends on the changed class deviation. Preserve both safety causes.
+        self.assertEqual(set(reopened), {"A1", "A2"})
         self.assertIn(
             "DEVIATION:"+ident,
-            result["reopened_assumptions"][0]["matched_dependencies"],
+            reopened["A1"]["matched_dependencies"],
+        )
+        self.assertNotIn(
+            "DEVIATION:"+ident,
+            reopened["A2"]["matched_dependencies"],
+        )
+        self.assertIn(
+            "SOURCE_CHECK:sol",
+            reopened["A2"]["matched_dependencies"],
         )
         self.assertTrue(result["requires_human_review"])
         self.assertTrue(result["previous_decision_preserved"])
@@ -263,10 +274,21 @@ class DeviationWatchTests(unittest.TestCase):
         )
         types={x["type"] for x in result["events"]}
         self.assertIn("DEVIATION_PROPOSAL_CHANGED",types)
-        self.assertEqual([x["assumption_id"] for x in result["reopened_assumptions"]],["A1"])
+        reopened={x["assumption_id"]:x for x in result["reopened_assumptions"]}
+        # Both assumptions cite the still-unrefreshed solicitation; only A1
+        # depends on the changed class deviation. Preserve both safety causes.
+        self.assertEqual(set(reopened), {"A1", "A2"})
         self.assertIn(
             "DEVIATION:"+ident,
-            result["reopened_assumptions"][0]["matched_dependencies"],
+            reopened["A1"]["matched_dependencies"],
+        )
+        self.assertNotIn(
+            "DEVIATION:"+ident,
+            reopened["A2"]["matched_dependencies"],
+        )
+        self.assertIn(
+            "SOURCE_CHECK:sol",
+            reopened["A2"]["matched_dependencies"],
         )
         self.assertFalse(result["automatic_decision_change"])
         self.assertTrue(result["previous_decision_preserved"])

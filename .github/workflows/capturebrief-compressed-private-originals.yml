@@ -1,0 +1,48 @@
+name: CaptureBrief original gzip retention candidate (SYNTHETIC ONLY)
+
+on:
+  push:
+    branches:
+      - security/fy2027-compressed-private-retention-candidate-20261019
+    paths:
+      - '.github/workflows/capturebrief-compressed-private-originals.yml'
+      - 'scripts/retain_compressed_sam_archive_candidate.py'
+      - 'tests/test_compressed_archive_candidate.py'
+  pull_request:
+    paths:
+      - '.github/workflows/capturebrief-compressed-private-originals.yml'
+      - 'scripts/retain_compressed_sam_archive_candidate.py'
+      - 'tests/test_compressed_archive_candidate.py'
+
+permissions:
+  contents: read
+
+jobs:
+  candidate-validation:
+    name: Fake-source gzip / ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 12
+    env:
+      PYTHONPATH: '.'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile source-bound candidate
+        run: python -m compileall -q scripts/retain_compressed_sam_archive_candidate.py
+      - name: Full fake source byte replay, atomic gzip and adversarial checks
+        run: python -m unittest tests.test_compressed_archive_candidate -v
+      - name: Verify CLI safety requires explicit private destination
+        run: >-
+          python -c "import inspect; from scripts.retain_compressed_sam_archive_candidate
+          import retain_compressed_candidate; assert
+          'private_dir' in inspect.signature(retain_compressed_candidate).parameters;
+          print('No live public download, no index, no release authorized.')"

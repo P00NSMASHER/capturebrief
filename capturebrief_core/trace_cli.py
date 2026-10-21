@@ -54,6 +54,7 @@ def main(argv=None) -> int:
     compare = sub.add_parser("compare"); compare.add_argument("before"); compare.add_argument("after")
     bundle = sub.add_parser("bundle", help="Write a ZIP; print its separate JSON receipt to stdout")
     bundle.add_argument("case"); bundle.add_argument("-o","--output",required=True); bundle.add_argument("--overwrite",action="store_true")
+    bundle.add_argument("--fixture-as-of", help="Test-only clock for the exact bundled synthetic case, never a customer")
     verify = sub.add_parser("verify-bundle", help="Read-only integrity check against a separately retained digest")
     verify.add_argument("bundle"); verify.add_argument("--expected-sha256", required=True)
     verify.add_argument("--case-id"); verify.add_argument("--case-sha256")
@@ -75,7 +76,18 @@ def main(argv=None) -> int:
             if _same_file(args.case, args.output):
                 raise ValueError("the input case and output bundle must be different files")
             case = read_case(args.case)
-            payload = build_delivery_bundle(case, args.output, overwrite=args.overwrite)
+            fixture_now = None
+            if args.fixture_as_of is not None:
+                # The frozen fictional fixture's source timestamps expire.
+                # Tests may replay it historically; this is NOT a bypass
+                # usable with actual buyer or copied customer cases.
+                fixture = Path(__file__).resolve().parents[1] / "fixtures" / "ready_trace_case.json"
+                if (Path(args.case).resolve() != fixture.resolve()
+                        or case.get("case_id") != "CB-DEMO-READY"):
+                    raise ValueError("--fixture-as-of requires the original bundled fictional fixture path")
+                fixture_now = _as_of(args.fixture_as_of)
+            payload = build_delivery_bundle(case, args.output, overwrite=args.overwrite,
+                                            now=fixture_now)
             verification = verify_delivery_bundle(
                 args.output, expected_sha256=payload["bundle_sha256"],
                 expected_case_id=case["case_id"], expected_case_sha256=payload["case_sha256"],

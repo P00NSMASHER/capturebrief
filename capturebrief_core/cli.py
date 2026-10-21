@@ -1,5 +1,6 @@
 from __future__ import annotations
 import argparse,json,os
+from datetime import datetime,timezone
 from pathlib import Path
 from .atomic_io import atomic_write_text, ensure_exact_bytes
 from . import audit_case,compare_cases,render_markdown
@@ -42,10 +43,30 @@ def dump(value,output=None):
     if output: atomic_write_text(output,text+"\n")
     else: print(text)
 
+def _fixture_as_of(path, value):
+    """Only the original committed fictional examples get an historical clock.
+
+    An operator cannot turn an expired real customer authority receipt green
+    using this switch. Regular operation uses the actual UTC clock.
+    """
+    if value is None:
+        return None
+    fixture_dir=Path(__file__).resolve().parents[1]/"fixtures"
+    approved={fixture_dir/"ready_case.json",fixture_dir/"ready_trace_case.json"}
+    if Path(path).resolve() not in {item.resolve() for item in approved}:
+        raise SystemExit("--fixture-as-of is restricted to original fictional repository fixtures")
+    try:
+        at=datetime.fromisoformat(value.replace("Z","+00:00"))
+        if at.utcoffset() is None:
+            raise ValueError("timezone required")
+    except ValueError:
+        raise SystemExit("--fixture-as-of requires a timezone-aware ISO-8601 timestamp")
+    return at.astimezone(timezone.utc)
+
 def main():
     p=argparse.ArgumentParser(prog="capturebrief-core"); sub=p.add_subparsers(dest="cmd",required=True)
-    x=sub.add_parser("validate"); x.add_argument("case")
-    x=sub.add_parser("render"); x.add_argument("case"); x.add_argument("--output","-o")
+    x=sub.add_parser("validate"); x.add_argument("case"); x.add_argument("--fixture-as-of")
+    x=sub.add_parser("render"); x.add_argument("case"); x.add_argument("--output","-o"); x.add_argument("--fixture-as-of")
     x=sub.add_parser("diff"); x.add_argument("before"); x.add_argument("after")
     x=sub.add_parser("normalize-manifest"); x.add_argument("action_id"); x.add_argument("raw_json"); x.add_argument("--observed-at",required=True); x.add_argument("--output","-o")
     x=sub.add_parser("manifest-diff"); x.add_argument("before"); x.add_argument("after")
@@ -74,7 +95,7 @@ def main():
     x=sub.add_parser("current-search-plan"); x.add_argument("case"); x.add_argument("--output","-o")
     x=sub.add_parser("case-fetch-current"); x.add_argument("case"); x.add_argument("--api-key-env",default="SAM_API_KEY"); x.add_argument("--organization-code"); x.add_argument("--output","-o",required=True); x.add_argument("--result-output")
     x=sub.add_parser("work-queue"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o")
-    x=sub.add_parser("fulfillment-plan"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o")
+    x=sub.add_parser("fulfillment-plan"); x.add_argument("case"); x.add_argument("--api-observation"); x.add_argument("--history-index-plan"); x.add_argument("--output","-o"); x.add_argument("--fixture-as-of")
     x=sub.add_parser("outcome-validate"); x.add_argument("event_json"); x.add_argument("--output","-o")
     x=sub.add_parser("outcome-append"); x.add_argument("ledger"); x.add_argument("event_json"); x.add_argument("--recorded-at"); x.add_argument("--output","-o")
     x=sub.add_parser("outcome-summary"); x.add_argument("ledger"); x.add_argument("--output","-o")
@@ -85,9 +106,9 @@ def main():
     x=sub.add_parser("ledger-verify"); x.add_argument("ledger")
     a=p.parse_args()
     if a.cmd=="validate":
-        r=audit_case(load(a.case)); dump(r.to_dict()); return 0 if r.release_state=="READY_FOR_HUMAN_RELEASE" else 2
+        r=audit_case(load(a.case),now=_fixture_as_of(a.case,a.fixture_as_of)); dump(r.to_dict()); return 0 if r.release_state=="READY_FOR_HUMAN_RELEASE" else 2
     if a.cmd=="render":
-        c=load(a.case); r=audit_case(c); out=render_markdown(c,r)
+        c=load(a.case); r=audit_case(c,now=_fixture_as_of(a.case,a.fixture_as_of)); out=render_markdown(c,r)
         if a.output: atomic_write_text(a.output,out)
         else: print(out)
         return 0 if r.release_state=="READY_FOR_HUMAN_RELEASE" else 2
@@ -236,7 +257,18 @@ def main():
     if a.cmd=="fulfillment-plan":
         observation=load(a.api_observation) if a.api_observation else None
         history_plan=load(a.history_index_plan) if a.history_index_plan else None
-        dump(build_fulfillment_plan(load(a.case),api_observation=observation,history_index_plan=history_plan),a.output); return 0
+        frozen_now=None
+        if a.fixture_as_of is not None:
+            source=Path(__file__).resolve().parents[1]/"fixtures"/"ready_trace_case.json"
+            if Path(a.case).resolve()!=source.resolve():
+                raise SystemExit("--fixture-as-of is limited to the exact bundled fictional fixture")
+            try:
+                frozen_now=datetime.fromisoformat(a.fixture_as_of.replace("Z","+00:00"))
+                if frozen_now.utcoffset() is None:
+                    raise ValueError("timezone missing")
+            except ValueError:
+                raise SystemExit("--fixture-as-of requires a timezone-aware ISO-8601 time")
+        dump(build_fulfillment_plan(load(a.case),api_observation=observation,history_index_plan=history_plan,now=frozen_now),a.output); return 0
     if a.cmd=="outcome-validate":
         errors=validate_outcome_event(load(a.event_json))
         result={"valid":not errors,"errors":errors}; dump(result,a.output); return 0 if not errors else 2

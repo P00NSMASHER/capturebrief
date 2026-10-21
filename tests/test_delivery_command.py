@@ -14,6 +14,7 @@ from tests.synthetic_ready_case import write_current_synthetic_case
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "fixtures" / "ready_trace_case.json"
+FROZEN_FIXTURE_AS_OF = "2026-09-21T17:30:00Z"
 
 
 def command(*args):
@@ -39,6 +40,17 @@ class DeliveryCommandTests(unittest.TestCase):
             with zipfile.ZipFile(target) as archive:
                 self.assertIn("decision-evidence.html", archive.namelist())
                 self.assertIsNone(archive.testzip())
+
+    def test_fixture_clock_cannot_override_a_copied_customer_case(self):
+        with tempfile.TemporaryDirectory() as directory:
+            copied = Path(directory) / "copied.json"
+            copied.write_bytes(FIXTURE.read_bytes())
+            output = Path(directory) / "fake.zip"
+            result = command("bundle", copied, "-o", output,
+                             "--fixture-as-of", FROZEN_FIXTURE_AS_OF)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("original bundled fictional fixture", result.stderr)
+            self.assertFalse(output.exists())
 
     def test_input_case_cannot_be_used_as_output_even_with_overwrite(self):
         with tempfile.TemporaryDirectory() as directory:

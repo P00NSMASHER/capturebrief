@@ -1,0 +1,48 @@
+name: CaptureBrief private indexed-row projection audit (FAKE SOURCES ONLY)
+
+on:
+  push:
+    branches:
+      - security/independent-source-row-projection-audit-20261019
+    paths:
+      - '.github/workflows/capturebrief-original-index-projection-audit.yml'
+      - 'scripts/audit_original_index_projection.py'
+      - 'tests/test_original_index_projection_audit.py'
+  pull_request:
+    paths:
+      - '.github/workflows/capturebrief-original-index-projection-audit.yml'
+      - 'scripts/audit_original_index_projection.py'
+      - 'tests/test_original_index_projection_audit.py'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-exactness:
+    name: Original-index semantic verification / ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 12
+    env:
+      PYTHONPATH: '.'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile read-only auditing utility
+        run: python -m compileall -q scripts/audit_original_index_projection.py
+      - name: Exercise fake-original and tampered-SQLite negative controls
+        run: python -m unittest tests.test_original_index_projection_audit -v
+      - name: Verify audit API has no customer-release or source catalog side effects
+        run: >-
+          python -c "from scripts.audit_original_index_projection import
+          audit_row_projection; import inspect;
+          assert 'snapshot_root' in inspect.signature(audit_row_projection).parameters;
+          print('Read-only synthetic audit; all publisher/release gates remain blocked.')"

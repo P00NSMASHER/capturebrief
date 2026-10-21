@@ -66,6 +66,30 @@ class OperatorWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(IntakeError, "http:// or https://"):
             build_case_from_intake(bad_reference)
 
+    def test_public_only_intake_rejects_direct_ips_and_reserved_domains(self):
+        private_urls = (
+            "https://192.168.1.10/internal",
+            "https://169.254.169.254/latest/meta-data",
+            "https://127.0.0.2/private",
+            "https://[fc00::1]/internal",
+            "https://[::ffff:127.0.0.1]/private",
+            "https://0x7f000001/",
+            "https://company.internal/private",
+            "https://contractor.home.arpa/private",
+            "https://sample.test/draft",
+            "https://localhost./portal",
+        )
+        for url in private_urls:
+            with self.subTest(url=url):
+                row = intake()
+                row["public_opportunity"] = url
+                with self.assertRaisesRegex(IntakeError, "public host"):
+                    build_case_from_intake(row, submitted_at=NOW.isoformat())
+        row = intake()
+        row["public_opportunity"] = "https://sam.gov/opp/3127a3862fe74c0b8bf614948e89f66f/view"
+        case = build_case_from_intake(row, submitted_at=NOW.isoformat())
+        self.assertEqual(case["intake"]["public_opportunity"], row["public_opportunity"])
+
     def test_intake_rejects_a_sixth_or_duplicate_assumption(self):
         too_many = intake()
         too_many["assumption_6"] = "A sixth promise that would otherwise be ignored."
