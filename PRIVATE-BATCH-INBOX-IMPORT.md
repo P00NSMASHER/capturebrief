@@ -114,11 +114,61 @@ retains `purchase_claim_verified=false`, and the batch report always marks
 case before action. Do not store real intake in GitHub, CI artifacts, ChatGPT
 or public websites.
 
+
+## Review imported private cases
+
+After a normal batch import, obtain a **read-only work queue**:
+
+```powershell
+py -3 scripts/review_private_cases.py --cases-dir "$env:LOCALAPPDATA\CaptureBrief\private-cases"
+```
+
+On PAAM-L044, the pinned local `Review-CaptureBrief-Private-Cases.cmd`
+launcher performs the same action, separately from the preview and importer.
+This report reads only existing private `request-<SHA256>.case.json` and
+matching `request-<SHA256>.receipt.json` pairs. The case and receipt are
+checked against each other's canonical JSON digest, exact on-disk SHA-256,
+request fingerprint, case ID, timestamp, and strictly **unverified**
+payment, identity, evidence, and release flags. Linked or oversized files,
+missing partner files, or active importer locks are not accepted.
+
+For intact **original unverified intake** pairs, the utility invokes the
+actual CaptureBrief `build_fulfillment_plan` engine in memory. It reports
+how many tasks are open, P0 counts, the next generic work stage and its
+priority. It does **not** invent source records, execute any task, make a
+procurement decision, authorize a delivery or automatically send anything.
+Rows contain only opaque case tags and bounded stage labels; they do not
+print buyer names, email addresses, opportunity URLs, assumptions, raw case
+IDs or private file paths.
+
+The report also counts **possible related case pairs** where two
+independently intact cases share the same work email and exact public
+opportunity URL. This helps an operator notice edited duplicate requests
+that exact-byte batch deduplication cannot collapse. It never merges,
+discards, or approves related customer requests, and those relationships
+are only local, unverified suggestions.
+
+`PRIVATE_CASE_REVIEW_PENDING` means original intake pairs are intact
+**but still unverified and not releasable**. `PRIVATE_CASE_REVIEW_BLOCKED`
+means at least one incomplete, tampered or locked case. `PRIVATE_CASE_REVIEW_EMPTY`
+means no matching imported cases. A blocked report exits with code 3; an
+invalid configuration exits with code 2. The reviewer is limited to 100
+case handles per run, and produces no output files. `--now` accepts a
+timezone-aware clock value for reproducible synthetic tests only.
+
+**Security boundary:** matching local hashes do not authenticate an email
+sender or prove live Stripe payment, SAM.gov source authority, acceptance
+of a customer engagement, or the independent release process. Open any
+case/customer details only through authorized private operator tools,
+and reconcile customer identity, live payment and source completeness
+separately. Do not copy the private case folder into GitHub or CI.
+
 ## Reproducible validation
 
 ```powershell
 py -3 -m unittest tests.test_batch_request_drafts -v
 py -3 -m unittest tests.test_request_draft -v
+py -3 -m unittest tests.test_private_case_review_queue -v
 ```
 
 The dedicated Linux/Windows workflow executes these only with **fictional**
