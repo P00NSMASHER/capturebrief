@@ -39,7 +39,18 @@ charge cards, refund money, send messages or release customer deliverables.
    ```
    Preview parses associations, validates the original private case/receipt
    pair, identifies missing or duplicate candidates and reports only hashed
-   opaque labels. It does **not** access Stripe, create a registry or
+   opaque labels.
+   **Unfinished or incorrectly named Checkout mappings are blocking items**:
+   a `request-...` file with the wrong digest, a temporary
+   `.order.json.tmp` or `.order.jsn` filename, an unexpectedly capitalized
+   `Request-...` file, or a misnamed `*.order.json` is reported as
+   `PRIVATE_ORDER_QUEUE_BLOCKED`, not misreported as an empty queue.
+   Counts appear as `unexpected_association_entries` and
+   `ignored_non_association_entries`. Ordinary `notes.txt` and unrelated
+   PDFs are ignored; private filenames and provider identifiers stay out of
+   CLI output. The preview never repairs, moves, deletes or accepts any file.
+   An operator must review a malformed local association before invoking
+   the authenticated execute path. It does **not** access Stripe, create a registry or
    authenticate the buyer.
 4. **When operator-approved and a suitable LIVE read-only/restricted Stripe
    key is available locally, run an authenticated account check.**
