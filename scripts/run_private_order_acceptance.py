@@ -21,6 +21,7 @@ from capturebrief_core.delivery_bundle import build_delivery_bundle
 from capturebrief_core.delivery_verify import verify_delivery_bundle
 from capturebrief_core.watch_baseline import build_watch_baseline, compare_watch_baseline
 from scripts.batch_import_request_drafts import batch_import
+from scripts.save_private_checkout_association import save_private_checkout_association
 from scripts.process_private_order_queue import process_private_order_queue
 from scripts.inspect_private_order_fulfillment import inspect_fulfillment
 from tests.test_private_order_os import provider_for, stripe_records
@@ -62,12 +63,17 @@ def run_acceptance() -> dict:
         # Windows text mode writes CRLF. Hash the exact actual private draft
         # bytes consumed by the importer, never a reconstructed LF string.
         sha = hashlib.sha256((inbox / "a.txt").read_bytes()).hexdigest()
-        association = {
-            "schema": "capturebrief-private-checkout-association-v1",
-            "request_sha256": sha,
-            "checkout_session_id": "cs_live_REGISTRATION",
-        }
-        (associations / f"request-{sha}.order.json").write_text(json.dumps(association))
+        association = save_private_checkout_association(
+            cases / f"request-{sha}.case.json",
+            associations,
+            "cs_live_REGISTRATION",
+        )
+        _check(
+            association["status"] == "PRIVATE_ASSOCIATION_SAVED_UNVERIFIED"
+            and association["stripe_payment_verified"] is False
+            and association["customer_release_authorized"] is False,
+            "private no-network checkout association creation",
+        )
         fetcher, calls = provider_for(stripe_records("REGISTRATION"))
         scan = process_private_order_queue(
             cases, associations, registry, preview_only=True,
@@ -129,6 +135,7 @@ def run_acceptance() -> dict:
             "preview_rejected": preview["blocked"],
             "preview_exact_duplicates": preview["duplicates"],
             "private_cases_created": imported["created"],
+            "private_checkout_association_created_unverified": True,
             "simulated_stripe_direct_read_calls": 4,
             "private_orders_registered_synthetic": ingested["registered"],
             "idempotent_order_replays": rerun["reused"],
