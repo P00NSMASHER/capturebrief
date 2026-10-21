@@ -10,6 +10,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from capturebrief_core.private_order_registry import register_order, order_summary, OrderConflict
 from capturebrief_core.payment_reconciliation import ACCOUNT_ID, PAYMENT_LINK_ID
@@ -194,6 +195,50 @@ class PrivateOrderOsTests(unittest.TestCase):
                     )
                 self.assertFalse(db.exists())
                 self.assertFalse(calls)
+
+    def test_private_registry_creation_race_reuses_existing_file(self):
+        # Another worker may create the private SQLite pathname after this
+        # one tested exists(), before its exclusive create. SQLite UNIQUE and
+        # BEGIN IMMEDIATE must decide the order, not a FileExistsError.
+        with tempfile.TemporaryDirectory() as td:
+            inbox, cases, db = self.root(td)
+            case = self.create_case(inbox, cases)
+            original_open = os.open
+            raced = []
+
+            def simultaneous_first_create(path, flags, mode=0o777, *args, **kwargs):
+                if (Path(path) == db
+                        and flags & os.O_EXCL
+                        and not raced):
+                    raced.append(True)
+                    fd = original_open(path, flags, mode)
+                    os.close(fd)
+                    raise FileExistsError("another fictional worker created registry")
+                return original_open(path, flags, mode, *args, **kwargs)
+
+            with patch("capturebrief_core.private_order_registry.os.open",
+                       side_effect=simultaneous_first_create):
+                r, _ = self.register(case, db, stripe_records("RACE"))
+            self.assertTrue(raced)
+            self.assertEqual(r["status"], "PRIVATE_ORDER_REGISTERED_REVIEW_REQUIRED")
+            self.assertEqual(len(order_summary(db)["orders"]), 1)
+            again, _ = self.register(case, db, stripe_records("RACE"))
+            self.assertEqual(again["status"], "ALREADY_REGISTERED_UNVERIFIED")
+
+    def test_two_simultaneous_operators_register_same_payment_only_once(self):
+        from concurrent.futures import ThreadPoolExecutor
+        with tempfile.TemporaryDirectory() as td:
+            inbox, cases, db = self.root(td)
+            case = self.create_case(inbox, cases)
+            def register_simultaneously(_):
+                return self.register(case, db, stripe_records("PARALLEL"))[0]["status"]
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                statuses = sorted(executor.map(register_simultaneously, range(2)))
+            self.assertEqual(statuses, [
+                "ALREADY_REGISTERED_UNVERIFIED",
+                "PRIVATE_ORDER_REGISTERED_REVIEW_REQUIRED",
+            ])
+            self.assertEqual(len(order_summary(db)["orders"]), 1)
 
     def test_registry_read_only_summary_and_cli_no_key_no_customer_data(self):
         with tempfile.TemporaryDirectory() as td:
