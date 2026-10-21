@@ -2,12 +2,16 @@
 from __future__ import annotations
 
 import unittest
+import tempfile
+from pathlib import Path
 
 from capturebrief_core.data_services import (
     ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD, DataServicesError,
     issue_history_receipt_from_snapshots, scan_extract_bytes,
 )
 from tests.test_source_policy_data_services import HEADER, row
+from capturebrief_core.history_index import ingest_extract_file
+from tests.test_history_index import row as index_row, write_csv
 
 ORIGINAL = (HEADER + row("FICTIONAL-1", "FICTIONAL-SOL")).encode("ascii")
 
@@ -174,6 +178,55 @@ class DataServicesSourceBindingTests(unittest.TestCase):
         )
         self.assertEqual(result["rows_scanned"],0)
         self.assertEqual(result["matches"],[])
+
+
+
+    def test_disk_ingest_rejects_source_slot_impersonation_before_any_index_write(self):
+        # The disk-based indexed pipeline must not be weaker than the
+        # in-memory scanner. A valid SAM-class URL is not proof of a FY slot.
+        cases = (
+            ("active-mislabeled-archive", ACTIVE_DOWNLOAD, "ARCHIVE", 2026),
+            ("archive-mislabeled-active", ARCHIVE_DOWNLOAD.format(fy=2026), "ACTIVE", None),
+            ("archive-fy-mismatch", ARCHIVE_DOWNLOAD.format(fy=2027), "ARCHIVE", 2026),
+            ("archive-typed-string-year", ARCHIVE_DOWNLOAD.format(fy=2026), "ARCHIVE", "2026"),
+            ("archive-boolean-year", ARCHIVE_DOWNLOAD.format(fy=2026), "ARCHIVE", True),
+            ("active-with-year", ACTIVE_DOWNLOAD, "ACTIVE", 2026),
+        )
+        for label, url, kind, year in cases:
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                csv_path = root / "fictional-original.csv"
+                write_csv(csv_path, [index_row("fictional-action")])
+                index_path = root / "history.sqlite"
+                snapshot_dir = root / "snapshots"
+                with self.assertRaises((ValueError, DataServicesError)):
+                    ingest_extract_file(
+                        index_path, csv_path, source_url=url, source_kind=kind,
+                        fiscal_year=year, snapshot_dir=snapshot_dir,
+                        collection_mode="APPROVED_FETCH",
+                        observed_at="2026-09-21T13:00:00+00:00",
+                    )
+                self.assertFalse(index_path.exists(), label)
+                self.assertFalse(snapshot_dir.exists(), label)
+
+    def test_disk_ingest_accepts_exact_original_slots_without_catalog_promotion(self):
+        for kind, year, url, expected in (
+            ("ACTIVE", None, ACTIVE_DOWNLOAD, "ACTIVE"),
+            ("ARCHIVE", 2026, ARCHIVE_DOWNLOAD.format(fy=2026), "ARCHIVE:2026"),
+        ):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                csv_path = root / "fictional-original.csv"
+                write_csv(csv_path, [index_row("fictional-action")])
+                ingested = ingest_extract_file(
+                    root / "history.sqlite", csv_path, source_url=url,
+                    source_kind=kind, fiscal_year=year,
+                    collection_mode="OPERATOR_FILE",
+                    observed_at="2026-09-21T13:00:00+00:00",
+                )
+                self.assertEqual(ingested["slot"], expected)
+                self.assertEqual(ingested["rows_scanned"], 1)
+
 
 
 if __name__=="__main__":
