@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -111,15 +112,29 @@ class PrivateOrderPipelineTests(unittest.TestCase):
             self.build_association(inbox,cases,assoc)
             first,_ = self.synthetic(cases,assoc,db)
             self.assertEqual(first["registered"],1)
+            with sqlite3.connect(db) as conn:
+                original = conn.execute(
+                    "SELECT observation_sha256,created_at,payment_state FROM orders"
+                ).fetchone()
             records=list(stripe_records("REGISTRATION"))
             records[2]["refunded"]=True
             records[2]["amount_refunded"]=14900
             replay,_=self.synthetic(cases,assoc,db,records=records)
             self.assertEqual(replay["blocked"],1)
             result=inspect_fulfillment(cases,db,now=NOW)
+            self.assertEqual(result["status"], "PRIVATE_ORDER_FULFILLMENT_BLOCKED")
+            self.assertEqual(result["orders"][0]["status"], "PAYMENT_RECHECK_BLOCKED")
+            self.assertTrue(result["orders"][0]["payment_recheck_blocked"])
+            self.assertIn("STRIPE_PAYMENT_RECHECK_BLOCKED",
+                          result["orders"][0]["pending_evidence"])
             self.assertFalse(result["orders"][0]["payment_currently_authenticated_for_start"])
             self.assertEqual(result["orders"][0]["research_state"] if "research_state" in result["orders"][0] else "NOT_STARTED","NOT_STARTED")
             self.assertFalse(result["customer_release_authorized"])
+            with sqlite3.connect(db) as conn:
+                after = conn.execute(
+                    "SELECT observation_sha256,created_at,payment_state FROM orders"
+                ).fetchone()
+            self.assertEqual(original, after, "Earlier paid observation must remain intact")
 
     def test_invalid_association_and_damaged_case_block_without_provider_reads(self):
         for kind in ("wrong_sha","duplicate_json_key","damaged_case"):
