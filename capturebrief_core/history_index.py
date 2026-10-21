@@ -25,6 +25,7 @@ from .data_services import (
     ARCHIVE_DOWNLOAD,
     REQUIRED_COLUMNS,
     FamilyAmbiguous,
+    _require_exact_original_source_slot,
 )
 from .model import canonical_json, history_set_digest, parse_dt, sha256_hex
 from .source_policy import (
@@ -370,7 +371,10 @@ def ingest_extract_file(
     """
     require_approved_automation(source_url, expected="SAM_DATA_SERVICES_EXTRACT")
     kind = source_kind.upper()
-    slot = _slot(kind, fiscal_year)
+    # Bind imported publisher bytes to their *exact* source slot BEFORE
+    # source retention, index creation, or release-bearing current_sources writes.
+    # A class-approved SAM endpoint alone cannot certify another FY.
+    slot = _require_exact_original_source_slot(kind, fiscal_year, source_url)
     observed_at = observed_at or datetime.now(timezone.utc).isoformat()
     if not parse_dt(observed_at):
         raise ValueError("observed_at must be timezone-aware ISO-8601")
