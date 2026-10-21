@@ -27,6 +27,9 @@ MAX_CASES = 100
 MAX_CASE_BYTES = 256 * 1024
 MAX_RECEIPT_BYTES = 16 * 1024
 _CASE_NAME = re.compile(r"^request-([0-9a-f]{64})\.(case|receipt)\.json$")
+_CASE_LOCK_NAME = re.compile(r"^request-([0-9a-f]{64})\.(case|receipt)\.json\.intake\.lock$")
+_CASE_LIKE_SUFFIXES = (".case.json", ".receipt.json", ".case.json.intake.lock",
+                       ".receipt.json.intake.lock")
 
 # Only these bounded labels are returned, never task titles, arbitrary
 # task keys, URL/notice identifiers, contact details, or input paths.
@@ -123,15 +126,36 @@ def review_private_cases(
     root = _private_directory(cases_directory)
     entries = sorted(root.iterdir(), key=lambda p: (p.name.casefold(), p.name))
     files: dict[str, set[str]] = {}
+    locked_digests: set[str] = set()
+    active_import_locks = 0
+    unexpected_case_entries = 0
+    ignored_non_case_entries = 0
     for entry in entries:
         match = _CASE_NAME.fullmatch(entry.name)
+        lock_match = _CASE_LOCK_NAME.fullmatch(entry.name)
         if match:
             files.setdefault(match.group(1), set()).add(match.group(2))
-    if len(files) > max_cases:
-        raise ValueError("Too many private cases for bounded review")
+        elif lock_match:
+            # A lock can exist before the importer publishes the FIRST
+            # artifact. Never report "EMPTY" merely because no JSON exists.
+            active_import_locks += 1
+            locked_digests.add(lock_match.group(1))
+        elif (entry.name.casefold().startswith("request-")
+              and entry.name.casefold().endswith(_CASE_LIKE_SUFFIXES)):
+            # A mistyped/truncated/noncanonical case/receipt name is a
+            # potential private customer artifact, not an unrelated note.
+            unexpected_case_entries += 1
+        else:
+            ignored_non_case_entries += 1
+    if len(files) > max_cases or len(locked_digests | files.keys()) > max_cases:
+        raise ValueError("Too many private cases or locks for bounded review")
+    orphan_import_locks = len(locked_digests - files.keys())
     summaries: list[dict[str, Any]] = []
     grouping: dict[tuple[str, str], list[int]] = {}
-    blocked = 0
+    # Block every unrecognized case-like artifact, and each lock-only import
+    # that would otherwise be invisible to the operator. An active lock for
+    # an existing full pair is counted below as a blocked case instead.
+    blocked = unexpected_case_entries + orphan_import_locks
     missing_partner = 0
     verified = 0
     for digest in sorted(files):
@@ -146,7 +170,8 @@ def review_private_cases(
                 # Never assert work can proceed while another importer may be
                 # creating or repairing one of these private output files.
                 for output in (case_file, receipt_file):
-                    if output.with_name(output.name + ".intake.lock").exists():
+                    lock = output.with_name(output.name + ".intake.lock")
+                    if lock.exists() or lock.is_symlink():
                         raise ValueError("Concurrent private importer lock exists")
                 case = _load_unverified_pair(case_file, receipt_file, digest)
                 plan = build_fulfillment_plan(case, now=checked_at)
@@ -159,7 +184,8 @@ def review_private_cases(
                 if stage not in _SAFE_STAGES:
                     raise ValueError("Unexpected operator work stage")
                 for output in (case_file, receipt_file):
-                    if output.with_name(output.name + ".intake.lock").exists():
+                    lock = output.with_name(output.name + ".intake.lock")
+                    if lock.exists() or lock.is_symlink():
                         raise ValueError("Private importer started during review")
                 row.update({
                     "state": "UNVERIFIED_INTAKE_REVIEW_REQUIRED",
@@ -201,7 +227,10 @@ def review_private_cases(
         "verified_intake_pairs": verified,
         "blocked": blocked,
         "missing_partner": missing_partner,
-        "ignored_non_case_entries": len(entries) - sum(len(v) for v in files.values()),
+        "ignored_non_case_entries": ignored_non_case_entries,
+        "unexpected_case_entries": unexpected_case_entries,
+        "active_import_locks": active_import_locks,
+        "orphan_import_locks": orphan_import_locks,
         "possible_related_case_pairs": related_pairs,
         "cases": summaries,
         "read_only": True,
