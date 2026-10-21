@@ -161,8 +161,17 @@ def register_order(
     # across sessions, intents, source drafts and canonical case fingerprints.
     new_file = not db_file.exists()
     if new_file:
-        fd = os.open(db_file, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-        os.close(fd)
+        try:
+            fd = os.open(db_file, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        except FileExistsError:
+            # A simultaneous operator registered first. Re-check that the
+            # destination remains private and regular; the transaction and
+            # UNIQUE constraints below will decide which payment wins.
+            _private_db(db_file)
+            if not db_file.is_file():
+                raise ValueError("Private order registry race produced an invalid file") from None
+        else:
+            os.close(fd)
     with closing(sqlite3.connect(db_file, timeout=5, isolation_level=None)) as conn:
         conn.row_factory = sqlite3.Row
         try:
