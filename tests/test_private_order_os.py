@@ -207,7 +207,7 @@ class PrivateOrderOsTests(unittest.TestCase):
             raced = []
 
             def simultaneous_first_create(path, flags, mode=0o777, *args, **kwargs):
-                if (Path(path) == db
+                if (Path(path).resolve() == db.resolve()
                         and flags & os.O_EXCL
                         and not raced):
                     raced.append(True)
