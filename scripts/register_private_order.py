@@ -21,7 +21,7 @@ REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from capturebrief_core.private_order_registry import register_order, order_summary, OrderConflict
+from capturebrief_core.private_order_registry import register_order, order_summary, mark_payment_recheck_blocked, OrderConflict
 from scripts.batch_import_request_drafts import _private_directory
 from scripts.review_private_cases import _load_unverified_pair
 from scripts.reconcile_stripe_checkout import check_live_payment, _stripe_get
@@ -73,9 +73,23 @@ def register_checkout(
     # Receipt remains a local consistency check, NOT independent provider
     # cryptographic authentication, source acceptance or send authorization.
     if checked["payment_verified_by_matching_records"] is not True:
+        # A formerly consistent payment may have since been refunded,
+        # disputed or contradicted by current provider records. Keep its
+        # ORIGINAL observation unchanged and append a one-way review hold.
+        # No new order is created for a failed first observation.
+        recheck_marked = mark_payment_recheck_blocked(
+            database_path,
+            case=case,
+            source_request_sha256=match.group(1),
+            session_id=checkout_session_id,
+            payment_report=checked,
+            synthetic_provider=synthetic_test_mode,
+            observed_at=observed_at,
+        )
         return {
             "status": "PAYMENT_RECONCILIATION_BLOCKED",
             "error_codes": checked["error_codes"],
+            "existing_order_recheck_marked": recheck_marked,
             "private_order_created": False,
             "work_authorized": False,
             "external_send_authorized": False,
