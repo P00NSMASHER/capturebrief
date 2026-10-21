@@ -16,8 +16,8 @@ checkout, Pages publishing directory and cloud-synced source-control trees:
 - `cases`: imported case JSON files and immutable import receipts.
 
 For example, on an authorized Windows PC, create
-`%LOCALAPPDATA%\\CaptureBrief\\private-inbox` and
-`%LOCALAPPDATA%\\CaptureBrief\\private-cases` (prefer a host-encrypted
+`%LOCALAPPDATA%\CaptureBrief\private-inbox` and
+`%LOCALAPPDATA%\CaptureBrief\private-cases` (prefer a host-encrypted
 volume and tightly scoped local permissions). Do not move or copy actual
 buyer drafts into the public Git repository, Actions, or this conversation.
 
