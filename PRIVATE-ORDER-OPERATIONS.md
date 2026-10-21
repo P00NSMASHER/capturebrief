@@ -19,7 +19,28 @@ charge cards, refund money, send messages or release customer deliverables.
    cases, not paid orders or authenticated email sender records.
 2. **Associate checkout safely.** Obtain the **exact Checkout Session ID**
    independently from the intended live Stripe Dashboard, rather than
-   customer copy, a success URL or a claimed payment email. For a specific
+   customer copy, a success URL or a claimed payment email.
+   The preferred local operator action is to use the tested private association
+   builder instead of hand-editing a JSON file:
+
+   ```powershell
+   py -3 scripts/save_private_checkout_association.py "$env:LOCALAPPDATA\CaptureBrief\private-cases\request-<the exact 64 lowercase hex>.case.json" --associations-dir "$env:LOCALAPPDATA\CaptureBrief\private-checkout-associations"
+   ```
+
+   It prompts for the independently obtained Checkout Session ID in the
+   operator's terminal, validates the original case/receipt pair, prevents
+   assigning the same Checkout ID to two cases, and atomically creates or
+   reuses the corresponding private mapping. It does **not** access Stripe,
+   assert payment, or identify/authenticate the buyer. Its console output
+   includes opaque tags and false authority flags, not the Checkout ID.
+   The optional `--session-id` argument is available for isolated tests,
+   but using it with real IDs exposes them in command/process history and
+   is not recommended. Noninteractive calls without an explicit ID block
+   rather than guessing a provider reference.
+
+   For environments that cannot run this helper, the exact JSON mapping
+   contract below remains supported; review it carefully before processing.
+ For a specific
    imported case `request-<64-byte hex>.case.json`, create a separate
    private text file `request-<the same hex>.order.json` in the existing
    `private-checkout-associations` folder:
