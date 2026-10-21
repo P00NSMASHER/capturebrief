@@ -179,7 +179,7 @@ def _outcome_records(path:str|Path)->list[dict[str,Any]]:
     p=Path(path)
     if not p.exists(): return []
     rows=[]
-    for line in p.read_text(encoding="utf-8").splitlines():
+    for line in p.read_text(encoding="utf-8").split("\n"):
         if not line.strip(): continue
         record=json.loads(line)
         if record.get("record_type")!=RECORD_TYPE: continue
