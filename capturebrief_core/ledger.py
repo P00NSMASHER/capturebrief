@@ -214,7 +214,7 @@ def read_verified_outcome_snapshot(
                 "present": True,
                 "content": captured,
                 "snapshot_sha256": sha256_hex(captured),
-                "observed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "observed_at": datetime.now(timezone.utc).isoformat(timespec="microseconds"),
             }
     except LedgerLockedError:
         raise ValueError("approved outcome ledger is locked") from None
