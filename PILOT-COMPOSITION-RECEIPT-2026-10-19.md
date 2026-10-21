@@ -829,3 +829,70 @@ review, real 14-day customer watch, disk encryption or independent
 off-device disaster recovery. No customer record was sent or stored
 on GitHub, no live website, pricing, payment, buyer communication
 or production main/gh-pages branch was changed.
+
+
+## October 21 — operator review queue no longer silently ignores malformed case names or lock-only imports
+
+**Operator UX correctness defect, repaired in DRAFT stacked PR #64.**
+The source-locked read-only reviewer previously recognized only files
+strictly named `request-<64 lowercase hex>.case.json` and matching
+`.receipt.json` files, while counting everything else as unrelated.
+An invalid case-like name or a legitimate case/receipt `.intake.lock`
+created before its first JSON file could therefore produce the
+misleading **`PRIVATE_CASE_REVIEW_EMPTY`** status with exit code zero.
+
+**Independent fictional negative controls** reproduced the defective
+behavior in [pre-fix private-batch QA
+#39601795891](https://github.com/P00NSMASHER/capturebrief/actions/runs/39601795891)
+(and follow-up [#39601802837](https://github.com/P00NSMASHER/capturebrief/actions/runs/39601802837)).
+The tests covered malformed-only cases, lock-only imports, a valid case
+beside an unexpected file, and ordinary unrelated notes.
+
+**Source repair (actual current PR #64 commit
+`f09dbcbe89a2dc5044ec7596dbbf6270bbd57b68`):**
+- Recognized case and receipt JSON files, correctly named active importer
+  locks, and unexpected case-like artifacts are counted separately.
+- Orphan importer locks (no case/receipt yet published) trigger a blocked
+  read-only review, never `EMPTY`.
+- Malformed/truncated/noncanonical case/receipt filenames are counted
+  as `unexpected_case_entries` and return a blocked review. Ordinary
+  unrelated notes/PDFs remain ignored to avoid false alarms.
+- Sanitized summary fields include `active_import_locks`,
+  `orphan_import_locks`, `unexpected_case_entries`, and
+  `ignored_non_case_entries`. No private filenames, buyer data or
+  request content are emitted and no files are modified.
+- Real recognized pairs still invoke the existing strict read-only
+  case/receipt hash/authority checks and CaptureBrief fulfillment planner.
+
+**Verification:**
+- Exact-source [Linux/Windows private batch
+  #39602168815](https://github.com/P00NSMASHER/capturebrief/actions/runs/39602168815),
+  [Product Core
+  #39602168840](https://github.com/P00NSMASHER/capturebrief/actions/runs/39602168840),
+  and [concurrency
+  #39602168938](https://github.com/P00NSMASHER/capturebrief/actions/runs/39602168938)
+  **PASSED**.
+- All eleven pinned candidate heads were merged **only inside disposable
+  CI worktrees**. [Exact QA workflow
+  #39602457284](https://github.com/P00NSMASHER/capturebrief/actions/runs/39602457284)
+  at `32c5088b8c53359c00455988068a39c4d872e7aa`
+  **PASSED 667 Linux tests, 270 Windows tests (one skipped)**, and the
+  Chromium/WebKit fictional buyer-to-Python/Stripe safety contract.
+- Online PAAM-L044 installed exact source SHA `f09dbcbe...` and passed
+  **40 local Python 3.13 intake/batch/reviewer unit tests (one symlink
+  privilege skip)**. A disposable fictional Windows CLI check confirmed
+  that malformed-only and orphan-lock-only directories **fail closed**
+  (exit 3), while a benign unrelated note does not cause a false alarm.
+  The test artifacts were removed. All three private manual operator
+  launchers were re-pinned to the exact repaired commit.
+- The genuine operator private inbox/cases directories remained empty,
+  with no actual buyer file processed. No original FY2027 source bytes,
+  checkout integration, payments, messages, external source collection,
+  or production branch writes occurred.
+
+**Still NO-GO for customer release:** Nothing in this correction
+authenticates a payment, sender, publisher catalog or source authority;
+it neither merges/deploys PR #64 nor removes the independent requirements
+for actual customers, recovery acceptance or governed production release.
+The unrelated PA x402 discovery YAML workflow remains separately failing,
+and is not counted as a failure of the focused CaptureBrief acceptance.
