@@ -24,6 +24,20 @@ class BatchDraftTests(unittest.TestCase):
         output.mkdir()
         return incoming, output
 
+    def test_empty_private_inbox_has_explicit_no_requests_status(self):
+        with tempfile.TemporaryDirectory() as td:
+            incoming, output = self.roots(td)
+            report = batch_import(incoming, output)
+            self.assertEqual(report["status"], "BATCH_NO_REQUESTS")
+            self.assertEqual(report["processed_txt"], 0)
+            self.assertEqual(report["created"], 0)
+            self.assertFalse(report["customer_release_authorized"])
+            self.assertEqual(list(output.iterdir()), [])
+            (incoming / "unrelated.pdf").write_bytes(b"%PDF invented only")
+            ignored = batch_import(incoming, output)
+            self.assertEqual(ignored["status"], "BATCH_NO_REQUESTS")
+            self.assertEqual(ignored["ignored_non_txt"], 1)
+
     def test_multiple_valid_duplicates_invalid_and_non_text(self):
         with tempfile.TemporaryDirectory() as td:
             incoming, output = self.roots(td)
