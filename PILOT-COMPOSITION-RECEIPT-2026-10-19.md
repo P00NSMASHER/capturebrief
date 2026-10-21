@@ -555,3 +555,54 @@ remote restore, verified device encryption, payment/case/delivery
 acceptance and real 14-day monitoring are still unproven. No main or
 gh-pages merge, actual billing, private original upload, customer
 communication, or production deployment is authorized by this receipt.
+
+
+## October 21 — buyer-intake retry and blocked-clipboard fallback acceptance
+
+**Product improvements, NO DEPLOY.** The staged pilot now fixes two tangible
+buyer/operator pain points without changing payments, source authority,
+release permission or customer notifications.
+
+1. **Repeatable intake:** PR #52 candidate
+   `4ac840dbbc50fea40e629ee48d12aaa2ff6f56d7` restores the original
+   private case import timestamp on a byte-identical CLI retry, including
+   interruption between case and receipt publication. A changed request
+   and tampered prior artifacts are refused without overwriting. The
+   initially reproduced red failure is [Product Core
+   #39545698859](https://github.com/P00NSMASHER/capturebrief/actions/runs/39545698859).
+   Fixed-head [Product Core #39546730510](https://github.com/P00NSMASHER/capturebrief/actions/runs/39546730510)
+   passed Linux/Windows.
+2. **Clipboard-independent buyer handoff:** PR #50 website candidate
+   `2e35b30cceefa213d1b27b6159b6b8ae6834f1e7` displays a complete,
+   selectable local email draft when both browser clipboard methods are
+   blocked. A later input change clears that previously shown draft.
+   All five fictional 500-character assumptions remain intact and are
+   not sent or stored by the website. [Exact-head website quality
+   #39546404758](https://github.com/P00NSMASHER/capturebrief/actions/runs/39546404758)
+   passed Chromium/WebKit.
+3. **Interoperability against actual separate candidate branches:** PR #52
+   [cross-branch acceptance
+   #39546727991](https://github.com/P00NSMASHER/capturebrief/actions/runs/39546727991)
+   passed Chromium and WebKit, loading the exact immutable site head
+   and the pinned fictional Stripe/payment review candidate. A
+   clipboard-denied plain-text draft generated a backend case containing
+   all five UNPROVEN assumptions, without external HTTP POST, sent email,
+   charge, source attestation or fictitious payment authorization.
+
+**Full ten-candidate composition, exact QA head
+`7fa8eb6243f2a6b1ff88982ead15b233b428b304`:**
+[GitHub Actions run
+#39546802599](https://github.com/P00NSMASHER/capturebrief/actions/runs/39546802599)
+**SUCCEEDED on Linux and Windows**, with **642 Linux tests** and
+**245 Windows tests (one skipped)**. The actual pinned candidate heads
+merged cleanly only inside disposable CI workspaces, and the
+separately checked-out site candidate ran Chromium/WebKit fictional
+buyer-to-private-case/Stripe acceptance.
+
+**Not a production release.** No actual buyer emails, real payments,
+private source uploads, customer data, independent approval, main/gh-pages
+merges, FY2027 catalog approval, 34-year original collection, or
+off-device recovery took place. The real website/customer system has
+not been claimed updated from these unmerged candidates. Protected-main
+and independent user/source-release gates remain separate from this
+functional improvement.
