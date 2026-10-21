@@ -12,7 +12,7 @@ import json
 import os
 import sqlite3
 import sys
-from contextlib import closing
+from contextlib import closing, nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -78,7 +78,8 @@ def inspect_fulfillment(
         raise ValueError("Private order registry must be separate from customer case folder")
     result: list[dict[str, Any]] = []
     blocked = 0
-    with closing(_read_only_connection(db)) as connection:
+    connector = _read_only_connection(db)
+    with (closing(connector) if connector is not None else nullcontext(None)) as connection:
         if connection is None:
             stored = []
         else:
