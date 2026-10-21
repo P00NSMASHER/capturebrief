@@ -18,7 +18,7 @@ from typing import Any
 from .model import canonical_json, sha256_hex
 
 REPO = Path(__file__).resolve().parents[1]
-_ID = re.compile(r"^[A-Za-z0-9_]{8,100}$")
+_ID = re.compile(r"^[A-Za-z0-9_]{6,100}$")
 _SHA = re.compile(r"^[0-9a-f]{64}$")
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS orders (
