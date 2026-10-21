@@ -82,9 +82,16 @@ def inspect_fulfillment(
     with (closing(connector) if connector is not None else nullcontext(None)) as connection:
         if connection is None:
             stored = []
+            blocked_sessions = set()
         else:
             try:
                 stored = connection.execute("SELECT * FROM orders ORDER BY created_at,session_ref").fetchall()
+                hold_table = connection.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='payment_holds'"
+                ).fetchone()
+                blocked_sessions = ({row["session_ref"] for row in connection.execute(
+                    "SELECT session_ref FROM payment_holds"
+                )} if hold_table else set())
             except sqlite3.DatabaseError:
                 return {
                     "status": "PRIVATE_ORDER_FULFILLMENT_BLOCKED",
@@ -113,17 +120,23 @@ def inspect_fulfillment(
                         or plan.get("release_state") != "FAIL_CLOSED"
                         or plan["communications"]["external_send_authorized"] is not False):
                     raise ValueError("Unverified intake must never satisfy delivery gates")
+                hold = row["session_ref"] in blocked_sessions
                 pending = ["SENDER_IDENTITY_REVIEW", "LIVE_PAYMENT_REFRESH_BEFORE_WORK",
                            "FAMILY_AND_PACKET_SOURCE_REVIEW",
                            "ASSUMPTION_AND_RULE_QA",
                            "DELIVERY_RECEIPT_AND_HUMAN_ACCEPTANCE",
                            "14_DAY_WATCH_NOT_STARTED"]
+                if hold:
+                    pending.insert(0, "STRIPE_PAYMENT_RECHECK_BLOCKED")
                 if source["status"] == "SOURCE_CATALOG_REFRESH_REVIEW_REQUIRED":
                     pending.insert(2, "FY2027_ARCHIVE_CATALOG_RECERTIFICATION")
                 next_task = plan.get("next_task") or {}
                 review.update({
-                    "status": "PENDING_PRIVATE_CUSTOMER_REVIEW",
-                    "payment_state": row["payment_state"],
+                    "status": ("PAYMENT_RECHECK_BLOCKED" if hold
+                               else "PENDING_PRIVATE_CUSTOMER_REVIEW"),
+                    "payment_state": ("PAYMENT_RECHECK_BLOCKED_REVIEW_REQUIRED"
+                                      if hold else row["payment_state"]),
+                    "payment_recheck_blocked": hold,
                     "review_task_count": plan["summary"]["open_tasks"],
                     "next_effort_stage": next_task.get("effort_stage") or "OTHER",
                     "current_case_release_state": plan["release_state"],
@@ -135,6 +148,8 @@ def inspect_fulfillment(
                     "customer_release_authorized": False,
                     "external_send_authorized": False,
                 })
+                if hold:
+                    blocked += 1
             except (OSError, ValueError, TypeError, KeyError, sqlite3.DatabaseError) as exc:
                 blocked += 1
                 review.update(status="BLOCKED_INTEGRITY", error_type=type(exc).__name__)
