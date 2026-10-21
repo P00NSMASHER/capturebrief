@@ -65,7 +65,7 @@ jobs:
           security/fy2027-offdevice-backup-candidate-20261019:b77f48a623a622c1f297fd819290bbfda5415bdf
           security/fy2027-compressed-disk-reserve-20261019:ef53c49b1ac63124256701e52a3bd5513c02e82a
           research/fy2027-archive-capacity-probe-20261019:7ddba048416bd059c80b02d84accde4e69f743fa
-          security/independent-source-row-projection-audit-20261019:47b1341ab1419b392a661ce803f60f7f7c6193e3
+          security/independent-source-row-projection-audit-20261019:2e3ae7f5300d50842d30186f488752519b5a8f34
           security/sam-original-slot-binding-20261020:3280cf9f3fc6abb9b1956004c98f010a6543cf95
           PINNED
           git diff --check
