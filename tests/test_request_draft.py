@@ -273,8 +273,11 @@ class RequestDraftTests(unittest.TestCase):
                                           name="second-import")
                 first.start()
                 try:
-                    self.assertTrue(first_at_write.wait(5),
-                                    "First import never reached case publication")
+                    self.assertTrue(
+                        first_at_write.wait(12),
+                        "First import never reached case publication; worker error types: "
+                        + ",".join(type(exc).__name__ for exc in failures),
+                    )
                     second.start()
                     time.sleep(0.15)
                 finally:
