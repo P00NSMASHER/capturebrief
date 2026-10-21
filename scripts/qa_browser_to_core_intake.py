@@ -242,6 +242,29 @@ def run():
                           "frontend/back-end lost 500-char assumptions")
                     checks.append(browser_name + ": 5 x 500 assumptions survive exact parser")
 
+                    # Real browsers may deny BOTH clipboard methods.
+                    # The complete local text must still parse as a core
+                    # case without inventing paid/sent status.
+                    page.evaluate("""() => {
+                        Object.defineProperty(navigator, 'clipboard', {
+                            configurable: true, value: undefined
+                        });
+                        document.execCommand = () => { throw Error('clipboard denied'); };
+                    }""")
+                    page.locator("#copy-request").click()
+                    manual = page.locator("#request-manual-copy")
+                    check(manual.is_visible(), "manual draft unavailable with denied clipboard")
+                    manual_text = manual.locator("#request-plaintext").input_value()
+                    manual_copy_case = assert_case(manual_text, claim=PAID_CLAIM, count=5)
+                    check([row["text"] for row in manual_copy_case["assumptions"]] == lines,
+                          "manual copy fallback lost buyer assumptions before Python intake")
+                    checks.append(browser_name + ": clipboard denial still yields five complete unproven assumptions")
+                    page.locator("#assumptions").fill("Edited after clipboard denial")
+                    check(not manual.is_visible()
+                          and manual.locator("#request-plaintext").input_value() == "",
+                          "stale manual request text remained visible after buyer edit")
+                    checks.append(browser_name + ": old manual preview clears on edit")
+
                     # Email clients may reject long mailto URLs. The site must
                     # not navigate or attempt a send when the draft is too long.
                     old_url = page.url
