@@ -48,7 +48,7 @@ jobs:
           python -m capturebrief_core.cli outcome-summary /tmp/capturebrief-outcomes.jsonl -o /tmp/outcome-summary.json
       - name: Build and independently reopen the command-produced delivery
         run: |
-          python -m capturebrief_core.trace_cli bundle fixtures/ready_trace_case.json -o /tmp/capturebrief-delivery.zip > /tmp/capturebrief-delivery-receipt.json
+          python -m capturebrief_core.trace_cli bundle fixtures/ready_trace_case.json -o /tmp/capturebrief-delivery.zip --fixture-as-of 2026-09-21T17:30:00Z > /tmp/capturebrief-delivery-receipt.json
           python - <<'PY'
           import hashlib, json, zipfile
           from pathlib import Path
@@ -106,7 +106,7 @@ jobs:
           python -m capturebrief_core.cli fulfillment-plan fixtures/ready_case.json -o /tmp/legacy-plan.json
           grep -q '"fulfillment_state": "TRACE_UPGRADE_REQUIRED"' /tmp/legacy-plan.json
           grep -q '"delivery_bundle_eligible": false' /tmp/legacy-plan.json
-          python -m capturebrief_core.cli fulfillment-plan fixtures/ready_trace_case.json -o /tmp/traced-plan.json
+          python -m capturebrief_core.cli fulfillment-plan fixtures/ready_trace_case.json --fixture-as-of 2026-09-21T17:30:00Z -o /tmp/traced-plan.json
           grep -q '"delivery_bundle_eligible": true' /tmp/traced-plan.json
       - name: Validate releasable fixture
         run: python -m capturebrief_core.cli validate fixtures/ready_case.json
