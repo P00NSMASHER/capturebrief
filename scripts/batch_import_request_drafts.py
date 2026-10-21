@@ -18,7 +18,7 @@ PROJECT = Path(__file__).resolve().parents[1]
 if str(PROJECT) not in sys.path:
     sys.path.insert(0, str(PROJECT))
 
-from capturebrief_core.request_draft import MAX_REQUEST_TEXT
+from capturebrief_core.request_draft import MAX_REQUEST_TEXT, create_unverified_case
 from scripts.import_request_draft import REPOSITORY, import_request
 
 MAX_FILES = 100
@@ -61,6 +61,7 @@ def batch_import(
     output_directory: str | Path,
     *,
     max_files: int = MAX_FILES,
+    preview: bool = False,
 ) -> dict[str, Any]:
     """Import only immediate .txt drafts, deduplicated by exact input bytes.
 
@@ -69,6 +70,8 @@ def batch_import(
     """
     if type(max_files) is not int or not 1 <= max_files <= MAX_FILES:
         raise ValueError("Batch must be limited to 1-100 buyer drafts")
+    if type(preview) is not bool:
+        raise ValueError("Preview mode must be a boolean")
     incoming = _private_directory(input_directory)
     destination = _private_directory(output_directory)
     if (incoming == destination or incoming.is_relative_to(destination)
@@ -81,6 +84,8 @@ def batch_import(
         raise ValueError("Too many request files; no cases have been imported")
 
     counters = dict(created=0, reused=0, recovered=0, duplicates=0, blocked=0)
+    preview_counts = dict(preview_new=0, preview_existing_unverified=0,
+                          preview_partial_unverified=0)
     records: list[dict[str, str]] = []
     observed: set[str] = set()
     for entry in eligible:
@@ -103,6 +108,29 @@ def batch_import(
                 raise ValueError("Private output artifact cannot be a link")
             was_case, was_receipt = case.exists(), receipt.exists()
 
+            if preview:
+                # Validate buyer text with the same intake core as real import.
+                # The fixed timestamp is ONLY an in-memory validation input;
+                # it is never persisted or used as an actual submission time.
+                create_unverified_case(
+                    raw.decode("utf-8"), submitted_at="2000-01-01T00:00:00Z",
+                )
+                # Existing files are NOT independently integrity-checked in
+                # preview mode. Calling them reusable would be misleading.
+                # The actual import always locks and compares full bytes.
+                if was_case and was_receipt:
+                    state = "EXISTING_UNVERIFIED"
+                    preview_counts["preview_existing_unverified"] += 1
+                elif was_case or was_receipt:
+                    state = "PARTIAL_UNVERIFIED"
+                    preview_counts["preview_partial_unverified"] += 1
+                else:
+                    state = "NEW_VALIDATED"
+                    preview_counts["preview_new"] += 1
+                observed.add(source_sha)
+                records.append({"item_tag": tag, "state": state})
+                continue
+
             imported = import_request(
                 str(entry), str(case), str(receipt),
                 expected_request_sha256=source_sha,
@@ -124,12 +152,19 @@ def batch_import(
 
     return {
         "schema": "capturebrief-private-batch-intake-v1",
-        "status": ("BATCH_NO_REQUESTS" if not eligible
-                   else "BATCH_PARTIAL_REVIEW_REQUIRED" if counters["blocked"]
-                   else "BATCH_ACCEPTED_REVIEW_REQUIRED"),
+        "status": (
+            "BATCH_PREVIEW_NO_REQUESTS" if preview and not eligible
+            else "BATCH_PREVIEW_PARTIAL_REVIEW_REQUIRED" if preview and counters["blocked"]
+            else "BATCH_PREVIEW_READY_FOR_REVIEW" if preview
+            else "BATCH_NO_REQUESTS" if not eligible
+            else "BATCH_PARTIAL_REVIEW_REQUIRED" if counters["blocked"]
+            else "BATCH_ACCEPTED_REVIEW_REQUIRED"
+        ),
         "processed_txt": len(eligible),
         "ignored_non_txt": len(all_entries) - len(eligible),
         **counters,
+        **(preview_counts if preview else {}),
+        "preview_only": preview,
         "items": records,
         "payment_verified": False,
         "message_delivery_verified": False,
@@ -143,9 +178,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--input-dir", required=True, help="Existing private folder of saved .txt drafts")
     parser.add_argument("--output-dir", required=True, help="Separate existing private folder for cases")
     parser.add_argument("--max-files", type=int, default=MAX_FILES)
+    parser.add_argument(
+        "--preview", action="store_true",
+        help="Validate locally and classify expected actions without writing cases or receipts",
+    )
     args = parser.parse_args(argv)
     try:
-        result = batch_import(args.input_dir, args.output_dir, max_files=args.max_files)
+        result = batch_import(
+            args.input_dir, args.output_dir,
+            max_files=args.max_files, preview=args.preview,
+        )
     except (OSError, ValueError, TypeError) as exc:
         print(json.dumps({
             "status": "BATCH_IMPORT_BLOCKED",
