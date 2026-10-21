@@ -59,7 +59,7 @@ jobs:
           done <<'PINNED'
           pilot/acceptance-evidence-gates-20261018:10666533585915f2d58bc921959ce7ec7ea87311
           feat/pilot-email-intake-bridge-20261018:d445ee6fe21513b48ead4d956b15ff333ddb9013
-          feat/private-batch-buyer-intake-20261021:6c8d4327054b0987e60a754e731dfda642a563ee
+          feat/private-batch-buyer-intake-20261021:149bd034e56bcba75aeb8daff2d71f3dc302ebd0
           fix/source-policy-secret-redaction-20261018:a788e90042b391579a2e98cf9d28b43bd46c65b5
           feat/pilot-stripe-payment-reconciliation-20261019:bbbac444705b0a95ea4af12430c287a984b427ee
           fix/x402-workflow-typed-env-20261018:567c648ac91f23423a808b85ec3c617a919dcc36
