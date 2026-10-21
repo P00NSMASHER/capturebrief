@@ -301,6 +301,26 @@ class PrivateOrderPipelineTests(unittest.TestCase):
                 self.assertEqual(snapshot,{p.name:p.read_bytes() for p in assoc.iterdir()})
                 self.assertFalse(db.exists())
 
+    def test_noninteractive_case_picker_rejects_untrusted_stdin_without_writes(self):
+        with tempfile.TemporaryDirectory() as td:
+            inbox,cases,assoc,db=self.setup_dirs(td)
+            digest=self.build_association(inbox,cases,assoc)
+            (assoc/f"request-{digest}.order.json").unlink()
+            command=[
+                sys.executable,
+                str(Path(__file__).resolve().parents[1]
+                    / "scripts" / "save_private_checkout_association.py"),
+                "--cases-dir",str(cases),
+                "--associations-dir",str(assoc),
+                "--session-id","cs_live_FICTIONAL",
+            ]
+            run=subprocess.run(command,input=digest+"\n",capture_output=True,text=True)
+            self.assertEqual(run.returncode,3)
+            self.assertFalse(list(assoc.iterdir()))
+            self.assertFalse(db.exists())
+            self.assertNotIn("cs_live_FICTIONAL",run.stdout)
+            self.assertNotIn(str(cases),run.stdout)
+
     def test_noninteractive_builder_cli_without_id_does_not_guess_checkout(self):
         with tempfile.TemporaryDirectory() as td:
             inbox,cases,assoc,db=self.setup_dirs(td)
