@@ -32,7 +32,10 @@ def _private_directory(value: str | Path) -> Path:
         junction = getattr(part, "is_junction", None)
         if part.is_symlink() or (junction is not None and junction()):
             raise ValueError("Private import directory cannot traverse links")
-    root = raw.resolve(strict=True)
+    try:
+        root = raw.resolve(strict=True)
+    except (OSError, RuntimeError):
+        raise ValueError("Private import folder is unavailable") from None
     if (not root.is_dir() or root.is_relative_to(REPOSITORY)
             or any(part.name.casefold() in {".git", "gh-pages"}
                    for part in (root, *root.parents))):
