@@ -19,7 +19,16 @@ PUBLIC_FILES = frozenset({
     "robots.txt", "sample.html", "site.webmanifest", "sitemap.xml", "terms.html",
     "thanks.html", "assets/main.js", "assets/og-capturebrief.png",
     "assets/styles.css", "assets/v5.css",
+    # The seller's public discovery files are deliberately staged in two
+    # locations by netlify-build.sh. Their source bytes are still one immutable,
+    # exact-Git-commit revision per discovery document.
+    ".well-known/x402", "openapi.json",
+    "x402/pa-entity/.well-known/x402", "x402/pa-entity/openapi.json",
 })
+PUBLIC_SOURCE_PATHS = {
+    ".well-known/x402": "x402/pa-entity/.well-known/x402",
+    "openapi.json": "x402/pa-entity/openapi.json",
+}
 _FIXED_TIME = (1980, 1, 1, 0, 0, 0)
 
 
@@ -55,7 +64,11 @@ def package_release(root: Path, output_dir: Path, source_sha: str) -> dict:
         data = (dist / name).read_bytes()
         if not data:
             raise ValueError("empty public file: " + name)
-        if data != _git(root, "show", f"{source_sha}:{name}"):
+        # Root-level x402 discovery copies do not exist at the repository root.
+        # Verify each against the reviewed source path in this exact commit;
+        # never infer an alias from arbitrary new paths in dist/.
+        source_path = PUBLIC_SOURCE_PATHS.get(name, name)
+        if data != _git(root, "show", f"{source_sha}:{source_path}"):
             raise ValueError("built file does not match pinned source: " + name)
         files[name] = data
     rows = [{"path": name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
