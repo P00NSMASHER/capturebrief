@@ -152,6 +152,10 @@ def main() -> int:
         print(json.dumps({
             "status": "FICTIONAL_PILOT_BLOCKED",
             "error_type": type(exc).__name__,
+            "failed_fictional_check": (
+                str(exc).removeprefix("Fictional pilot acceptance failed: ")[:90]
+                if isinstance(exc, AssertionError) else None
+            ),
             "customer_release_authorized": False,
         }, sort_keys=True))
         return 2
