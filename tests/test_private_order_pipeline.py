@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+from contextlib import closing
 import hashlib
 import json
 import os
@@ -112,7 +113,7 @@ class PrivateOrderPipelineTests(unittest.TestCase):
             self.build_association(inbox,cases,assoc)
             first,_ = self.synthetic(cases,assoc,db)
             self.assertEqual(first["registered"],1)
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn:
                 original = conn.execute(
                     "SELECT observation_sha256,created_at,payment_state FROM orders"
                 ).fetchone()
@@ -130,7 +131,7 @@ class PrivateOrderPipelineTests(unittest.TestCase):
             self.assertFalse(result["orders"][0]["payment_currently_authenticated_for_start"])
             self.assertEqual(result["orders"][0]["research_state"] if "research_state" in result["orders"][0] else "NOT_STARTED","NOT_STARTED")
             self.assertFalse(result["customer_release_authorized"])
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn:
                 after = conn.execute(
                     "SELECT observation_sha256,created_at,payment_state FROM orders"
                 ).fetchone()
