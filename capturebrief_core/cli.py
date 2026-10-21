@@ -43,10 +43,30 @@ def dump(value,output=None):
     if output: atomic_write_text(output,text+"\n")
     else: print(text)
 
+def _fixture_as_of(path, value):
+    """Only the original committed fictional examples get an historical clock.
+
+    An operator cannot turn an expired real customer authority receipt green
+    using this switch. Regular operation uses the actual UTC clock.
+    """
+    if value is None:
+        return None
+    fixture_dir=Path(__file__).resolve().parents[1]/"fixtures"
+    approved={fixture_dir/"ready_case.json",fixture_dir/"ready_trace_case.json"}
+    if Path(path).resolve() not in {item.resolve() for item in approved}:
+        raise SystemExit("--fixture-as-of is restricted to original fictional repository fixtures")
+    try:
+        at=datetime.fromisoformat(value.replace("Z","+00:00"))
+        if at.utcoffset() is None:
+            raise ValueError("timezone required")
+    except ValueError:
+        raise SystemExit("--fixture-as-of requires a timezone-aware ISO-8601 timestamp")
+    return at.astimezone(timezone.utc)
+
 def main():
     p=argparse.ArgumentParser(prog="capturebrief-core"); sub=p.add_subparsers(dest="cmd",required=True)
-    x=sub.add_parser("validate"); x.add_argument("case")
-    x=sub.add_parser("render"); x.add_argument("case"); x.add_argument("--output","-o")
+    x=sub.add_parser("validate"); x.add_argument("case"); x.add_argument("--fixture-as-of")
+    x=sub.add_parser("render"); x.add_argument("case"); x.add_argument("--output","-o"); x.add_argument("--fixture-as-of")
     x=sub.add_parser("diff"); x.add_argument("before"); x.add_argument("after")
     x=sub.add_parser("normalize-manifest"); x.add_argument("action_id"); x.add_argument("raw_json"); x.add_argument("--observed-at",required=True); x.add_argument("--output","-o")
     x=sub.add_parser("manifest-diff"); x.add_argument("before"); x.add_argument("after")
@@ -86,9 +106,9 @@ def main():
     x=sub.add_parser("ledger-verify"); x.add_argument("ledger")
     a=p.parse_args()
     if a.cmd=="validate":
-        r=audit_case(load(a.case)); dump(r.to_dict()); return 0 if r.release_state=="READY_FOR_HUMAN_RELEASE" else 2
+        r=audit_case(load(a.case),now=_fixture_as_of(a.case,a.fixture_as_of)); dump(r.to_dict()); return 0 if r.release_state=="READY_FOR_HUMAN_RELEASE" else 2
     if a.cmd=="render":
-        c=load(a.case); r=audit_case(c); out=render_markdown(c,r)
+        c=load(a.case); r=audit_case(c,now=_fixture_as_of(a.case,a.fixture_as_of)); out=render_markdown(c,r)
         if a.output: atomic_write_text(a.output,out)
         else: print(out)
         return 0 if r.release_state=="READY_FOR_HUMAN_RELEASE" else 2
