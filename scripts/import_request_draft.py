@@ -10,11 +10,12 @@ import hashlib
 import json
 import sys
 from datetime import datetime, timezone
+from contextlib import ExitStack
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from capturebrief_core.atomic_io import ensure_exact_bytes
+from capturebrief_core.atomic_io import ensure_exact_bytes, exclusive_path_lock
 from capturebrief_core.model import canonical_json, sha256_hex
 from capturebrief_core.request_draft import MAX_REQUEST_TEXT, create_unverified_case
 
@@ -84,7 +85,8 @@ def _existing_intake_time(case_output: Path, receipt_output: Path,
 
 
 def import_request(message_path: str, case_path: str, receipt_path: str, *,
-                   imported_at: datetime | None = None) -> dict:
+                   imported_at: datetime | None = None,
+                   lock_timeout_seconds: float = 5.0) -> dict:
     checked_at = imported_at or datetime.now(timezone.utc)
     if not isinstance(checked_at, datetime) or checked_at.utcoffset() is None:
         raise ValueError("Import time must be timezone aware")
@@ -93,6 +95,29 @@ def import_request(message_path: str, case_path: str, receipt_path: str, *,
     case_output, receipt_output = _private_file(case_path), _private_file(receipt_path)
     if len({src, case_output, receipt_output}) != 3:
         raise ValueError("Source, case and receipt paths must be distinct")
+    # Pair-wide publication is not atomic. Lock BOTH paths in a stable
+    # order before reading old timestamp/artifacts, so parallel inbox imports
+    # cannot invent incompatible case identities or partial output pairs.
+    # The same check works when two jobs share just ONE output destination.
+    if type(lock_timeout_seconds) not in {int, float} or not 0 <= lock_timeout_seconds <= 60:
+        raise ValueError("Invalid bounded private intake lock timeout")
+    with ExitStack() as held:
+        for output in sorted((case_output, receipt_output),
+                             key=lambda value: str(value).casefold()):
+            held.enter_context(exclusive_path_lock(
+                output, timeout_seconds=lock_timeout_seconds,
+                suffix=".intake.lock",
+            ))
+        return _import_request_locked(
+            src, case_output, receipt_output, checked_at, imported_at,
+        )
+
+
+def _import_request_locked(
+    src: Path, case_output: Path, receipt_output: Path,
+    checked_at: datetime, imported_at: datetime | None,
+) -> dict:
+    """Build and publish one customer request while both output locks are held."""
     # Bounded read; no user request text, credentials or contact details in logs.
     with src.open("rb") as handle:
         raw = handle.read(MAX_REQUEST_TEXT * 4 + 1)
