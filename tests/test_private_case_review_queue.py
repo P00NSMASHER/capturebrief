@@ -134,9 +134,79 @@ class PrivateCaseReviewQueueTests(unittest.TestCase):
             (cases / "request-not-a-sha.case.json").write_text("fake", encoding="utf-8")
             result = review_private_cases(cases)
             self.assertEqual(result["missing_partner"], 1)
-            self.assertGreaterEqual(result["ignored_non_case_entries"], 1)
+            self.assertEqual(result["unexpected_case_entries"], 1)
+            self.assertEqual(result["ignored_non_case_entries"], 0)
+            self.assertEqual(result["status"], "PRIVATE_CASE_REVIEW_BLOCKED")
             self.assertEqual(result["verified_intake_pairs"], 0)
             self.assertTrue(case.exists())
+
+    def test_malformed_only_case_file_must_never_look_like_empty_inbox(self):
+        with tempfile.TemporaryDirectory() as temp:
+            _, cases = self.roots(temp)
+            suspicious = cases / "request-INVALID-SHA.case.json"
+            suspicious.write_text('{"case_id":"FICTIONAL"}', encoding="utf-8")
+            before = suspicious.read_bytes()
+            report = review_private_cases(cases, now=NOW)
+            self.assertEqual(report["status"], "PRIVATE_CASE_REVIEW_BLOCKED")
+            self.assertEqual(report["unexpected_case_entries"], 1)
+            self.assertEqual(report["blocked"], 1)
+            self.assertEqual(report["verified_intake_pairs"], 0)
+            self.assertEqual(report["ignored_non_case_entries"], 0)
+            self.assertEqual(suspicious.read_bytes(), before)
+            self.assertNotIn(suspicious.name, json.dumps(report))
+            cli = subprocess.run(
+                [sys.executable, str(Path(__file__).resolve().parents[1]
+                  / "scripts" / "review_private_cases.py"),
+                 "--cases-dir", str(cases)],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(cli.returncode, 3, cli.stderr)
+            self.assertNotIn(suspicious.name, cli.stdout)
+
+    def test_in_progress_lock_before_case_publication_never_looks_empty(self):
+        with tempfile.TemporaryDirectory() as temp:
+            _, cases = self.roots(temp)
+            digest = hashlib.sha256(b"fictional original draft").hexdigest()
+            lock = cases / f"request-{digest}.case.json.intake.lock"
+            lock.write_text("fictional writer active", encoding="utf-8")
+            before = lock.read_bytes()
+            report = review_private_cases(cases, now=NOW)
+            self.assertEqual(report["status"], "PRIVATE_CASE_REVIEW_BLOCKED")
+            self.assertEqual(report["active_import_locks"], 1)
+            self.assertEqual(report["orphan_import_locks"], 1)
+            self.assertEqual(report["blocked"], 1)
+            self.assertEqual(report["verified_intake_pairs"], 0)
+            self.assertEqual(report["input_pairs_or_orphans"], 0)
+            self.assertEqual(lock.read_bytes(), before)
+            self.assertNotIn(digest, json.dumps(report))
+            self.assertFalse(report["any_customer_release_authorized"])
+
+    def test_valid_case_cannot_hide_unrecognized_neighbor(self):
+        with tempfile.TemporaryDirectory() as temp:
+            inbox, cases = self.roots(temp)
+            (inbox / "valid.txt").write_text(draft(), encoding="utf-8")
+            batch_import(inbox, cases)
+            malformed = cases / "request-truncated.receipt.json"
+            malformed.write_text('{"fictional":true}', encoding="utf-8")
+            report = review_private_cases(cases, now=NOW)
+            self.assertEqual(report["verified_intake_pairs"], 1)
+            self.assertEqual(report["unexpected_case_entries"], 1)
+            self.assertEqual(report["blocked"], 1)
+            self.assertEqual(report["status"], "PRIVATE_CASE_REVIEW_BLOCKED")
+            self.assertEqual(report["cases"][0]["state"],
+                             "UNVERIFIED_INTAKE_REVIEW_REQUIRED")
+            self.assertFalse(report["any_external_send_authorized"])
+
+    def test_unrelated_noncase_files_are_ignored_in_empty_folder(self):
+        with tempfile.TemporaryDirectory() as temp:
+            _, cases = self.roots(temp)
+            (cases / "notes.txt").write_text("synthetic", encoding="utf-8")
+            (cases / "readme.pdf").write_bytes(b"fictional")
+            report = review_private_cases(cases, now=NOW)
+            self.assertEqual(report["status"], "PRIVATE_CASE_REVIEW_EMPTY")
+            self.assertEqual(report["ignored_non_case_entries"], 2)
+            self.assertEqual(report["unexpected_case_entries"], 0)
+            self.assertEqual(report["active_import_locks"], 0)
 
     def test_empty_bounded_invalid_path_and_cli_read_only_behavior(self):
         with tempfile.TemporaryDirectory() as temp:
