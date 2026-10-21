@@ -167,6 +167,69 @@ class RequestDraftTests(unittest.TestCase):
                 self.assertEqual(case_path.stat().st_mode & 0o777, 0o600)
                 self.assertEqual(receipt_path.stat().st_mode & 0o777, 0o600)
 
+    def test_default_time_retries_reuse_existing_case_and_receipt(self):
+        # Operator CLIs omit --imported-at in normal use. Retrying identical
+        # customer text must NOT create a new case ID or conflict with itself.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            input_file, case_file, receipt_file = (
+                root / "buyer.txt", root / "case.json", root / "receipt.json"
+            )
+            input_file.write_text(draft(paid=True), encoding="utf-8")
+            first = import_request(
+                str(input_file), str(case_file), str(receipt_file),
+                imported_at=NOW,
+            )
+            case_bytes, receipt_bytes = case_file.read_bytes(), receipt_file.read_bytes()
+            # Deliberately OMIT imported_at on retry, as a real operator does.
+            second = import_request(str(input_file), str(case_file), str(receipt_file))
+            self.assertEqual(first, second)
+            self.assertEqual(case_file.read_bytes(), case_bytes)
+            self.assertEqual(receipt_file.read_bytes(), receipt_bytes)
+            self.assertFalse(json.loads(receipt_bytes)["purchase_claim_verified"])
+
+    def test_partial_case_or_receipt_recovery_reuses_original_timestamp(self):
+        # Recover from interrupted two-file publication. Never invent a new
+        # case identity, silently rewrite the intact artifact or promote claims.
+        for missing in ("receipt", "case"):
+            with self.subTest(missing=missing), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                src, case_file, receipt_file = (
+                    root / "buyer.txt", root / "case.json", root / "receipt.json"
+                )
+                src.write_text(draft(), encoding="utf-8")
+                original = import_request(
+                    str(src), str(case_file), str(receipt_file), imported_at=NOW,
+                )
+                expected = (case_file.read_bytes(), receipt_file.read_bytes())
+                (receipt_file if missing == "receipt" else case_file).unlink()
+                restored = import_request(str(src), str(case_file), str(receipt_file))
+                self.assertEqual(restored, original)
+                self.assertEqual(
+                    (case_file.read_bytes(), receipt_file.read_bytes()), expected
+                )
+
+    def test_changed_request_or_tampered_artifact_cannot_be_reused(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src, case_file, receipt_file = (
+                root / "buyer.txt", root / "case.json", root / "receipt.json"
+            )
+            src.write_text(draft(), encoding="utf-8")
+            import_request(str(src), str(case_file), str(receipt_file), imported_at=NOW)
+            old_case, old_receipt = case_file.read_bytes(), receipt_file.read_bytes()
+            src.write_text(draft(company="Different Buyer"), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                import_request(str(src), str(case_file), str(receipt_file))
+            self.assertEqual(case_file.read_bytes(), old_case)
+            self.assertEqual(receipt_file.read_bytes(), old_receipt)
+            src.write_text(draft(), encoding="utf-8")
+            receipt_file.write_text("tampered")
+            with self.assertRaises(ValueError):
+                import_request(str(src), str(case_file), str(receipt_file))
+            self.assertEqual(case_file.read_bytes(), old_case)
+            self.assertEqual(receipt_file.read_text(), "tampered")
+
     def test_private_destination_rejects_public_repo_and_overwrite(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
