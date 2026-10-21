@@ -11,6 +11,7 @@ on:
       - scripts/process_private_order_queue.py
       - scripts/inspect_private_order_fulfillment.py
       - tests/test_private_order_pipeline.py
+      - scripts/run_private_order_acceptance.py
       - scripts/reconcile_stripe_checkout.py
       - tests/test_private_order_os.py
       - tests/test_payment_reconciliation.py
@@ -23,6 +24,7 @@ on:
       - scripts/process_private_order_queue.py
       - scripts/inspect_private_order_fulfillment.py
       - tests/test_private_order_pipeline.py
+      - scripts/run_private_order_acceptance.py
       - scripts/reconcile_stripe_checkout.py
       - tests/test_private_order_os.py
       - tests/test_payment_reconciliation.py
@@ -50,6 +52,8 @@ jobs:
           python-version: '3.11'
       - name: Provider-state and order integrity contract tests
         run: python -m unittest tests.test_payment_reconciliation tests.test_private_order_os tests.test_private_order_pipeline -v
+      - name: Run actual fictional buyer-to-bundle-and-watch laboratory
+        run: python scripts/run_private_order_acceptance.py
       - name: Existing private buyer intake remains intact
         run: python -m unittest tests.test_request_draft tests.test_private_case_review_queue -q
       - name: Safety declaration
