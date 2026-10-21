@@ -301,6 +301,11 @@
             <label class="acknowledgment" for="public-only"><input id="public-only" name="public-only" type="checkbox" required><span>I will include only public, non-sensitive information—no restricted files, credentials, pricing, proposal text, or private strategy.</span></label>
             <div class="form-actions"><button class="button" type="submit">Open email draft</button><button class="button secondary" id="copy-request" type="button">Copy request</button></div>
             <p class="form-status" id="request-status" role="status" aria-live="polite"></p>
+            <div class="request-manual-copy" id="request-manual-copy" hidden>
+              <label for="request-plaintext">Complete request — select and copy manually</label>
+              <p id="request-plaintext-help">Your browser could not copy automatically. This text remains on this page only; nothing has been sent. Select all and copy into your own email.</p>
+              <textarea id="request-plaintext" rows="12" readonly spellcheck="false" aria-describedby="request-plaintext-help"></textarea>
+            </div>
           </form>
           <noscript><p class="noscript-note">JavaScript is off. <a href="mailto:jayp19386@gmail.com?subject=CaptureBrief%20scope%20request">Email JP Enterprises</a> with the public link, your current posture, and up to five non-sensitive assumptions.</p></noscript>
           <div class="direct-contact"><p>Prefer your usual email?</p><a class="email" id="contact-email" href="mailto:jayp19386@gmail.com?subject=CaptureBrief%20scope%20request">Email JP Enterprises</a><button type="button" class="copy-email" hidden data-copy-email="contact-email" aria-describedby="copy-status">Copy email</button><span class="copy-status" id="copy-status" role="status" aria-live="polite"></span></div>
