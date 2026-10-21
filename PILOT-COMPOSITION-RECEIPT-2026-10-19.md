@@ -650,3 +650,64 @@ records, charges, email sends, source catalog promotion or main/gh-pages
 merge were performed. This evidence does not independently approve
 publisher authenticity, full FY2027 coverage, disaster recovery or
 production release.
+
+
+## October 21 — private saved-request batch intake acceptance
+
+**Functional candidate only; no live buyer data or deployment.** Newly stacked
+DRAFT PR #64 introduces an operator-invoked private batch loader for saved
+CaptureBrief request-draft `.txt` files, based on the reviewed single-request
+intake PR #52. It accepts at most 100 immediate draft files per invocation;
+never polls an inbox, sends messages, bills Stripe, calls SAM.gov, or creates
+a case containing approved evidence. Distinct **exact request-byte SHA-256**
+values map to separate private case+receipt paths; same-byte copies are
+safely deduplicated even if the source filenames differ. Previously created
+matching case/receipt pairs are reused, and interrupted partners can be
+restored with the original import timestamp.
+
+A new optional expected-request SHA-256 boundary in the underlying importer
+rejects a request that changes *between* batch fingerprinting and the
+locked authoritative import read; no incorrect digest-named case is
+published. Symlink input/output files and linked private directories are
+rejected; oversized, malformed, tampered, or unsafe drafts fail independently
+without aborting valid neighbors. The batch JSON reports only aggregate
+counts, opaque hashed filename tags, and generic error classes, never buyer
+contact details, paths or request text. Payment/source/client-release
+approval remains **FALSE**. Semantically similar but byte-different drafts
+are **not** deduplicated automatically and remain an operator concern.
+
+**Checks at exact current PR #64 candidate head
+`149bd034e56bcba75aeb8daff2d71f3dc302ebd0`:**
+- Dedicated [Linux/Windows batch QA
+  #39558736476](https://github.com/P00NSMASHER/capturebrief/actions/runs/39558736476),
+  [Product Core #39558736632](https://github.com/P00NSMASHER/capturebrief/actions/runs/39558736632),
+  and [private intake concurrency #39558736483](https://github.com/P00NSMASHER/capturebrief/actions/runs/39558736483)
+  all **PASSED** using invented buyers and disposable directories.
+- PAAM-L044 Windows Python 3.13 ran **25/25 previous-head combined
+  batch/single-draft tests with one symlink test skipped** at exact
+  `6c8d4327054b0987e60a754e731dfda642a563ee`; that isolated
+  checkout was removed. The final `149bd034` head was installed
+  locally into an explicitly pinned operator-only checkout, and a
+  read-only empty-inbox smoke test returned exactly
+  `BATCH_NO_REQUESTS`, creating **no** case artifacts.
+- The local operator setup includes EMPTY private `private-inbox`
+  and `private-cases` folders under CaptureBrief's local app data,
+  plus a manual, pinned launch command. The new launcher has not been
+  used to ingest real buyer records. No broad Users/Everyone/Guest
+  allow ACLs were observed on the new private folders; this is not
+  certification of whole-device encryption.
+- Previous pinned eleven-candidate
+  [no-deploy QA #39558146207](https://github.com/P00NSMASHER/capturebrief/actions/runs/39558146207)
+  **PASSED 652 Linux tests and 255 Windows tests (one skipped)**,
+  Chromium/WebKit buyer-to-Python/fictional-Stripe checks and all 11
+  ephemeral pinned Git merges. That run used the previous PR #64
+  documentation head `6c8d4327`. The updated current final head is
+  pinned in this QA branch's revised workflow for a separate
+  eleven-head acceptance; do not infer final acceptance from the prior
+  run before its own exact-head CI completes.
+
+**Release state: still NO-GO.** PR #64 remains stacked onto unmerged
+PR #52. No main/gh-pages changes, private buyer requests, mail
+delivery, live payment, complete FY2027 source catalog, off-device
+recovery, independent release approval or actual customer fulfillment
+are established by these synthetic developer tests.
