@@ -24,11 +24,15 @@ charge cards, refund money, send messages or release customer deliverables.
    builder instead of hand-editing a JSON file:
 
    ```powershell
-   py -3 scripts/save_private_checkout_association.py "$env:LOCALAPPDATA\CaptureBrief\private-cases\request-<the exact 64 lowercase hex>.case.json" --associations-dir "$env:LOCALAPPDATA\CaptureBrief\private-checkout-associations"
+   py -3 scripts/save_private_checkout_association.py --cases-dir "$env:LOCALAPPDATA\CaptureBrief\private-cases" --associations-dir "$env:LOCALAPPDATA\CaptureBrief\private-checkout-associations"
    ```
 
-   It prompts for the independently obtained Checkout Session ID in the
-   operator's terminal, validates the original case/receipt pair, prevents
+   The interactive command first prompts for the **64-lowercase-hex case
+   fingerprint**, then privately prompts for the independently obtained
+   Checkout Session ID. The fingerprint is used only to select an existing
+   private case; it is never treated as customer authentication.
+
+   The builder validates the original case/receipt pair, prevents
    assigning the same Checkout ID to two cases, and atomically creates or
    reuses the corresponding private mapping. It does **not** access Stripe,
    assert payment, or identify/authenticate the buyer. Its console output
