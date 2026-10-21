@@ -7,6 +7,7 @@ import os
 import subprocess
 import threading
 import time
+import traceback
 import sys
 import tempfile
 import unittest
@@ -273,11 +274,22 @@ class RequestDraftTests(unittest.TestCase):
                                           name="second-import")
                 first.start()
                 try:
-                    self.assertTrue(
-                        first_at_write.wait(12),
-                        "First import never reached case publication; worker error types: "
-                        + ",".join(type(exc).__name__ for exc in failures),
-                    )
+                    ready = first_at_write.wait(12)
+                    if not ready:
+                        # Diagnostic contains only Python function names/line
+                        # numbers, never private paths or fictional buyer data.
+                        active = sys._current_frames().get(first.ident)
+                        call_path = (
+                            " > ".join(
+                                f"{frame.name}:{frame.lineno}"
+                                for frame in traceback.extract_stack(active)[-8:]
+                            ) if active is not None else "thread-finished"
+                        )
+                        self.fail(
+                            "First import never reached case publication; worker types="
+                            + ",".join(type(exc).__name__ for exc in failures)
+                            + "; Python call path=" + call_path
+                        )
                     second.start()
                     time.sleep(0.15)
                 finally:
