@@ -769,3 +769,63 @@ genuine source authority, independent code/production review,
 off-device encrypted disaster recovery with an independently retrieved
 key, and a real 14-day customer watch. No main/gh-pages merge,
 external send, payment, or customer release occurred.
+
+
+## October 21 — read-only operator review of imported private cases
+
+**Feature candidate is functional, still NO DEPLOY.** Stacked PR #64 at
+immutable exact head `dbf4bc9a12f67bbce56b1da3bc14468038fea8d2`
+adds `scripts/review_private_cases.py` after the already-validated
+private Preview and Import stages. Its read-only review loads paired
+private case/receipt JSON files, requires consistent canonical case
+and receipt hashes, source request SHA and UTC timestamp, checks
+unverified buyer identity/payment/communication/source states, then
+uses CaptureBrief's **real** `build_fulfillment_plan` to summarize
+task counts and the next generic effort stage. Raw customer contact,
+assumptions, opportunity URLs, case IDs and private filesystem paths
+are **not** emitted in the output.
+
+The reviewer refuses missing partner files, altered receipts, unapproved
+state claims and active importer locks. Two independently valid requests
+with matching supplied work email and exact opportunity URL are
+reported as **possibly related** even if the assumption copy differs.
+These are *unverified local duplicate clues*, not authenticated buyer
+identities or automatic merges/deletions.
+
+**CI:** [Final isolated eleven-head no-deploy composition
+#39577299827](https://github.com/P00NSMASHER/capturebrief/actions/runs/39577299827)
+at exact QA workflow SHA `c276b4dc02eef4a58bdb3275ecc3caae3afe0ba6`
+**PASSED 663 Linux tests and 266 Windows tests (one Windows symlink
+privilege skip)**, Chromium/WebKit fictional buyer-to-strict-core/
+fictional-Stripe checks, plus all eleven pinned ephemeral Git merges.
+Standalone [private batch
+#39577254208](https://github.com/P00NSMASHER/capturebrief/actions/runs/39577254208),
+[Product Core
+#39577254258](https://github.com/P00NSMASHER/capturebrief/actions/runs/39577254258),
+and [intake concurrency
+#39577254315](https://github.com/P00NSMASHER/capturebrief/actions/runs/39577254315)
+also passed at the same exact PR #64 code head.
+
+**Real Windows host:** PAAM-L044 checkout was updated to the same PR #64
+SHA. **36 direct Python 3.13 private review, batch, and intake tests
+passed with one symlink creation privilege skip**. Its authorized
+private case folder remains empty; a read-only live-dir check
+returned `PRIVATE_CASE_REVIEW_EMPTY` with no case writes.
+Three private manually initiated pinned launchers are installed:
+`Preview-CaptureBrief-Private-Batch.cmd`,
+`Start-CaptureBrief-Private-Batch.cmd`, and
+`Review-CaptureBrief-Private-Cases.cmd`. A *separate disposable
+fictional* Windows CLI exercise verified preview-new/duplicate/blocked
+counts, two explicitly created fictional cases, one related-case
+warning, and rejection of a manually altered fictional receipt. Its
+temporary folder was destroyed. Both actual private inbox and cases
+directories are still empty. The real retained FY2027 original/source
+hash was never used by this case-queue feature.
+
+**Release/certification still blocked:** These results do not establish
+independent customer identity, authenticated Stripe live payment,
+independent source or FY2027 34-year catalog coverage, publisher
+review, real 14-day customer watch, disk encryption or independent
+off-device disaster recovery. No customer record was sent or stored
+on GitHub, no live website, pricing, payment, buyer communication
+or production main/gh-pages branch was changed.
