@@ -178,6 +178,14 @@ def audit_row_projection(
                 seen += 1
         if recorded_rows.fetchone() is not None or seen != metadata["rows_scanned"]:
             raise IndexSourceMismatch("Indexed original row count mismatch")
+        # Fingerprinting and parsing happen in separate file opens. A mutable
+        # original could be swapped between them to match a tampered SQLite
+        # projection despite the original first digest matching metadata.
+        # Re-read all bytes after row comparison; never certify an unstable
+        # original. This is on-demand deep QA, not the hot-path validator.
+        final_sha, final_bytes = _original_sha_and_size(source)
+        if final_sha != original_sha or final_bytes != nbytes:
+            raise IndexSourceMismatch("Source original changed during row projection audit")
         conn.execute("ROLLBACK")
     return {
         "status": "EXACT_PRIVATE_SOURCE_ROW_PROJECTION_PASS_UNAPPROVED",
