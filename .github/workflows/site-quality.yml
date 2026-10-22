@@ -2,7 +2,7 @@ name: Website quality
 on:
   push:
     branches: [gh-pages, site-clarity-20260921, 'pages-buyer-evidence-*']
-    paths: ['**/*.html', 'index.html', 'decision-evidence.html', 'examples/**', 'permitplate/**', 'freightrecovery/**', 'assets/**', '.github/site_qa.py', '.github/brand_qa.py', '.github/buyer_journey_qa.py', '.github/workflows/site-quality.yml']
+    paths: ['**/*.html', 'index.html', 'decision-evidence.html', 'examples/**', 'permitplate/**', 'freightrecovery/**', 'assets/**', '.github/site_qa.py', '.github/brand_qa.py', '.github/buyer_journey_qa.py', '.github/clipboard_qa.py', '.github/clipboard_unit.cjs', '.github/workflows/site-quality.yml']
   pull_request:
     branches: [gh-pages]
 permissions:
@@ -43,6 +43,14 @@ jobs:
         env:
           SITE_ROOT: .
           QA_OUTPUT: qa-output/buyer-build
+      - name: Test clipboard fallback without touching the system clipboard
+        run: node .github/clipboard_unit.cjs
+      - name: Verify clipboard failure recovery in the built website
+        run: python .github/clipboard_qa.py
+        env:
+          SITE_ROOT: .
+          QA_BROWSER: ${{ matrix.browser }}
+          QA_OUTPUT: qa-output/clipboard-build
       - name: Wait for GitHub Pages to publish this exact release
         if: github.ref == 'refs/heads/gh-pages'
         run: |
@@ -97,6 +105,13 @@ jobs:
         env:
           QA_BASE_URL: https://p00nsmasher.github.io/capturebrief/
           QA_OUTPUT: qa-output/buyer-live
+      - name: Verify clipboard failure recovery on the published site
+        if: github.ref == 'refs/heads/gh-pages'
+        run: python .github/clipboard_qa.py
+        env:
+          QA_BASE_URL: https://p00nsmasher.github.io/capturebrief/
+          QA_BROWSER: ${{ matrix.browser }}
+          QA_OUTPUT: qa-output/clipboard-live
       - name: Preserve reports and screenshots
         if: always()
         uses: actions/upload-artifact@v4
