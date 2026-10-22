@@ -159,3 +159,5 @@ try{
 
 
 require("./approved-brand.test.js");
+
+require("./operations/service-obligations.test.js");
