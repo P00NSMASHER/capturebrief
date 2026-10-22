@@ -67,12 +67,19 @@ def images_ready(page, label, expected):
         except Exception as exc:
             check(False, f"{label}: image decode failed: {str(exc)[:160]}")
     images = page.eval_on_selector_all(
-        "img",
+        "img:not(.approved-brand-image)",
         "els => els.map(i => ({src:i.currentSrc,loaded:i.complete&&i.naturalWidth>0,"
         "naturalWidth:i.naturalWidth,naturalHeight:i.naturalHeight,"
         "renderedWidth:i.getBoundingClientRect().width,renderedHeight:i.getBoundingClientRect().height}))",
     )
     check(len(images) == expected, f"{label}: expected {expected} content images")
+    branded = page.locator("img.approved-brand-image").evaluate_all(
+        "imgs=>imgs.map(i=>({loaded:i.complete&&i.naturalWidth>0, alt:i.alt, width:i.getBoundingClientRect().width}))"
+    )
+    if label.startswith("index.html"):
+        check(len(branded) == 3 and all(i["loaded"] and i["width"]>0 for i in branded),
+              f"{label}: approved header, hero and footer artwork loaded")
+
     check(all(i["loaded"] for i in images), f"{label}: all content images must load")
     check(
         all(i["renderedWidth"] > 80 and i["renderedHeight"] > 80 for i in images),
@@ -132,16 +139,17 @@ with sync_playwright() as pw:
             check(page.locator("h1").count() == 1, f"{name}: one H1")
             summary = {"page": name, "headline": page.locator("h1").inner_text(), "viewports": []}
             check(contract["headline"] in summary["headline"], f"{name}: correct headline")
-            check(page.locator("img").count() == contract["images"], f"{name}: expected content-image count")
+            check(page.locator("img:not(.approved-brand-image)").count() == contract["images"], f"{name}: expected content-image count")
             if contract["images"]:
-                urls = page.locator("img").evaluate_all("els=>els.map(i=>i.getAttribute('src'))")
+                urls = page.locator("img:not(.approved-brand-image)").evaluate_all("els=>els.map(i=>i.getAttribute('src'))")
                 unique = {urlsplit(url).path for url in urls}
                 summary["unique_photos"] = len(unique)
                 check(len(unique) == contract["images"], f"{name}: no repeated photos")
                 check(page.locator('img:not([alt]),img[alt=""]').count() == 0, f"{name}: image alternative text")
-                check(page.locator("img:not([width]),img:not([height]),img:not([srcset])").count() == 0, f"{name}: responsive image dimensions")
-                check(page.locator('img[fetchpriority="high"]').count() == 1, f"{name}: one prioritized hero")
-                check(page.locator('img[loading="lazy"]').count() == contract["images"] - 1, f"{name}: secondary photos lazy loaded")
+                check(page.locator("img:not([width]),img:not([height])").count() == 0, f"{name}: all images have intrinsic dimensions")
+                check(page.locator("img:not(.approved-brand-image):not([srcset])").count() == 0, f"{name}: responsive photo dimensions")
+                check(page.locator('img:not(.approved-brand-image)[fetchpriority="high"]').count() == 1, f"{name}: one prioritized content hero")
+                check(page.locator('img:not(.approved-brand-image)[loading="lazy"]').count() == contract["images"] - 1, f"{name}: secondary photos lazy loaded")
             check(page.locator('link[rel="canonical"]').count() == 1, f"{name}: canonical URL")
             missing = page.eval_on_selector_all(
                 'a[href^="#"]',
@@ -162,7 +170,8 @@ with sync_playwright() as pw:
             if name == "index.html":
                 check(page.locator(".brief-preview").count() == 1, "CaptureBrief: visible deliverable preview")
                 check(page.locator(".hero-assurance span").count() == 3, "CaptureBrief: concise service assurances")
-                check(page.locator(".brand-lockup").count() >= 2, "CaptureBrief: complete brand lockup")
+                check(page.locator('a.brand.approved-brand-header img.approved-brand-image[alt="CaptureBrief by RETALLY"]').count() >= 2,
+                      "CaptureBrief: complete approved brand lockup on header and footer")
                 check(page.locator("#request-builder").is_visible(), "CaptureBrief: local request builder is available")
                 check(page.locator('#request-builder[action]').count() == 0, "CaptureBrief: request form has no network action")
                 check(page.locator('a[href="privacy.html"]').count() >= 1, "CaptureBrief: privacy link")
