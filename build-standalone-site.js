@@ -93,20 +93,68 @@ function rootReference(value){
   if(/^(?:[a-z][a-z0-9+.-]*:|\/\/|#|\?)/i.test(value)) return value;
   return cleanHtmlUrl('/'+value.replace(/^\.\//,'').replace(/^\//,''));
 }
+function plainAnchorLabel(label){
+  return label.replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
+}
+function isGroupAffiliationLabel(label){
+  return ['RETALLY Group','A RETALLY Group business','Part of RETALLY Group'].includes(plainAnchorLabel(label));
+}
+function rebaseGroupLinks(html){
+  // PR72 added Group links to the old umbrella host. Match their labels and
+  // known destinations so genuine Freight links retain their own destination.
+  return html.replace(/(<a\b[^>]*?\bhref=)(["'])([^"']*)\2([^>]*>)([\s\S]*?)(<\/a>)/gi,
+    (match,prefix,quote,href,suffix,label,close)=>{
+      let destination=href;
+      if(isGroupAffiliationLabel(label)&&[
+        'https://www.retallyrecovery.com/',
+        'https://www.retallyrecovery.com/capturebrief/'
+      ].includes(href)){
+        destination=GROUP_URL;
+      }else if(plainAnchorLabel(label)==='RETALLY contact'){
+        let old;
+        try{old=new URL(href);}catch{return match;}
+        if(old.origin==='https://www.retallyrecovery.com'&&old.pathname==='/contact/'){
+          const next=new URL(GROUP_URL);
+          next.search=old.search;
+          next.hash='contact';
+          destination=next.href;
+        }
+      }
+      return prefix+quote+destination+quote+suffix+label+close;
+    });
+}
+function hasGroupFooterAffiliation(footer){
+  return Array.from(footer.matchAll(/<a\b[^>]*?\bhref=(["'])([^"']*)\1[^>]*>([\s\S]*?)<\/a>/gi))
+    .some(match=>match[2]===GROUP_URL&&isGroupAffiliationLabel(match[3]));
+}
 function transformHtml(html,file=''){
   let text=html.split(LEGACY_SITE_BASE).join(SITE_BASE);
   if(file==='decision-evidence.html'){
     text=text.replace('$149, with scope and timing confirmed before payment.',
       '$149, with scope and timing confirmed before work begins.');
   }
+  if(file==='privacy.html'){
+    text=text.replace('GitHub Pages and its infrastructure may process',
+      'Cloudflare Pages and its infrastructure may process')
+      .replace('under GitHub’s own terms and privacy practices.',
+        'under <a href="https://www.cloudflare.com/policies/privacy/">Cloudflare’s privacy policy</a> and applicable service terms.');
+  }
+  if(file==='data-handling.html'){
+    text=text.replace('GitHub Pages hosts the public site. Google/Gmail processes direct email correspondence.',
+      'Cloudflare Pages hosts the public site. RETALLY’s email service provider processes direct email correspondence.');
+  }
+  text=rebaseGroupLinks(text);
   const escapedBase=SITE_BASE.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   text=text.replace(new RegExp(escapedBase+'[^\\s"\'<>]*','g'),cleanHtmlUrl);
   // Root paths keep the same navigation and assets working on nested 404 routes.
   text=text.replace(/\b(href|src|action)=(["'])([^"']*)\2/g,
     (match,attribute,quote,value)=>attribute+'='+quote+rootReference(value)+quote);
-  if(!text.includes('</footer>')) throw new Error('MISSING_COMPANY_FOOTER');
-  const affiliation='<div class="wrap retally-affiliation"><a href="'+GROUP_URL+'">Part of RETALLY Group</a></div>';
-  text=text.replace('</footer>',affiliation+'</footer>');
+  const footer=text.match(/<footer\b[^>]*>[\s\S]*?<\/footer>/i);
+  if(!footer) throw new Error('MISSING_COMPANY_FOOTER');
+  if(!hasGroupFooterAffiliation(footer[0])){
+    const affiliation='<div class="wrap retally-affiliation"><a href="'+GROUP_URL+'">Part of RETALLY Group</a></div>';
+    text=text.replace('</footer>',affiliation+'</footer>');
+  }
   // Preserve existing public mailto links without Cloudflare's decode script.
   return text.replace(/<body\b[^>]*>/,'$&\n<!--email_off-->')
     .replace('</body>','<!--/email_off-->\n</body>');

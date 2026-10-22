@@ -12,6 +12,9 @@ const read=(file)=>fs.readFileSync(path.join(out,file),'utf8');
 const originals=site.PUBLIC_FILES.map(name=>({path:name,sha256:site.sha256File(path.join(site.ROOT,name))}));
 const env={CF_PAGES_COMMIT_SHA:process.env.CF_PAGES_COMMIT_SHA,GITHUB_SHA:process.env.GITHUB_SHA,COMMIT_REF:process.env.COMMIT_REF};
 const checkoutReferences=(html)=>Array.from(html.matchAll(/href=(["'])((?:https:\/\/buy\.stripe\.com\/|mailto:)[^"']*)\1/g),match=>match[2]);
+const groupAffiliations=(html)=>Array.from(html.matchAll(/<a\b[^>]*\bhref=(["'])([^"']*)\1[^>]*>([\s\S]*?)<\/a>/gi),match=>({
+  href:match[2],label:match[3].replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim()
+})).filter(link=>['RETALLY Group','A RETALLY Group business','Part of RETALLY Group'].includes(link.label));
 
 try{
   for(const name of site.PUBLIC_FILES){
@@ -51,7 +54,9 @@ try{
   for(const file of site.PUBLIC_FILES.filter(name=>name.endsWith('.html'))){
     const html=read(file);
     const source=fs.readFileSync(path.join(site.ROOT,file),'utf8');
-    assert.equal(html.split('Part of RETALLY Group').length-1,1,file+' needs one group affiliation');
+    const footer=html.match(/<footer\b[^>]*>[\s\S]*?<\/footer>/i)[0];
+    assert.equal(groupAffiliations(footer).length,1,file+' needs exactly one footer group affiliation');
+    for(const link of groupAffiliations(html)) assert.equal(link.href,site.GROUP_URL,file+' Group link must use the Group host');
     assert(html.includes('href="'+site.GROUP_URL+'"'));
     assert(!html.includes(site.LEGACY_SITE_BASE));
     assert(html.includes('<!--email_off-->')&&html.includes('<!--/email_off-->'));
@@ -69,6 +74,37 @@ try{
   assert(read('404.html').includes('href="/assets/enterprise.css?v=2"'),'Nested 404 must load styles from root');
   assert(read('index.html').includes('$149'));
   assert(read('index.html').includes('JP Enterprises'));
+  assert.equal(groupAffiliations(read('index.html')).length,2,'Homepage should retain its Group signal bar and one footer affiliation');
+  for(const file of ['data-handling.html','privacy.html','terms.html']){
+    assert(read(file).includes('href="'+site.GROUP_URL+'?business=CaptureBrief#contact"'),'Group contact query and anchor missing: '+file);
+    assert(!read(file).includes('https://www.retallyrecovery.com/contact/'),'Legacy Group contact remains: '+file);
+  }
+  const routeFixture='<body><a href="https://www.retallyrecovery.com/">Freight Recovery</a>'+
+    '<a href="https://www.retallyrecovery.com/capturebrief/">Legacy product page</a>'+
+    '<a href="https://www.retallyrecovery.com/contact/?business=Freight">Freight contact</a>'+
+    '<a href="https://www.retallyrecovery.com/contact/?business=CaptureBrief&amp;source=terms%20page#old">RETALLY contact</a>'+
+    '<footer><a href="https://www.retallyrecovery.com/capturebrief/">A RETALLY Group business</a></footer></body>';
+  const routed=site.transformHtml(routeFixture);
+  assert(routed.includes('<a href="https://www.retallyrecovery.com/">Freight Recovery</a>'),'Non-Group Freight root link changed');
+  assert(routed.includes('<a href="https://www.retallyrecovery.com/capturebrief/">Legacy product page</a>'),'Non-Group legacy link changed');
+  assert(routed.includes('<a href="https://www.retallyrecovery.com/contact/?business=Freight">Freight contact</a>'),'Non-Group Freight contact changed');
+  assert(routed.includes('href="'+site.GROUP_URL+'?business=CaptureBrief&amp;source=terms%20page#contact"'),'Group handoff must preserve the existing query');
+  assert.equal(groupAffiliations(routed).length,1,'Existing Group footer must not be duplicated');
+  assert(!routed.includes('Part of RETALLY Group'),'An existing affiliation should be reused');
+  assert(read('privacy.html').includes('Cloudflare Pages and its infrastructure may process'));
+  assert(read('privacy.html').includes('href="https://www.cloudflare.com/policies/privacy/"'));
+  assert(!read('privacy.html').includes('GitHub Pages'));
+  assert(read('data-handling.html').includes('Cloudflare Pages hosts the public site. RETALLY’s email service provider processes direct email correspondence.'));
+  assert(!read('data-handling.html').includes('Google/Gmail'));
+  for(const file of ['privacy.html','data-handling.html']){
+    const source=fs.readFileSync(path.join(site.ROOT,file),'utf8');
+    assert(source.includes('GitHub Pages'),'Legacy source hosting notice must remain intact');
+    const sections=Array.from(source.matchAll(/<h2>([^<]+)<\/h2>([\s\S]*?)(?=<h2>|<div class="legal-nav")/g));
+    for(const section of sections){
+      if(['What the public website collects','Service providers and access'].includes(section[1])) continue;
+      assert(read(file).includes(section[0]),'Unrelated privacy/scope section changed: '+section[1]);
+    }
+  }
   assert(read('decision-evidence.html').includes('$149, with scope and timing confirmed before work begins.'));
   assert(!read('decision-evidence.html').includes('scope and timing confirmed before payment.'));
   assert(read('sitemap.xml').includes(site.SITE_BASE+'decision-evidence</loc>'));
