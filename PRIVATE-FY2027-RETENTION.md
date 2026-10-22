@@ -1,6 +1,10 @@
 # CaptureBrief FY2027 public-source private retention candidate
 
-Status: OPERATOR UTILITY CANDIDATE, NOT FY2027 SOURCE APPROVAL.
+Status: INTEGRATED OPERATOR UTILITY, NOT FY2027 SOURCE APPROVAL.
+
+The utility is part of main through [PR #69](https://github.com/P00NSMASHER/capturebrief/pull/69).
+Integration and passing tests do not attest that private original retention,
+full-catalog indexing or independent recovery have been completed.
 
 The official public SAM.gov Contract Opportunities archive listed FY2027
 on October 19, 2026. A one-time GitHub Actions observer downloaded the

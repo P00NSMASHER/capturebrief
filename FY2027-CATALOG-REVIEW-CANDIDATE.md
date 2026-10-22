@@ -75,9 +75,10 @@ completed. The tool cannot update the production catalog or authorize a
 FULL_CATALOG claim.
 
 This is a reproducible review *candidate*, not a source attestation. The
-FY2027 original full CSV has not been downloaded and its complete SHA-256
-remains unavailable here. Official collection and human source review still
-need to happen in an authorized external environment.
+complete FY2027 object read and checksum are documented below. That automated
+read did not retain the original on the CI runner and does not establish the
+complete private source index or approved catalog. Source review and durable
+retention still need independently verifiable evidence.
 
 ## October 19 full original-file checksum — automated, unreviewed
 
@@ -124,7 +125,8 @@ CSV columns, counted data rows and computed a streaming SHA-256 digest.
       and archive CSV bytes for **all** required FY2027 year slots, with
       per-file SHA-256 and refreshed checked-at timestamps in a private index.
 - [ ] Independently pass both Linux and Windows Product Core exact-head tests
-      and protected-main review before any deployment or customer claim.
+      and an authorized merge before any deployment or customer claim. Passing
+      code review or CI does not substitute for the source evidence above.
 
 ## Release boundary
 
@@ -141,3 +143,37 @@ Operator can inspect the current blocking state using the read-only command:
 
 No API key, archive contents, customer data or protected source bytes are
 included in this public candidate record.
+
+## October 22 operational correction
+
+The catalog and source-retention hold remains in force. The retention and
+private-operations utilities were integrated by
+[PR #69](https://github.com/P00NSMASHER/capturebrief/pull/69); merging utilities
+does not prove they have populated and recovered the required private index.
+
+The bounded [FY2027 public source byte proof workflow](.github/workflows/capturebrief-fy2027-source-byte-proof.yml)
+now runs when its definition changes on `main` and can be manually dispatched.
+It previously targeted only an obsolete pilot branch. Each successful run reads
+the exact previously listed public object, validates its CSV structure and full
+HTTP response, computes its current SHA-256, and retains a seven-day JSON receipt
+with the run ID and commit. The original CSV and response headers are removed.
+The receipt explicitly marks listing refresh, private retention, source-index
+update, off-device restore and customer release as unproven. Retrieve the exact
+run receipt; the historical October 19 checksum above is not a fresh observation.
+
+To close customer readiness, the remaining evidence is:
+
+1. A new approved first-party catalog observation, including every actual
+   listing addition or removal; the October 19 candidate contains 34 archive
+   slots at or before FY2027 and two future slots. Never infer missing FY2028.
+2. Fresh, verified original bytes for those approved archive slots **and the
+   active extract**, with matching private index receipts. A fresh FY2027-only
+   checksum closes only that single-object observation.
+3. Protected retention and a verified independent recovery of the private
+   evidence. A local backup file or checksum alone is not a restore test.
+4. A current admission preflight against that real index:
+   `python scripts/pilot_preflight.py --stage admission --history-index <private-index> --verify-source-bytes --source-snapshot-root <private-extracts>`.
+   Omitting `--as-of` evaluates the actual current fiscal year.
+
+No production catalog version, year coverage, payment proof, release gate or
+customer-delivery status was promoted by this operational correction.
