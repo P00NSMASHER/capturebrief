@@ -9,7 +9,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 ROOT = Path(os.environ.get("SITE_ROOT", ".")).resolve()
 OUT = Path(os.environ.get("QA_OUTPUT", ".qa-output")).resolve()
@@ -169,7 +169,16 @@ with sync_playwright() as pw:
                 check(page.locator('a[href="terms.html"]').count() >= 1, "CaptureBrief: terms link")
                 check(page.locator('a[href="data-handling.html"]').count() >= 1, "CaptureBrief: data-handling link")
                 page.locator("#deliverables").scroll_into_view_if_needed()
-                page.wait_for_timeout(150)
+                # Scroll completion and the requestAnimationFrame chrome update
+                # can land on different WebKit frames. Wait for the observable
+                # state, then retain both independent assertions below.
+                try:
+                    page.wait_for_function("""() => window.scrollY > 18 &&
+                        document.querySelector('.header').classList.contains('is-scrolled') &&
+                        Number(getComputedStyle(document.documentElement).getPropertyValue('--page-progress') || 0) > 0
+                    """, timeout=5000)
+                except PlaywrightTimeoutError:
+                    pass  # The assertions record the actual missing behavior.
                 check(page.locator(".header").evaluate("e=>e.classList.contains('is-scrolled')"), "CaptureBrief: compact scrolled navigation")
                 check(float(page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--page-progress') || 0")) > 0, "CaptureBrief: reading progress updates")
                 page.evaluate("window.scrollTo(0,0)")
