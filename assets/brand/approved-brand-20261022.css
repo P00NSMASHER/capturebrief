@@ -1,0 +1,9 @@
+
+/* Owner-approved RETALLY product artwork — 2026-10-22. White backing is part of the approved design. */
+a.brand.approved-brand-header{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;flex-direction:row;width:236px;max-width:calc(100vw - 116px);padding:8px 12px;border:1px solid #d5e8de;border-radius:10px;background:#fff;line-height:1;white-space:normal;text-decoration:none;box-shadow:0 3px 12px #001a1117}
+a.brand.approved-brand-header>img.approved-brand-image{display:block;width:100%;max-width:100%;height:auto;max-height:none;object-fit:contain;margin:0;padding:0;border:0;filter:none;transform:none}
+.approved-brand-hero{display:block;width:min(100%,318px);margin:0 0 24px;padding:12px;border:1px solid #cfe4d9;border-radius:16px;background:#fff;box-shadow:0 10px 28px #00170f20;overflow:hidden}
+.approved-brand-hero>img.approved-brand-image{display:block;width:100%;height:auto;object-fit:contain;margin:0;filter:none;transform:none}
+.approved-brand-header:focus-visible{outline:3px solid #30d295;outline-offset:5px}
+@media(max-width:600px){a.brand.approved-brand-header{width:202px;padding:7px 9px}.approved-brand-hero{width:min(100%,280px);padding:10px;margin-bottom:22px}}
+@media(max-width:360px){a.brand.approved-brand-header{width:176px;padding:6px 8px}}
