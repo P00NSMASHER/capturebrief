@@ -13,6 +13,13 @@ const LEGACY_SITE_BASE='https://p00nsmasher.github.io/capturebrief/';
 const GROUP_URL='https://group.retallyrecovery.com/';
 
 const PUBLIC_FILES=Object.freeze([
+  "assets/brand/capturebrief-600-20261022.webp",
+  "assets/brand/capturebrief-1200-20261022.webp",
+  "assets/brand/capturebrief-wordmark-20261022.webp",
+  "assets/brand/capturebrief-social-20261022.png",
+  "assets/brand/capturebrief-icon-20261022.png",
+  "assets/brand/approved-brand-assets.json",
+  "assets/brand/approved-brand-20261022.css",
   "404.html",
   "data-handling.html",
   "decision-evidence.html",

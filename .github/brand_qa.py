@@ -20,7 +20,7 @@ class Page(HTMLParser):
         if tag=='meta' and a.get('name')=='site-brand': self.marker=a.get('content')
         if tag=='footer': self.in_footer=True
         if tag=='a': self.link={'href':a.get('href',''),'id':a.get('id'),'text':''}
-        if tag=='img': self.images+=1
+        if tag=='img' and 'approved-brand-image' not in a.get('class','').split(): self.images+=1
     def handle_data(self,data):
         if self.in_footer: self.footer.append(data)
         if self.link is not None: self.link['text']+=data

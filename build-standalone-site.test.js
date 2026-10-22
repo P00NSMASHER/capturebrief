@@ -143,3 +143,5 @@ try{
   fs.rmSync(root,{recursive:true,force:true});
 }
 
+
+require("./approved-brand.test.js");

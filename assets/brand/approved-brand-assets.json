@@ -1,0 +1,46 @@
+{
+  "release": "approved-retally-logos-20261022",
+  "derivation": "Owner-approved white-background artwork, proportionally downsampled. Header is the unchanged wordmark and endorsement region. No AI regeneration.",
+  "brands": {
+    "capturebrief": {
+      "name": "CaptureBrief by RETALLY",
+      "source_sha256": "b48b332918001972060bbabb0190ed577ca9ab6f1c2d49589fc273abc8b36b8c",
+      "source_dimensions": [
+        6144,
+        4096
+      ],
+      "files": {
+        "capturebrief-600-20261022.webp": {
+          "sha256": "ff63865e61f5646dc4fd504df9b2fe6bb4609780f4dd43c7215abbb2e0132620",
+          "width": 600,
+          "height": 400,
+          "bytes": 38380
+        },
+        "capturebrief-1200-20261022.webp": {
+          "sha256": "74673a39d3b0cdb7922571ea5d55f130a59a402f89e6eea761e55ff7f0e01bf4",
+          "width": 1200,
+          "height": 800,
+          "bytes": 91354
+        },
+        "capturebrief-wordmark-20261022.webp": {
+          "sha256": "cd015d2a652b4972e327db68ad9a597da6b3921b715dbcc5b146179a50058464",
+          "width": 640,
+          "height": 127,
+          "bytes": 13926
+        },
+        "capturebrief-social-20261022.png": {
+          "sha256": "16cc4afc2e13b78f2f6a64c56d25e021bdff1a86b475a0f90948523aa2ad40db",
+          "width": 1200,
+          "height": 630,
+          "bytes": 435673
+        },
+        "capturebrief-icon-20261022.png": {
+          "sha256": "68fc384f5697a321f3c23c4b8e08c6d55889525b32cf0ad84a4378247f0bc4ac",
+          "width": 256,
+          "height": 256,
+          "bytes": 55490
+        }
+      }
+    }
+  }
+}
