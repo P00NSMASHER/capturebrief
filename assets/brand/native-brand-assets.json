@@ -1,0 +1,22 @@
+{
+  "capturebrief": {
+    "emblem": "capturebrief-emblem.webp",
+    "lockup": "capturebrief-lockup.webp",
+    "favicon": "capturebrief-favicon.png",
+    "source_sha256": "6511ff2c8d3d775b91a8fe349711b40c478c34ed044798a75ab07269095b5847",
+    "sizes": {
+      "capturebrief-emblem.webp": {
+        "bytes": 132520,
+        "sha256": "d7e600dc42447d1c793b4388ad8ee9495537dea6decf3d55341dd9a57fdc8681"
+      },
+      "capturebrief-lockup.webp": {
+        "bytes": 123480,
+        "sha256": "1ac26fcad68aacf44c5f6d434d6414d2d45a5cbe676ceb62efe2cce7774ac457"
+      },
+      "capturebrief-favicon.png": {
+        "bytes": 83118,
+        "sha256": "3d44d36cb620f7091892b2d4e6de3c0159f7730ab9efb593bdb01bde8d3f02c1"
+      }
+    }
+  }
+}
