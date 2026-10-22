@@ -74,7 +74,7 @@
   const form = document.getElementById('request-builder');
   if (!form) return;
 
-  const recipient = 'jayp19386@gmail.com';
+  const recipient = 'jay@retallyrecovery.com';
   const purchaseStatus = document.getElementById('purchase-status');
   const opportunity = document.getElementById('opportunity-url');
   const posture = document.getElementById('current-posture');
@@ -200,9 +200,10 @@
       setStatus(
         copied
           ? 'Request copied. Paste it into your email service and review it before sending.'
-          : 'Copy was unavailable. Use “Email JP Enterprises” below instead.',
+          : 'Copy was unavailable. Use “Email RETALLY” below instead.',
         !copied
       );
     }
   });
 })();
+

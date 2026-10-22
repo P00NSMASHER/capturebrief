@@ -83,7 +83,7 @@ try:
 
                 mail = page.locator("#contact-email")
                 mail_href = urlsplit(mail.get_attribute("href"))
-                check(mail_href.scheme == "mailto" and mail_href.path == "jayp19386@gmail.com", "Fallback email recipient")
+                check(mail_href.scheme == "mailto" and mail_href.path == "jay@retallyrecovery.com", "Fallback email recipient")
 
                 if enabled:
                     form = page.locator("#request-builder")
@@ -196,3 +196,4 @@ finally:
     print(json.dumps(REPORT, indent=2))
 
 raise SystemExit(0 if REPORT["passed"] else 1)
+

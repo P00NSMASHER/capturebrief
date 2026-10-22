@@ -8,6 +8,7 @@ import os
 ROOT=Path(os.environ.get('SITE_ROOT','.')).resolve()
 OUT=Path(os.environ.get('QA_OUTPUT','qa-output/brand')).resolve()
 PAGES=['404.html','data-handling.html','decision-evidence.html','flagos/index.html','index.html','permitplate/index.html','portfolio/index.html','privacy.html','rehabsignal/index.html','scopesignal/index.html','sheetharbor/index.html','starblox/index.html','terms.html']
+RETALLY_PAGES={'index.html','terms.html','privacy.html','data-handling.html','decision-evidence.html'}
 PRIMARY_PHOTOS={'index.html':5,'permitplate/index.html':7}
 
 class Page(HTMLParser):
@@ -34,14 +35,18 @@ for rel in PAGES:
         raw=(ROOT/rel).read_bytes(); p=Page(); p.feed(raw.decode('utf-8'))
         issues=[]
         if p.authors!=['JP Enterprises']: issues.append('author metadata must use the public brand')
-        if p.marker!='jp-enterprises-1': issues.append('brand release marker missing')
+        if p.marker!=('retally-group-20261022' if rel in RETALLY_PAGES else 'jp-enterprises-1'): issues.append('brand release marker missing')
         if 'JP Enterprises' not in ' '.join(p.footer): issues.append('public brand missing from footer')
         if rel!='portfolio/index.html' and any('portfolio/' in a['href'] for a in p.links): issues.append('cross-project navigation must stay removed')
         if rel in PRIMARY_PHOTOS:
             contact=[a for a in p.links if a['id']=='contact-email']
-            if len(contact)!=1 or contact[0]['text']!='Email JP Enterprises': issues.append('visible contact label must use the brand')
+            if len(contact)!=1 or contact[0]['text']!=('Email RETALLY' if rel=='index.html' else 'Email JP Enterprises'): issues.append('visible contact label must use the brand')
             if any('@' in a['text'] for a in p.links if a['href'].startswith('mailto:')): issues.append('personal email must not be the default visible label')
             if p.images!=PRIMARY_PHOTOS[rel]: issues.append(f'expected {PRIMARY_PHOTOS[rel]} content-image placements')
+        if rel in RETALLY_PAGES:
+            if 'RETALLY' not in ' '.join(p.footer): issues.append('RETALLY group affiliation missing')
+            if 'jayp19386@gmail.com' in raw.decode('utf-8'): issues.append('legacy personal inbox remains on RETALLY page')
+            if not any(a['href'].startswith('https://www.retallyrecovery.com/') for a in p.links): issues.append('RETALLY customer route missing')
         report['pages'].append({'path':rel,'sha256':hashlib.sha256(raw).hexdigest(),'brand_verified':not issues})
         report['errors'].extend(rel+': '+issue for issue in issues)
     except Exception as exc:
@@ -51,3 +56,4 @@ OUT.mkdir(parents=True,exist_ok=True)
 (OUT/'report.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
 print(json.dumps(report,indent=2))
 raise SystemExit(0 if report['passed'] else 1)
+

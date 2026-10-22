@@ -227,12 +227,12 @@ with sync_playwright() as pw:
                 check("Request copied" in page.locator("#request-status").inner_text(), "CaptureBrief: honest local-copy status")
 
             page.locator("[data-copy-email]").click()
-            check(page.evaluate("window.__qaCopied") == "jayp19386@gmail.com", f"{name}: correct copied email")
+            check(page.evaluate("window.__qaCopied") == ("jay@retallyrecovery.com" if name == "index.html" else "jayp19386@gmail.com"), f"{name}: correct copied email")
             check("Nothing has been sent" in page.locator("#copy-status").inner_text(), f"{name}: no false send confirmation")
             page.evaluate("Object.defineProperty(navigator,'clipboard',{value:undefined,configurable:true})")
             page.locator("[data-copy-email]").click()
             check("selected address" in page.locator("#copy-status").inner_text(), f"{name}: clipboard fallback")
-            check(page.evaluate("getSelection().toString()") == "jayp19386@gmail.com", f"{name}: fallback selects address")
+            check(page.evaluate("getSelection().toString()") == ("jay@retallyrecovery.com" if name == "index.html" else "jayp19386@gmail.com"), f"{name}: fallback selects address")
 
             summary["solid_color_contrast"] = contrast_check(page)
             check(all(x["ratio"] >= 4.5 for x in summary["solid_color_contrast"]), f"{name}: targeted text contrast")
@@ -272,3 +272,4 @@ with sync_playwright() as pw:
         print(json.dumps(RESULT, indent=2))
 
 raise SystemExit(0 if RESULT["passed"] else 1)
+
