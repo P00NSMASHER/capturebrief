@@ -1,13 +1,15 @@
 name: CaptureBrief FY2027 public source byte proof
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - pilot/acceptance-evidence-gates-20261018
+      - main
     paths:
       - ".github/workflows/capturebrief-fy2027-source-byte-proof.yml"
 
-# One-time PUBLIC source observation, not catalog approval or a release.
+# Bounded PUBLIC source observation. The receipt is evidence of this object read,
+# not catalog approval, private retention, a source-index update or a release.
 permissions:
   contents: read
 
@@ -25,6 +27,8 @@ jobs:
           : "$RUNNER_TEMP"
           output="$RUNNER_TEMP/capturebrief-FY2027-original.csv"
           headers="$RUNNER_TEMP/capturebrief-FY2027-headers.txt"
+          export CAPTUREBRIEF_SOURCE_RECEIPT="$RUNNER_TEMP/capturebrief-FY2027-source-receipt.json"
+          trap 'rm -f "$output" "$headers"' EXIT
           # Bounded exact public object, NO redirects and NO credentials.
           response_code="$(curl --proto '=https' --silent --show-error \
               --fail --max-redirs 0 --connect-timeout 12 --max-time 65 \
@@ -89,6 +93,9 @@ jobs:
               "object_url": os.environ["SOURCE_URL"],
               "observed_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
               "source_listed_at": "2026-10-19T04:59:14Z",
+              "source_listing_refreshed": False,
+              "workflow_run_id": os.environ["GITHUB_RUN_ID"],
+              "repository_commit": os.environ["GITHUB_SHA"],
               "http_status": 200,
               "size_bytes": length,
               "sha256": sha.hexdigest(),
@@ -101,8 +108,13 @@ jobs:
               "human_catalog_reviewed": False,
               "full_catalog_coverage_proven": False,
               "customer_release_authorized": False,
+              "original_bytes_retained": False,
+              "private_source_index_updated": False,
+              "off_device_restore_verified": False,
           }
-          print(json.dumps(output, indent=2, sort_keys=True))
+          receipt_json = json.dumps(output, indent=2, sort_keys=True) + "\n"
+          Path(os.environ["CAPTUREBRIEF_SOURCE_RECEIPT"]).write_text(receipt_json, encoding="utf-8")
+          print(receipt_json, end="")
           summary = os.environ.get("GITHUB_STEP_SUMMARY")
           if summary:
               with open(summary, "a", encoding="utf-8") as out:
@@ -113,4 +125,13 @@ jobs:
                   out.write(f"- CSV data rows: {row_count}\n")
                   out.write(f"- Prior size unchanged: {length == 1607260}\n")
           PY
-          # No artifacts, credentials, customer payloads, or deployment.
+          # Original CSV and response headers are removed by the EXIT trap.
+          # Only the non-sensitive receipt below is retained; no source content.
+
+      - name: Retain public observation receipt only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: capturebrief-fy2027-source-receipt-${{ github.run_id }}
+          path: ${{ runner.temp }}/capturebrief-FY2027-source-receipt.json
+          if-no-files-found: error
+          retention-days: 7

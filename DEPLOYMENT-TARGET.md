@@ -43,3 +43,16 @@ when verifying a release.
 
 This document supersedes older hosting assumptions. It changes no price,
 customer promise, source-evidence gate, or communication approval rule.
+
+## Legacy PA x402 monitoring (2026-10-22)
+
+The retired `capturebrief.netlify.app` discovery/proxy endpoint is not a
+CaptureBrief website health target. The `PA x402 legacy contract regression`
+workflow retains only offline discovery and single-forward proxy tests; it must
+not poll that origin or register it as a replacement for the current seller.
+The workflow boundary has a regression test to prevent either action returning.
+
+Live PA x402 deployment, discovery and payment checks belong to
+[`P00NSMASHER/x402-product-factory`](https://github.com/P00NSMASHER/x402-product-factory).
+A passing compatibility test here proves neither live availability nor a paid
+transaction. GitHub Pages remains the authoritative CaptureBrief website target.
