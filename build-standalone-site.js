@@ -1,0 +1,215 @@
+'use strict';
+
+// A separate static publication boundary for the CaptureBrief company site.
+// The gh-pages branch also contains unrelated sites; never publish it wholesale.
+const fs=require('fs');
+const path=require('path');
+const crypto=require('crypto');
+
+const ROOT=__dirname;
+const OUT=path.join(ROOT,'dist');
+const SITE_BASE='https://capturebrief.retallyrecovery.com/';
+const LEGACY_SITE_BASE='https://p00nsmasher.github.io/capturebrief/';
+const GROUP_URL='https://group.retallyrecovery.com/';
+
+const PUBLIC_FILES=Object.freeze([
+  "404.html",
+  "data-handling.html",
+  "decision-evidence.html",
+  "favicon.svg",
+  "index.html",
+  "privacy.html",
+  "terms.html",
+  "assets/capturebrief.css",
+  "assets/capturebrief.js",
+  "assets/enterprise.css",
+  "assets/enterprise.js",
+  "assets/evidence.css",
+  "assets/fonts/azeret-mono-latin-wght-normal.woff2",
+  "assets/fonts/familjen-grotesk-latin-wght-normal.woff2",
+  "assets/fonts/newsreader-latin-wght-italic.woff2",
+  "assets/fonts/newsreader-latin-wght-normal.woff2",
+  "assets/og-capturebrief.png",
+  "assets/visuals/architecture-grid.webp",
+  "assets/visuals/capturebrief-social.jpg",
+  "assets/visuals/change-watch.webp",
+  "assets/visuals/evidence-layers.webp",
+  "assets/visuals/hero-council.webp",
+  "assets/visuals/reviewer-desk.webp",
+  "examples/amendment-02.txt",
+  "examples/incorporation.txt",
+  "examples/manifest.json",
+  "examples/original.txt",
+  "examples/rule-2025.txt",
+  "examples/rule-2026.txt"
+]);
+const GENERATED_FILES=Object.freeze(['robots.txt','sitemap.xml','_headers']);
+const STANDALONE_HEADERS="/*\n"+
+  "  Strict-Transport-Security: max-age=86400\n"+
+  "  X-Content-Type-Options: nosniff\n"+
+  "  Referrer-Policy: strict-origin-when-cross-origin\n"+
+  "  Content-Security-Policy: object-src 'none'; frame-ancestors 'none'; base-uri 'self'\n";
+const RUNTIME_FILES=Object.freeze(['functions','_worker.js','wrangler.toml','wrangler.json','wrangler.jsonc']);
+
+function sha256File(file){
+  return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+}
+function fingerprint(files){
+  return crypto.createHash('sha256').update(files.slice()
+    .sort((a,b)=>a.path.localeCompare(b.path))
+    .map(item=>item.path+':'+item.sha256).join('\n')).digest('hex');
+}
+function listFilesRecursive(directory,prefix=''){
+  const files=[];
+  for(const entry of fs.readdirSync(directory,{withFileTypes:true})){
+    const relative=prefix?prefix+'/'+entry.name:entry.name;
+    if(entry.isDirectory()) files.push(...listFilesRecursive(path.join(directory,entry.name),relative));
+    else if(entry.isFile()) files.push(relative);
+    else throw new Error('NON_REGULAR_OUTPUT:'+relative);
+  }
+  return files.sort();
+}
+function validateSources(root=ROOT){
+  const failures=[];
+  for(const name of RUNTIME_FILES){
+    if(fs.existsSync(path.join(root,name))) failures.push('UNEXPECTED_PAGES_RUNTIME:'+name);
+  }
+  const realRoot=fs.realpathSync(root);
+  for(const name of PUBLIC_FILES){
+    const source=path.join(realRoot,name);
+    if(!fs.existsSync(source)||!fs.lstatSync(source).isFile()){
+      failures.push('MISSING_PUBLIC_FILE:'+name);
+    }else if(fs.realpathSync(source)!==source){
+      failures.push('SYMLINK_IN_PUBLIC_ALLOWLIST:'+name);
+    }
+  }
+  return failures;
+}
+function cleanHtmlUrl(value){
+  return value.replace(/\/index\.html(?=[?#]|$)/,'/')
+    .replace(/\.html(?=[?#]|$)/,'');
+}
+function rootReference(value){
+  if(/^(?:[a-z][a-z0-9+.-]*:|\/\/|#|\?)/i.test(value)) return value;
+  return cleanHtmlUrl('/'+value.replace(/^\.\//,'').replace(/^\//,''));
+}
+function transformHtml(html,file=''){
+  let text=html.split(LEGACY_SITE_BASE).join(SITE_BASE);
+  if(file==='decision-evidence.html'){
+    text=text.replace('$149, with scope and timing confirmed before payment.',
+      '$149, with scope and timing confirmed before work begins.');
+  }
+  const escapedBase=SITE_BASE.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  text=text.replace(new RegExp(escapedBase+'[^\\s"\'<>]*','g'),cleanHtmlUrl);
+  // Root paths keep the same navigation and assets working on nested 404 routes.
+  text=text.replace(/\b(href|src|action)=(["'])([^"']*)\2/g,
+    (match,attribute,quote,value)=>attribute+'='+quote+rootReference(value)+quote);
+  if(!text.includes('</footer>')) throw new Error('MISSING_COMPANY_FOOTER');
+  const affiliation='<div class="wrap retally-affiliation"><a href="'+GROUP_URL+'">Part of RETALLY Group</a></div>';
+  text=text.replace('</footer>',affiliation+'</footer>');
+  // Preserve existing public mailto links without Cloudflare's decode script.
+  return text.replace(/<body\b[^>]*>/,'$&\n<!--email_off-->')
+    .replace('</body>','<!--/email_off-->\n</body>');
+}
+function checkLocalReferences(out=OUT){
+  const failures=[];
+  function check(ref,from){
+    if(!ref||/^(?:mailto|tel|data|javascript):/i.test(ref)||ref.startsWith('#')) return;
+    let url;
+    try{url=new URL(ref,new URL(from,SITE_BASE));}catch{
+      failures.push('INVALID_PUBLIC_REFERENCE:'+from+':'+ref);return;
+    }
+    if(url.origin!==new URL(SITE_BASE).origin) return;
+    const relative=decodeURIComponent(url.pathname).replace(/^\//,'');
+    const candidates=relative?[relative,relative+'.html',relative+'/index.html']:['index.html'];
+    if(!candidates.some(name=>fs.existsSync(path.join(out,name))&&fs.statSync(path.join(out,name)).isFile())){
+      failures.push('MISSING_PUBLIC_REFERENCE:'+from+':'+ref);
+    }
+  }
+  for(const name of PUBLIC_FILES){
+    if(name.endsWith('.html')){
+      const html=fs.readFileSync(path.join(out,name),'utf8');
+      for(const match of html.matchAll(/\b(?:href|src|action)=(["'])([^"']*)\1/g)) check(match[2],name);
+      for(const match of html.matchAll(/\bsrcset=(["'])([^"']*)\1/g)){
+        for(const candidate of match[2].split(',')) check(candidate.trim().split(/\s+/)[0],name);
+      }
+    }else if(name.endsWith('.css')){
+      const css=fs.readFileSync(path.join(out,name),'utf8');
+      for(const match of css.matchAll(/url\(\s*["']?([^"'\s)]+)["']?\s*\)/g)) check(match[1],name);
+    }
+  }
+  if(failures.length) throw new Error(failures.join('\n'));
+}
+function build(options={}){
+  const root=options.root||ROOT;
+  const out=options.out||path.join(root,'dist');
+  // Refuse a publication directory that could erase the source tree.
+  if(path.resolve(out)===path.resolve(root)||!path.resolve(out).startsWith(path.resolve(root)+path.sep)){
+    throw new Error('OUTPUT_MUST_BE_INSIDE_SOURCE_ROOT');
+  }
+  const failures=validateSources(root);
+  if(failures.length) throw new Error(failures.join('\n'));
+  fs.rmSync(out,{recursive:true,force:true});
+  fs.mkdirSync(out,{recursive:true});
+  const inputs=[];
+  for(const name of PUBLIC_FILES){
+    const source=path.join(root,name);
+    const target=path.join(out,name);
+    inputs.push({path:name,sha256:sha256File(source),bytes:fs.statSync(source).size});
+    fs.mkdirSync(path.dirname(target),{recursive:true});
+    if(name.endsWith('.html')){
+      fs.writeFileSync(target,transformHtml(fs.readFileSync(source,'utf8'),name));
+    }else if(name==='assets/enterprise.css'){
+      fs.writeFileSync(target,fs.readFileSync(source,'utf8')+
+        '\n/* Company affiliation, shared by the standalone CaptureBrief pages. */\n'+
+        '.retally-affiliation{padding-top:18px;margin-top:18px;font-size:14px}\n'+
+        '.retally-affiliation a{display:inline-flex;align-items:center;min-height:44px;color:inherit;font-weight:700;text-underline-offset:4px}\n');
+    }else{
+      fs.copyFileSync(source,target);
+    }
+  }
+  const pages=PUBLIC_FILES.filter(name=>name.endsWith('.html')&&name!=='404.html');
+  fs.writeFileSync(path.join(out,'_headers'),STANDALONE_HEADERS);
+  fs.writeFileSync(path.join(out,'robots.txt'),'User-agent: *\nAllow: /\nSitemap: '+SITE_BASE+'sitemap.xml\n');
+  fs.writeFileSync(path.join(out,'sitemap.xml'),'<?xml version="1.0" encoding="UTF-8"?>\n'+
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+
+    pages.map(name=>'  <url><loc>'+cleanHtmlUrl(SITE_BASE+name)+'</loc></url>').join('\n')+
+    '\n</urlset>\n');
+  checkLocalReferences(out);
+  const files=PUBLIC_FILES.concat(GENERATED_FILES).sort().map(name=>({
+    path:name,sha256:sha256File(path.join(out,name)),bytes:fs.statSync(path.join(out,name)).size
+  }));
+  const info={
+    buildInfoVersion:'CaptureBrief-standalone-build-v1.0.0',
+    company:'CaptureBrief',
+    operator:'JP Enterprises',
+    canonical:SITE_BASE,
+    group:GROUP_URL,
+    sourceRepository:'P00NSMASHER/capturebrief',
+    sourceBranch:process.env.CF_PAGES_BRANCH||'gh-pages',
+    sourceCommit:process.env.CF_PAGES_COMMIT_SHA||process.env.GITHUB_SHA||process.env.COMMIT_REF||'local',
+    deployContext:'cloudflare-pages',
+    builtAt:new Date().toISOString(),
+    publicFileCount:files.length,
+    sourceContentFingerprint:fingerprint(inputs),
+    publicSourceFingerprint:fingerprint(files),
+    files
+  };
+  fs.writeFileSync(path.join(out,'build-info.json'),JSON.stringify(info,null,2)+'\n');
+  const expected=PUBLIC_FILES.concat(GENERATED_FILES,'build-info.json').sort();
+  if(JSON.stringify(listFilesRecursive(out))!==JSON.stringify(expected)) throw new Error('DIST_CONTENT_MISMATCH');
+  return info;
+}
+
+if(require.main===module){
+  if(process.argv.length>2) throw new Error('Usage: node build-standalone-site.js');
+  const info=build();
+  console.log(JSON.stringify({
+    company:info.company,canonical:info.canonical,sourceCommit:info.sourceCommit,
+    publicFileCount:info.publicFileCount,output:'dist'
+  },null,2));
+}
+module.exports={ROOT,OUT,SITE_BASE,LEGACY_SITE_BASE,GROUP_URL,PUBLIC_FILES,GENERATED_FILES,
+  RUNTIME_FILES,sha256File,fingerprint,listFilesRecursive,validateSources,
+  cleanHtmlUrl,rootReference,transformHtml,checkLocalReferences,build};
+
