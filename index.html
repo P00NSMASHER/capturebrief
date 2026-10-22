@@ -24,7 +24,7 @@
   <meta property="og:image:alt" content="A pursuit team reviewing public opportunity documents around a polished table">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="assets/enterprise.css?v=2">
-  <link rel="stylesheet" href="assets/capturebrief.css?v=3">
+  <link rel="stylesheet" href="assets/capturebrief.css?v=4">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -43,7 +43,7 @@
   }
   </script>
   <script src="assets/enterprise.js?v=jp1" defer></script>
-  <script src="assets/capturebrief.js?v=3" defer></script>
+  <script src="assets/capturebrief.js?v=4" defer></script>
 </head>
 <body class="capture capture-site">
   <a class="skip" href="#main">Skip to content</a>
@@ -288,15 +288,24 @@
             <div class="form-heading"><div><span>Scope request</span><strong>Nothing is sent from this page.</strong></div><span class="local-badge">Local draft</span></div>
             <label for="purchase-status">Purchase status <span aria-hidden="true">*</span></label>
             <select id="purchase-status" name="purchase-status" required><option value="">Choose one</option><option value="PAID">I already purchased</option><option value="SCOPE_FIRST">Check scope before I buy</option></select>
+            <label for="company-name">Company <span aria-hidden="true">*</span></label>
+            <input id="company-name" name="company" type="text" autocomplete="organization" maxlength="200" placeholder="Your company" required>
+            <label for="work-email">Work email <span aria-hidden="true">*</span></label>
+            <input id="work-email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="254" placeholder="name@company.com" required>
             <label for="opportunity-url">Public opportunity link <span aria-hidden="true">*</span></label>
             <input id="opportunity-url" name="opportunity" type="url" inputmode="url" autocomplete="url" placeholder="https://sam.gov/opp/..." required>
             <label for="current-posture">Current posture <span aria-hidden="true">*</span></label>
             <select id="current-posture" name="posture" required><option value="">Choose one</option><option>GO</option><option>HOLD</option><option>PASS</option><option>UNSURE</option></select>
             <label for="assumptions">Assumptions to check <span aria-hidden="true">*</span><small>One per line, up to five</small></label>
-            <textarea id="assumptions" name="assumptions" rows="6" maxlength="1200" placeholder="1. The deadline has not changed.&#10;2. We can bid as the prime.&#10;3. The response limit is 20 pages." required></textarea>
+            <textarea id="assumptions" name="assumptions" rows="6" maxlength="3000" placeholder="1. The deadline has not changed.&#10;2. We can bid as the prime.&#10;3. The response limit is 20 pages." required></textarea>
             <label class="acknowledgment" for="public-only"><input id="public-only" name="public-only" type="checkbox" required><span>I will include only public, non-sensitive information—no restricted files, credentials, pricing, proposal text, or private strategy.</span></label>
             <div class="form-actions"><button class="button" type="submit">Open email draft</button><button class="button secondary" id="copy-request" type="button">Copy request</button></div>
             <p class="form-status" id="request-status" role="status" aria-live="polite"></p>
+            <div class="request-manual-copy" id="request-manual-copy" hidden>
+              <label for="request-plaintext">Complete request — select and copy manually</label>
+              <p id="request-plaintext-help">Your browser could not copy automatically. This text remains on this page only; nothing has been sent. Select all and copy into your own email.</p>
+              <textarea id="request-plaintext" rows="12" readonly spellcheck="false" aria-describedby="request-plaintext-help"></textarea>
+            </div>
           </form>
           <noscript><p class="noscript-note">JavaScript is off. <a href="mailto:jayp19386@gmail.com?subject=CaptureBrief%20scope%20request">Email JP Enterprises</a> with the public link, your current posture, and up to five non-sensitive assumptions.</p></noscript>
           <div class="direct-contact"><p>Prefer your usual email?</p><a class="email" id="contact-email" href="mailto:jayp19386@gmail.com?subject=CaptureBrief%20scope%20request">Email JP Enterprises</a><button type="button" class="copy-email" hidden data-copy-email="contact-email" aria-describedby="copy-status">Copy email</button><span class="copy-status" id="copy-status" role="status" aria-live="polite"></span></div>

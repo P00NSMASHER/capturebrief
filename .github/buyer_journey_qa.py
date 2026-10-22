@@ -93,6 +93,8 @@ try:
                     page.on("request", lambda req: requests_before.append(req.url))
                     page.evaluate("Object.defineProperty(navigator,'clipboard',{value:{writeText:async t=>{window.__qaCopied=t}},configurable:true})")
                     page.locator("#purchase-status").select_option("PAID")
+                    page.locator("#company-name").fill("Example Public Federal LLC")
+                    page.locator("#work-email").fill("buyer@example.com")
                     page.locator("#opportunity-url").fill("https://sam.gov/opp/fictional-public-demo")
                     page.locator("#current-posture").select_option("HOLD")
                     page.locator("#assumptions").fill("The deadline has not changed.\nWe can submit 20 pages.\nThe cited edition applies.")
@@ -101,7 +103,11 @@ try:
                     page.locator("#copy-request").click()
                     page.wait_for_function("() => window.__qaCopied && window.__qaCopied.includes('Current posture: HOLD')")
                     copied = page.evaluate("window.__qaCopied")
-                    check("Purchase status: Already purchased" in copied, "Paid order status enters draft")
+                    check("Purchase status (customer-reported, not verified): Already purchased" in copied, "Buyer-reported status is explicitly unverified")
+                    check("independently verify payment in Stripe" in copied, "Operator must verify payment with Stripe before starting")
+                    check("payment verification needed" in copied.lower(), "Draft subject cannot claim payment was verified")
+                    check("Company: Example Public Federal LLC" in copied, "Required company arrives in the private email draft")
+                    check("Work email: buyer@example.com" in copied, "Required work email arrives in the private email draft")
                     check("Public opportunity link: https://sam.gov/opp/fictional-public-demo" in copied, "Public link enters draft")
                     check("1. The deadline has not changed." in copied and "3. The cited edition applies." in copied, "Assumptions numbered")
                     check("only public, non-sensitive information" in copied, "Safety confirmation enters draft")
@@ -109,13 +115,113 @@ try:
                     check(len(requests_before) == loaded_requests, "Copying draft makes no network request")
                     check("Nothing was sent" not in page.locator("#request-status").inner_text(), "Copy status does not claim submission")
 
+                    # Do not silently erase legal clause numbers or FY
+                    # decimal identifiers that resemble list numbering.
+                    page.locator("#assumptions").fill(
+                        "1. FAR 52.204-21 applies.\n"
+                        "52.204-21 must be cited verbatim.\n"
+                        "2027.4 budget provision is current."
+                    )
+                    page.evaluate("window.__qaCopied = null")
+                    page.locator("#copy-request").click()
+                    page.wait_for_function("() => window.__qaCopied !== null")
+                    legal_copy = page.evaluate("window.__qaCopied")
+                    check("1. FAR 52.204-21 applies." in legal_copy and
+                          "2. 52.204-21 must be cited verbatim." in legal_copy and
+                          "3. 2027.4 budget provision is current." in legal_copy,
+                          "Federal clause/FY numbers must survive normalization")
+
+                    # Full contract: five distinct 500-character lines must survive
+                    # without HTML maxlength truncation or unreliable mailto links.
+                    five_long = chr(10).join(chr(65+i) * 500 for i in range(5))
+                    page.locator("#assumptions").fill(five_long)
+                    check(page.locator("#assumptions").input_value() == five_long, "Five 500-character assumptions are retained")
+                    page.evaluate("window.__qaCopied = null")
+                    page.locator("#copy-request").click()
+                    page.wait_for_function("() => window.__qaCopied && window.__qaCopied.includes('5. EEEEE')")
+                    complete_draft = page.evaluate("window.__qaCopied")
+                    check(all((f"{i+1}. " + chr(65+i)*500) in complete_draft for i in range(5)),
+                          "Copy draft includes all 2500 characters without truncation")
+                    original_page_url = page.url
+                    page.locator("#request-builder").evaluate("(f) => f.requestSubmit()")
+                    check(page.url == original_page_url and "too long" in page.locator("#request-status").inner_text(),
+                          "Oversized mailto is blocked with copy fallback, no navigation or external action")
+
+                    # Some browsers/privacy modes deny BOTH Clipboard API
+                    # and execCommand. Do not silently lose an entire buyer
+                    # request or ask them to retype five long assumptions.
+                    blocked_requests = len(requests_before)
+                    page.evaluate("""() => {
+                        Object.defineProperty(navigator, 'clipboard', {
+                            value: undefined, configurable: true
+                        });
+                        document.execCommand = () => false;
+                    }""")
+                    page.locator("#copy-request").click()
+                    manual = page.locator("#request-manual-copy")
+                    check(manual.count() == 1 and manual.is_visible(),
+                          "The complete request remains selectable when both clipboard APIs fail")
+                    if manual.count():
+                        full_plain = manual.locator("#request-plaintext").input_value()
+                        check(all((f"{i+1}. " + chr(65+i)*500) in full_plain for i in range(5)),
+                              "Manual copy fallback retains all five full 500-character assumptions")
+                        check("To: jayp19386@gmail.com" in full_plain,
+                              "Manual fallback includes recipient and subject for ordinary email")
+                        page.locator("#assumptions").fill("Edited after failed copy")
+                        check(not manual.is_visible()
+                              and manual.locator("#request-plaintext").input_value() == "",
+                              "Editing clears the previously displayed draft for privacy")
+                    check(len(requests_before) == blocked_requests,
+                          "No POST or other network request during manual copy fallback")
+                    page.evaluate("""() => {
+                        Object.defineProperty(navigator, 'clipboard', {
+                            value: {writeText:async t=>{window.__qaCopied=t}},
+                            configurable: true
+                        });
+                    }""")
+
                     page.locator("#assumptions").fill("One\nTwo\nThree\nFour\nFive\nSix")
                     page.locator("#copy-request").click()
                     check("five assumptions or fewer" in page.locator("#request-status").inner_text(), "Sixth assumption is blocked")
 
+                    page.locator("#assumptions").fill("Same request.\n  same   REQUEST.  ")
+                    page.locator("#copy-request").click()
+                    check("duplicate assumptions" in page.locator("#request-status").inner_text(), "Duplicate assumptions are blocked")
+
+                    page.locator("#assumptions").fill("x" * 501)
+                    page.locator("#copy-request").click()
+                    check("500 characters" in page.locator("#request-status").inner_text(), "Oversized assumption is blocked")
+
+                    page.locator("#assumptions").fill("The deadline is current.")
+                    page.locator("#opportunity-url").fill("https://user:password@sam.gov/opp/fictional-public-demo")
+                    page.locator("#copy-request").click()
+                    check("without embedded credentials" in page.locator("#request-status").inner_text(), "Credentialed URL is blocked")
+                    for unsafe_url in (
+                        "https://192.168.1.10/internal",
+                        "https://169.254.169.254/latest/meta-data",
+                        "https://[fc00::1]/private",
+                        "https://company.internal/portal",
+                        "https://localhost./portal",
+                    ):
+                        page.locator("#opportunity-url").fill(unsafe_url)
+                        page.locator("#copy-request").click()
+                        check("private addresses" in page.locator("#request-status").inner_text(),
+                              f"Private/reserved URL blocked: {unsafe_url}")
+                    page.locator("#opportunity-url").fill("https://sam.gov/opp/fictional-public-demo")
+
+                    page.locator("#company-name").fill("")
+                    page.locator("#copy-request").click()
+                    check(page.locator("#company-name").evaluate("(i)=>!i.checkValidity()"), "Company is required")
+                    page.locator("#company-name").fill("Example Public Federal LLC")
+
+                    page.locator("#work-email").fill("not-an-email")
+                    page.locator("#copy-request").click()
+                    check(page.locator("#work-email").evaluate("(i)=>!i.checkValidity()"), "Valid work email is required")
+                    page.locator("#work-email").fill("buyer@example.com")
+
                     navigate(page, "index.html?checkout=complete#request")
                     check(page.locator("#purchase-status").input_value() == "PAID", "Checkout return selects paid intake")
-                    check("verified separately" in page.locator("#request-status").inner_text(), "Checkout return avoids an unverified payment claim")
+                    check("does not verify a payment" in page.locator("#request-status").inner_text(), "Editable checkout return cannot attest a payment")
                 else:
                     check(not page.locator("#request-builder").is_visible(), "No-JS builder is hidden")
                     check(page.locator(".noscript-note").is_visible(), "No-JS fallback is visible")

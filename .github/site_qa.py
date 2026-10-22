@@ -168,9 +168,31 @@ with sync_playwright() as pw:
                 check(page.locator('a[href="privacy.html"]').count() >= 1, "CaptureBrief: privacy link")
                 check(page.locator('a[href="terms.html"]').count() >= 1, "CaptureBrief: terms link")
                 check(page.locator('a[href="data-handling.html"]').count() >= 1, "CaptureBrief: data-handling link")
-                page.locator("#deliverables").scroll_into_view_if_needed()
-                page.wait_for_timeout(150)
-                check(page.locator(".header").evaluate("e=>e.classList.contains('is-scrolled')"), "CaptureBrief: compact scrolled navigation")
+                # WebKit can see #deliverables as already partly visible.
+                # Explicitly scroll, then test the observed state instead of
+                # using a fixed 150ms delay susceptible to smooth scrolling.
+                page.evaluate("""() => {
+                    document.documentElement.style.scrollBehavior = 'auto';
+                    const target = document.querySelector('#deliverables');
+                    window.scrollTo(0, Math.max(120, window.scrollY + target.getBoundingClientRect().top));
+                    window.dispatchEvent(new Event('scroll'));
+                }""")
+                page.mouse.wheel(0, 360)
+                try:
+                    page.wait_for_function("window.scrollY > 18", timeout=6000)
+                    page.wait_for_function(
+                        "() => document.querySelector('.header').classList.contains('is-scrolled')",
+                        timeout=6000,
+                    )
+                except Exception as err:
+                    state = page.evaluate("""() => ({
+                        scrollY: window.scrollY,
+                        scrollTop: document.scrollingElement?.scrollTop,
+                        maxScroll: document.documentElement.scrollHeight - window.innerHeight,
+                        headerClass: document.querySelector('.header')?.className,
+                        pageProgress: getComputedStyle(document.documentElement).getPropertyValue('--page-progress')
+                    })""")
+                    raise AssertionError(f"CaptureBrief: scroll state failed {state}") from err
                 check(float(page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--page-progress') || 0")) > 0, "CaptureBrief: reading progress updates")
                 page.evaluate("window.scrollTo(0,0)")
             else:
@@ -215,6 +237,8 @@ with sync_playwright() as pw:
             page.evaluate("Object.defineProperty(navigator,'clipboard',{value:{writeText:async t=>{window.__qaCopied=t}},configurable:true})")
             if name == "index.html":
                 page.locator("#purchase-status").select_option("SCOPE_FIRST")
+                page.locator("#company-name").fill("Public Example Corp")
+                page.locator("#work-email").fill("buyer@example.com")
                 page.locator("#opportunity-url").fill("https://sam.gov/opp/demo")
                 page.locator("#current-posture").select_option("GO")
                 page.locator("#assumptions").fill("The deadline has not changed.\nWe can bid as prime.")
@@ -222,6 +246,7 @@ with sync_playwright() as pw:
                 page.locator("#copy-request").click()
                 page.wait_for_function("() => window.__qaCopied && window.__qaCopied.includes('Public opportunity link:')")
                 copied_request = page.evaluate("window.__qaCopied")
+                check("Company: Public Example Corp" in copied_request and "Work email: buyer@example.com" in copied_request, "CaptureBrief: complete required buyer identity copied")
                 check("Current posture: GO" in copied_request, "CaptureBrief: request posture copied")
                 check("1. The deadline has not changed." in copied_request, "CaptureBrief: numbered assumptions copied")
                 check("Request copied" in page.locator("#request-status").inner_text(), "CaptureBrief: honest local-copy status")
