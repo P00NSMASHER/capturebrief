@@ -9,7 +9,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 ROOT = Path(os.environ.get("SITE_ROOT", ".")).resolve()
 OUT = Path(os.environ.get("QA_OUTPUT", ".qa-output")).resolve()
@@ -169,7 +169,16 @@ with sync_playwright() as pw:
                 check(page.locator('a[href="terms.html"]').count() >= 1, "CaptureBrief: terms link")
                 check(page.locator('a[href="data-handling.html"]').count() >= 1, "CaptureBrief: data-handling link")
                 page.locator("#deliverables").scroll_into_view_if_needed()
-                page.wait_for_timeout(150)
+                # Scroll completion and the requestAnimationFrame chrome update
+                # can land on different WebKit frames. Wait for the observable
+                # state, then retain both independent assertions below.
+                try:
+                    page.wait_for_function("""() => window.scrollY > 18 &&
+                        document.querySelector('.header').classList.contains('is-scrolled') &&
+                        Number(getComputedStyle(document.documentElement).getPropertyValue('--page-progress') || 0) > 0
+                    """, timeout=5000)
+                except PlaywrightTimeoutError:
+                    pass  # The assertions record the actual missing behavior.
                 check(page.locator(".header").evaluate("e=>e.classList.contains('is-scrolled')"), "CaptureBrief: compact scrolled navigation")
                 check(float(page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--page-progress') || 0")) > 0, "CaptureBrief: reading progress updates")
                 page.evaluate("window.scrollTo(0,0)")
@@ -227,12 +236,12 @@ with sync_playwright() as pw:
                 check("Request copied" in page.locator("#request-status").inner_text(), "CaptureBrief: honest local-copy status")
 
             page.locator("[data-copy-email]").click()
-            check(page.evaluate("window.__qaCopied") == "jayp19386@gmail.com", f"{name}: correct copied email")
+            check(page.evaluate("window.__qaCopied") == ("jay@retallyrecovery.com" if name == "index.html" else "jayp19386@gmail.com"), f"{name}: correct copied email")
             check("Nothing has been sent" in page.locator("#copy-status").inner_text(), f"{name}: no false send confirmation")
             page.evaluate("Object.defineProperty(navigator,'clipboard',{value:undefined,configurable:true})")
             page.locator("[data-copy-email]").click()
             check("selected address" in page.locator("#copy-status").inner_text(), f"{name}: clipboard fallback")
-            check(page.evaluate("getSelection().toString()") == "jayp19386@gmail.com", f"{name}: fallback selects address")
+            check(page.evaluate("getSelection().toString()") == ("jay@retallyrecovery.com" if name == "index.html" else "jayp19386@gmail.com"), f"{name}: fallback selects address")
 
             summary["solid_color_contrast"] = contrast_check(page)
             check(all(x["ratio"] >= 4.5 for x in summary["solid_color_contrast"]), f"{name}: targeted text contrast")
@@ -272,3 +281,4 @@ with sync_playwright() as pw:
         print(json.dumps(RESULT, indent=2))
 
 raise SystemExit(0 if RESULT["passed"] else 1)
+
