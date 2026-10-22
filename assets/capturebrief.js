@@ -194,9 +194,19 @@
       helper.style.position = 'fixed';
       helper.style.opacity = '0';
       document.body.appendChild(helper);
-      helper.select();
-      const copied = document.execCommand && document.execCommand('copy');
-      helper.remove();
+      const previousFocus = document.activeElement;
+      let copied = false;
+      try {
+        helper.select();
+        copied = typeof document.execCommand === 'function' && document.execCommand('copy') === true;
+      } catch (_) {
+        copied = false;
+      } finally {
+        helper.remove();
+        if (previousFocus && previousFocus.isConnected && typeof previousFocus.focus === 'function') {
+          previousFocus.focus({ preventScroll: true });
+        }
+      }
       setStatus(
         copied
           ? 'Request copied. Paste it into your email service and review it before sending.'
