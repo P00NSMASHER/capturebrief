@@ -58,7 +58,9 @@ const STANDALONE_HEADERS="/*\n"+
   "  Strict-Transport-Security: max-age=86400\n"+
   "  X-Content-Type-Options: nosniff\n"+
   "  Referrer-Policy: strict-origin-when-cross-origin\n"+
-  "  Content-Security-Policy: object-src 'none'; frame-ancestors 'none'; base-uri 'self'\n";
+  "  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n"+
+  "  X-Frame-Options: DENY\n"+
+  "  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'none'; media-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests\n";
 const RUNTIME_FILES=Object.freeze(['functions','_worker.js','wrangler.toml','wrangler.json','wrangler.jsonc']);
 
 function sha256File(file){

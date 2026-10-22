@@ -45,7 +45,21 @@ try{
     "  Strict-Transport-Security: max-age=86400\n"+
     "  X-Content-Type-Options: nosniff\n"+
     "  Referrer-Policy: strict-origin-when-cross-origin\n"+
-    "  Content-Security-Policy: object-src 'none'; frame-ancestors 'none'; base-uri 'self'\n");
+    "  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n"+
+    "  X-Frame-Options: DENY\n"+
+    "  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'none'; media-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests\n");
+  const policy=(read('_headers').match(/^  Content-Security-Policy: (.+)$/m)||[])[1]||'';
+  for(const directive of [
+    "default-src 'self'","script-src 'self'","style-src 'self'",
+    "img-src 'self' data:","font-src 'self'","connect-src 'self'",
+    "frame-ancestors 'none'","form-action 'none'","object-src 'none'",
+    "worker-src 'none'","upgrade-insecure-requests"
+  ]) assert(policy.includes(directive),'CSP missing '+directive);
+  assert(!/unsafe-(inline|eval)/.test(policy),'Strict CSP must not allow arbitrary inline JS or eval');
+  assert(read('_headers').includes('  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n'));
+  assert(!read('404.html').includes(' style='),'404 page has an inline style blocked by strict CSP');
+  assert(read('index.html').includes('name="robots" content="index,follow"'));
+
   assert(info.files.some(file=>file.path==='_headers'),'Header configuration must be fingerprinted');
   for(const name of site.listFilesRecursive(out)){
     assert(!fs.readFileSync(path.join(out,name)).includes('UNRELATED_SOURCE_CANARY'),name+' leaked unrelated content');
