@@ -19,3 +19,5 @@ a.brand.native-header:hover img.native-brand-icon{filter:drop-shadow(0 4px 9px r
 @media(max-width:600px){a.brand.native-header img.native-brand-icon{flex-basis:46px;width:46px;min-width:46px;height:46px;max-height:46px}a.brand.native-header .native-brand-text strong{font-size:21px}a.brand.native-header .native-brand-text small{font-size:8px}.approved-brand-hero.native-hero{width:102px;margin-bottom:15px}.capture-site a.brand.native-header img.native-brand-icon{flex-basis:45px;width:45px;min-width:45px;height:45px;max-height:45px}}
 @media(max-width:360px){a.brand.native-header img.native-brand-icon,.capture-site a.brand.native-header img.native-brand-icon{flex-basis:40px;width:40px;min-width:40px;height:40px;max-height:40px}a.brand.native-header .native-brand-text strong{font-size:18px}a.brand.native-header{gap:7px}}
 @media(prefers-reduced-motion:reduce){a.brand.native-header img.native-brand-icon{transition:none}}
+
+.capture-not-found-kicker{margin-top:48px}
