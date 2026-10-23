@@ -4,15 +4,18 @@ on:
   push:
     branches:
       - security/fy2027-compressed-private-retention-candidate-20261019
+      - fix/fy2027-compressed-original-content-range-20261023
     paths:
       - '.github/workflows/capturebrief-compressed-private-originals.yml'
       - 'scripts/retain_compressed_sam_archive_candidate.py'
       - 'tests/test_compressed_archive_candidate.py'
+      - 'tests/test_compressed_candidate_content_range.py'
   pull_request:
     paths:
       - '.github/workflows/capturebrief-compressed-private-originals.yml'
       - 'scripts/retain_compressed_sam_archive_candidate.py'
       - 'tests/test_compressed_archive_candidate.py'
+      - 'tests/test_compressed_candidate_content_range.py'
 
 permissions:
   contents: read
@@ -39,7 +42,7 @@ jobs:
       - name: Compile source-bound candidate
         run: python -m compileall -q scripts/retain_compressed_sam_archive_candidate.py
       - name: Full fake source byte replay, atomic gzip and adversarial checks
-        run: python -m unittest tests.test_compressed_archive_candidate -v
+        run: python -m unittest tests.test_compressed_archive_candidate tests.test_compressed_candidate_content_range -v
       - name: Verify CLI safety requires explicit private destination
         run: >-
           python -c "import inspect; from scripts.retain_compressed_sam_archive_candidate
