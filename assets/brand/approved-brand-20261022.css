@@ -21,3 +21,12 @@ a.brand.native-header:hover img.native-brand-icon{filter:drop-shadow(0 4px 9px r
 @media(prefers-reduced-motion:reduce){a.brand.native-header img.native-brand-icon{transition:none}}
 
 .capture-not-found-kicker{margin-top:48px}
+
+
+/* Exact owner-approved RETALLY wordmark at the same visual text scale. */
+img.retally-wordmark{display:inline-block!important;width:auto!important;height:.79em!important;
+ max-width:min(100%,8em);margin:0 .04em;padding:.075em .12em;box-sizing:content-box;
+ object-fit:contain;vertical-align:-.035em;background:#fff;border:1px solid rgba(10,72,50,.12);
+ border-radius:.17em;box-shadow:0 1px 4px rgba(0,31,26,.10)}
+a img.retally-wordmark{pointer-events:none}
+@media print{img.retally-wordmark{box-shadow:none}}

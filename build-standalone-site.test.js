@@ -13,7 +13,8 @@ const originals=site.PUBLIC_FILES.map(name=>({path:name,sha256:site.sha256File(p
 const env={CF_PAGES_COMMIT_SHA:process.env.CF_PAGES_COMMIT_SHA,GITHUB_SHA:process.env.GITHUB_SHA,COMMIT_REF:process.env.COMMIT_REF};
 const checkoutReferences=(html)=>Array.from(html.matchAll(/href=(["'])((?:https:\/\/buy\.stripe\.com\/|mailto:)[^"']*)\1/g),match=>match[2]);
 const groupAffiliations=(html)=>Array.from(html.matchAll(/<a\b[^>]*\bhref=(["'])([^"']*)\1[^>]*>([\s\S]*?)<\/a>/gi),match=>({
-  href:match[2],label:match[3].replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim()
+  href:match[2],label:match[3].replace(/<img\b[^>]*\balt=([\"'])RETALLY\1[^>]*>/gi,'RETALLY')
+    .replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim()
 })).filter(link=>['RETALLY Group','A RETALLY Group business','Part of RETALLY Group'].includes(link.label));
 
 try{
