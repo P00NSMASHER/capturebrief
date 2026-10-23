@@ -20,7 +20,14 @@ class Page(HTMLParser):
         if tag=='meta' and a.get('name')=='site-brand': self.marker=a.get('content')
         if tag=='footer': self.in_footer=True
         if tag=='a': self.link={'href':a.get('href',''),'id':a.get('id'),'text':''}
-        if tag=='img' and 'approved-brand-image' not in a.get('class','').split(): self.images+=1
+        if tag=='img':
+            classes=a.get('class','').split()
+            if 'retally-wordmark' in classes:
+                if a.get('alt')!='RETALLY': raise ValueError('wordmark must retain accessible brand name')
+                if self.link is not None: self.link['text']+='RETALLY'
+                if self.in_footer: self.footer.append('RETALLY')
+            elif 'approved-brand-image' not in classes:
+                self.images+=1
     def handle_data(self,data):
         if self.in_footer: self.footer.append(data)
         if self.link is not None: self.link['text']+=data
@@ -45,6 +52,7 @@ for rel in PAGES:
             if p.images!=PRIMARY_PHOTOS[rel]: issues.append(f'expected {PRIMARY_PHOTOS[rel]} content-image placements')
         if rel in RETALLY_PAGES:
             if 'RETALLY' not in ' '.join(p.footer): issues.append('RETALLY group affiliation missing')
+            if 'class="retally-wordmark"' not in raw.decode('utf-8'): issues.append('approved RETALLY wordmark missing')
             if 'jayp19386@gmail.com' in raw.decode('utf-8'): issues.append('legacy personal inbox remains on RETALLY page')
             if not any(a['href'].startswith('https://www.retallyrecovery.com/') for a in p.links): issues.append('RETALLY customer route missing')
         report['pages'].append({'path':rel,'sha256':hashlib.sha256(raw).hexdigest(),'brand_verified':not issues})
