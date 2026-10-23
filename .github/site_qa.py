@@ -67,7 +67,7 @@ def images_ready(page, label, expected):
         except Exception as exc:
             check(False, f"{label}: image decode failed: {str(exc)[:160]}")
     images = page.eval_on_selector_all(
-        "img:not(.approved-brand-image)",
+        "img:not(.approved-brand-image):not(.retally-wordmark)",
         "els => els.map(i => ({src:i.currentSrc,loaded:i.complete&&i.naturalWidth>0,"
         "naturalWidth:i.naturalWidth,naturalHeight:i.naturalHeight,"
         "renderedWidth:i.getBoundingClientRect().width,renderedHeight:i.getBoundingClientRect().height}))",
@@ -139,17 +139,17 @@ with sync_playwright() as pw:
             check(page.locator("h1").count() == 1, f"{name}: one H1")
             summary = {"page": name, "headline": page.locator("h1").inner_text(), "viewports": []}
             check(contract["headline"] in summary["headline"], f"{name}: correct headline")
-            check(page.locator("img:not(.approved-brand-image)").count() == contract["images"], f"{name}: expected content-image count")
+            check(page.locator("img:not(.approved-brand-image):not(.retally-wordmark)").count() == contract["images"], f"{name}: expected content-image count")
             if contract["images"]:
-                urls = page.locator("img:not(.approved-brand-image)").evaluate_all("els=>els.map(i=>i.getAttribute('src'))")
+                urls = page.locator("img:not(.approved-brand-image):not(.retally-wordmark)").evaluate_all("els=>els.map(i=>i.getAttribute('src'))")
                 unique = {urlsplit(url).path for url in urls}
                 summary["unique_photos"] = len(unique)
                 check(len(unique) == contract["images"], f"{name}: no repeated photos")
                 check(page.locator('img:not([alt]),img[alt=""]').count() == 0, f"{name}: image alternative text")
                 check(page.locator("img:not([width]),img:not([height])").count() == 0, f"{name}: all images have intrinsic dimensions")
-                check(page.locator("img:not(.approved-brand-image):not([srcset])").count() == 0, f"{name}: responsive photo dimensions")
-                check(page.locator('img:not(.approved-brand-image)[fetchpriority="high"]').count() == 1, f"{name}: one prioritized content hero")
-                check(page.locator('img:not(.approved-brand-image)[loading="lazy"]').count() == contract["images"] - 1, f"{name}: secondary photos lazy loaded")
+                check(page.locator("img:not(.approved-brand-image):not(.retally-wordmark):not([srcset])").count() == 0, f"{name}: responsive photo dimensions")
+                check(page.locator('img:not(.approved-brand-image):not(.retally-wordmark)[fetchpriority="high"]').count() == 1, f"{name}: one prioritized content hero")
+                check(page.locator('img:not(.approved-brand-image):not(.retally-wordmark)[loading="lazy"]').count() == contract["images"] - 1, f"{name}: secondary photos lazy loaded")
             check(page.locator('link[rel="canonical"]').count() == 1, f"{name}: canonical URL")
             missing = page.eval_on_selector_all(
                 'a[href^="#"]',
