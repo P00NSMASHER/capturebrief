@@ -14,6 +14,7 @@ const GROUP_URL='https://group.retallyrecovery.com/';
 
 const PUBLIC_FILES=Object.freeze([
   "assets/brand/capturebrief-emblem.webp",
+  "assets/brand/retally-wordmark-approved.png",
   "assets/brand/capturebrief-favicon.png",
   "assets/brand/native-brand-assets.json",
   "assets/brand/capturebrief-600-20261022.webp",
@@ -106,7 +107,7 @@ function rootReference(value){
   return cleanHtmlUrl('/'+value.replace(/^\.\//,'').replace(/^\//,''));
 }
 function plainAnchorLabel(label){
-  return label.replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
+  // Inline approved logo preserves the same text-only affiliation routing.\n  return label.replace(/<img\b[^>]*\balt=([\"'])RETALLY\1[^>]*>/gi,'RETALLY')\n    .replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
 }
 function isGroupAffiliationLabel(label){
   return ['RETALLY Group','A RETALLY Group business','Part of RETALLY Group'].includes(plainAnchorLabel(label));
