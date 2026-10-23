@@ -353,5 +353,65 @@ class CompressedCandidateOfflineTests(unittest.TestCase):
 
 
 
+class GzipSingleMemberIntegrityTests(unittest.TestCase):
+    """Fake bytes only; no network access, no original archive download."""
+
+    def test_valid_single_member_replays_byte_identically(self):
+        clear = b"fake notice data," * 10000
+        member = gzip.compress(clear, mtime=0)
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "single.gz"
+            path.write_bytes(member)
+            m._verify_decompressed(path, hashlib.sha256(clear).hexdigest(), len(clear))
+
+    def test_extra_empty_member_and_padding_are_not_valid_originals(self):
+        # gzip.open historically accepts BOTH even when SHA256(clear) matches.
+        clear = b"offline fictitious original" * 1000
+        member = gzip.compress(clear, mtime=0)
+        variants = {
+            "extra_empty_member": member + gzip.compress(b"", mtime=0),
+            "zero_padding": member + b"\\x00\\x00",
+            "duplicate_member": member + member,
+            "trailing_junk": member + b"junk",
+        }
+        with tempfile.TemporaryDirectory() as td:
+            for name, raw in variants.items():
+                with self.subTest(name=name):
+                    path = Path(td) / (name + ".gz")
+                    path.write_bytes(raw)
+                    with self.assertRaises(ValueError):
+                        m._verify_decompressed(path, hashlib.sha256(clear).hexdigest(),
+                                               len(clear))
+
+    def test_truncated_invalid_crc_and_wrong_header_rejected(self):
+        clear = b"test synthetic truncated CRC" * 1000
+        member = gzip.compress(clear, mtime=0)
+        bad_crc = bytearray(member)
+        bad_crc[-8] ^= 1
+        variants = {
+            "truncated": member[:-2],
+            "bad_crc": bytes(bad_crc),
+            "bad_header": b"XX" + member[2:],
+            "empty_file": b"",
+        }
+        with tempfile.TemporaryDirectory() as td:
+            for name, raw in variants.items():
+                with self.subTest(name=name):
+                    path = Path(td) / (name + ".gz")
+                    path.write_bytes(raw)
+                    with self.assertRaises(ValueError):
+                        m._verify_decompressed(path, hashlib.sha256(clear).hexdigest(),
+                                               len(clear))
+
+    def test_uncompressed_overrun_blocked(self):
+        clear = b"Z" * (m.BLOCK_BYTES + 1)
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "bomb-synthetic.gz"
+            path.write_bytes(gzip.compress(clear, mtime=0))
+            with self.assertRaisesRegex(ValueError, "beyond exact source bound"):
+                m._verify_decompressed(path, hashlib.sha256(clear[:-1]).hexdigest(),
+                                       len(clear) - 1)
+
+
 if __name__ == "__main__":
     unittest.main()

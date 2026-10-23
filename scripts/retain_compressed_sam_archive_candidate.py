@@ -25,6 +25,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import zlib
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -144,14 +145,42 @@ def _require_readonly_archive(archive: Path) -> None:
 
 
 def _verify_decompressed(archive: Path, expected_sha: str, expected_bytes: int) -> None:
+    """Verify one complete gzip member; reject appended members, junk and truncation.
+
+    gzip.open accepts concatenated members and zero padding. Matching just
+    the cleartext digest does not establish one exact retained source member.
+    Bounded inflate output prevents a malicious high-ratio allocation.
+    """
+    if type(expected_bytes) is not int or not 0 < expected_bytes <= MAX_ORIGINAL_BYTES:
+        raise ValueError("Compressed source expected byte count is invalid")
     sha = hashlib.sha256()
     count = 0
-    with gzip.open(archive, "rb") as handle:
-        for part in iter(lambda: handle.read(BLOCK_BYTES), b""):
-            count += len(part)
-            if count > expected_bytes:
-                raise ValueError("Compressed candidate expands beyond exact source bound")
-            sha.update(part)
+    inflater = zlib.decompressobj(wbits=31)
+    with archive.open("rb") as handle:
+        for data in iter(lambda: handle.read(BLOCK_BYTES), b""):
+            if inflater.eof:
+                raise ValueError("Compressed original has trailing bytes or another gzip member")
+            while data:
+                try:
+                    part = inflater.decompress(data, BLOCK_BYTES)
+                except zlib.error as exc:
+                    raise ValueError("Compressed original has invalid gzip header, CRC or trailer") from exc
+                if inflater.unused_data:
+                    raise ValueError("Compressed original has trailing bytes or another gzip member")
+                count += len(part)
+                if count > expected_bytes:
+                    raise ValueError("Compressed candidate expands beyond exact source bound")
+                sha.update(part)
+                tail = inflater.unconsumed_tail
+                if inflater.eof:
+                    if tail:
+                        raise ValueError("Compressed original has unconsumed gzip bytes")
+                    break
+                if len(tail) == len(data) and not part:
+                    raise ValueError("Compressed original decompressor made no progress")
+                data = tail
+    if not inflater.eof:
+        raise ValueError("Compressed original is truncated or missing gzip checksum")
     if count != expected_bytes or sha.hexdigest() != expected_sha:
         raise ValueError("Compressed original fails independent bit-for-bit source replay")
 
