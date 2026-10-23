@@ -108,7 +108,8 @@ function rootReference(value){
 }
 function plainAnchorLabel(label){
   // Inline approved logo preserves the same text-only affiliation routing.
-  return label.replace(/<img\b[^>]*\balt=([\"'])RETALLY\1[^>]*>/gi,'RETALLY')\n    .replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
+  return label.replace(/<img\b[^>]*\balt=([\"'])RETALLY\1[^>]*>/gi,'RETALLY')
+    .replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
 }
 function isGroupAffiliationLabel(label){
   return ['RETALLY Group','A RETALLY Group business','Part of RETALLY Group'].includes(plainAnchorLabel(label));
