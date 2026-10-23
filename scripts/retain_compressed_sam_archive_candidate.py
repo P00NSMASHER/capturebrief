@@ -263,6 +263,10 @@ def retain_compressed_candidate(
                     headers = getattr(response, "headers", None)
                     if headers is None:
                         raise ValueError("Source response lacks trustworthy headers")
+                    # An HTTP 200 response bearing byte-range metadata is not
+                    # a trustworthy full publisher original.
+                    if headers.get("Content-Range") is not None:
+                        raise ValueError("Full source-original response has Content-Range")
                     length = headers.get("Content-Length")
                     if length is not None and str(length).strip() != str(total):
                         raise ValueError("Publisher-declared source size no longer matches review candidate")
