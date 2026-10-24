@@ -42,7 +42,11 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: "22"
+          node-version: "22.23.4"
+      - name: Verify October 2026 patched Node runtime
+        run: |
+          node --version
+          node -e 'const [major,minor,patch]=process.versions.node.split(".").map(Number); if(major!==22 || minor<23 || (minor===23 && patch<4)) process.exit(1)'
       - name: Validate legacy PA x402 offline contracts
         run: |
           node tests/pa-entity-discovery.test.mjs
