@@ -269,7 +269,9 @@ with sync_playwright() as pw:
             RESULT["pages"].append(summary)
             context.close()
 
-            context = browser.new_context(java_script_enabled=False, viewport={"width": 320, "height": 844})
+            # Match the other rendered contexts: animated document scrolling
+            # must settle before normal, hit-tested clicks on the mobile page.
+            context = browser.new_context(java_script_enabled=False, viewport={"width": 320, "height": 844}, reduced_motion="reduce")
             page = context.new_page()
             page.goto(base + name, wait_until="domcontentloaded", timeout=45000)
             page.locator(".menu summary").click()
