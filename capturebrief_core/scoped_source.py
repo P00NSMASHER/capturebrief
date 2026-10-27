@@ -349,3 +349,80 @@ def bind_reviewed_scoped_case(
         "customer_release_authorized": False,
         "external_send_authorized": False,
     }
+
+
+def retain_review_source(
+    case: dict[str, Any], *, original_file: str | Path, source_url: str,
+    private_dir: str | Path, observed_at: datetime | None = None,
+) -> dict[str, Any]:
+    """Retain ONE operator-supplied public document privately for scoped review.
+
+    Source URL provenance and completeness remain unverified. The reviewer must
+    independently confirm original publisher bytes, version and applicability.
+    This does not fabricate an action history, attachment manifest or citation.
+    """
+    identity = _intake_identity(case)
+    root = private_root(private_dir)
+    source = _private_path(original_file, directory=False)
+    if source == root or source.is_relative_to(root):
+        raise ScopedSourceBlocked("Original input must not alias the scoped retention tree")
+    if not 0 < source.stat().st_size <= 50 * 1024 * 1024:
+        raise ScopedSourceBlocked("One reviewed document must be 1-50 MiB")
+    try:
+        url = urlsplit(source_url)
+        host = (url.hostname or "").lower()
+        valid = (url.scheme == "https" and url.username is None and
+                 url.password is None and url.port in (None, 443) and
+                 not url.fragment and host in {
+                     "sam.gov", "www.sam.gov", "acquisition.gov",
+                     "www.acquisition.gov", "gsa.gov", "www.gsa.gov"
+                 })
+    except (TypeError, ValueError):
+        raise ScopedSourceBlocked("Source must use an approved public government HTTPS host") from None
+    if not valid:
+        raise ScopedSourceBlocked("Source must use an approved public government HTTPS host")
+    observed = _clock(observed_at)
+    # Double bounded read; operator-owned path may mutate during collection.
+    first = source.stat()
+    with source.open("rb") as handle:
+        original = handle.read(50 * 1024 * 1024 + 1)
+    last = source.stat()
+    if (not original or len(original) > 50 * 1024 * 1024 or
+            first.st_size != len(original) or first.st_mtime_ns != last.st_mtime_ns):
+        raise ScopedSourceBlocked("Reviewed document changed while being retained")
+    digest = hashlib.sha256(original).hexdigest()
+    case_dir = root / ("case-" + identity["case_tag"])
+    if case_dir.is_symlink() or (case_dir.exists() and not case_dir.is_dir()):
+        raise ScopedSourceBlocked("Scoped case folder is not a regular private directory")
+    case_dir.mkdir(mode=0o700, exist_ok=True)
+    if os.name != "nt" and case_dir.stat().st_mode & (stat.S_IRWXG | stat.S_IRWXO):
+        raise ScopedSourceBlocked("Scoped case folder must have owner-only permissions")
+    # Scope-specific names are derived from content digests, not buyer filenames.
+    name = "public-source-" + digest + ".bin"
+    receipt = {
+        "schema": "capturebrief-scoped-review-source-v1",
+        "case_identity_sha256": identity["identity"],
+        "source_url": source_url,
+        "source_sha256": digest,
+        "source_bytes": len(original),
+        "observed_at": observed.isoformat().replace("+00:00", "Z"),
+        "capture_mode": "OPERATOR_SUPPLIED_FOR_INDEPENDENT_REVIEW",
+        "publisher_authenticity_verified": False,
+        "history_completeness_verified": False,
+        "customer_release_authorized": False,
+        "external_send_authorized": False,
+        "retained_filename": name,
+    }
+    bytes_receipt = (json.dumps(receipt, sort_keys=True, indent=2) + "\n").encode()
+    with exclusive_path_lock(case_dir / ".review-source", timeout_seconds=5):
+        ensure_exact_bytes(case_dir / name, original, mode=0o400)
+        ensure_exact_bytes(case_dir / (name + ".receipt.json"), bytes_receipt, mode=0o600)
+    return {
+        "status": "PUBLIC_DOCUMENT_RETAINED_SOURCE_REVIEW_REQUIRED",
+        "case_tag": identity["case_tag"], "source_sha256": digest,
+        "source_bytes": len(original),
+        "publisher_authenticity_verified": False,
+        "history_completeness_verified": False,
+        "customer_release_authorized": False,
+        "external_send_authorized": False,
+    }
