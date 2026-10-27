@@ -98,6 +98,59 @@ def _bytes(path: Path, bound: int) -> bytes:
     return data
 
 
+
+
+def _validate_source_set(case: dict[str, Any], files: dict[str, bytes]) -> None:
+    """Refuse to encrypt forged release assertions or mismatched source bytes."""
+    from capturebrief_core.scoped_source import verify_scoped_capture, _time
+    from capturebrief_core.model import canonical_json, sha256_hex
+    identity = _intake_identity(case)
+    for name, content in files.items():
+        if name == "intake-case.json":
+            continue
+        if not name.startswith("evidence/") or not FILE_NAME.fullmatch(name[9:]):
+            raise ValueError("Scoped source contains a forbidden file name")
+        leaf = name[9:]
+        if leaf.startswith("sam-current-"):
+            capture = json.loads(content.decode("utf-8"), object_pairs_hook=_unique)
+            if (capture.get("capture_sha256") != leaf[len("sam-current-"):-len(".json")]
+                    or content != (json.dumps(capture, sort_keys=True, indent=2,
+                                              ensure_ascii=False) + "\n").encode()):
+                raise ValueError("Scoped API receipt content address is invalid")
+            observed = (capture.get("api_observation") or {}).get("observed_at")
+            verify_scoped_capture(case, capture, now=_time(observed))
+        elif leaf.startswith("case-current-"):
+            saved = json.loads(content.decode("utf-8"), object_pairs_hook=_unique)
+            if (sha256_hex(canonical_json(saved)) !=
+                    leaf[len("case-current-"):-len(".json")]):
+                raise ValueError("Bound reviewed case content address is invalid")
+            if _intake_identity(saved)["identity"] != identity["identity"]:
+                raise ValueError("Reviewed case belongs to a different intake")
+        elif leaf.endswith(".bin"):
+            expected_sha = leaf[len("public-source-"):-len(".bin")]
+            if hashlib.sha256(content).hexdigest() != expected_sha:
+                raise ValueError("Retained original no longer matches its source digest")
+            if "evidence/" + leaf + ".receipt.json" not in files:
+                raise ValueError("Retained original has no matching source receipt")
+        elif leaf.endswith(".bin.receipt.json"):
+            receipt = json.loads(content.decode("utf-8"), object_pairs_hook=_unique)
+            source_name = receipt.get("retained_filename")
+            if (receipt.get("schema") != "capturebrief-scoped-review-source-v1"
+                    or not isinstance(source_name, str)
+                    or source_name + ".receipt.json" != leaf
+                    or receipt.get("case_identity_sha256") != identity["identity"]
+                    or receipt.get("source_sha256") !=
+                       source_name[len("public-source-"):-len(".bin")]
+                    or receipt.get("capture_mode") != "OPERATOR_SUPPLIED_FOR_INDEPENDENT_REVIEW"
+                    or any(receipt.get(flag) is not False for flag in (
+                        "publisher_authenticity_verified", "history_completeness_verified",
+                        "customer_release_authorized", "external_send_authorized"
+                    ))):
+                raise ValueError("Retained public-source receipt is inconsistent or claims release")
+            original = files.get("evidence/" + source_name)
+            if original is None or len(original) != receipt.get("source_bytes"):
+                raise ValueError("Retained source bytes no longer match its receipt")
+
 def _contents(case_path: str | Path, root: str | Path) -> tuple[str, dict[str, bytes]]:
     case = read_private_case(case_path)
     identity = _intake_identity(case)
@@ -117,6 +170,7 @@ def _contents(case_path: str | Path, root: str | Path) -> tuple[str, dict[str, b
         files["evidence/" + item.name] = data
     if len(files) == 1:
         raise ValueError("No retained source data to protect")
+    _validate_source_set(case, files)
     return identity["case_tag"], files
 
 
@@ -257,6 +311,7 @@ def _open_backup(backup: str | Path, passphrase: bytes) -> tuple[str, dict[str, 
         restored_case = json.loads(files["intake-case.json"].decode("utf-8"), object_pairs_hook=_unique)
         if _intake_identity(restored_case)["case_tag"] != manifest["case_tag"]:
             raise ValueError("Backup case identity does not match source manifest")
+        _validate_source_set(restored_case, files)
     return manifest["case_tag"], files
 
 
