@@ -87,6 +87,17 @@ python scripts/prepare_scoped_sam.py bind \
   --capture "$CB_PRIVATE_ROOT/case-CASE_TAG/sam-current-SHA.json"
 ~~~
 
+Before binding, the separately retained first-party SAM_HISTORY receipt MUST
+include a manual_review object with exactly: scope=COMPLETE_ACTION_SET,
+source_sha256 (the digest of a retained public-source-SHA.bin original),
+reviewer_id, reviewed_at (timezone-aware), and review_reference. The retained
+source receipt URL must match the history receipt URL. The source bytes are
+re-hashed, review age is limited to seven days, and the buyer and current
+notice IDs must belong to the same independently reviewed action family.
+No software-generated reviewer identity or hash proves that the actual
+SAM.gov listing was complete: independent human source verification remains
+an explicit release obligation.
+
 Binding calls the existing history/current-authority validators and requires
 the original buyer notice and current action in a separately reviewed same-
 family action set. Its immutable case-current-SHA.json remains private.
