@@ -233,6 +233,8 @@ with sync_playwright() as pw:
             page.evaluate("Object.defineProperty(navigator,'clipboard',{value:{writeText:async t=>{window.__qaCopied=t}},configurable:true})")
             if name == "index.html":
                 page.locator("#purchase-status").select_option("SCOPE_FIRST")
+                page.locator("#company").fill("Example Federal")
+                page.locator("#work-email").fill("buyer@example.com")
                 page.locator("#opportunity-url").fill("https://sam.gov/opp/demo")
                 page.locator("#current-posture").select_option("GO")
                 page.locator("#assumptions").fill("The deadline has not changed.\nWe can bid as prime.")

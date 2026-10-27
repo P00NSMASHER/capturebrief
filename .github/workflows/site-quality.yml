@@ -47,6 +47,8 @@ jobs:
           QA_OUTPUT: qa-output/buyer-build
       - name: Test clipboard fallback without touching the system clipboard
         run: node .github/clipboard_unit.cjs
+      - name: Verify free and paid request contracts without sending
+        run: node .github/request_draft_unit.cjs
       - name: Verify clipboard failure recovery in the built website
         run: python .github/clipboard_qa.py
         env:
