@@ -11,6 +11,7 @@ public_files=(
   "data-handling.html"
   "decision-evidence-sample.html"
   "favicon.svg"
+  "free-check.html"
   "index.html"
   "privacy.html"
   "robots.txt"
