@@ -272,6 +272,8 @@ def _open_backup(backup: str | Path, passphrase: bytes) -> tuple[str, dict[str, 
         if (len(names) != len(set(names)) or len(names) > MAX_FILES + 1
                 or "manifest.json" not in names):
             raise ValueError("Encrypted ZIP contains duplicate/unexpected entries")
+        if archive.getinfo("manifest.json").file_size > 64 * 1024:
+            raise ValueError("Encrypted manifest exceeds bounded metadata allowance")
         manifest = json.loads(archive.read("manifest.json").decode("utf-8"), object_pairs_hook=_unique)
         if (not isinstance(manifest, dict)
                 or set(manifest) != {
