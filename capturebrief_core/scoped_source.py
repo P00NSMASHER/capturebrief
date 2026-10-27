@@ -317,15 +317,80 @@ def verify_scoped_capture(
     return obs
 
 
+def _bound_history_review_source(
+    case: dict[str, Any], capture: dict[str, Any], *,
+    private_dir: str | Path, now: datetime,
+) -> None:
+    """Verify that the manual complete-history claim references retained bytes.
+
+    Hashes and user-supplied review identifiers are NOT proof of independent
+    reviewer identity or of official publisher authenticity. Both must be
+    separately checked by the operator prior to any customer release.
+    """
+    original = _intake_identity(case)
+    case_dir = private_root(private_root(private_dir) / ("case-" + original["case_tag"]))
+    reviews = [
+        r for r in (case.get("packet") or {}).get("history_receipts") or []
+        if r.get("source_surface") == "SAM_HISTORY"
+    ]
+    if len(reviews) != 1:
+        raise ScopedSourceBlocked("Exactly one reviewed first-party SAM_HISTORY receipt is required")
+    receipt = reviews[0]
+    payload = receipt.get("evidence_payload")
+    review = payload.get("manual_review") if isinstance(payload, dict) else None
+    if not isinstance(review, dict) or set(review) != {
+        "scope", "source_sha256", "reviewer_id", "reviewed_at", "review_reference"
+    }:
+        raise ScopedSourceBlocked("Operator manual-history provenance is incomplete")
+    if (review["scope"] != "COMPLETE_ACTION_SET"
+            or not isinstance(review["reviewer_id"], str)
+            or not 3 <= len(review["reviewer_id"].strip()) <= 100
+            or not isinstance(review["review_reference"], str)
+            or not 3 <= len(review["review_reference"].strip()) <= 200
+            or not re.fullmatch(r"[0-9a-f]{64}", str(review["source_sha256"]))):
+        raise ScopedSourceBlocked("Manual history review scope, identity or hash is invalid")
+    reviewed = _time(review["reviewed_at"])
+    captured_at = _time(receipt.get("observed_at"))
+    if not captured_at <= reviewed <= now or now - reviewed > timedelta(days=7):
+        raise ScopedSourceBlocked("Manual history review is future-dated, stale, or predates source observation")
+    expected_name = "public-source-" + review["source_sha256"] + ".bin"
+    source = _private_path(case_dir / expected_name, directory=False)
+    receipt_file = _private_path(case_dir / (expected_name + ".receipt.json"), directory=False)
+    if not 0 < source.stat().st_size <= 50 * 1024 * 1024:
+        raise ScopedSourceBlocked("Manual history source original exceeds reviewed bounds")
+    with source.open("rb") as stream:
+        raw = stream.read(50 * 1024 * 1024 + 1)
+    if hashlib.sha256(raw).hexdigest() != review["source_sha256"]:
+        raise ScopedSourceBlocked("Manual history source bytes do not match retained review")
+    if not 0 < receipt_file.stat().st_size <= 16 * 1024:
+        raise ScopedSourceBlocked("Manual history source receipt is too large")
+    try:
+        source_receipt = json.loads(receipt_file.read_text(encoding="utf-8"))
+    except (UnicodeError, ValueError):
+        raise ScopedSourceBlocked("Retained history source receipt is unreadable") from None
+    if (source_receipt.get("schema") != "capturebrief-scoped-review-source-v1"
+            or source_receipt.get("case_identity_sha256") != original["identity"]
+            or source_receipt.get("source_sha256") != review["source_sha256"]
+            or source_receipt.get("source_bytes") != len(raw)
+            or source_receipt.get("source_url") != receipt.get("source_url")
+            or source_receipt.get("capture_mode") != "OPERATOR_SUPPLIED_FOR_INDEPENDENT_REVIEW"
+            or source_receipt.get("publisher_authenticity_verified") is not False
+            or source_receipt.get("history_completeness_verified") is not False
+            or source_receipt.get("customer_release_authorized") is not False):
+        raise ScopedSourceBlocked("Reviewed source provenance or release boundary is inconsistent")
+
+
 def bind_reviewed_scoped_case(
-    case: dict[str, Any], capture: dict[str, Any], *, now: datetime | None = None,
+    case: dict[str, Any], capture: dict[str, Any], *,
+    private_dir: str | Path, now: datetime | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Apply existing strict current-action rules only after distinct reviewed history.
 
     The separate manifest, reference, Decision Evidence, backup, human review,
     and free-report release gates are intentionally NOT satisfied by this call.
     """
-    obs = verify_scoped_capture(case, capture, now=now)
+    checked = _clock(now)
+    obs = verify_scoped_capture(case, capture, now=checked)
     packet = case.get("packet") or {}
     action_ids = [str(x).lower() for x in packet.get("history_action_ids") or []]
     chosen = _intake_identity(case)["selected_notice_id"]
@@ -337,6 +402,7 @@ def bind_reviewed_scoped_case(
     )
     if history_state != "HISTORY_COMPLETE":
         raise ScopedSourceBlocked("Complete human-reviewed first-party family history required")
+    _bound_history_review_source(case, capture, private_dir=private_dir, now=checked)
     # SAM_HISTORY is a manual source of reviewed evidence, not automatically
     # inferred from the single current API record.
     if not any(r.get("source_surface") == "SAM_HISTORY" and
