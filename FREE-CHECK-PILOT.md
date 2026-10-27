@@ -75,6 +75,23 @@ The existing paid and scope-first formats remain valid.
 
 ## Current launch status and remaining work
 
+For the no-card offer, run the offer-specific admission report:
+
+```sh
+python scripts/pilot_preflight.py --stage admission --offer free \
+  --history-index /private/source-index.sqlite --verify-source-bytes \
+  --source-snapshot-root /private/originals
+```
+
+This retains source/catalog/identity review while correctly excluding Stripe
+and the paid change watch. Free completion continues through its bound
+reservation and report builder above. A free request is not evidence approval.
+
+The October 27 current-source repair, retained rendered catalog review packet,
+protected-storage proposal and explicitly fictional customer reviews on genuine
+public inputs are documented in `LAUNCH-READINESS-2026-10-27.md`. Those simulations
+are barred by the actual LIVE builder and do not supply human source signoff.
+
 This is a working request/import/reservation/evidence-inspection/report foundation.
 Do not advertise instant output or guaranteed admission. The live-pursuit
 source acceptance remains incomplete: the production catalog is approved only

@@ -1,0 +1,237 @@
+Browser tab: 6, Title: "SAM.gov | Data Services", URL: "https://sam.gov/data-services/Contract%20Opportunities/Archived%20Data?privacy=Public".
+0 AXWebArea SAM.gov | Data Services, URL: sam.gov/data-services/Contract%20Opportunities/Archived%20Data?privacy=Public
+	1 container
+		2 link Description: Skip to main content on the same page, ID: skipnav-link
+			3 text Skip to main content
+		4 text An official website of the United States government
+		5 button (collapsed) Here’s how you know, Secondary Actions: Expand
+		6 container
+			7 container alert0
+				8 container
+					9 text ISR Workspace: Increased Contract Volume
+					10 button (collapsed) Show Details, Secondary Actions: Expand
+					11 text Jun 26, 2026
+				12 button Description: Close Alert, ID: alert0CloseBtn
+			13 container alert1
+				14 container
+					15 text Revolutionary FAR Overhaul Impacts to SAM.gov
+					16 button (collapsed) Show Details, Secondary Actions: Expand
+					17 text Aug 15, 2025
+				18 button Description: Close Alert, ID: alert1CloseBtn
+		19 button See All Alerts, ID: seeAllAlertsTabletBtn
+		20 link Description: Go to Home page, Help: Home, Value: sam.gov/
+		21 container Primary navigation
+			22 container
+				23 content list
+					24 link Description: Home, Value: sam.gov/, ID: home
+					25 link Description: Search, Value: sam.gov/search/, ID: search
+					26 link Description: Data Bank, Value: sam.gov/reports/awards/standard, ID: databank
+					27 link Description: Data Services, Value: sam.gov/data-services, ID: dataService
+					28 link Description: Help, Value: sam.gov/help, ID: help
+				29 content list
+					30 link Description: Sign In, Value: javascript:void(0), ID: signIn
+		31 container main-container
+			234 container primary-content
+				235 heading DATA SERVICES, Value: 5
+					236 text DATA SERVICES
+				237 heading File Extracts, Value: 2
+					238 text File Extracts
+				239 container crumbs
+					240 link Data Services 
+						241 text Data Services 
+					393 text 
+					243 link  Contract Opportunities 
+						244 text  Contract Opportunities 
+					394 text 
+					246 text  Archived Data 
+				247 container
+					248 text Name
+					249 text Details
+					250 link Description:    FY1969_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					251 container
+						252 link Description: Metadata Info for FY1969_archived_opportunities.csvPublic, Value: javascript:void(0);
+						395 text 
+					254 link Description:    FY1970_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					255 container
+						256 link Description: Metadata Info for FY1970_archived_opportunities.csvPublic, Value: javascript:void(0);
+						396 text 
+					258 link Description:    FY1980_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					259 container
+						260 link Description: Metadata Info for FY1980_archived_opportunities.csvPublic, Value: javascript:void(0);
+						397 text 
+					262 link Description:    FY1981_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					263 container
+						264 link Description: Metadata Info for FY1981_archived_opportunities.csvPublic, Value: javascript:void(0);
+						398 text 
+					266 link Description:    FY1998_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					267 container
+						268 link Description: Metadata Info for FY1998_archived_opportunities.csvPublic, Value: javascript:void(0);
+						399 text 
+					270 link Description:    FY1999_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					271 container
+						272 link Description: Metadata Info for FY1999_archived_opportunities.csvPublic, Value: javascript:void(0);
+						400 text 
+					274 link Description:    FY2000_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					275 container
+						276 link Description: Metadata Info for FY2000_archived_opportunities.csvPublic, Value: javascript:void(0);
+						401 text 
+					278 link Description:    FY2001_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					279 container
+						280 link Description: Metadata Info for FY2001_archived_opportunities.csvPublic, Value: javascript:void(0);
+						402 text 
+					282 link Description:    FY2002_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					283 container
+						284 link Description: Metadata Info for FY2002_archived_opportunities.csvPublic, Value: javascript:void(0);
+						403 text 
+					286 link Description:    FY2003_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					287 container
+						288 link Description: Metadata Info for FY2003_archived_opportunities.csvPublic, Value: javascript:void(0);
+						404 text 
+					290 link Description:    FY2004_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					291 container
+						292 link Description: Metadata Info for FY2004_archived_opportunities.csvPublic, Value: javascript:void(0);
+						405 text 
+					294 link Description:    FY2005_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					295 container
+						296 link Description: Metadata Info for FY2005_archived_opportunities.csvPublic, Value: javascript:void(0);
+						406 text 
+					298 link Description:    FY2006_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					299 container
+						300 link Description: Metadata Info for FY2006_archived_opportunities.csvPublic, Value: javascript:void(0);
+						407 text 
+					302 link Description:    FY2007_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					303 container
+						304 link Description: Metadata Info for FY2007_archived_opportunities.csvPublic, Value: javascript:void(0);
+						408 text 
+					306 link Description:    FY2008_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					307 container
+						308 link Description: Metadata Info for FY2008_archived_opportunities.csvPublic, Value: javascript:void(0);
+						409 text 
+					310 link Description:    FY2009_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					311 container
+						312 link Description: Metadata Info for FY2009_archived_opportunities.csvPublic, Value: javascript:void(0);
+						410 text 
+					314 link Description:    FY2010_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					315 container
+						316 link Description: Metadata Info for FY2010_archived_opportunities.csvPublic, Value: javascript:void(0);
+						411 text 
+					318 link Description:    FY2011_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					319 container
+						320 link Description: Metadata Info for FY2011_archived_opportunities.csvPublic, Value: javascript:void(0);
+						412 text 
+					322 link Description:    FY2012_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					323 container
+						324 link Description: Metadata Info for FY2012_archived_opportunities.csvPublic, Value: javascript:void(0);
+						413 text 
+					326 link Description:    FY2013_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					327 container
+						328 link Description: Metadata Info for FY2013_archived_opportunities.csvPublic, Value: javascript:void(0);
+						414 text 
+					330 link Description:    FY2014_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					331 container
+						332 link Description: Metadata Info for FY2014_archived_opportunities.csvPublic, Value: javascript:void(0);
+						415 text 
+					334 link Description:    FY2015_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					335 container
+						336 link Description: Metadata Info for FY2015_archived_opportunities.csvPublic, Value: javascript:void(0);
+						416 text 
+					338 link Description:    FY2016_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					339 container
+						340 link Description: Metadata Info for FY2016_archived_opportunities.csvPublic, Value: javascript:void(0);
+						417 text 
+					342 link Description:    FY2017_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					343 container
+						344 link Description: Metadata Info for FY2017_archived_opportunities.csvPublic, Value: javascript:void(0);
+						418 text 
+					346 link Description:    FY2018_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					347 container
+						348 link Description: Metadata Info for FY2018_archived_opportunities.csvPublic, Value: javascript:void(0);
+						419 text 
+					350 link Description:    FY2019_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					351 container
+						352 link Description: Metadata Info for FY2019_archived_opportunities.csvPublic, Value: javascript:void(0);
+						420 text 
+					354 link Description:    FY2020_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					355 container
+						356 link Description: Metadata Info for FY2020_archived_opportunities.csvPublic, Value: javascript:void(0);
+						421 text 
+					358 link Description:    FY2021_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					359 container
+						360 link Description: Metadata Info for FY2021_archived_opportunities.csvPublic, Value: javascript:void(0);
+						422 text 
+					362 link Description:    FY2022_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					363 container
+						364 link Description: Metadata Info for FY2022_archived_opportunities.csvPublic, Value: javascript:void(0);
+						423 text 
+					366 link Description:    FY2023_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					367 container
+						368 link Description: Metadata Info for FY2023_archived_opportunities.csvPublic, Value: javascript:void(0);
+						424 text 
+					370 link Description:    FY2024_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					371 container
+						372 link Description: Metadata Info for FY2024_archived_opportunities.csvPublic, Value: javascript:void(0);
+						425 text 
+					374 link Description:    FY2025_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					375 container
+						376 link Description: Metadata Info for FY2025_archived_opportunities.csvPublic, Value: javascript:void(0);
+						426 text 
+					378 link Description:    FY2026_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					379 container
+						380 link Description: Metadata Info for FY2026_archived_opportunities.csvPublic, Value: javascript:void(0);
+						427 text 
+					382 link Description:    FY2027_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					383 container
+						384 link Description: Metadata Info for FY2027_archived_opportunities.csvPublic, Value: javascript:void(0);
+						428 text 
+					386 link Description:    FY2029_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					387 container
+						388 link Description: Metadata Info for FY2029_archived_opportunities.csvPublic, Value: javascript:void(0);
+						429 text 
+					390 link Description:    FY2030_archived_opportunities.csv Item under Archived DataPublic, Value: javascript:void(0)
+					391 container
+						392 link Description: Metadata Info for FY2030_archived_opportunities.csvPublic, Value: javascript:void(0);
+						430 text 
+		192 container
+			193 container Footer Navigation Links
+				194 container
+					195 text Our Website
+					196 content list
+						197 link Description: About This Site, Value: sam.gov/about/this-site
+						198 link Description: Our Community - opens in a new window, Value: interact.gsa.gov/group/integrated-award-environment-iae-industry-community
+						199 link Description: Release Notes - opens in a new window, Value: fsd.gov/gsafsd_sp?id=kb_category&kb_category=ccf4380a1ba67410fe314000f54bcb16&kb_id=f66d8e6cdb76d4100d73f81d0f9619c
+						200 link Description: System Alerts, Value: sam.gov/alerts
+				201 container
+					202 text Our Partners
+					203 content list
+						204 link Description: Acquisition.gov - opens in a new window, Value: acquisition.gov/
+						205 link Description: USASpending.gov - opens in a new window, Value: usaspending.gov/
+						206 link Description: Grants.gov - opens in a new window, Value: grants.gov/
+						207 link Description: More Partners, Value: sam.gov/about/partners
+				208 container
+					209 text Policies
+					210 content list
+						211 link Description: Terms of Use, Value: sam.gov/about/terms-of-use
+						212 link Description: Privacy Policy, Value: sam.gov/about/terms-of-use#privacy
+						213 link Description: Restricted Data Use, Value: sam.gov/about/terms-of-use#restricted
+						214 link Description: Freedom of Information Act - opens in a new window, Value: gsa.gov/reference/freedom-of-information-act-foia
+						215 link Description: Accessibility, Value: sam.gov/about/accessibility
+				216 container
+					217 text Customer Service
+					218 content list
+						219 link Description: Help, Value: sam.gov/help
+						220 link Description: Check Entity Status, Value: sam.gov/content/status-tracker
+						221 link Description: Federal Service Desk - opens in a new window, Value: fsd.gov/gsafsd_sp
+						222 link Description: External Resources, Value: sam.gov/about/external-resources
+						223 link Description: Contact, Value: sam.gov/about/contact
+			224 link Description: GSA Logo, Value: gsa.gov/
+			225 text WARNING
+			226 text This is a U.S. General Services Administration Federal Government computer system that is 
+			227 text "FOR OFFICIAL USE ONLY."
+			228 text  This system is subject to monitoring. Individuals found performing unauthorized activities are subject to disciplinary action including criminal prosecution.
+			229 text This system contains Controlled Unclassified Information (CUI). All individuals viewing, reproducing or disposing of this information are required to protect it in accordance with 32 CFR Part 2002 and GSA Order CIO 2103.2 CUI Policy.
+			230 container Agency identifier,
+				231 container Agency description,
+					232 text SAM.gov
+					233 text An official website of the U.S. General Services Administration
+
+The focused UI element is 0 AXWebArea SAM.gov | Data Services, URL: sam.gov/data-services/Contract%20Opportunities/Archived%20Data?privacy=Public

@@ -1,7 +1,9 @@
 # Verified public release artifact
 
-CaptureBrief's authoritative website uses GitHub Pages, the `gh-pages` branch,
-and https://p00nsmasher.github.io/capturebrief/. See `DEPLOYMENT-TARGET.md`.
+CaptureBrief's company website is https://capturebrief.retallyrecovery.com/,
+served by the existing Cloudflare Pages standalone build from `gh-pages`.
+The shared https://p00nsmasher.github.io/capturebrief/ site is a separate legacy
+surface. See `DEPLOYMENT-TARGET.md` and `STANDALONE_SITE.md` on `gh-pages`.
 
 The Netlify-named build and ZIP below are legacy packaging tools. They do not
 select the current hosting provider or authorize a website deployment. Product
@@ -23,16 +25,19 @@ artifact. No raw product code, tests, fixtures, customer data, source catalogs, 
 operating documents enter that deployment ZIP. No deployment credentials are required
 or embedded. All artifact receipts explicitly say the build is not deployment proof.
 
-## Current GitHub Pages release handoff
+## Current company-site release handoff
 
-The legacy release ZIP is packaging evidence, not a GitHub Pages deployment
+The legacy release ZIP is packaging evidence, not a company-site deployment
 instruction. Begin website changes from the actual current `gh-pages` branch,
-preserve its existing project pages and use its site-quality workflow. Do not
-replace that branch with product-engine `main` or with the legacy ZIP.
+preserve its existing project pages and use its site-quality workflow. The
+existing `retally-capturebrief` Cloudflare project publishes only the standalone
+build's allowlisted `dist/` artifact. Do not replace the website branch with
+product-engine `main` or with the legacy ZIP.
 
-After an authorized Pages release, independently verify the served homepage,
-sample and assets at https://p00nsmasher.github.io/capturebrief/ against the
-intended website revision. A successful product build or deployment job does
+After an authorized release, independently verify `/build-info.json`, the served
+homepage, sample and assets at https://capturebrief.retallyrecovery.com/ against
+the intended website revision. Verify the shared GitHub Pages surface separately
+when it changes. A successful product build or deployment job does
 not prove the intended content is live. Do not submit forms or send customer
 messages without the owner's specific approval.
 

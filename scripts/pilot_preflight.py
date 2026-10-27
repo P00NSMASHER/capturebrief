@@ -62,6 +62,7 @@ def inspect(
     stage: str = "completion", history_index: str | None = None,
     verify_source_bytes: bool = False,
     source_snapshot_root: str | None = None,
+    offer: str = "paid",
 ) -> dict[str, Any]:
     """Assess observed evidence, separating admission from post-delivery work.
 
@@ -71,6 +72,10 @@ def inspect(
     """
     if stage not in {"admission", "completion"}:
         raise ValueError("stage must be admission or completion")
+    if offer not in {"paid", "free"}:
+        raise ValueError("offer must be paid or free")
+    if offer == "free" and stage != "admission":
+        raise ValueError("Free completion uses inspect_free_check and the separate free-report receipt")
     if not isinstance(now, datetime) or now.utcoffset() is None:
         raise ValueError("inspection time must include a timezone")
     now = now.astimezone(timezone.utc)
@@ -169,7 +174,9 @@ def inspect(
             result("release", "BLOCKED_EVIDENCE_INVALID", type(exc).__name__)
 
     if stage == "admission":
-        result("delivery", "POST_ADMISSION_CUSTOMER_BUNDLE",
+        result("delivery", "POST_ADMISSION_FREE_REPORT" if offer == "free" else "POST_ADMISSION_CUSTOMER_BUNDLE",
+               "The free-check reservation and separately verified report are due before that customer's delivery"
+               if offer == "free" else
                "A customer's verified bundle is required before that customer's delivery, not before pilot admission")
     elif not bundle_path or receipt is None or case is None:
         result("delivery", "BLOCKED_UNVERIFIED_BUNDLE",
@@ -218,8 +225,16 @@ def inspect(
     # customer-supplied receipts, test transactions, or invented approvals.
     result("intake", "MANUAL_INBOX_RECONCILIATION_REQUIRED",
            "Draft/copy is not server delivery; independently confirm arrival and consent before work")
-    result("payment", "STRIPE_LIVE_RECORD_VERIFICATION_REQUIRED",
-           "Verify the exact CaptureBrief live account/payment/refund state via Stripe, never a URL parameter")
+    if offer == "free":
+        result("payment", "NO_PAYMENT_FOR_FREE_CHECK",
+               "The free check needs no card or Stripe record; an explicit later paid upgrade uses live Stripe verification")
+        result("watch", "NOT_INCLUDED_IN_FREE_CHECK",
+               "The free check has no change watch; source and currentness checks remain required before its report")
+        result("trial_identity", "BUSINESS_ELIGIBILITY_REVIEW_REQUIRED",
+               "Use the private one-business reservation registry before the free report; request identity is unverified")
+    else:
+        result("payment", "STRIPE_LIVE_RECORD_VERIFICATION_REQUIRED",
+               "Verify the exact CaptureBrief live account/payment/refund state via Stripe, never a URL parameter")
     result("operator", "INDEPENDENT_REVIEW_AND_SEND_APPROVAL_REQUIRED",
            "Require signed scope, source and human-review signoffs; each external message is separately approved")
     result("production", "PROTECTED_RELEASE_REVIEW_REQUIRED",
@@ -242,13 +257,17 @@ def inspect(
     return {
         "schema": "capturebrief-pilot-preflight-v1",
         "stage": stage,
+        "offer": offer,
         "checked_at": now.isoformat().replace("+00:00", "Z"),
         "fiscal_year": fiscal_year,
         "technical_preflight_passed": tech_ok,
         "approved_to_accept_payment_or_send_customer_material": False,
         "status": status,
-        "pre_pilot_gates": ["catalog", "source_index", "intake", "payment", "operator", "production"],
-        "post_pilot_gates": ["real_case", "release", "delivery", "watch"],
+        "pre_pilot_gates": (["catalog", "source_index", "intake", "trial_identity", "operator", "production"]
+                            if offer == "free" else
+                            ["catalog", "source_index", "intake", "payment", "operator", "production"]),
+        "post_pilot_gates": (["real_case", "release", "delivery"] if offer == "free" else
+                             ["real_case", "release", "delivery", "watch"]),
         "gates": gates,
     }
 
@@ -268,6 +287,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="Approved private extract directory; defaults to index file's directory")
     parser.add_argument("--stage", choices=("admission", "completion"), default="completion",
                         help="admission before the first customer; completion after the real delivered watch")
+    parser.add_argument("--offer", choices=("paid", "free"), default="paid",
+                        help="free is admission-only; free completion uses its reservation/report pipeline")
     args = parser.parse_args(argv)
     try:
         now = (datetime.fromisoformat(args.as_of.replace("Z", "+00:00"))
@@ -278,7 +299,7 @@ def main(argv: list[str] | None = None) -> int:
                       observed_case=_read_object(args.observed_case), stage=args.stage,
                       history_index=args.history_index,
                       verify_source_bytes=args.verify_source_bytes,
-                      source_snapshot_root=args.source_snapshot_root)
+                      source_snapshot_root=args.source_snapshot_root, offer=args.offer)
     except (ValueError, OSError, TypeError, json.JSONDecodeError) as exc:
         print(json.dumps({"status": "PILOT_BLOCKED", "error": type(exc).__name__}))
         return 2
