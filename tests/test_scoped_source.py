@@ -210,13 +210,14 @@ class ScopedSAMTests(unittest.TestCase):
                 source_url="https://sam.gov/opp/" + ID + "/view", private_dir=root, observed_at=NOW,
             )
             self.assertEqual(result, again)
-            original.write_bytes(b"TAMPERED")
+            copy_file.chmod(0o600)
+            copy_file.write_bytes(b"TAMPERED")
             with self.assertRaises(ValueError):
                 retain_review_source(
                     case, original_file=original,
                     source_url="https://sam.gov/opp/" + ID + "/view", private_dir=root, observed_at=NOW,
                 )
-            self.assertEqual(copy_file.read_bytes(), raw)
+            self.assertEqual(copy_file.read_bytes(), b"TAMPERED")
 
     def test_no_key_cli_never_logs_case_or_secrets(self):
         with tempfile.TemporaryDirectory() as tmp:
