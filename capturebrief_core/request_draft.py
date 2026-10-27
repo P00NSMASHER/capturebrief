@@ -17,11 +17,15 @@ from .intake import IntakeError, build_case_from_intake
 
 MAX_REQUEST_TEXT = 16_384
 
-TO_LINE = "To: jayp19386@gmail.com"
+TO_LINE = "To: jay@retallyrecovery.com"
+LEGACY_TO_LINE = "To: jayp19386@gmail.com"
 SCOPE_SUBJECT = "CaptureBrief scope request"
 PAID_SUBJECT = "CaptureBrief checkout-reported intake (payment verification needed)"
+FREE_SUBJECT = "CaptureBrief free assumption check request"
 PAID_CLAIM = "Already purchased"
 SCOPE_CLAIM = "Scope check before purchase"
+FREE_CLAIM = "Free assumption check requested"
+FREE_OFFER = "FREE_ONE_ASSUMPTION_CHECK"
 HEADER = "Hello CaptureBrief,"
 ASSUMPTIONS = "Assumptions to check:"
 CONFIRMATION = "I confirm this request contains only public, non-sensitive information."
@@ -31,6 +35,16 @@ PAID_END = (
     "coverage, and the delivery date. I understand an out-of-scope request "
     "will be refunded before work begins."
 )
+FREE_END = (
+    "Please confirm eligibility, source coverage, and delivery date for one free "
+    "assumption check. I understand there is no charge, no automatic upgrade, "
+    "and no included change watch."
+)
+_CLAIM_CONTRACT = {
+    SCOPE_CLAIM: (SCOPE_SUBJECT, SCOPE_END),
+    PAID_CLAIM: (PAID_SUBJECT, PAID_END),
+    FREE_CLAIM: (FREE_SUBJECT, FREE_END),
+}
 
 _STATUS_PREFIX = "Purchase status (customer-reported, not verified): "
 _FIELDS = (
@@ -65,10 +79,10 @@ def parse_customer_draft(raw: str) -> ParsedDraft:
     # Clipboard draft includes To/Subject; email body omits them. Do not
     # accept arbitrary forwarded headers, modified recipients, or fake subject.
     if lines[0].startswith(("To:", "Subject:")):
-        if len(lines) < 4 or lines[0] != TO_LINE or not lines[1].startswith("Subject: "):
+        if len(lines) < 4 or lines[0] not in {TO_LINE, LEGACY_TO_LINE} or not lines[1].startswith("Subject: "):
             raise IntakeError("intake draft header does not match the local request builder")
         subject = lines[1].removeprefix("Subject: ")
-        if subject not in {SCOPE_SUBJECT, PAID_SUBJECT} or lines[2] != "":
+        if subject not in {value[0] for value in _CLAIM_CONTRACT.values()} or lines[2] != "":
             raise IntakeError("intake draft subject or header is unsupported")
         pos = 3
         envelope_present = True
@@ -85,9 +99,10 @@ def parse_customer_draft(raw: str) -> ParsedDraft:
         raise IntakeError("intake draft does not state the unverified purchase claim")
     claim = lines[pos][len(_STATUS_PREFIX):]
     pos += 1
-    if claim not in {PAID_CLAIM, SCOPE_CLAIM}:
+    if claim not in _CLAIM_CONTRACT:
         raise IntakeError("intake draft purchase claim is unsupported")
-    if subject and subject != (PAID_SUBJECT if claim == PAID_CLAIM else SCOPE_SUBJECT):
+    expected_subject, expected_end = _CLAIM_CONTRACT[claim]
+    if subject and subject != expected_subject:
         raise IntakeError("intake draft subject contradicts the purchase claim")
 
     values: dict[str, str] = {}
@@ -112,11 +127,13 @@ def parse_customer_draft(raw: str) -> ParsedDraft:
         pos += 1
     if count == 0:
         raise IntakeError("intake draft must contain at least one assumption")
+    if claim == FREE_CLAIM and count != 1:
+        raise IntakeError("the free check covers exactly one assumption")
 
     require("")
     require(CONFIRMATION)
     require("")
-    require(PAID_END if claim == PAID_CLAIM else SCOPE_END)
+    require(expected_end)
     if pos != len(lines):
         raise IntakeError("intake draft contains unexpected content or a signature")
 
@@ -129,7 +146,7 @@ def parse_customer_draft(raw: str) -> ParsedDraft:
 def create_unverified_case(raw: str, *, submitted_at: str | None = None) -> tuple[dict, dict]:
     parsed = parse_customer_draft(raw)
     case = build_case_from_intake(parsed.intake, submitted_at=submitted_at)
-    return case, {
+    claims = {
         "source_kind": "BUYER_SUPPLIED_EMAIL_DRAFT",
         "purchase_claim": parsed.purchase_claim,
         "purchase_claim_verified": False,
@@ -140,3 +157,14 @@ def create_unverified_case(raw: str, *, submitted_at: str | None = None) -> tupl
         "ready_to_start_work": False,
         "envelope_present": parsed.envelope_present,
     }
+    if parsed.purchase_claim == FREE_CLAIM:
+        # Only the requested offer is recorded. This cannot attest identity,
+        # one-per-business eligibility, payment, source readiness or admission.
+        case["intake"]["requested_offer"] = FREE_OFFER
+        claims.update({
+            "requested_offer": FREE_OFFER,
+            "trial_eligibility_verified": False,
+            "trial_admission_authorized": False,
+            "automatic_upgrade_authorized": False,
+        })
+    return case, claims

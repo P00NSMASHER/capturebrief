@@ -1,8 +1,8 @@
 """Contract test: a REAL rendered website copy draft enters the Python core.
 
-Tests two immutable, separate GitHub review candidates:
-- Python core at the current branch head (this PR).
-- GitHub Pages candidate pinned via SITE_CHECKOUT to PR #50 head.
+Tests current core against the immutable website source pinned by CI:
+- Python core and payment contract at this checkout.
+- Website candidate pinned via SITE_CHECKOUT.
 No email, payment, SAM API, third-party submission, or customer data.
 """
 from __future__ import annotations
@@ -22,7 +22,7 @@ from playwright.sync_api import sync_playwright
 
 from capturebrief_core.intake import IntakeError
 from capturebrief_core.request_draft import (
-    PAID_CLAIM, SCOPE_CLAIM, create_unverified_case,
+    PAID_CLAIM, SCOPE_CLAIM, FREE_CLAIM, FREE_OFFER, create_unverified_case,
     parse_customer_draft,
 )
 
@@ -57,7 +57,7 @@ def copy_request(page):
 
 def fill(page, *, purchase="SCOPE_FIRST", assumptions=None):
     page.locator("#purchase-status").select_option(purchase)
-    page.locator("#company-name").fill("Fictional Federal Testing LLC")
+    page.locator("#company").fill("Fictional Federal Testing LLC")
     page.locator("#work-email").fill("test-buyer@example.com")
     page.locator("#opportunity-url").fill(NOTICE)
     page.locator("#current-posture").select_option("HOLD")
@@ -96,7 +96,7 @@ def assert_case(draft, *, claim, count):
 
 
 def check_fictional_processor_contract(core_case, browser_name):
-    """Check the payment contract as a THIRD independent proposed PR.
+    """Check the payment contract at the current reviewed core checkout.
 
     These are MADE-UP Stripe-shaped objects, never actual processor receipts.
     Even a matching set does not authenticate a provider or authorize work.
@@ -232,6 +232,23 @@ def run():
                           "paid buyer claim not labeled unverified")
                     checks.append(browser_name + ": PAID claim remains unverified")
 
+                    fill(page, purchase="FREE_CHECK", assumptions="The original deadline is unchanged.")
+                    free = copy_request(page)
+                    free_case = assert_case(free, claim=FREE_CLAIM, count=1)
+                    check(free_case["intake"].get("requested_offer") == FREE_OFFER,
+                          "free request lost its explicit offer identity")
+                    check("no charge, no automatic upgrade" in free,
+                          "free terms were lost in the actual draft")
+                    checks.append(browser_name + ": free one-assumption request reaches unverified core")
+                    fill(page, purchase="FREE_CHECK", assumptions="Question one\nQuestion two")
+                    page.evaluate("window.__capturebriefCopied = null")
+                    page.locator("#copy-request").click()
+                    check(page.evaluate("window.__capturebriefCopied") is None,
+                          "free request accepted multiple assumptions")
+                    check("exactly one assumption" in page.locator("#request-status").inner_text(),
+                          "free request is missing its one-assumption refusal")
+                    checks.append(browser_name + ": free request enforces one assumption")
+
                     lines = [chr(65+i)*500 for i in range(5)]
                     fill(page, purchase="PAID", assumptions="\n".join(lines))
                     check(page.locator("#assumptions").input_value() == "\n".join(lines),
@@ -294,8 +311,8 @@ def run():
 
                     # Browser must not produce a draft that core would reject.
                     invalids = [
-                        ("https://192.168.1.1/private", "private addresses"),
-                        ("https://company.internal/secret", "private addresses"),
+                        ("https://192.168.1.1/private", "private/local address"),
+                        ("https://company.internal/secret", "private/local address"),
                     ]
                     for url, expected in invalids:
                         fill(page)
@@ -317,7 +334,7 @@ def run():
                     check(response.status == 200, "return URL navigation failed")
                     check(page.locator("#purchase-status").input_value() == "PAID",
                           "checkout return posture not reflected")
-                    check("does not verify a payment"
+                    check("Payment is verified separately"
                           in page.locator("#request-status").inner_text(),
                           "website asserted unverified payment")
                     checks.append(browser_name + ": forged checkout return is unverified")
@@ -345,7 +362,7 @@ def run():
         "customer_records_used": False,
         "backend_persists_customer_data": False,
         "stripe_provider_records_real": False,
-        "stripe_payment_candidate_pinned": True,
+        "payment_contract_from_current_core_checkout": True,
         "approved_to_accept_paid_pilot": False,
         "cross_branch_contract_passed": bool(checks) and not errors,
     }

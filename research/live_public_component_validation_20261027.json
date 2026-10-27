@@ -1,0 +1,208 @@
+{
+  "admission_preflight": {
+    "approved_to_accept_payment_or_send_customer_material": false,
+    "checked_at": "2026-10-27T13:43:22.748287Z",
+    "fiscal_year": 2027,
+    "gates": {
+      "catalog": {
+        "reason": "FY2027 exceeds the last independently pinned first-party catalog observation",
+        "status": "BLOCKED_STALE_CATALOG"
+      },
+      "delivery": {
+        "reason": "A customer's verified bundle is required before that customer's delivery, not before pilot admission",
+        "status": "POST_ADMISSION_CUSTOMER_BUNDLE"
+      },
+      "intake": {
+        "reason": "Draft/copy is not server delivery; independently confirm arrival and consent before work",
+        "status": "MANUAL_INBOX_RECONCILIATION_REQUIRED"
+      },
+      "operator": {
+        "reason": "Require signed scope, source and human-review signoffs; each external message is separately approved",
+        "status": "INDEPENDENT_REVIEW_AND_SEND_APPROVAL_REQUIRED"
+      },
+      "payment": {
+        "reason": "Verify the exact CaptureBrief live account/payment/refund state via Stripe, never a URL parameter",
+        "status": "STRIPE_LIVE_RECORD_VERIFICATION_REQUIRED"
+      },
+      "production": {
+        "reason": "Any code or website changes require passing exact-head QA and approved publication",
+        "status": "PROTECTED_RELEASE_REVIEW_REQUIRED"
+      },
+      "real_case": {
+        "reason": "A future customer's genuine pursuit is not required before admitting the first supervised pilot",
+        "status": "POST_ADMISSION_CUSTOMER_EVIDENCE"
+      },
+      "release": {
+        "reason": "A real customer's reviewed evidence and trace are due before their deliverable",
+        "status": "POST_ADMISSION_DELIVERY_REVIEW"
+      },
+      "source_index": {
+        "reason": "No source index can override a catalog that is not independently certified through this fiscal year",
+        "status": "BLOCKED_CATALOG_STALE"
+      },
+      "watch": {
+        "reason": "An actual 14-day watch can only be measured after customer delivery; operational setup still needs independent QA",
+        "status": "POST_ADMISSION_WATCH_OBSERVATION"
+      }
+    },
+    "post_pilot_gates": [
+      "real_case",
+      "release",
+      "delivery",
+      "watch"
+    ],
+    "pre_pilot_gates": [
+      "catalog",
+      "source_index",
+      "intake",
+      "payment",
+      "operator",
+      "production"
+    ],
+    "schema": "capturebrief-pilot-preflight-v1",
+    "stage": "admission",
+    "status": "PILOT_ADMISSION_BLOCKED",
+    "technical_preflight_passed": false
+  },
+  "component_check_count": 8,
+  "component_checks": [
+    {
+      "bytes": 11335,
+      "citation": "52.204-21",
+      "edition_basis": "EMBEDDED_RULE_TEXT",
+      "embedded_or_labeled_edition": "Nov 2021",
+      "exact_paragraph_checks": 28,
+      "latest_edition_asserted": false,
+      "namespace": "FAR",
+      "pursuit_applicability_verified": false,
+      "source_revision": "da52ccbbe114e1f031a7f4c59195c508dbfa485f",
+      "source_sha256": "5d9ff06ba3d5119fc8ac703902daca44ccec271865de1f7d697118bcc5fc832f",
+      "source_url": "https://github.com/GSA/GSA-Acquisition-FAR/blob/da52ccbbe114e1f031a7f4c59195c508dbfa485f/dita/52.204-21.dita",
+      "status": "REAL_PINNED_RULE_COMPONENT_PASS",
+      "tampered_text_rejected": true
+    },
+    {
+      "bytes": 26693,
+      "citation": "52.212-1",
+      "edition_basis": "EMBEDDED_RULE_TEXT",
+      "embedded_or_labeled_edition": "Sep 2023",
+      "exact_paragraph_checks": 53,
+      "latest_edition_asserted": false,
+      "namespace": "FAR",
+      "pursuit_applicability_verified": false,
+      "source_revision": "da52ccbbe114e1f031a7f4c59195c508dbfa485f",
+      "source_sha256": "ff31798400c6deef784bc98aeeb149a27b7f9ec68958f5416671530ee1deb968",
+      "source_url": "https://github.com/GSA/GSA-Acquisition-FAR/blob/da52ccbbe114e1f031a7f4c59195c508dbfa485f/dita/52.212-1.dita",
+      "status": "REAL_PINNED_RULE_COMPONENT_PASS",
+      "tampered_text_rejected": true
+    },
+    {
+      "bytes": 20591,
+      "citation": "252.204-7012",
+      "edition_basis": "EMBEDDED_RULE_TEXT",
+      "embedded_or_labeled_edition": "May 2024",
+      "exact_paragraph_checks": 56,
+      "latest_edition_asserted": false,
+      "namespace": "DFARS",
+      "pursuit_applicability_verified": false,
+      "source_revision": "7e609f791af9cc6d8e7d75a7b05c83b1f62c0cb8",
+      "source_sha256": "99af021d6f34a1a2b8def660f9b7bd6d219c910c3dfd84a9db9591e5a73b18c1",
+      "source_url": "https://github.com/GSA/GSA-Acquisition-DFARS/blob/7e609f791af9cc6d8e7d75a7b05c83b1f62c0cb8/dita/252.204-7012.dita",
+      "status": "REAL_PINNED_RULE_COMPONENT_PASS",
+      "tampered_text_rejected": true
+    },
+    {
+      "bytes": 18658,
+      "citation": "252.204-7020",
+      "edition_basis": "EMBEDDED_RULE_TEXT",
+      "embedded_or_labeled_edition": "Nov 2023",
+      "exact_paragraph_checks": 61,
+      "latest_edition_asserted": false,
+      "namespace": "DFARS",
+      "pursuit_applicability_verified": false,
+      "source_revision": "7e609f791af9cc6d8e7d75a7b05c83b1f62c0cb8",
+      "source_sha256": "9d410f5f46854f104bdeffab9ea13014e22ba25f006b2fad8331a03e95638730",
+      "source_url": "https://github.com/GSA/GSA-Acquisition-DFARS/blob/7e609f791af9cc6d8e7d75a7b05c83b1f62c0cb8/dita/252.204-7020.dita",
+      "status": "REAL_PINNED_RULE_COMPONENT_PASS",
+      "tampered_text_rejected": true
+    },
+    {
+      "approved_catalog_source": false,
+      "automated_unreviewed_source_observation": true,
+      "bytes": 2157841,
+      "current_pursuit_verified": false,
+      "fiscal_year": 1999,
+      "matched_rows_checked": 7,
+      "original_rows": 1415,
+      "raw_bytes_persisted": false,
+      "solicitation_groups_checked": 3,
+      "source_sha256": "d5348f84eaec1e3855b19ad522c12c66c4a9f633f48353ad45ebe15bacd40cec",
+      "source_url": "https://sam.gov/api/prod/fileextractservices/v1/api/download/Contract%20Opportunities/Archived%20Data/FY1999_archived_opportunities.csv?privacy=Public",
+      "status": "REAL_HISTORICAL_EXTRACT_COMPONENT_PASS"
+    },
+    {
+      "approved_catalog_source": false,
+      "automated_unreviewed_source_observation": true,
+      "bytes": 1770559,
+      "current_pursuit_verified": false,
+      "fiscal_year": 2000,
+      "matched_rows_checked": 3,
+      "original_rows": 1047,
+      "raw_bytes_persisted": false,
+      "solicitation_groups_checked": 3,
+      "source_sha256": "7422d9160baa5de4f08efecc964b9bd22ff044d5d08413688421fe778b25d511",
+      "source_url": "https://sam.gov/api/prod/fileextractservices/v1/api/download/Contract%20Opportunities/Archived%20Data/FY2000_archived_opportunities.csv?privacy=Public",
+      "status": "REAL_HISTORICAL_EXTRACT_COMPONENT_PASS"
+    },
+    {
+      "approved_catalog_source": false,
+      "automated_unreviewed_source_observation": true,
+      "bytes": 2406436,
+      "current_pursuit_verified": false,
+      "fiscal_year": 2001,
+      "matched_rows_checked": 11,
+      "original_rows": 1467,
+      "raw_bytes_persisted": false,
+      "solicitation_groups_checked": 3,
+      "source_sha256": "733ee6a5810d33006a8f82024e6552af4186f4d15d97fde33519dcda1ae25dc4",
+      "source_url": "https://sam.gov/api/prod/fileextractservices/v1/api/download/Contract%20Opportunities/Archived%20Data/FY2001_archived_opportunities.csv?privacy=Public",
+      "status": "REAL_HISTORICAL_EXTRACT_COMPONENT_PASS"
+    },
+    {
+      "approved_catalog_source": false,
+      "automated_unreviewed_source_observation": true,
+      "bytes": 4518793,
+      "current_pursuit_verified": false,
+      "fiscal_year": 2027,
+      "matched_rows_checked": 3,
+      "original_rows": 3082,
+      "raw_bytes_persisted": false,
+      "solicitation_groups_checked": 3,
+      "source_sha256": "ea1d2c726566fc9546e80f0ce559f77b104809ad5c86e2095b9935bc03648ea0",
+      "source_url": "https://sam.gov/api/prod/fileextractservices/v1/api/download/Contract%20Opportunities/Archived%20Data/FY2027_archived_opportunities.csv?privacy=Public",
+      "status": "REAL_CURRENT_YEAR_EXTRACT_COMPONENT_PASS"
+    }
+  ],
+  "component_pass_count": 8,
+  "current_private_source_index_supplied": false,
+  "customer_delivery_verified": false,
+  "customer_release_authorized": false,
+  "engine_base_commit": "93b4923dd10739fae98abaf658ee7437248f35ba",
+  "external_send_authorized": false,
+  "observed_at": "2026-10-27T13:43:22.748287Z",
+  "paid_customer_or_revenue_evidence": false,
+  "sam_current_api_key_available_in_this_environment": false,
+  "sam_current_api_observation_performed": false,
+  "schema": "capturebrief-live-public-component-validation-v1",
+  "status": "LIVE_PURSUIT_ACCEPTANCE_NOT_ESTABLISHED",
+  "synthetic_transport": false,
+  "tested_component_file_sha256": {
+    "RULE-SOURCE-CATALOG.json": "e09e0f260c9bca3410e4f52f504b7614d3221e29d37af33446144555b7975752",
+    "capturebrief_core/archive_catalog.py": "30b81ab8a560b21063e8cecb6d355da22c8882baa93de060162edb6a7074f496",
+    "capturebrief_core/data_services.py": "6ede8ec2bd04b7aa8be9f25ebc5ddac6adb898e648ff0fa9b5bfa522dc2640a1",
+    "capturebrief_core/rule_registry.py": "c46f08286177fa10c10fb130fc0f691afce0994e6f07c982913783ab45843e3e",
+    "capturebrief_core/rule_sync.py": "a4a35d3a4935b00ddd4f49abad5c59e6b91ec63ff8f01f9feef39b77f1558bcc",
+    "capturebrief_core/source_policy.py": "084c2c33448aaa366473c6680a244cad635d8f1b05d2a17249af068b1b62b3b2",
+    "scripts/validate_live_public_sources.py": "429f07989b1594ce11464621ce079d3cacdea80249e24b28ec2e667121f37e50"
+  }
+}
