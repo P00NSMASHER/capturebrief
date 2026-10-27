@@ -17,9 +17,9 @@ PUBLIC_FILES = frozenset({
     ".well-known/x402", "openapi.json",
     "x402/pa-entity/.well-known/x402", "x402/pa-entity/openapi.json",
     "404.html", "_headers", "_redirects", "data-handling.html",
-    "decision-evidence-sample.html", "favicon.svg", "index.html", "privacy.html",
+    "decision-evidence-sample.html", "favicon.svg", "free-check.html", "index.html", "privacy.html",
     "robots.txt", "sample.html", "site.webmanifest", "sitemap.xml", "terms.html",
-    "thanks.html", "assets/main.js", "assets/og-capturebrief.png",
+    "thanks.html", "assets/main.js", "assets/free-check.js", "assets/og-capturebrief.png",
     "assets/styles.css", "assets/v5.css",
 })
 # These two discovery aliases are intentionally published at both the
