@@ -4,6 +4,7 @@ import functools
 import hashlib
 import json
 import os
+import re
 import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -58,6 +59,8 @@ try:
                     response = page.goto(base, wait_until='domcontentloaded', timeout=30000)
                     assert response is not None and response.status == 200
                     page.locator('#purchase-status').select_option('SCOPE_FIRST')
+                    page.locator('#company').fill('Example Federal')
+                    page.locator('#work-email').fill('buyer@example.com')
                     page.locator('#opportunity-url').fill('https://example.org/public-notice')
                     page.locator('#current-posture').select_option('HOLD')
                     page.locator('#assumptions').fill('Confirm the published deadline.')
@@ -65,8 +68,13 @@ try:
                     page.locator('#copy-request').click()
                     expected = 'Request copied.' if mode == 'success' else 'Copy was unavailable.'
                     expect(page.locator('#request-status')).to_contain_text(expected)
-                    assert page.locator('textarea[readonly]').count() == 0, 'temporary draft field retained'
-                    expect(page.locator('#copy-request')).to_be_focused()
+                    assert page.locator('body > textarea[readonly]').count() == 0, 'temporary draft field retained'
+                    if mode == 'success':
+                        expect(page.locator('#copy-request')).to_be_focused()
+                        expect(page.locator('#request-manual-copy')).to_be_hidden()
+                    else:
+                        expect(page.locator('#request-plaintext')).to_be_focused()
+                        expect(page.locator('#request-plaintext')).to_have_value(re.compile('Company: Example Federal'))
                     assert not errors, 'unhandled page error: ' + repr(errors)
                     result['passed'] = True
                     result['status_text'] = page.locator('#request-status').inner_text()

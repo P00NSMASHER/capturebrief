@@ -10,17 +10,19 @@ async function exercise(mode) {
   let focusRestored = false;
   const active = { isConnected: true, focus() { focusRestored = true; } };
   const field = value => ({ value, checked: true, setCustomValidity() {},
-    reportValidity() { return true; }, addEventListener() {} });
+    reportValidity() { return true; }, addEventListener() {}, focus() {}, select() {} });
   const controls = {
-    'purchase-status': field('SCOPE'), 'opportunity-url': field('https://example.org/public-notice'),
+    'purchase-status': field('SCOPE_FIRST'), 'opportunity-url': field('https://example.org/public-notice'),
+    'company': field('Example Federal'), 'work-email': field('buyer@example.com'),
     'current-posture': field('HOLD'), 'assumptions': field('Confirm the deadline.'),
     'public-only': field(''), 'request-status': { textContent: '', dataset: {} },
+    'request-manual-copy': { hidden: true }, 'request-plaintext': field(''),
     'request-builder': { hidden: true, reportValidity() { return true; }, addEventListener() {} },
     'copy-request': { addEventListener(name, callback) { listeners[name] = callback; } }
   };
   const document = {
     documentElement: { scrollHeight: 1000, style: { setProperty() {} } },
-    querySelector() { return null; }, getElementById(id) { return controls[id]; },
+    querySelector() { return null; }, querySelectorAll() { return []; }, getElementById(id) { return controls[id]; },
     activeElement: active,
     body: { appendChild() { temporary += 1; } },
     createElement() { return { value: '', style: {}, setAttribute() {},
@@ -44,6 +46,8 @@ async function exercise(mode) {
   } else {
     assert.match(status.textContent, /Copy was unavailable/);
     assert.equal(status.dataset.state, 'error');
+    assert.equal(controls['request-manual-copy'].hidden, false);
+    assert.match(controls['request-plaintext'].value, /Company: Example Federal/);
   }
 }
 (async () => {

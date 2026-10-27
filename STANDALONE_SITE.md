@@ -5,7 +5,7 @@ This build publishes only the actual CaptureBrief website at https://capturebrie
 ## Cloudflare Pages settings
 
 - Repository: `P00NSMASHER/capturebrief` (GitHub repository ID `1375917834`).
-- Website base branch: `gh-pages`, not the repository's `main` product-engine branch. Set the Pages production branch to the reviewed release branch until this change is merged.
+- Website production branch: `gh-pages`; product-engine changes remain on `main`. Verify the actual deployment revision after each release.
 - Project name: `retally-capturebrief`.
 - Root directory: repository root.
 - Framework preset: None.
@@ -23,13 +23,13 @@ Only the generated artifact gets root-based navigation, clean-route canonical/so
 
 The generated decision-evidence sample CTA says that scope and timing are confirmed “before work begins,” consistent with the existing homepage, terms and direct checkout. This one-sentence correction is applied only to the generated page; the shared source file remains unchanged.
 
-The artifact contains 33 files: 29 allowlisted public files, robots.txt, sitemap.xml, `_headers`, and build-info.json. The header configuration is included in the file hashes and count. It sets HSTS to `max-age=86400`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Content-Security-Policy: object-src 'none'; frame-ancestors 'none'; base-uri 'self'`. It adds no script or style restrictions.
+The exact public file list, count, byte sizes, and SHA-256 values are generated in `build-info.json`. The fingerprint includes `_headers`. The current policy uses same-origin scripts, styles, fonts and connections; blocks frames, objects, workers and form submissions; and adds HSTS, a strict-origin referrer policy, no-sniff and restricted browser permissions. Inspect `STANDALONE_HEADERS` for the complete policy.
 
 `build-info.json` identifies CaptureBrief, its canonical hostname, repository, source branch and `CF_PAGES_COMMIT_SHA` (preferred over other revision variables). It records both source-content and generated-artifact fingerprints.
 
-## Existing work
+## Request and trial contract
 
-This migration adds build tooling without changing the existing HTML, CSS or JavaScript source files. CaptureBrief PR #50 (`pilot/site-unverified-payment-copy-20261018`) remains separate and unmerged. Its buyer-journey fixes are not implied by this migration. Once that work is reviewed and merged into the website source branch, rebuild the company site from the resulting revision and rerun its existing buyer-journey checks. The build transformation intentionally does not depend on the current form's field layout.
+The current request composer includes company/contact identity, explicit unverified payment language, lossless legal identifiers, a complete manual-copy fallback, and the one-assumption free-pilot request. Those repairs carry forward the relevant intent of historical PR #50 on the current branded website. The trial is supervised: preparing a request neither admits a business, starts work, verifies sources nor sends email. The Python core on `main` remains the authority for intake and delivery readiness. Rebuild both public targets and verify the served bytes before claiming the request change is live.
 
 ## Acceptance and rollback
 
