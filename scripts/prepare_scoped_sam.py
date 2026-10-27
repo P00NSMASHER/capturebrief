@@ -88,7 +88,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "external_send_authorized": False,
         }
     if args.command == "bind":
-        updated, transition = bind_reviewed_scoped_case(case, capture)
+        updated, transition = bind_reviewed_scoped_case(case, capture, private_dir=root)
         case_dir = root / ("case-" + identity["case_tag"])
         raw = (json.dumps(updated, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode()
         if len(raw) > 1024 * 1024:
