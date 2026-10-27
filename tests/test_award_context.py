@@ -35,7 +35,7 @@ def scenario(*, rows=None, next_page=False, messages=None, limit=25):
     request = approved_request(
         start_date="2025-01-01", end_date="2026-09-30",
         awarding_agency_name="General Services Administration",
-        naics="541512", limit=limit
+        naics="541512", limit=limit)
     response = {
         "spending_level": "awards",
         "limit": limit,
