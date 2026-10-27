@@ -110,7 +110,7 @@ class ScopedSAMTests(unittest.TestCase):
             self.assertFalse(result["selected_notice_matches_latest_api"])
             self.assertFalse(result["history_completion_verified"])
             with self.assertRaisesRegex(ScopedSourceBlocked, "family history"):
-                bind_reviewed_scoped_case(case, capture, now=NOW)
+                bind_reviewed_scoped_case(case, capture, private_dir=root, now=NOW)
 
     def test_stale_future_inactive_wrong_family_and_invalid_response_block(self):
         for bad in (
@@ -153,18 +153,35 @@ class ScopedSAMTests(unittest.TestCase):
             _, root, case = fixture(Path(tmp))
             _, _, candidate = live_style_capture(case, root)
             with self.assertRaises(ScopedSourceBlocked):
-                bind_reviewed_scoped_case(case, candidate, now=NOW)
+                bind_reviewed_scoped_case(case, candidate, private_dir=root, now=NOW)
             case["packet"]["history_action_ids"] = [ID]
             with self.assertRaises(ScopedSourceBlocked):
-                bind_reviewed_scoped_case(case, candidate, now=NOW)
+                bind_reviewed_scoped_case(case, candidate, private_dir=root, now=NOW)
+            source_url = "https://sam.gov/opp/" + ID + "/view"
+            review_original = Path(tmp) / "manual-history-page.txt"
+            review_original.write_bytes(b"FAKE OFFLINE SAM history listing: one exact action " + ID.encode())
+            review_original.chmod(0o600)
+            retained = retain_review_source(
+                case, original_file=review_original,
+                source_url=source_url, private_dir=root, observed_at=NOW,
+            )
             case["packet"]["history_receipts"] = [
                 make_history_receipt(
-                    [ID], source_url="https://sam.gov/opp/" + ID + "/view",
+                    [ID], source_url=source_url,
                     observed_at=NOW.isoformat(), source_surface="SAM_HISTORY",
-                    payload={"family": {"solicitation_number": SOL}, "manual_review": "TEST_ONLY"},
+                    payload={
+                        "family": {"solicitation_number": SOL},
+                        "manual_review": {
+                            "scope": "COMPLETE_ACTION_SET",
+                            "source_sha256": retained["source_sha256"],
+                            "reviewer_id": "TEST_REVIEWER_NOT_REAL",
+                            "reviewed_at": NOW.isoformat(),
+                            "review_reference": "synthetic-offline-review-1",
+                        },
+                    },
                 )
             ]
-            updated, transition = bind_reviewed_scoped_case(case, candidate, now=NOW)
+            updated, transition = bind_reviewed_scoped_case(case, candidate, private_dir=root, now=NOW)
             self.assertEqual(transition["status"], "CURRENT_API_BOUND_REMAINING_EVIDENCE_REVIEW_REQUIRED")
             self.assertFalse(transition["customer_release_authorized"])
             self.assertEqual(updated["packet"]["current_action_id"], ID)
