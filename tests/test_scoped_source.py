@@ -190,6 +190,13 @@ class ScopedSAMTests(unittest.TestCase):
             self.assertFalse(evaluate_delivery_readiness(updated, now=NOW).eligible)
             self.assertEqual(updated["packet"]["manifest_receipts"], [])
             self.assertNotIn("FAKE_SECRET", json.dumps(updated))
+            # A forged reviewer claim cannot compensate for missing original bytes.
+            original = root / ("case-" + hashlib.sha256(case["case_id"].encode()).hexdigest()[:24])
+            retained_file = original / ("public-source-" + retained["source_sha256"] + ".bin")
+            retained_file.chmod(0o600)
+            retained_file.write_bytes(b"TAMPERED HISTORY SOURCE")
+            with self.assertRaises(ScopedSourceBlocked):
+                bind_reviewed_scoped_case(case, candidate, private_dir=root, now=NOW)
 
     def test_case_url_must_be_first_party_and_free_intake_unmodified(self):
         with tempfile.TemporaryDirectory() as tmp:
