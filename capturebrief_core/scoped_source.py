@@ -211,7 +211,6 @@ def observe_scoped_case(
     """
     identity = _intake_identity(case)
     root = private_root(private_dir)
-    checked = _clock(now)
     if (not isinstance(solicitation_number, str) or
             not SAFE_SOLICITATION.fullmatch(solicitation_number) or
             solicitation_number != solicitation_number.strip()):
@@ -230,6 +229,9 @@ def observe_scoped_case(
         kwargs["opener"] = opener
     try:
         raw = fetcher(**kwargs)
+        # Record the evaluation clock after the provider response; the source
+        # observation is made during fetch, not before it begins.
+        checked = _clock(now)
         observation = _source_projection(raw, solicitation_number=solicitation_number, checked=checked)
     except (CurrentApiError, ValueError, TypeError, KeyError, OSError) as exc:
         # The provider's original exception can contain credential-bearing URLs.
