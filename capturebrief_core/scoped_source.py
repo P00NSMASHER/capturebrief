@@ -68,7 +68,7 @@ def _private_path(value: str | Path, *, directory: bool) -> Path:
         if os.name != "nt" and actual.stat().st_mode & (stat.S_IRWXG | stat.S_IRWXO):
             raise ScopedSourceBlocked("Private evidence root must have owner-only permissions (0700)")
     elif not actual.is_file() or (os.name != "nt" and
-                                   actual.stat().st_mode & (stat.S_IRGRP | stat.S_IROTH)):
+                                   actual.stat().st_mode & (stat.S_IRWXG | stat.S_IRWXO)):
         raise ScopedSourceBlocked("Private input must be a regular owner-only file")
     return actual
 
@@ -78,12 +78,21 @@ def private_root(value: str | Path) -> Path:
     return _private_path(value, directory=True)
 
 
+def _unique_fields(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    obj: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in obj:
+            raise ScopedSourceBlocked("Duplicate private case JSON key")
+        obj[key] = value
+    return obj
+
+
 def read_private_case(path: str | Path) -> dict[str, Any]:
     source = _private_path(path, directory=False)
     if not 0 < source.stat().st_size <= MAX_CASE_BYTES:
         raise ScopedSourceBlocked("Private case has invalid bounded size")
     try:
-        case = json.loads(source.read_bytes().decode("utf-8"))
+        case = json.loads(source.read_bytes().decode("utf-8"), object_pairs_hook=_unique_fields)
     except (UnicodeError, ValueError) as exc:
         raise ScopedSourceBlocked("Private case is not valid JSON") from None
     if not isinstance(case, dict):
@@ -375,7 +384,7 @@ def retain_review_source(
         host = (url.hostname or "").lower()
         valid = (url.scheme == "https" and url.username is None and
                  url.password is None and url.port in (None, 443) and
-                 not url.fragment and host in {
+                 not url.fragment and not url.query and host in {
                      "sam.gov", "www.sam.gov", "acquisition.gov",
                      "www.acquisition.gov", "gsa.gov", "www.gsa.gov"
                  })
