@@ -81,21 +81,31 @@ def _source_json(raw: bytes, field: str) -> dict:
     return obj
 
 
-def approved_request(*, start_date: str, end_date: str, limit: int = 25) -> dict:
+def approved_request(*, start_date: str, end_date: str,
+                     awarding_agency_name: str, naics: str | None = None,
+                     limit: int = 25) -> dict:
     """Bounded official API POST shape. No search is performed by this function."""
     start, end = _date(start_date, "start_date"), _date(end_date, "end_date")
     if start > end or type(limit) is not int or not 1 <= limit <= MAX_RECORDS:
         raise AwardContextHold("Invalid time window or request limit")
+    agency_name = _text(awarding_agency_name, "awarding_agency_name", max_chars=120)
+    if naics is not None and (not isinstance(naics, str)
+                              or not _NAICS.fullmatch(naics)):
+        raise AwardContextHold("Invalid six-digit NAICS search filter")
+    filters = {
+        "award_type_codes": list(AWARD_TYPES),
+        "time_period": [{"start_date": start.isoformat(),
+                         "end_date": end.isoformat()}],
+        "agencies": [{"type": "awarding", "tier": "toptier", "name": agency_name}],
+    }
+    if naics is not None:
+        filters["naics_codes"] = {"require": [naics], "exclude": []}
     return {
         "subawards": False,
         "spending_level": "awards",
         "limit": limit,
         "page": 1,
-        "filters": {
-            "award_type_codes": list(AWARD_TYPES),
-            "time_period": [{"start_date": start.isoformat(),
-                             "end_date": end.isoformat()}],
-        },
+        "filters": filters,
         "fields": list(FIELDS),
         "sort": "Base Obligation Date",
         "order": "desc",
@@ -125,7 +135,8 @@ def _amount(value: Any) -> str | None:
 def evaluate_award_context(
     request_bytes: bytes, response_bytes: bytes, *,
     observed_at: str, pursuit_as_of: str,
-    target_agency_code: str, target_naics: str | None = None,
+    target_agency_code: str, target_agency_name: str,
+    target_naics: str | None = None,
 ) -> dict:
     """Inspect one bounded original response; never assert complete award history.
 
@@ -140,12 +151,14 @@ def evaluate_award_context(
     except (KeyError, TypeError, IndexError) as exc:
         raise AwardContextHold("Unexpected award search query shape") from exc
     expected = approved_request(start_date=start, end_date=end,
-                                limit=req.get("limit"))
+                                awarding_agency_name=target_agency_name,
+                                naics=target_naics, limit=req.get("limit"))
     if req != expected:
         raise AwardContextHold("Unapproved award search filters or paging")
     observed, as_of = _time(observed_at, "observed_at"), _time(
         pursuit_as_of, "pursuit_as_of")
     agency = _text(target_agency_code, "target_agency_code", max_chars=6).upper()
+    agency_name = _text(target_agency_name, "target_agency_name", max_chars=120)
     if not _AGENCY.fullmatch(agency):
         raise AwardContextHold("Invalid awarding agency code")
     if target_naics is not None and (type(target_naics) is not str
@@ -181,7 +194,8 @@ def evaluate_award_context(
             exclusions["future_base_date"] += 1
             continue
         actual_agency = row.get("Awarding Agency Code")
-        if not isinstance(actual_agency, str) or actual_agency.upper() != agency:
+        if (not isinstance(actual_agency, str) or actual_agency.upper() != agency
+                or row.get("Awarding Agency") != agency_name):
             exclusions["other_agency"] += 1
             continue
         naics = row.get("NAICS")
@@ -228,7 +242,9 @@ def evaluate_award_context(
                            else "CONTEMPORANEOUS_OBSERVATION_UNAUTHENTICATED"),
         "source_verified_by_independent_publisher_receipt": False,
         "request_fields_reviewed": True,
-        "query_scope": "BOUNDED_PUBLIC_SEARCH_NOT_COMPLETE_MARKET_COVERAGE",
+        "query_scope": "AWARDING_AGENCY_AND_OPTIONAL_NAICS_BOUNDED_SEARCH_ONLY",
+        "query_agency_name": agency_name,
+        "query_naics_exact": target_naics,
         "pagination_status": completeness,
         "number_of_rows_on_page": len(rows),
         "excluded_row_counts": exclusions,
