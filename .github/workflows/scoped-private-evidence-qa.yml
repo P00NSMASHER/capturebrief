@@ -44,7 +44,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install pinned release-tested cryptography dependency
-        run: python -m pip install --disable-pip-version-check --only-binary=:all: cryptography==46.0.4
+        run: 'python -m pip install --disable-pip-version-check --only-binary=:all: cryptography==46.0.4'
       - name: Compile only scoped source and secure backup
         run: python -m compileall -q capturebrief_core/scoped_source.py scripts/prepare_scoped_sam.py scripts/scoped_private_backup.py
       - name: Run real code against deliberately synthetic offline tests
