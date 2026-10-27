@@ -39,6 +39,7 @@ try{
   assert.equal(info.company,'CaptureBrief');
   assert.equal(info.operator,'JP Enterprises');
   assert.equal(info.canonical,site.SITE_BASE);
+  assert.equal(info.purchasePolicy,'SCOPE_FIRST_PENDING_SOURCE_READINESS');
   assert.equal(info.sourceBranch,process.env.CF_PAGES_BRANCH||'gh-pages');
   assert.deepEqual(site.listFilesRecursive(out),site.PUBLIC_FILES.concat(site.GENERATED_FILES,'build-info.json').sort());
   assert.equal(info.publicFileCount,site.PUBLIC_FILES.length+3);
@@ -69,6 +70,8 @@ try{
   for(const file of site.PUBLIC_FILES.filter(name=>name.endsWith('.html'))){
     const html=read(file);
     const source=fs.readFileSync(path.join(site.ROOT,file),'utf8');
+    assert(!site.hasDirectCheckout(source),'Scope-first source contains a checkout link: '+file);
+    assert(!site.hasDirectCheckout(html),'Scope-first standalone contains a checkout link: '+file);
     const footer=html.match(/<footer\b[^>]*>[\s\S]*?<\/footer>/i)[0];
     assert.equal(groupAffiliations(footer).length,1,file+' needs exactly one footer group affiliation');
     for(const link of groupAffiliations(html)) assert.equal(link.href,site.GROUP_URL,file+' Group link must use the Group host');
@@ -88,6 +91,8 @@ try{
   site.checkLocalReferences(out);
   assert(read('404.html').includes('href="/assets/enterprise.css?v=2"'),'Nested 404 must load styles from root');
   assert(read('index.html').includes('$149'));
+  assert(read('index.html').includes('data-purchase-policy="scope-first"'));
+  assert.equal((read('index.html').match(/class="[^"]*review-request-link[^"]*" href="#request" data-request-type="SCOPE_FIRST"/g)||[]).length,4);
   assert(read('index.html').includes('JP Enterprises'));
   assert.equal(groupAffiliations(read('index.html')).length,2,'Homepage should retain its Group signal bar and one footer affiliation');
   for(const file of ['data-handling.html','privacy.html','terms.html']){
@@ -120,8 +125,8 @@ try{
       assert(read(file).includes(section[0]),'Unrelated privacy/scope section changed: '+section[1]);
     }
   }
-  assert(read('decision-evidence.html').includes('$149, with scope and timing confirmed before work begins.'));
-  assert(!read('decision-evidence.html').includes('scope and timing confirmed before payment.'));
+  assert(read('decision-evidence.html').includes('$149, with scope and timing confirmed before payment.'));
+  assert(!read('decision-evidence.html').includes('scope and timing confirmed before work begins.'));
   assert(read('sitemap.xml').includes(site.SITE_BASE+'decision-evidence</loc>'));
   assert(!read('sitemap.xml').includes('404'));
   assert(!read('sitemap.xml').includes('.html'));
@@ -146,10 +151,19 @@ try{
     assert.throws(()=>site.build({root}),/UNEXPECTED_PAGES_RUNTIME/,'Must block root runtime '+name);
     fs.unlinkSync(path.join(root,name));
   }
+  // A payment entry point on any allowlisted page must block publication.
+  const termsPath=path.join(root,'terms.html');
+  const termsSource=fs.readFileSync(termsPath,'utf8');
+  fs.writeFileSync(termsPath,termsSource.replace('</body>','<a href="https://buy.stripe.com/test">Pay</a></body>'));
+  assert.throws(()=>site.build({root}),/CHECKOUT_BEFORE_SOURCE_CONFIRMATION:terms.html/);
+  fs.writeFileSync(termsPath,termsSource);
+  site.build({root});
+  fs.appendFileSync(path.join(out,'privacy.html'),'<a href="//CHECKOUT.STRIPE.COM/test">Pay</a>');
+  assert.throws(()=>site.checkLocalReferences(out),/CHECKOUT_BEFORE_SOURCE_CONFIRMATION:privacy.html/);
   fs.unlinkSync(path.join(root,'favicon.svg'));
   assert.throws(()=>site.build({root}),/MISSING_PUBLIC_FILE:favicon.svg/);
   for(const file of originals) assert.equal(site.sha256File(path.join(site.ROOT,file.path)),file.sha256,'Original shared source changed');
-  console.log('CaptureBrief allowlist, runtime exclusion, source integrity, checkout continuity, clean routes and revision identity passed.');
+  console.log('CaptureBrief allowlist, runtime exclusion, source integrity, scope-first payment boundary, clean routes and revision identity passed.');
 }finally{
   for(const [name,value] of Object.entries(env)){
     if(value===undefined) delete process.env[name];

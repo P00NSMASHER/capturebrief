@@ -29,7 +29,26 @@ jobs:
           QA_OUTPUT: qa-output/brand
       - name: Verify standalone company security and checkout boundary
         run: node build-standalone-site.test.js
+      - name: Use bounded official Ubuntu package downloads
+        run: |
+          sudo python3 - <<'PY'
+          from pathlib import Path
+          mirrors = Path('/etc/apt/apt-mirrors.txt')
+          if mirrors.is_file():
+              original = mirrors.read_text()
+              updated = original.replace('http://azure.archive.ubuntu.com/ubuntu',
+                                          'https://archive.ubuntu.com/ubuntu')
+              updated = updated.replace('https://azure.archive.ubuntu.com/ubuntu',
+                                        'https://archive.ubuntu.com/ubuntu')
+              mirrors.write_text(updated)
+          # Keep package signature verification and the full browser dependencies.
+          Path('/etc/apt/apt.conf.d/99capturebrief-browser-downloads').write_text(
+              'Acquire::Retries "2";\n'
+              'Acquire::http::Timeout "30";\n'
+              'Acquire::https::Timeout "30";\n')
+          PY
       - name: Install pinned browser test tools
+        timeout-minutes: 10
         run: |
           python -m pip install playwright==1.57.0
           python -m playwright install --with-deps ${{ matrix.browser }}

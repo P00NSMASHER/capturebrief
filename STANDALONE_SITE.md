@@ -19,9 +19,11 @@ This build publishes only the actual CaptureBrief website at https://capturebrie
 
 `build-standalone-site.js` explicitly allowlists six CaptureBrief HTML pages, their actual styles/scripts/images/fonts, the favicon, and the fictional evidence example files. It generates robots.txt, sitemap.xml, `_headers` and build-info.json. Sibling projects, QA scripts, source code, state and configuration are excluded. A missing allowlisted source, symlinked source, missing local asset/link, or root Pages runtime/config file blocks the build. No Pages Functions or Worker are published.
 
-Only the generated artifact gets root-based navigation, clean-route canonical/social URLs, the visible “Part of RETALLY Group” link to https://group.retallyrecovery.com/, and email-obfuscation opt-out comments. JP Enterprises remains the stated operator. Prices, checkout destinations, recipient addresses, intake behavior and product logic are unchanged. Evidence example bytes remain identical to their published hashes.
+Only the generated artifact gets root-based navigation, clean-route canonical/social URLs, the visible “Part of RETALLY Group” link to https://group.retallyrecovery.com/, and email-obfuscation opt-out comments. JP Enterprises remains the stated operator. The $149 price, recipient addresses, and already-paid intake remain unchanged. Evidence example bytes remain identical to their published hashes.
 
-The generated decision-evidence sample CTA says that scope and timing are confirmed “before work begins,” consistent with the existing homepage, terms and direct checkout. This one-sentence correction is applied only to the generated page; the shared source file remains unchanged.
+The current purchase policy is `SCOPE_FIRST_PENDING_SOURCE_READINESS`. The actual main-only SAM observation failed because its runtime had no `SAM_API_KEY`; current catalog approval and protected full-source coverage are also incomplete. All four homepage purchase placements now lead to the local scope request, including the mobile and no-JavaScript path. The source and standalone builder reject direct Stripe checkout links on every allowlisted HTML page. The evidence sample retains its original promise that scope and timing are confirmed before payment. `build-info.json` records this purchase policy.
+
+This is a website intake correction, not deactivation of the existing Stripe payment link or a Stripe-account change. Existing paid requests, unverified checkout-return handling, and all refund rights remain supported. Restoring direct checkout requires a separately reviewed change backed by actual production source readiness; changing a flag or passing site tests does not supply that evidence.
 
 The exact public file list, count, byte sizes, and SHA-256 values are generated in `build-info.json`. The fingerprint includes `_headers`. The current policy uses same-origin scripts, styles, fonts and connections; blocks frames, objects, workers and form submissions; and adds HSTS, a strict-origin referrer policy, no-sniff and restricted browser permissions. Inspect `STANDALONE_HEADERS` for the complete policy.
 
@@ -33,7 +35,7 @@ The current request composer includes company/contact identity, explicit unverif
 
 ## Acceptance and rollback
 
-Run the build command. Verify the custom hostname, the five indexable pages, example downloads, fonts/images, a nested missing URL, the Group link and `/build-info.json`. Check checkout and email destinations without purchasing or sending intake. The source revision in build-info must match the Cloudflare deployment commit. Confirm unrelated projects and runtime paths return 404 on this hostname while remaining available at their legacy host.
+Run the build command. Verify the custom hostname, the five indexable pages, example downloads, fonts/images, a nested missing URL, the Group link and `/build-info.json`. Check that every new-review CTA reaches scope-first intake and that no allowlisted page emits a direct payment link, without sending intake. The source revision and purchase policy in build-info must match the Cloudflare deployment commit. Confirm unrelated projects and runtime paths return 404 on this hostname while remaining available at their legacy host.
 
 Rollback only the `retally-capturebrief` Pages deployment if needed. The existing shared GitHub Pages site and the product-engine branch remain independent.
 

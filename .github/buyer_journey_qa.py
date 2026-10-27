@@ -73,8 +73,9 @@ try:
                 navigate(page, "index.html")
 
                 check(page.locator('a[href="decision-evidence.html"]').count() >= 3, "Home has prominent example links")
-                check(page.locator('a[href="https://buy.stripe.com/cNi4gB55KgFPd7ceRtb7y00"]').count() == 4, "Direct checkout is available without a scope gate")
-                check(page.locator('.checkout-link').count() == 4, "Direct checkout placements use the explicit checkout label")
+                check(page.locator('a[href*="buy.stripe.com"], a[href*="checkout.stripe.com"]').count() == 0, "Blocked source readiness exposes no direct checkout")
+                check(page.locator('.review-request-link[href="#request"][data-request-type="SCOPE_FIRST"]').count() == 4, "All four paid-review requests confirm scope before payment")
+                check(page.locator('body').get_attribute('data-purchase-policy') == 'scope-first', "Current purchase readiness state is explicit")
                 check("full refund" in page.locator("main").inner_text().lower(), "Pre-work out-of-scope refund promise is visible")
                 check(page.locator('a[href="privacy.html"]').count() >= 1, "Home links privacy")
                 check(page.locator('a[href="terms.html"]').count() >= 1, "Home links terms")
@@ -89,6 +90,8 @@ try:
                     form = page.locator("#request-builder")
                     check(form.is_visible(), "Local request builder visible with JavaScript")
                     check(form.get_attribute("action") is None, "Builder has no network action")
+                    page.locator('.nav-button').click()
+                    check(page.locator('#purchase-status').input_value() == 'SCOPE_FIRST', "Review CTA selects the scope-first request type")
                     requests_before = []
                     page.on("request", lambda req: requests_before.append(req.url))
                     page.evaluate("Object.defineProperty(navigator,'clipboard',{value:{writeText:async t=>{window.__qaCopied=t}},configurable:true})")

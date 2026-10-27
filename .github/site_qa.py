@@ -217,6 +217,11 @@ with sync_playwright() as pw:
                     page.keyboard.press("Escape")
                     check(not menu.evaluate("e=>e.open"), f"{name}@{width}: Escape closes menu")
                     check(menu.locator("summary").evaluate("e=>e===document.activeElement"), f"{name}@{width}: focus returns")
+                if name == "index.html":
+                    page.locator("#purchase-status").select_option("FREE_CHECK")
+                    page.locator(".nav-button" if width > 800 else ".mobile-cta").click()
+                    check(page.locator("#purchase-status").input_value() == "SCOPE_FIRST", f"CaptureBrief@{width}: review CTA selects scope before payment")
+                    check(urlsplit(page.url).fragment == "request", f"CaptureBrief@{width}: review CTA stays on local intake")
                 if width in [1440, 390]:
                     page.evaluate("window.scrollTo(0,0)")
                     slug = name.split("/")[0].replace(".html", "")
@@ -260,8 +265,9 @@ with sync_playwright() as pw:
             check(not errors, f"{name}: JavaScript errors {errors}")
             if name == "index.html":
                 check("$149" in text and "14-day" in text, "CaptureBrief offer preserved")
-                check(page.locator('a[href="https://buy.stripe.com/cNi4gB55KgFPd7ceRtb7y00"]').count() == 4, "Direct checkout is visible in four intentional placements")
-                check(page.locator('.checkout-link').count() == 4, "Every direct checkout placement is labeled")
+                check(page.locator('a[href*="buy.stripe.com"], a[href*="checkout.stripe.com"]').count() == 0, "Source-blocked website has no direct payment entry point")
+                check(page.locator('.review-request-link[href="#request"][data-request-type="SCOPE_FIRST"]').count() == 4, "All four review placements request scope first")
+                check(page.locator('body').get_attribute('data-purchase-policy') == 'scope-first', "Current purchase readiness state is explicit")
             elif name.startswith("permitplate"):
                 check("$79" in text and "per month" in text, "PermitPlate offer preserved")
             else:
@@ -283,6 +289,9 @@ with sync_playwright() as pw:
             if name == "index.html":
                 check(not page.locator("#request-builder").is_visible(), "CaptureBrief: dead builder hidden without JS")
                 check(page.locator(".noscript-note").is_visible(), "CaptureBrief: no-JS email fallback")
+                check(page.locator('a[href*="buy.stripe.com"], a[href*="checkout.stripe.com"]').count() == 0, "CaptureBrief: no-JS path has no direct checkout")
+                page.locator('.mobile-cta').click()
+                check(urlsplit(page.url).fragment == 'request', "CaptureBrief: no-JS mobile request reaches the manual intake")
             context.close()
     except Exception as exc:
         RESULT["errors"].append(f"{type(exc).__name__}: {exc}")
