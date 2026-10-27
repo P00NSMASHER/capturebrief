@@ -62,7 +62,7 @@ def inspect(
     stage: str = "completion", history_index: str | None = None,
     verify_source_bytes: bool = False,
     source_snapshot_root: str | None = None,
-    offer: str = "paid",
+    offer: str = "paid", launch_mode: str = "full_catalog",
 ) -> dict[str, Any]:
     """Assess observed evidence, separating admission from post-delivery work.
 
@@ -74,6 +74,10 @@ def inspect(
         raise ValueError("stage must be admission or completion")
     if offer not in {"paid", "free"}:
         raise ValueError("offer must be paid or free")
+    if launch_mode not in {"full_catalog", "founder_curated"}:
+        raise ValueError("launch_mode must be full_catalog or founder_curated")
+    if launch_mode == "founder_curated" and (offer != "free" or stage != "admission"):
+        raise ValueError("founder_curated is limited to free inquiry admission; no paid or delivery shortcut")
     if offer == "free" and stage != "admission":
         raise ValueError("Free completion uses inspect_free_check and the separate free-report receipt")
     if not isinstance(now, datetime) or now.utcoffset() is None:
@@ -240,6 +244,21 @@ def inspect(
     result("production", "PROTECTED_RELEASE_REVIEW_REQUIRED",
            "Any code or website changes require passing exact-head QA and approved publication")
 
+    # An additive founder-curated INQUIRY route. It never treats a known stale
+    # full-catalog snapshot as current, and it never releases a customer case.
+    # Case-specific SAM_HISTORY remains subject to existing receipt, current
+    # action, manifest, reference, Decision Evidence and actual free-report gates.
+    if launch_mode == "founder_curated":
+        result("history_route", "CASE_SPECIFIC_FIRST_PARTY_REVIEW_REQUIRED",
+               "Independently retain and review the COMPLETE official action/attachment history "
+               "for this exact pursuit; SAM_HISTORY is human-supervised, not a fabricated full catalog")
+        result("current_action", "CUSTOMER_SPECIFIC_API_OBSERVATION_REQUIRED",
+               "Fetch and bind an approved fresh SAM Opportunities API observation for "
+               "this customer's notice; a generic API health probe proves access only")
+        result("private_recovery", "ENCRYPTED_PRIVATE_RETENTION_REVIEW_REQUIRED",
+               "Protect original bytes, reviews, receipts, one-business registry and "
+               "independently restored off-device backup; R2 is optional, not mandatory")
+
     technical = ("catalog", "source_index", "real_case", "release", "delivery", "watch")
     passes = {"CATALOG_YEAR_COVERED", "INDEX_LOCAL_HASHES_MATCH", "PUBLIC_NOTICE_BOUND_TO_HISTORY",
               "CORE_EVIDENCE_ELIGIBLE", "BUNDLE_BYTES_VERIFIED",
@@ -247,7 +266,12 @@ def inspect(
     # No mere presence of a future/fictional case, copied email or unverified
     # processor claim can turn an admission check into a signed launch approval.
     tech_ok = stage == "completion" and all(gates[key]["status"] in passes for key in technical)
-    if stage == "admission":
+    if launch_mode == "founder_curated":
+        # This says inquiries can be PREPARED for supervised scope review, not
+        # that a customer was admitted, a useful check can be delivered, or a
+        # current-source/history/backup requirement has been waived.
+        status = "FOUNDER_CURATED_INQUIRY_REVIEW_REQUIRED"
+    elif stage == "admission":
         status = ("PILOT_ADMISSION_REVIEW_REQUIRED"
                   if (gates["catalog"]["status"] == "CATALOG_YEAR_COVERED"
                       and gates["source_index"]["status"] == "INDEX_LOCAL_HASHES_MATCH")
@@ -258,16 +282,27 @@ def inspect(
         "schema": "capturebrief-pilot-preflight-v1",
         "stage": stage,
         "offer": offer,
+        "launch_mode": launch_mode,
         "checked_at": now.isoformat().replace("+00:00", "Z"),
         "fiscal_year": fiscal_year,
         "technical_preflight_passed": tech_ok,
         "approved_to_accept_payment_or_send_customer_material": False,
         "status": status,
-        "pre_pilot_gates": (["catalog", "source_index", "intake", "trial_identity", "operator", "production"]
-                            if offer == "free" else
-                            ["catalog", "source_index", "intake", "payment", "operator", "production"]),
-        "post_pilot_gates": (["real_case", "release", "delivery"] if offer == "free" else
-                             ["real_case", "release", "delivery", "watch"]),
+        "inquiry_preparation_only": launch_mode == "founder_curated",
+        "full_catalog_diagnostic_gates": (["catalog", "source_index"] if launch_mode == "founder_curated" else []),
+        "pre_pilot_gates": (
+            ["intake", "trial_identity", "operator", "production"]
+            if launch_mode == "founder_curated" else
+            ["catalog", "source_index", "intake", "trial_identity", "operator", "production"]
+            if offer == "free" else
+            ["catalog", "source_index", "intake", "payment", "operator", "production"]
+        ),
+        "post_pilot_gates": (
+            ["history_route", "current_action", "private_recovery", "real_case", "release", "delivery"]
+            if launch_mode == "founder_curated" else
+            ["real_case", "release", "delivery"] if offer == "free" else
+            ["real_case", "release", "delivery", "watch"]
+        ),
         "gates": gates,
     }
 
@@ -289,6 +324,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="admission before the first customer; completion after the real delivered watch")
     parser.add_argument("--offer", choices=("paid", "free"), default="paid",
                         help="free is admission-only; free completion uses its reservation/report pipeline")
+    parser.add_argument("--launch-mode", choices=("full_catalog", "founder_curated"), default="full_catalog",
+                        help="founder_curated prepares free scope inquiries only; never accepts payment or releases work")
     args = parser.parse_args(argv)
     try:
         now = (datetime.fromisoformat(args.as_of.replace("Z", "+00:00"))
@@ -299,7 +336,8 @@ def main(argv: list[str] | None = None) -> int:
                       observed_case=_read_object(args.observed_case), stage=args.stage,
                       history_index=args.history_index,
                       verify_source_bytes=args.verify_source_bytes,
-                      source_snapshot_root=args.source_snapshot_root, offer=args.offer)
+                      source_snapshot_root=args.source_snapshot_root, offer=args.offer,
+                      launch_mode=args.launch_mode)
     except (ValueError, OSError, TypeError, json.JSONDecodeError) as exc:
         print(json.dumps({"status": "PILOT_BLOCKED", "error": type(exc).__name__}))
         return 2
