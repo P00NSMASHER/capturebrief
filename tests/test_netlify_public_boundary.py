@@ -16,6 +16,7 @@ PUBLIC_ROOT={
     "data-handling.html",
     "decision-evidence-sample.html",
     "favicon.svg",
+    "free-check.html",
     "index.html",
     "openapi.json",
     "privacy.html",
