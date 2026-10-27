@@ -3,6 +3,13 @@
 No payment, external contact, customer email, bid submission or account mutation
 is authorized by this document. Actual customer and provider evidence is required.
 
+As of October 27, new website requests use scope-first intake while production
+source readiness is blocked. Confirm actual catalog, source coverage, current
+API access, scope and delivery timing before inviting payment. The existing
+Stripe link is not deactivated by this website change. Steps below retain the
+handling and refund rights for any actual payment, including an earlier direct
+reservation; they do not authorize accepting a source-blocked assignment.
+
 1. A real Stripe charge reserves a review, not acceptance. Record actual
    non-sensitive intake completeness and keep customer/charge data private.
 2. Respond to complete intake within two business days with a written

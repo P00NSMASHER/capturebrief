@@ -11,6 +11,9 @@ const OUT=path.join(ROOT,'dist');
 const SITE_BASE='https://capturebrief.retallyrecovery.com/';
 const LEGACY_SITE_BASE='https://p00nsmasher.github.io/capturebrief/';
 const GROUP_URL='https://group.retallyrecovery.com/';
+// Current production source admission is blocked. Website tests do not clear it.
+// Restore direct checkout only through a reviewed, evidence-backed readiness change.
+const PURCHASE_POLICY='SCOPE_FIRST_PENDING_SOURCE_READINESS';
 
 const PUBLIC_FILES=Object.freeze([
   "assets/brand/capturebrief-emblem.webp",
@@ -82,6 +85,14 @@ function listFilesRecursive(directory,prefix=''){
   }
   return files.sort();
 }
+function hasDirectCheckout(html){
+  return Array.from(html.matchAll(/\b(?:href|action)\s*=\s*(["'])([^"']*)\1/gi)).some(match=>{
+    try{
+      const host=new URL(match[2],SITE_BASE).hostname.toLowerCase();
+      return host==='buy.stripe.com'||host==='checkout.stripe.com';
+    }catch{return false;}
+  });
+}
 function validateSources(root=ROOT){
   const failures=[];
   for(const name of RUNTIME_FILES){
@@ -94,6 +105,8 @@ function validateSources(root=ROOT){
       failures.push('MISSING_PUBLIC_FILE:'+name);
     }else if(fs.realpathSync(source)!==source){
       failures.push('SYMLINK_IN_PUBLIC_ALLOWLIST:'+name);
+    }else if(name.endsWith('.html')&&hasDirectCheckout(fs.readFileSync(source,'utf8'))){
+      failures.push('CHECKOUT_BEFORE_SOURCE_CONFIRMATION:'+name);
     }
   }
   return failures;
@@ -144,10 +157,6 @@ function hasGroupFooterAffiliation(footer){
 }
 function transformHtml(html,file=''){
   let text=html.split(LEGACY_SITE_BASE).join(SITE_BASE);
-  if(file==='decision-evidence.html'){
-    text=text.replace('$149, with scope and timing confirmed before payment.',
-      '$149, with scope and timing confirmed before work begins.');
-  }
   if(file==='privacy.html'){
     text=text.replace('GitHub Pages and its infrastructure may process',
       'Cloudflare Pages and its infrastructure may process')
@@ -192,6 +201,7 @@ function checkLocalReferences(out=OUT){
   for(const name of PUBLIC_FILES){
     if(name.endsWith('.html')){
       const html=fs.readFileSync(path.join(out,name),'utf8');
+      if(hasDirectCheckout(html)) failures.push('CHECKOUT_BEFORE_SOURCE_CONFIRMATION:'+name);
       for(const match of html.matchAll(/\b(?:href|src|action)=(["'])([^"']*)\1/g)) check(match[2],name);
       for(const match of html.matchAll(/\bsrcset=(["'])([^"']*)\1/g)){
         for(const candidate of match[2].split(',')) check(candidate.trim().split(/\s+/)[0],name);
@@ -248,6 +258,7 @@ function build(options={}){
     operator:'JP Enterprises',
     canonical:SITE_BASE,
     group:GROUP_URL,
+    purchasePolicy:PURCHASE_POLICY,
     sourceRepository:'P00NSMASHER/capturebrief',
     sourceBranch:process.env.CF_PAGES_BRANCH||'gh-pages',
     sourceCommit:process.env.CF_PAGES_COMMIT_SHA||process.env.GITHUB_SHA||process.env.COMMIT_REF||'local',
@@ -272,7 +283,7 @@ if(require.main===module){
     publicFileCount:info.publicFileCount,output:'dist'
   },null,2));
 }
-module.exports={ROOT,OUT,SITE_BASE,LEGACY_SITE_BASE,GROUP_URL,PUBLIC_FILES,GENERATED_FILES,
+module.exports={ROOT,OUT,SITE_BASE,LEGACY_SITE_BASE,GROUP_URL,PURCHASE_POLICY,PUBLIC_FILES,GENERATED_FILES,
   RUNTIME_FILES,sha256File,fingerprint,listFilesRecursive,validateSources,
-  cleanHtmlUrl,rootReference,transformHtml,checkLocalReferences,build};
+  hasDirectCheckout,cleanHtmlUrl,rootReference,transformHtml,checkLocalReferences,build};
 
