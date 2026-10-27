@@ -1,0 +1,361 @@
+{
+  "FY2027_full_catalog_certified": false,
+  "active_extract_budget_included": false,
+  "complete_metadata_coverage": true,
+  "confirmed_metadata_years_sum_bytes": 20346928128,
+  "confirmed_one_byte_metadata_count": 34,
+  "customer_release_authorized": false,
+  "disk_space_checked": false,
+  "external_send_authorized": false,
+  "frozen_candidate_year_count": 34,
+  "independent_human_catalog_reviewed": false,
+  "observed_at": "2026-10-27T14:14:50.773420+00:00",
+  "original_bytes_retained": false,
+  "publisher_originals_verified": false,
+  "requested_year_count": 34,
+  "schema": "capturebrief-fy2027-unapproved-capacity-observation-v1",
+  "single_byte_observations": [
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 1969,
+      "http_status": 206,
+      "origin_object_bytes": 685,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 1970,
+      "http_status": 206,
+      "origin_object_bytes": 2712,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 1980,
+      "http_status": 206,
+      "origin_object_bytes": 1157,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 1981,
+      "http_status": 206,
+      "origin_object_bytes": 685,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 1998,
+      "http_status": 206,
+      "origin_object_bytes": 96549,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 1999,
+      "http_status": 206,
+      "origin_object_bytes": 2157841,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2000,
+      "http_status": 206,
+      "origin_object_bytes": 1770559,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2001,
+      "http_status": 206,
+      "origin_object_bytes": 2406436,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2002,
+      "http_status": 206,
+      "origin_object_bytes": 214678981,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2003,
+      "http_status": 206,
+      "origin_object_bytes": 324283914,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2004,
+      "http_status": 206,
+      "origin_object_bytes": 331836534,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2005,
+      "http_status": 206,
+      "origin_object_bytes": 349435068,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2006,
+      "http_status": 206,
+      "origin_object_bytes": 394730858,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2007,
+      "http_status": 206,
+      "origin_object_bytes": 454622833,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2008,
+      "http_status": 206,
+      "origin_object_bytes": 550881628,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2009,
+      "http_status": 206,
+      "origin_object_bytes": 677444793,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2010,
+      "http_status": 206,
+      "origin_object_bytes": 765675609,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2011,
+      "http_status": 206,
+      "origin_object_bytes": 772945163,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2012,
+      "http_status": 206,
+      "origin_object_bytes": 836409886,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2013,
+      "http_status": 206,
+      "origin_object_bytes": 860353244,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2014,
+      "http_status": 206,
+      "origin_object_bytes": 907454578,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2015,
+      "http_status": 206,
+      "origin_object_bytes": 908697183,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2016,
+      "http_status": 206,
+      "origin_object_bytes": 905525661,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2017,
+      "http_status": 206,
+      "origin_object_bytes": 988776931,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2018,
+      "http_status": 206,
+      "origin_object_bytes": 1041498975,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2019,
+      "http_status": 206,
+      "origin_object_bytes": 963400673,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2020,
+      "http_status": 206,
+      "origin_object_bytes": 1144349825,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2021,
+      "http_status": 206,
+      "origin_object_bytes": 1139822594,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2022,
+      "http_status": 206,
+      "origin_object_bytes": 1175213280,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2023,
+      "http_status": 206,
+      "origin_object_bytes": 1277367344,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2024,
+      "http_status": 206,
+      "origin_object_bytes": 1151410121,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2025,
+      "http_status": 206,
+      "origin_object_bytes": 1163975023,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2026,
+      "http_status": 206,
+      "origin_object_bytes": 1035182012,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    },
+    {
+      "bytes_downloaded": 1,
+      "catalog_approved": false,
+      "fiscal_year": 2027,
+      "http_status": 206,
+      "origin_object_bytes": 4518793,
+      "publisher_original_verified": false,
+      "status": "ONE_BYTE_RANGE_AND_SIZE_DECLARED_UNREVIEWED",
+      "transport_host": "falextracts.s3.amazonaws.com"
+    }
+  ],
+  "source_index_updated": false,
+  "total_archive_bytes_only_if_all_metadata_confirmed": 20346928128
+}

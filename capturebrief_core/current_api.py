@@ -199,9 +199,12 @@ def fetch_latest_active(
                 response, max_bytes=max_response_bytes, label="SAM Opportunities API response"
             )
     except HTTPError as exc:
-        raise CurrentApiError(f"SAM Opportunities API HTTP {exc.code}") from exc
-    except URLError as exc:
-        raise CurrentApiError(f"SAM Opportunities API transport failure: {exc.reason}") from exc
+        # HTTPError retains the request URL, including the API credential.
+        # Suppress its chained traceback even for callers that print exceptions.
+        raise CurrentApiError(f"SAM Opportunities API HTTP {exc.code}") from None
+    except URLError:
+        # A provider's reason can also contain the complete keyed URL.
+        raise CurrentApiError("SAM Opportunities API transport failure") from None
 
     try:
         payload = json.loads(body.decode("utf-8"))
@@ -332,9 +335,9 @@ def download_resource_from_api_observation(
             content = _response_bytes(response, max_bytes=max_bytes, label="SAM resource")
             final_url = response.geturl() if hasattr(response, "geturl") else resource_url
     except HTTPError as exc:
-        raise CurrentApiError(f"SAM resource HTTP {exc.code}") from exc
-    except URLError as exc:
-        raise CurrentApiError(f"SAM resource transport failure: {exc.reason}") from exc
+        raise CurrentApiError(f"SAM resource HTTP {exc.code}") from None
+    except URLError:
+        raise CurrentApiError("SAM resource transport failure") from None
 
     final_host, final_url_hash = _safe_https_delivery_url(final_url)
     redirect_used = final_url != resource_url

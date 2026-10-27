@@ -1,0 +1,122 @@
+{
+  "catalog_approved": false,
+  "checked_at": "2026-10-27T14:25:19.357550+00:00",
+  "customer_delivery_verified": false,
+  "customer_release_authorized": false,
+  "customer_reviews_are_simulated": true,
+  "external_messages_sent": 0,
+  "live_registry_updated": false,
+  "not_customer_satisfaction_or_conversion_evidence": true,
+  "passed": true,
+  "payments_created": 0,
+  "real_public_transport_used": true,
+  "results": [
+    {
+      "customer_release_authorized": false,
+      "illustrative_trace_complete": true,
+      "preview_sha256": "688b34f89c808e216addcbefaa0c41af861d1814bd7b850672fbe05e193da3b1",
+      "production_blocker_codes": [
+        "DELIVERY_CASE_AUDIT_FAILED",
+        "DELIVERY_SYNTHETIC_EVIDENCE",
+        "DELIVERY_TRACE_INCOMPLETE",
+        "FAMILY_AUTHORITY_UNKNOWN",
+        "HISTORY_RECEIPT_NOT_COMPLETE",
+        "HISTORY_UNRESOLVED",
+        "MANIFEST_ACTION_UNOBSERVED",
+        "MANIFEST_UNRESOLVED",
+        "REFERENCE_CLOSURE_UNRESOLVED",
+        "REFERENCE_SCAN_UNRESOLVED",
+        "SYNTHETIC_TRACE_NOT_FOR_RELEASE"
+      ],
+      "production_builder_rejected": true,
+      "quote_mutation_rejected": true,
+      "reservation_scope_matches": true,
+      "scenario": "SIM-01",
+      "selected_row_sha256": "89da74395e2fe859ace7b285a8ce60fd02db0aca8b420bb6f6a1e5ec127bc6c8",
+      "simulated_customer_acceptance": "SIMULATED_REVIEW_REQUIRES_SOURCE_COMPLETION",
+      "source_original_sha256": "9cc53cb26df3bf0c60d4621c872ff861254c80b223fd89e0d9f6c5c9b90d4d80",
+      "source_rows_independently_checked": 70878,
+      "source_slot": "ACTIVE",
+      "synthetic_case": true,
+      "trial_retry_idempotent": true
+    },
+    {
+      "customer_release_authorized": false,
+      "illustrative_trace_complete": true,
+      "preview_sha256": "6e5817250ff2c44002b15397caebe27fe29ee9d21bc087bbd144fb3582612bdf",
+      "production_blocker_codes": [
+        "DELIVERY_CASE_AUDIT_FAILED",
+        "DELIVERY_SYNTHETIC_EVIDENCE",
+        "DELIVERY_TRACE_INCOMPLETE",
+        "FAMILY_AUTHORITY_UNKNOWN",
+        "HISTORY_RECEIPT_NOT_COMPLETE",
+        "HISTORY_UNRESOLVED",
+        "MANIFEST_ACTION_UNOBSERVED",
+        "MANIFEST_UNRESOLVED",
+        "REFERENCE_CLOSURE_UNRESOLVED",
+        "REFERENCE_SCAN_UNRESOLVED",
+        "SYNTHETIC_TRACE_NOT_FOR_RELEASE"
+      ],
+      "production_builder_rejected": true,
+      "quote_mutation_rejected": true,
+      "reservation_scope_matches": true,
+      "scenario": "SIM-02",
+      "selected_row_sha256": "cb241e1e9c2c767f31d0da908f915d2df39b18b3481497c89e30827b1a25b12d",
+      "simulated_customer_acceptance": "SIMULATED_REVIEW_REQUIRES_SOURCE_COMPLETION",
+      "source_original_sha256": "9cc53cb26df3bf0c60d4621c872ff861254c80b223fd89e0d9f6c5c9b90d4d80",
+      "source_rows_independently_checked": 70878,
+      "source_slot": "ACTIVE",
+      "synthetic_case": true,
+      "trial_retry_idempotent": true
+    },
+    {
+      "customer_release_authorized": false,
+      "illustrative_trace_complete": true,
+      "preview_sha256": "24f7687ea1f6046c67fcbff8b4bc251d3af47f88c4967c3240f74af7163c7a51",
+      "production_blocker_codes": [
+        "DELIVERY_CASE_AUDIT_FAILED",
+        "DELIVERY_SYNTHETIC_EVIDENCE",
+        "DELIVERY_TRACE_INCOMPLETE",
+        "FAMILY_AUTHORITY_UNKNOWN",
+        "HISTORY_RECEIPT_NOT_COMPLETE",
+        "HISTORY_UNRESOLVED",
+        "MANIFEST_ACTION_UNOBSERVED",
+        "MANIFEST_UNRESOLVED",
+        "REFERENCE_CLOSURE_UNRESOLVED",
+        "REFERENCE_SCAN_UNRESOLVED",
+        "SYNTHETIC_TRACE_NOT_FOR_RELEASE"
+      ],
+      "production_builder_rejected": true,
+      "quote_mutation_rejected": true,
+      "reservation_scope_matches": true,
+      "scenario": "SIM-03",
+      "selected_row_sha256": "a06ce620744ffcf6f24a3549713f7fc338bbe54a1900277811cbe09e36072787",
+      "simulated_customer_acceptance": "SIMULATED_REVIEW_REQUIRES_SOURCE_COMPLETION",
+      "source_original_sha256": "ea1d2c726566fc9546e80f0ce559f77b104809ad5c86e2095b9935bc03648ea0",
+      "source_rows_independently_checked": 3082,
+      "source_slot": "ARCHIVE:2027",
+      "synthetic_case": true,
+      "trial_retry_idempotent": true
+    }
+  ],
+  "scenario_count": 3,
+  "schema": "capturebrief-customer-source-simulation-v1",
+  "simulated": true,
+  "source_observations": [
+    {
+      "original_bytes": 212898407,
+      "original_sha256": "9cc53cb26df3bf0c60d4621c872ff861254c80b223fd89e0d9f6c5c9b90d4d80",
+      "rows_checked": 70878,
+      "slot": "ACTIVE",
+      "synthetic_transport": false
+    },
+    {
+      "original_bytes": 4518793,
+      "original_sha256": "ea1d2c726566fc9546e80f0ce559f77b104809ad5c86e2095b9935bc03648ea0",
+      "rows_checked": 3082,
+      "slot": "ARCHIVE:2027",
+      "synthetic_transport": false
+    }
+  ],
+  "sources_independently_human_approved": false
+}
