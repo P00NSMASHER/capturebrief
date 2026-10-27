@@ -33,7 +33,9 @@ def award(identifier="1001", **changes):
 
 def scenario(*, rows=None, next_page=False, messages=None, limit=25):
     request = approved_request(
-        start_date="2025-01-01", end_date="2026-09-30", limit=limit)
+        start_date="2025-01-01", end_date="2026-09-30",
+        awarding_agency_name="General Services Administration",
+        naics="541512", limit=limit
     response = {
         "spending_level": "awards",
         "limit": limit,
@@ -49,6 +51,7 @@ def analyze(request, response, **kwargs):
         "observed_at": "2026-10-27T18:00:00Z",
         "pursuit_as_of": "2026-10-27T18:01:00Z",
         "target_agency_code": "047",
+        "target_agency_name": "General Services Administration",
         "target_naics": "541512",
     }
     options.update(kwargs)
@@ -58,7 +61,9 @@ def analyze(request, response, **kwargs):
 
 class AwardContextTest(unittest.TestCase):
     def test_official_query_constrained_no_global_all_award_aggregation(self):
-        request = approved_request(start_date="2025-01-01", end_date="2026-09-30")
+        request = approved_request(start_date="2025-01-01", end_date="2026-09-30",
+                                   awarding_agency_name="General Services Administration",
+                                   naics="541512")
         self.assertEqual(request["page"], 1)
         self.assertEqual(request["limit"], MAX_RECORDS)
         self.assertEqual(request["sort"], "Base Obligation Date")
@@ -66,6 +71,11 @@ class AwardContextTest(unittest.TestCase):
         self.assertEqual(request["filters"]["time_period"],
                          [{"start_date": "2025-01-01", "end_date": "2026-09-30"}])
         self.assertEqual(request["filters"]["award_type_codes"], ["A", "B", "C", "D"])
+        self.assertEqual(request["filters"]["agencies"], [
+            {"type": "awarding", "tier": "toptier",
+             "name": "General Services Administration"}])
+        self.assertEqual(request["filters"]["naics_codes"],
+                         {"require": ["541512"], "exclude": []})
         for change in (
             {"limit": 26}, {"limit": 0}, {"limit": True},
             {"start_date": "2026-10-01", "end_date": "2026-09-30"},
@@ -75,8 +85,37 @@ class AwardContextTest(unittest.TestCase):
                 approved_request(
                     start_date=change.get("start_date", "2025-01-01"),
                     end_date=change.get("end_date", "2026-09-30"),
+                    awarding_agency_name="General Services Administration",
+                    naics="541512",
                     limit=change.get("limit", 25),
                 )
+
+
+    def test_agency_name_cannot_be_omitted_or_changed_by_observer(self):
+        req, res = scenario()
+        for field in ("", " ", "Fake\tDepartment"):
+            with self.subTest(field=field), self.assertRaises(AwardContextHold):
+                approved_request(start_date="2025-01-01",
+                                 end_date="2026-09-30",
+                                 awarding_agency_name=field)
+        with self.assertRaises(AwardContextHold):
+            analyze(req, res, target_agency_name="Department of Defense")
+        other = deepcopy(res)
+        other["results"][0]["Awarding Agency"] = "Department of Defense"
+        self.assertEqual(analyze(req, other)["excluded_row_counts"]["other_agency"], 1)
+
+    def test_unscoped_agency_and_naics_dropped_by_attacker(self):
+        req, res = scenario()
+        for name, mutate in (
+            ("no_agency", lambda d: d["filters"].pop("agencies")),
+            ("no_naics", lambda d: d["filters"].pop("naics_codes")),
+            ("extra_agency", lambda d: d["filters"]["agencies"].append(
+                {"type": "funding", "tier": "toptier", "name": "All"})),
+        ):
+            altered = deepcopy(req)
+            mutate(altered)
+            with self.subTest(name=name), self.assertRaises(AwardContextHold):
+                analyze(altered, res)
 
     def test_valid_prior_award_is_context_only_not_incumbent(self):
         req, res = scenario()
@@ -98,8 +137,10 @@ class AwardContextTest(unittest.TestCase):
         self.assertFalse(actual["source_verified_by_independent_publisher_receipt"])
         self.assertFalse(actual["no_matching_awards_claimed"])
         self.assertEqual(actual["query_scope"],
-                         "BOUNDED_PUBLIC_SEARCH_NOT_COMPLETE_MARKET_COVERAGE")
+                         "AWARDING_AGENCY_AND_OPTIONAL_NAICS_BOUNDED_SEARCH_ONLY")
         self.assertEqual(actual["pagination_status"], "BOUNDED_SEARCH_ONLY")
+        self.assertEqual(actual["query_agency_name"], "General Services Administration")
+        self.assertEqual(actual["query_naics_exact"], "541512")
         self.assertEqual(actual["request_sha256"],
                          hashlib.sha256(jsonbytes(req)).hexdigest())
         self.assertEqual(actual["response_sha256_LOCAL_INTEGRITY_NOT_PUBLISHER_PROOF"],
@@ -164,6 +205,9 @@ class AwardContextTest(unittest.TestCase):
             ("subawards", lambda x: x.update(subawards=True)),
             ("types", lambda x: x["filters"].update(award_type_codes=["S"])),
             ("inject", lambda x: x.update(authorize_cash_payment=True)),
+            ("agency", lambda x: x["filters"]["agencies"][0].update(name="Other Department")),
+            ("agency_type", lambda x: x["filters"]["agencies"][0].update(type="funding")),
+            ("naics", lambda x: x["filters"]["naics_codes"].update(require=["541330"])),
         )
         for label, mutate in mutations:
             q = deepcopy(req)
@@ -215,7 +259,9 @@ class AwardContextTest(unittest.TestCase):
         req, res = scenario()
         base = dict(observed_at="2026-10-27T18:00:00Z",
                     pursuit_as_of="2026-10-27T18:01:00Z",
-                    target_agency_code="047", target_naics="541512")
+                    target_agency_code="047",
+                    target_agency_name="General Services Administration",
+                    target_naics="541512")
         for bad in (
             (b"", jsonbytes(res), base),
             (b"{}\n", jsonbytes(res), base),
