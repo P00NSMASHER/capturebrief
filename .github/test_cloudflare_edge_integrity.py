@@ -26,6 +26,21 @@ class EdgeBytesTests(unittest.TestCase):
         html = CLEAN.replace(b"</body>", b"\n" + BEACON + b"</body>")
         self.assertEqual(verify_public_html_bytes(EXPECTED, html), "PINNED_CLOUDFLARE_EDGE_TRANSFORMS")
 
+
+    def test_cloudflare_beacon_after_document_close_is_allowed_only_if_other_bytes_exact(self):
+        # Production injection was observed after the closing BODY rather than
+        # inside it. A single edge newline is not permission for other edits.
+        for html in (CLEAN + BEACON + b"\n",
+                     CLEAN.replace(b"</html>", BEACON + b"</html>"),
+                     CLEAN.replace(b"</body>", b"</body>" + BEACON)):
+            with self.subTest(last_bytes=html[-25:]):
+                self.assertEqual(
+                    verify_public_html_bytes(EXPECTED, html),
+                    "PINNED_CLOUDFLARE_EDGE_TRANSFORMS",
+                )
+        with self.assertRaises(ValueError):
+            verify_public_html_bytes(EXPECTED, CLEAN.replace(b"CaptureBrief", b"Modified") + BEACON + b"\n")
+
     def test_unrelated_byte_tamper_stays_blocked(self):
         html = CLEAN.replace(b"CaptureBrief", b"MaliciousBrand").replace(b"</body>", BEACON+b"</body>")
         with self.assertRaises(ValueError):
