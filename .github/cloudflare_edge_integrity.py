@@ -21,10 +21,11 @@ BEACON = re.compile(
     rb'<script type="module" src="https://static\.cloudflareinsights\.com/beacon\.min\.js/v'
     rb'[a-f0-9]{32}[0-9]{13}" integrity="sha512-'
     + re.escape(ANALYTICS_SRI)
-    + rb'" data-cf-beacon='
-    + rb"""'{"version":"2024.11.0","token":""""
-    + ANALYTICS_SITE_TOKEN
-    + rb"""","r":1,"spa":2}' crossorigin="anonymous"></script>"""
+    + b'" data-cf-beacon=' + b"'"
+    + re.escape(b'''{"version":"2024.11.0","token":"''')
+    + re.escape(ANALYTICS_SITE_TOKEN)
+    + re.escape(b'''","r":1,"spa":2}''')
+    + b'''\' crossorigin="anonymous"></script>'''
 )
 
 
