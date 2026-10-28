@@ -31,6 +31,11 @@ jobs:
         run: node build-standalone-site.test.js
       - name: Compile production smoke acceptance before publication
         run: python -m py_compile .github/cloudflare_company_live_qa.py
+      - name: Compare public Cloudflare response bytes with generated release (diagnostic only)
+        if: matrix.browser == 'chromium'
+        run: |
+          node build-standalone-site.js
+          python .github/cloudflare_byte_diagnostic.py
       - name: Use bounded official Ubuntu package downloads
         run: |
           sudo python3 - <<'PY'
