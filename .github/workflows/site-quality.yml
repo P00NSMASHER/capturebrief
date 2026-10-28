@@ -36,6 +36,8 @@ jobs:
         run: |
           node build-standalone-site.js
           python .github/cloudflare_byte_diagnostic.py
+      - name: Reject unsigned Cloudflare response alterations in standalone tests
+        run: PYTHONPATH=.github python -m unittest test_cloudflare_edge_integrity -v
       - name: Use bounded official Ubuntu package downloads
         run: |
           sudo python3 - <<'PY'
