@@ -7,6 +7,8 @@ on:
       - scripts/verify_sam_current_access.py
       - tests/test_verify_sam_current_access.py
       - tests/test_sam_runtime_source_policy.py
+      - scripts/verify_federal_pilot_public_case.py
+      - tests/test_verify_federal_pilot_public_case.py
       - .github/workflows/capturebrief-sam-current-access.yml
   push:
     branches: [main]
@@ -14,6 +16,8 @@ on:
       - scripts/verify_sam_current_access.py
       - tests/test_verify_sam_current_access.py
       - tests/test_sam_runtime_source_policy.py
+      - scripts/verify_federal_pilot_public_case.py
+      - tests/test_verify_federal_pilot_public_case.py
       - .github/workflows/capturebrief-sam-current-access.yml
 
 permissions:
@@ -104,3 +108,108 @@ jobs:
           path: sam-current-access.json
           if-no-files-found: error
           retention-days: 7
+
+  source-capture:
+    needs: contract
+    if: github.repository == 'P00NSMASHER/capturebrief' && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Enforce exact current main before credentials
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "P00NSMASHER/capturebrief"
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$GITHUB_EVENT_NAME" = "push"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          remote="$(timeout 20s git ls-remote --exit-code https://github.com/P00NSMASHER/capturebrief.git refs/heads/main 2>/dev/null)"
+          test "$remote" = "$EXPECTED_SHA"$'\trefs/heads/main'
+      - name: Install pinned original PDF inspection and cryptography
+        run: |
+          python -m pip install --only-binary=:all: pypdf==6.2.0 cryptography==46.0.4
+          python -c "import pypdf,cryptography;assert pypdf.__version__=='6.2.0' and cryptography.__version__=='46.0.4'"
+      - name: Observe official SAM, original PDF, and history without sending or admitting
+        env:
+          SAM_API_KEY: ${{ secrets.SAM_API_KEY }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          umask 077
+          python scripts/verify_federal_pilot_public_case.py --output-root "$RUNNER_TEMP/public-case-pilot"
+      - name: Recheck production main before retaining bounded sample
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          remote="$(timeout 20s git ls-remote --exit-code https://github.com/P00NSMASHER/capturebrief.git refs/heads/main 2>/dev/null)"
+          test "$remote" = "$EXPECTED_SHA"$'\trefs/heads/main'
+      - name: Upload encrypted fictional/public source only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: synthetic-public-case-encrypted-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/public-case-pilot/backup/public-case-rehearsal.cbak
+            ${{ runner.temp }}/public-case-pilot/safe-proof.json
+          retention-days: 3
+          if-no-files-found: error
+
+  fresh-runner-restore:
+    needs: source-capture
+    if: github.repository == 'P00NSMASHER/capturebrief' && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - run: |
+          python -m pip install --only-binary=:all: cryptography==46.0.4
+      - name: Fetch encrypted artifact on a clean independent runner
+        uses: actions/download-artifact@v4
+        with:
+          name: synthetic-public-case-encrypted-${{ github.sha }}
+          path: ${{ runner.temp }}/recovery-download
+      - name: Restore and compare exact original bytes, without production key
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          chmod 700 "$RUNNER_TEMP/recovery-download"
+          find "$RUNNER_TEMP/recovery-download" -type f -exec chmod 600 {} \;
+          mkdir -m 700 "$RUNNER_TEMP/recovery-output"
+          python - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          from scripts.scoped_private_backup import verify_backup,restore_backup
+          from scripts.verify_federal_pilot_public_case import DEMO_KEY
+          source=Path(os.environ["RUNNER_TEMP"])/"recovery-download"
+          archive=next(source.rglob("public-case-rehearsal.cbak"))
+          proof=json.loads(next(source.rglob("safe-proof.json")).read_text())
+          assert hashlib.sha256(archive.read_bytes()).hexdigest()==proof["backup_sha256"]
+          checked=verify_backup(archive,DEMO_KEY)
+          restored=restore_backup(archive,Path(os.environ["RUNNER_TEMP"])/"recovery-output"/"restored",DEMO_KEY)
+          assert checked["case_tag"]==restored["case_tag"]
+          assert checked["file_count"]==restored["file_count"]
+          assert restored["customer_release_authorized"] is False
+          assert restored["independent_offdevice_restore_proven"] is False
+          print(json.dumps({"status":"SEPARATE_CLEAN_RUNNER_ENCRYPTED_RESTORE_REHEARSAL_VERIFIED",
+            "restored_files":restored["file_count"],
+            "source_pdf_status":proof["official_document"]["status"],
+            "official_history_status":proof["official_history"]["status"],
+            "production_independent_key_custody_verified":False,
+            "approved_customer_storage_and_delivery":False},sort_keys=True))
+          PY
+
