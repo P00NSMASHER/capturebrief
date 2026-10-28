@@ -190,6 +190,33 @@ class ScopedSAMTests(unittest.TestCase):
             self.assertFalse(evaluate_delivery_readiness(updated, now=NOW).eligible)
             self.assertEqual(updated["packet"]["manifest_receipts"], [])
             self.assertNotIn("FAKE_SECRET", json.dumps(updated))
+            # Retained history metadata is untrusted. Extra authority claims,
+            # duplicate keys, swapped names, and stale originals must block.
+            original = root / ("case-" + hashlib.sha256(case["case_id"].encode()).hexdigest()[:24])
+            receipt_file = original / ("public-source-" + retained["source_sha256"] + ".bin.receipt.json")
+            safe_bytes = receipt_file.read_bytes()
+            safe_metadata = json.loads(safe_bytes)
+            bad_receipts = [
+                {**safe_metadata, "payment_authorized": True},
+                {**safe_metadata, "retained_filename": "public-source-" + "f" * 64 + ".bin"},
+                {**safe_metadata, "observed_at": (NOW - timedelta(days=9)).isoformat()},
+            ]
+            for value in bad_receipts:
+                receipt_file.write_text(json.dumps(value), encoding="utf-8")
+                with self.assertRaises(ScopedSourceBlocked):
+                    bind_reviewed_scoped_case(case, candidate, private_dir=root, now=NOW)
+            # Duplicate JSON keys must not be silently resolved using last-wins semantics.
+            duplicate = safe_bytes.decode().replace(
+                '"source_sha256":', '"source_sha256": "' + "a" * 64 + '", "source_sha256":', 1
+            )
+            receipt_file.write_text(duplicate, encoding="utf-8")
+            with self.assertRaises(ScopedSourceBlocked):
+                bind_reviewed_scoped_case(case, candidate, private_dir=root, now=NOW)
+            receipt_file.write_bytes(safe_bytes)
+            self.assertEqual(
+                bind_reviewed_scoped_case(case, candidate, private_dir=root, now=NOW)[1]["status"],
+                "CURRENT_API_BOUND_REMAINING_EVIDENCE_REVIEW_REQUIRED"
+            )
             # A forged reviewer claim cannot compensate for missing original bytes.
             original = root / ("case-" + hashlib.sha256(case["case_id"].encode()).hexdigest()[:24])
             retained_file = original / ("public-source-" + retained["source_sha256"] + ".bin")
