@@ -39,6 +39,10 @@ def inspect(path: str) -> dict:
     # to locate middleware rewrites.
     span_start = max(0, first - 32)
     span_end = first + 110
+    beacon = re.findall(rb"<script\\b[^>]*static\\.cloudflareinsights\\.com/beacon\\.min\\.js[^>]*></script>", observed, re.I | re.S)
+    without_beacon = observed.replace(beacon[0], b"") if len(beacon) == 1 else observed
+    without_beacon_and_markers = without_beacon.replace(b"<!--email_off-->", b"").replace(b"<!--/email_off-->", b"")
+    source_without_markers = expected.replace(b"<!--email_off-->", b"").replace(b"<!--/email_off-->", b"")
     signals = ("cdn-cgi/scripts", "email-decode.min.js", "data-cfemail",
                "__cf_bm", "cloudflareinsights.com", "beacon.min.js",
                "rocket-loader", "cf-email", "<!--email_off-->", "<!--/email_off-->")
@@ -47,6 +51,10 @@ def inspect(path: str) -> dict:
         "served_sha256": digest(observed),
         "expected_bytes": len(expected), "served_bytes": len(observed),
         "first_byte_difference": first, "match": expected == observed,
+        "beacon_tag_count": len(beacon),
+        "beacon_tag_shape": printable(re.sub(rb'[0-9a-fA-F]{32,}', b'[HEX]', beacon[0])) if len(beacon)==1 else None,
+        "other_bytes_equal_after_known_transforms": without_beacon_and_markers == source_without_markers,
+        "expected_tail": printable(expected[-450:]), "served_tail": printable(observed[-450:]),
         "expected_excerpt": printable(expected[span_start:span_end]),
         "served_excerpt": printable(observed[span_start:span_end]),
         "signals": {s:{"expected":expected.lower().count(s.encode()),
