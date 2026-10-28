@@ -39,7 +39,7 @@ def inspect(path: str) -> dict:
     # to locate middleware rewrites.
     span_start = max(0, first - 32)
     span_end = first + 110
-    beacon = re.findall(rb"<script\\b[^>]*static\\.cloudflareinsights\\.com/beacon\\.min\\.js[^>]*></script>", observed, re.I | re.S)
+    beacon = re.findall(rb"<script\b[^>]*static\.cloudflareinsights\.com/beacon\.min\.js[^>]*></script>", observed, re.I | re.S)
     without_beacon = observed.replace(beacon[0], b"") if len(beacon) == 1 else observed
     without_beacon_and_markers = without_beacon.replace(b"<!--email_off-->", b"").replace(b"<!--/email_off-->", b"")
     source_without_markers = expected.replace(b"<!--email_off-->", b"").replace(b"<!--/email_off-->", b"")
