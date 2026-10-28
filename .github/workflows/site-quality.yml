@@ -11,6 +11,61 @@ concurrency:
   group: website-quality-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  capturebrief-production-acceptance:
+    name: CaptureBrief production exact bytes and no-send / ${{ matrix.browser }}
+    if: github.repository == 'P00NSMASHER/capturebrief' && (github.ref == 'refs/heads/gh-pages' || github.event_name == 'pull_request')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate the exact standalone release builder and edge-byte guard
+        run: |
+          node build-standalone-site.test.js
+          PYTHONPATH=.github python -m unittest test_cloudflare_edge_integrity -v
+          node build-standalone-site.js
+      - name: Use bounded official Ubuntu mirrors
+        run: |
+          sudo python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/etc/apt/apt-mirrors.txt')
+          if p.is_file():
+              s=p.read_text().replace('http://azure.archive.ubuntu.com/ubuntu','https://archive.ubuntu.com/ubuntu')
+              s=s.replace('https://azure.archive.ubuntu.com/ubuntu','https://archive.ubuntu.com/ubuntu')
+              p.write_text(s)
+          Path('/etc/apt/apt.conf.d/99capturebrief-production-qa').write_text(
+              'Acquire::Retries "2";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n')
+          PY
+      - name: Install pinned standalone browser only
+        timeout-minutes: 10
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps ${{ matrix.browser }}
+      - name: Verify Cloudflare production revision, static bytes, privacy boundary and fictional no-send copy
+        env:
+          PR_BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
+          QA_BROWSER: ${{ matrix.browser }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            test -n "$PR_BASE_COMMIT"
+            export GITHUB_SHA="$PR_BASE_COMMIT"
+          else
+            test "$GITHUB_REF" = "refs/heads/gh-pages"
+          fi
+          python .github/cloudflare_company_live_qa.py
+
   browser-check:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
