@@ -2,7 +2,7 @@ name: Website quality
 on:
   push:
     branches: [gh-pages, site-clarity-20260921, 'pages-buyer-evidence-*']
-    paths: ['**/*.html', 'index.html', 'decision-evidence.html', 'examples/**', 'permitplate/**', 'freightrecovery/**', 'assets/**', '.github/site_qa.py', '.github/brand_qa.py', '.github/buyer_journey_qa.py', '.github/clipboard_qa.py', '.github/clipboard_unit.cjs', '.github/request_draft_unit.cjs', '.github/cloudflare_company_live_qa.py', '.github/workflows/site-quality.yml']
+    paths: ['**/*.html', 'index.html', 'decision-evidence.html', 'examples/**', 'permitplate/**', 'freightrecovery/**', 'assets/**', '.github/site_qa.py', '.github/brand_qa.py', '.github/buyer_journey_qa.py', '.github/clipboard_qa.py', '.github/clipboard_unit.cjs', '.github/request_draft_unit.cjs', '.github/cloudflare_company_live_qa.py', '.github/cloudflare_edge_integrity.py', '.github/test_cloudflare_edge_integrity.py', '.github/cloudflare_byte_diagnostic.py', 'build-standalone-site.js', 'build-standalone-site.test.js', '.github/workflows/site-quality.yml']
   pull_request:
     branches: [gh-pages]
 permissions:
