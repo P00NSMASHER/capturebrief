@@ -88,6 +88,7 @@
   const trialTerms = document.getElementById('trial-terms');
   const manualCopy = document.getElementById('request-manual-copy');
   const manualText = document.getElementById('request-plaintext');
+  let requestRevision = 0;
 
   const resetManualCopy = () => {
     manualText.value = '';
@@ -113,6 +114,7 @@
   };
 
   const updateRequestType = () => {
+    requestRevision += 1;
     const free = purchaseStatus.value === 'FREE_CHECK';
     if (hint) hint.textContent = free ? 'One assumption, up to 500 characters' : 'One per line, up to five; 500 characters each';
     if (trialTerms) trialTerms.hidden = !free;
@@ -150,12 +152,18 @@
     if (!['PAID', 'SCOPE_FIRST', 'FREE_CHECK'].includes(purchaseStatus.value)) {
       return fail(purchaseStatus, 'Choose the kind of request you want to prepare.');
     }
-    if (!company.value.trim() || company.value.trim().length > 200 || /[\r\n\x00-\x1f]/.test(company.value)) {
+    if (!company.value.trim() || company.value.trim().length > 200 || /[\u0000-\u001f\u007f]/.test(company.value)) {
       return fail(company, 'Enter your company name on one line, up to 200 characters.');
     }
     const emailText = email.value.trim();
     if (emailText.length > 254 || !/^[^@\s]{1,64}@[^@\s]{1,189}\.[^@\s]{2,63}$/.test(emailText)) {
       return fail(email, 'Enter a valid work email address.');
+    }
+    if (!['GO', 'HOLD', 'PASS', 'UNSURE'].includes(posture.value)) {
+      return fail(posture, 'Choose GO, HOLD, PASS, or UNSURE.');
+    }
+    if (/[\u0000-\u001f\u007f]/.test(opportunity.value)) {
+      return fail(opportunity, 'Remove control characters from the public opportunity link.');
     }
     if (!form.reportValidity()) {
       setStatus('Complete the required fields before preparing the draft.', true);
@@ -184,6 +192,14 @@
       return fail(opportunity, 'Use a named public website without credentials or a private/local address.');
     }
 
+    if (/(?:\r(?!\n)|[\u0000-\u0009\u000b-\u001f\u007f])/.test(assumptions.value)) {
+      return fail(assumptions, 'Remove hidden control characters from the assumption text.');
+    }
+    if (free && (parsed.protocol !== 'https:' || host !== 'sam.gov' ||
+        (parsed.port && parsed.port !== '443') || parsed.search || parsed.hash ||
+        !/^\/opp\/[0-9a-f]{32}\/view\/?$/i.test(parsed.pathname))) {
+      return fail(opportunity, 'The free pilot needs one exact public SAM.gov opportunity link, without tracking parameters.');
+    }
     const lines = assumptionLines();
     if (!lines.length || (free && lines.length !== 1) || lines.length > 5) {
       return fail(assumptions, free
@@ -236,6 +252,7 @@
 
   [purchaseStatus, company, email, opportunity, posture, assumptions, publicOnly].forEach(control => {
     control.addEventListener('input', () => {
+      requestRevision += 1;
       control.setCustomValidity('');
       status.textContent = '';
       delete status.dataset.state;
@@ -259,12 +276,17 @@
   copyButton.addEventListener('click', async () => {
     const draft = compose();
     if (!draft) return;
+    const startedAtRevision = requestRevision;
+    const stillCurrent = () => startedAtRevision === requestRevision;
+    const editedMessage = 'The form changed while copying. Review the updated request and copy again.';
     try {
       if (!navigator.clipboard) throw new Error('Clipboard unavailable');
       await navigator.clipboard.writeText(draft.plain);
+      if (!stillCurrent()) { setStatus(editedMessage, true); return; }
       resetManualCopy();
       setStatus('Request copied. Paste it into your email service and review it before sending.');
     } catch (_) {
+      if (!stillCurrent()) { setStatus(editedMessage, true); return; }
       const helper = document.createElement('textarea');
       helper.value = draft.plain;
       helper.setAttribute('readonly', '');
