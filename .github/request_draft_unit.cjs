@@ -109,7 +109,7 @@ async function run() {
   await copying;
   assert.doesNotMatch(race.fields['request-status'].textContent, /Request copied/, 'A stale draft cannot claim successful copy');
   assert.equal(race.fields['request-manual-copy'].hidden, true, 'Old manual copy cannot return after editing');
-    const returnPage = harness('', {}, '?checkout=complete');
+  const returnPage = harness('', {}, '?checkout=complete');
   assert.equal(returnPage.fields['purchase-status'].value, 'PAID');
   assert.match(returnPage.fields['request-status'].textContent, /verified separately/);
   const trialPage = harness('', {}, '?trial=free');
