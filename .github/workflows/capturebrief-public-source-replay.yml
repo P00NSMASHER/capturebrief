@@ -1,0 +1,167 @@
+name: CaptureBrief exact previous SAM public source PDF replay and separate restore
+
+on:
+  pull_request:
+    paths:
+      - scripts/replay_verified_public_case_pdf.py
+      - tests/test_replay_verified_public_case_pdf.py
+      - .github/workflows/capturebrief-public-source-replay.yml
+  push:
+    branches: [main]
+    paths:
+      - scripts/replay_verified_public_case_pdf.py
+      - tests/test_replay_verified_public_case_pdf.py
+      - .github/workflows/capturebrief-public-source-replay.yml
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: capturebrief-previous-approved-source-replay-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Test pinned prior source; reject fake release claims
+        run: |
+          python -m compileall -q scripts/replay_verified_public_case_pdf.py
+          python -m unittest tests.test_replay_verified_public_case_pdf -v
+
+  first-party-public-original:
+    needs: contract
+    if: github.repository == 'P00NSMASHER/capturebrief' && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Refuse stale main, private forks or changed source SHA
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "P00NSMASHER/capturebrief"
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$GITHUB_EVENT_NAME" = "push"
+          test "$EXPECTED_SHA" = "$(git rev-parse HEAD)"
+          remote="$(timeout 20s git ls-remote --exit-code https://github.com/P00NSMASHER/capturebrief.git refs/heads/main 2>/dev/null)"
+          test "$remote" = "$EXPECTED_SHA"$'\trefs/heads/main'
+      - name: Download only previous authenticated main-only PUBLIC/fictional encrypted observation
+        uses: actions/download-artifact@v4
+        with:
+          repository: P00NSMASHER/capturebrief
+          run-id: 40737843155
+          name: synthetic-public-case-encrypted-d4a8f522054a72ca58a884ed8685e3cbc5f540aa
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/prior-public-source
+      - name: Install versioned public PDF and local authenticated-source inspection tools
+        run: |
+          python -m pip install --only-binary=:all: cryptography==46.0.4 pypdf==6.2.0
+          python -c "import cryptography,pypdf;assert cryptography.__version__=='46.0.4' and pypdf.__version__=='6.2.0'"
+      - name: Exact official SAM resource PDF fetch with no SAM_API_KEY or customer info
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          umask 077
+          chmod 700 "$RUNNER_TEMP/prior-public-source"
+          find "$RUNNER_TEMP/prior-public-source" -type f -exec chmod 600 {} \;
+          python scripts/replay_verified_public_case_pdf.py \
+            --artifact-dir "$RUNNER_TEMP/prior-public-source" \
+            --private-output "$RUNNER_TEMP/sam-public-original-replay"
+      - name: Exact current main required before saving public-only encrypted test bundle
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          remote="$(timeout 20s git ls-remote --exit-code https://github.com/P00NSMASHER/capturebrief.git refs/heads/main 2>/dev/null)"
+          test "$remote" = "$EXPECTED_SHA"$'\trefs/heads/main'
+      - name: Retain only demo-key encrypted public original and non-sensitive summary
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: capturebrief-one-genuine-public-original-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/sam-public-original-replay/backup/public-case-with-official-original.cbak
+            ${{ runner.temp }}/sam-public-original-replay/safe-proof.json
+          retention-days: 3
+          if-no-files-found: error
+
+  clean-runner-original-recovery:
+    needs: first-party-public-original
+    if: github.repository == 'P00NSMASHER/capturebrief' && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Install pinned original-pdf parser and cryptography
+        run: |
+          python -m pip install --only-binary=:all: cryptography==46.0.4 pypdf==6.2.0
+      - name: Retrieve independently archived encrypted public-only original to a clean runner
+        uses: actions/download-artifact@v4
+        with:
+          name: capturebrief-one-genuine-public-original-${{ github.sha }}
+          path: ${{ runner.temp }}/fresh-original-bundle
+      - name: Decrypt, rehash and independently review actual public PDF bytes without customer release
+        run: |
+          set -euo pipefail
+          umask 077
+          chmod 700 "$RUNNER_TEMP/fresh-original-bundle"
+          find "$RUNNER_TEMP/fresh-original-bundle" -type f -exec chmod 600 {} \;
+          mkdir -m 700 "$RUNNER_TEMP/checked-original"
+          python - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          from scripts.scoped_private_backup import verify_backup,restore_backup
+          from scripts.verify_federal_pilot_public_case import DEMO_KEY
+          from scripts.replay_verified_public_case_pdf import _date_pages
+          root=Path(os.environ["RUNNER_TEMP"])
+          source=root/"fresh-original-bundle"
+          archive=next(source.rglob("public-case-with-official-original.cbak"))
+          proof=json.loads(next(source.rglob("safe-proof.json")).read_text())
+          if hashlib.sha256(archive.read_bytes()).hexdigest()!=proof["offdevice_new_test_backup_sha256"]:
+              raise SystemExit("TEST BACKUP SHA256 MISMATCH")
+          checked=verify_backup(archive,DEMO_KEY)
+          restored=restore_backup(archive,root/"checked-original"/"restored",DEMO_KEY)
+          originals=list((root/"checked-original"/"restored"/"evidence").glob("public-source-*.bin"))
+          if len(originals)!=1 or hashlib.sha256(originals[0].read_bytes()).hexdigest()!=proof["pdf_sha256"]:
+              raise SystemExit("PUBLIC PDF SOURCE EXACT DIGEST FAILED")
+          observed=_date_pages(originals[0].read_bytes())
+          assert checked["file_count"]==restored["file_count"]==proof["offdevice_new_test_bundle_files"]==4
+          assert observed["page_count"]==proof["source_file_page_candidates"]["page_count"]
+          assert proof["historical_family_complete"] is False
+          assert proof["customer_release_authorized"] is False
+          assert proof["production_recovery_key_custody_verified"] is False
+          print(json.dumps({
+              "status":"OFFICIAL_PUBLIC_PDF_ENCRYPTED_AND_INDEPENDENTLY_RESTORED_REVIEW_PENDING",
+              "pdf_sha256":proof["pdf_sha256"],
+              "pdf_bytes":proof["pdf_bytes"],
+              "page_count":observed["page_count"],
+              "date_page_numbers":observed["candidate_date_page_numbers"],
+              "recovered_files":restored["file_count"],
+              "production_key_custody":False,
+              "historical_family_complete":False,
+              "customer_release_authorized":False,
+              "external_send_authorized":False,
+          },sort_keys=True))
+          PY
