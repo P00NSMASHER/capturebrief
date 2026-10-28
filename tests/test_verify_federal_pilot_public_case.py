@@ -49,6 +49,24 @@ class PublicCaseProofTests(unittest.TestCase):
         self.assertNotIn("MORE_SECRET", str(err))
         self.assertNotIn("HIDDEN_SECRET", json.dumps(err.safe_projection()))
 
+    def test_redirect_diagnostic_discloses_only_safe_source_path_digest_and_known_query_names(self):
+        from urllib.request import Request
+        from urllib.parse import urlsplit
+        import hashlib
+        target = ("https://iae-fbo-attachments.s3.amazonaws.com/example-public-source.pdf?"
+                  "X-Amz-Signature=SECRET_DO_NOT_ECHO"
+                  "&response-content-disposition=attachment%3Bfilename%3DSECRET_DO_NOT_ECHO")
+        with self.assertRaises(case.OfficialPdfRedirectBlocked) as caught:
+            case.SameHost().redirect_request(
+                Request(case.PUBLIC_FILE), None, 303, "See Other", {}, target)
+        safe = caught.exception.safe_projection()
+        assert safe["redirect_path_sha256_only"] == hashlib.sha256(
+            urlsplit(target).path.encode()).hexdigest()
+        assert safe["redirect_host"] == "iae-fbo-attachments.s3.amazonaws.com"
+        assert "response-content-disposition" in safe["redirect_query_parameter_names_only"]
+        assert "X-Amz-Signature" in safe["redirect_query_parameter_names_only"]
+        assert "SECRET_DO_NOT_ECHO" not in json.dumps(safe)
+
     def test_history_missing_unauthorized_and_wrong_family_never_approves(self):
         def payload(value):
             def open_(req,timeout):

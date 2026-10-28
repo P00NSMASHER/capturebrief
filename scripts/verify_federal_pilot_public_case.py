@@ -52,6 +52,11 @@ class OfficialPdfRedirectBlocked(RuntimeError):
         self.destination_host = host if re.fullmatch(r"[a-z0-9.-]{1,253}", host) else "UNSAFE_HOST"
         self.response_code = int(response_code) if isinstance(response_code, int) and 300 <= response_code <= 399 else 0
         self.location_sha256 = hashlib.sha256(location.encode("utf-8")).hexdigest()
+        public_path = urlsplit(location).path
+        self.path_sha256 = hashlib.sha256(public_path.encode("utf-8")).hexdigest()
+        self.path_segment_count = len([part for part in public_path.split("/") if part])
+        self.path_has_resource_id = RESOURCE in public_path.lower()
+        self.path_looks_like_pdf = public_path.lower().endswith(".pdf")
         raw_names = [
             field.partition("=")[0] for field in urlsplit(location).query.split("&")
             if field
@@ -59,7 +64,10 @@ class OfficialPdfRedirectBlocked(RuntimeError):
         safe_names = {
             "X-Amz-Algorithm", "X-Amz-Credential", "X-Amz-Date",
             "X-Amz-Expires", "X-Amz-SignedHeaders", "X-Amz-Signature",
-            "X-Amz-Security-Token",
+            "X-Amz-Security-Token", "response-content-disposition",
+            "response-content-type", "response-cache-control",
+            "response-content-language", "response-content-encoding",
+            "response-expires", "x-id",
         }
         self.query_parameter_names = sorted(
             {name if name in safe_names else "OTHER_QUERY_FIELD" for name in raw_names}
@@ -71,6 +79,10 @@ class OfficialPdfRedirectBlocked(RuntimeError):
             "redirect_host": self.destination_host,
             "redirect_status": self.response_code,
             "redirect_location_sha256_only": self.location_sha256,
+            "redirect_path_sha256_only": self.path_sha256,
+            "redirect_path_segment_count": self.path_segment_count,
+            "redirect_path_contains_public_resource_id": self.path_has_resource_id,
+            "redirect_path_pdf_extension": self.path_looks_like_pdf,
             "redirect_query_parameter_names_only": self.query_parameter_names,
         }
 
