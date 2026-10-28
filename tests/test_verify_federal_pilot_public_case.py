@@ -130,6 +130,23 @@ class PublicCaseProofTests(unittest.TestCase):
             with self.assertRaises((ValueError,RuntimeError)):
                 case._require_exact_original_resource(other)
 
+    def test_scoped_api_failure_trace_reveals_only_safe_status_not_secret_details(self):
+        from capturebrief_core.current_api import CurrentApiError, CurrentApiCardinalityError
+        for error, expected in [
+            (CurrentApiError("SAM Opportunities API HTTP 429"), "SAM_HTTP_429"),
+            (CurrentApiError("Provider response URL contains SECRET_API_KEY"), "SAM_API_ERROR"),
+            (CurrentApiCardinalityError(0), "SAM_FAMILY_CARDINALITY"),
+        ]:
+            trace={}
+            def failing_fetcher(**kwargs):
+                raise error
+            with self.assertRaises(CurrentApiError):
+                case._traced_scoped_fetch(trace, failing_fetcher, api_key="SECRET_API_KEY")
+            safe=json.dumps(trace)
+            assert trace.get("safe_source_state") == expected
+            assert "SECRET_API_KEY" not in safe
+            assert "Provider response URL" not in safe
+
     def test_history_missing_unauthorized_and_wrong_family_never_approves(self):
         def payload(value):
             def open_(req,timeout):
