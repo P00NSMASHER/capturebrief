@@ -2,7 +2,7 @@ name: Website quality
 on:
   push:
     branches: [gh-pages, site-clarity-20260921, 'pages-buyer-evidence-*']
-    paths: ['**/*.html', 'index.html', 'decision-evidence.html', 'examples/**', 'permitplate/**', 'freightrecovery/**', 'assets/**', '.github/site_qa.py', '.github/brand_qa.py', '.github/buyer_journey_qa.py', '.github/clipboard_qa.py', '.github/clipboard_unit.cjs', '.github/workflows/site-quality.yml']
+    paths: ['**/*.html', 'index.html', 'decision-evidence.html', 'examples/**', 'permitplate/**', 'freightrecovery/**', 'assets/**', '.github/site_qa.py', '.github/brand_qa.py', '.github/buyer_journey_qa.py', '.github/clipboard_qa.py', '.github/clipboard_unit.cjs', '.github/buyer_journey_qa.py', '.github/request_draft_unit.cjs', '.github/cloudflare_company_live_qa.py', '.github/workflows/site-quality.yml']
   pull_request:
     branches: [gh-pages]
 permissions:
@@ -29,6 +29,8 @@ jobs:
           QA_OUTPUT: qa-output/brand
       - name: Verify standalone company security and checkout boundary
         run: node build-standalone-site.test.js
+      - name: Compile production smoke acceptance before publication
+        run: python -m py_compile .github/cloudflare_company_live_qa.py
       - name: Use bounded official Ubuntu package downloads
         run: |
           sudo python3 - <<'PY'
@@ -135,6 +137,11 @@ jobs:
           QA_BASE_URL: https://p00nsmasher.github.io/capturebrief/
           QA_BROWSER: ${{ matrix.browser }}
           QA_OUTPUT: qa-output/clipboard-live
+      - name: Verify exact Cloudflare production release and fictional no-send inquiry
+        if: github.ref == 'refs/heads/gh-pages'
+        run: python .github/cloudflare_company_live_qa.py
+        env:
+          QA_BROWSER: ${{ matrix.browser }}
       - name: Preserve reports and screenshots
         if: always()
         uses: actions/upload-artifact@v4
