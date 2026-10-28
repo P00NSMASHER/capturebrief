@@ -35,6 +35,20 @@ class PublicCaseProofTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             case.fetch_official_pdf(opener=lambda req,timeout: Response(body,"https://evil.example/pdf"))
 
+    def test_official_pdf_redirect_is_blocked_and_safely_described(self):
+        from urllib.request import Request
+        request = Request(case.PUBLIC_FILE)
+        fake_signed_url = ("https://signed.example.invalid/private?X-Amz-Credential=HIDDEN_SECRET"
+                           "&X-Amz-Signature=MORE_SECRET")
+        with self.assertRaises(case.OfficialPdfRedirectBlocked) as caught:
+            case.SameHost().redirect_request(request, None, 302, "Redirect", {}, fake_signed_url)
+        err = caught.exception
+        self.assertEqual(err.destination_host, "signed.example.invalid")
+        self.assertEqual(err.response_code, 302)
+        self.assertNotIn("HIDDEN_SECRET", str(err))
+        self.assertNotIn("MORE_SECRET", str(err))
+        self.assertNotIn("HIDDEN_SECRET", json.dumps(err.safe_projection()))
+
     def test_history_missing_unauthorized_and_wrong_family_never_approves(self):
         def payload(value):
             def open_(req,timeout):

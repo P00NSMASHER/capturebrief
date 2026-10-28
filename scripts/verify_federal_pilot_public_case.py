@@ -44,6 +44,37 @@ DEMO_KEY = b"DEMO_PUBLIC_GOVERNMENT_SOURCE_NO_CUSTOMER_NOT_A_PRODUCTION_SECRET_2
 MAX_PDF = 2 * 1024 * 1024
 
 
+class OfficialPdfRedirectBlocked(RuntimeError):
+    """A blocked official attachment redirect, with NO signed URL disclosure."""
+
+    def __init__(self, destination_host: str | None, response_code: int, location: str):
+        host = (destination_host or "").lower()
+        self.destination_host = host if re.fullmatch(r"[a-z0-9.-]{1,253}", host) else "UNSAFE_HOST"
+        self.response_code = int(response_code) if isinstance(response_code, int) and 300 <= response_code <= 399 else 0
+        self.location_sha256 = hashlib.sha256(location.encode("utf-8")).hexdigest()
+        raw_names = [
+            field.partition("=")[0] for field in urlsplit(location).query.split("&")
+            if field
+        ][:24]
+        safe_names = {
+            "X-Amz-Algorithm", "X-Amz-Credential", "X-Amz-Date",
+            "X-Amz-Expires", "X-Amz-SignedHeaders", "X-Amz-Signature",
+            "X-Amz-Security-Token",
+        }
+        self.query_parameter_names = sorted(
+            {name if name in safe_names else "OTHER_QUERY_FIELD" for name in raw_names}
+        )
+        super().__init__("Official source cross-host redirect blocked before connection")
+
+    def safe_projection(self) -> dict:
+        return {
+            "redirect_host": self.destination_host,
+            "redirect_status": self.response_code,
+            "redirect_location_sha256_only": self.location_sha256,
+            "redirect_query_parameter_names_only": self.query_parameter_names,
+        }
+
+
 class SameHost(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         source = urlsplit(req.full_url)
@@ -53,7 +84,7 @@ class SameHost(HTTPRedirectHandler):
                 or target.hostname not in {"sam.gov", "api.sam.gov"}
                 or target.username or target.password
                 or target.port not in (None, 443)):
-            raise RuntimeError("Official source redirect left approved first-party host")
+            raise OfficialPdfRedirectBlocked(target.hostname, code, newurl)
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
@@ -183,6 +214,9 @@ def main(argv=None) -> int:
         input_file.chmod(0o600)
         retain_review_source(case, original_file=input_file,
                              source_url=SAM_NOTICE, private_dir=private)
+    except OfficialPdfRedirectBlocked as exc:
+        doc = {"status": "BLOCKED_OFFICIAL_PDF_REDIRECT_TRANSPORT_REVIEW_REQUIRED",
+               "publisher_human_reviewed": False, **exc.safe_projection()}
     except Exception as exc:
         doc = {"status": "BLOCKED_OFFICIAL_PDF_OR_DOCUMENT_REVIEW",
                "safe_error_type": type(exc).__name__,
