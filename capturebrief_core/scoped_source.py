@@ -365,10 +365,22 @@ def _bound_history_review_source(
     if not 0 < receipt_file.stat().st_size <= 16 * 1024:
         raise ScopedSourceBlocked("Manual history source receipt is too large")
     try:
-        source_receipt = json.loads(receipt_file.read_text(encoding="utf-8"))
+        source_receipt = json.loads(
+            receipt_file.read_text(encoding="utf-8"), object_pairs_hook=_unique_fields
+        )
     except (UnicodeError, ValueError):
         raise ScopedSourceBlocked("Retained history source receipt is unreadable") from None
-    if (source_receipt.get("schema") != "capturebrief-scoped-review-source-v1"
+    expected_receipt_fields = {
+        "schema", "case_identity_sha256", "source_url", "source_sha256",
+        "source_bytes", "observed_at", "capture_mode",
+        "publisher_authenticity_verified", "history_completeness_verified",
+        "customer_release_authorized", "external_send_authorized", "retained_filename",
+    }
+    if (not isinstance(source_receipt, dict)
+            or set(source_receipt) != expected_receipt_fields
+            or source_receipt.get("retained_filename") != expected_name
+            or source_receipt.get("external_send_authorized") is not False
+            or source_receipt.get("schema") != "capturebrief-scoped-review-source-v1"
             or source_receipt.get("case_identity_sha256") != original["identity"]
             or source_receipt.get("source_sha256") != review["source_sha256"]
             or source_receipt.get("source_bytes") != len(raw)
@@ -378,6 +390,9 @@ def _bound_history_review_source(
             or source_receipt.get("history_completeness_verified") is not False
             or source_receipt.get("customer_release_authorized") is not False):
         raise ScopedSourceBlocked("Reviewed source provenance or release boundary is inconsistent")
+    retained_at = _time(source_receipt["observed_at"])
+    if retained_at > reviewed or now - retained_at > timedelta(days=7):
+        raise ScopedSourceBlocked("Retained reviewed history source is stale or future-dated")
 
 
 def bind_reviewed_scoped_case(
