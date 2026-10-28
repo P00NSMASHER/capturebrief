@@ -42,15 +42,12 @@ def verify_public_html_bytes(expected: bytes, observed: bytes) -> str:
     if len(beacons) != 1:
         raise ValueError("Unknown, duplicate or altered edge-injected analytics script")
     beacon = beacons[0]
-    if observed.find(b"</body>", beacon.end()) < 0:
-        raise ValueError("Beacon is not before the final body close")
-    # The beacon must be inserted at the trailing body boundary. Its position
-    # is not an allowlist for unknown third-party scripts elsewhere in HTML.
-    after = observed[beacon.end():]
-    if after not in (b"</body>", b"\n</body>", b"</body>\n", b"\n</body>\n", b"</body></html>",
-                     b"\n</body></html>", b"</body>\n</html>", b"\n</body>\n</html>",
-                     b"</body></html>\n", b"\n</body></html>\n"):
-        raise ValueError("Beacon is not confined to the closing body boundary")
+    # Cloudflare's auto-installed beacon may follow </body> or </html>.
+    # Rather than trusting a loose placement rule, the strict byte replay
+    # below proves that removal of this one pinned tag (+ at most one LF)
+    # restores the complete reviewed source, with no other mutation.
+    if len(observed) - beacon.end() > 128:
+        raise ValueError("Cloudflare analytics tag is not at document tail")
     original = expected.replace(EMAIL_START, b"").replace(EMAIL_END, b"")
     clean = observed[:beacon.start()] + observed[beacon.end():]
     if clean == original:
