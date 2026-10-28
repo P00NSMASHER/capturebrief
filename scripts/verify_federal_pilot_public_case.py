@@ -29,7 +29,10 @@ from capturebrief_core.scoped_source import (
     ScopedApiRedirects, observe_scoped_case, retain_review_source,
     read_private_case, verify_scoped_capture,
 )
-from capturebrief_core.current_api import validate_api_observation
+from capturebrief_core.current_api import (
+    validate_api_observation, fetch_latest_active,
+    CurrentApiError, CurrentApiCardinalityError, CurrentApiIncompletePageError,
+)
 from capturebrief_core.source_policy import require_approved_automation
 from scripts.import_request_draft import import_request
 from scripts.scoped_private_backup import create_backup
@@ -92,6 +95,36 @@ class OfficialPdfRedirectBlocked(RuntimeError):
             "redirect_path_pdf_extension": self.path_looks_like_pdf,
             "redirect_query_parameter_names_only": self.query_parameter_names,
         }
+
+
+def _traced_scoped_fetch(trace: dict, fetcher, **kwargs) -> dict:
+    """No URLs, keys, host response bodies, contact fields or exception text leave QA."""
+    trace["safe_source_state"]="FETCH_STARTED"
+    try:
+        result = fetcher(**kwargs)
+        trace["safe_source_state"]="PUBLIC_API_RESPONSE_RECEIVED"
+        record = result.get("record") or {}
+        trace["notice_id_matches_case"] = str(record.get("noticeId") or "").lower() == NOTICE
+        trace["solicitation_matches_case"] = str(record.get("solicitationNumber") or "").strip().upper() == SOL
+        trace["reported_active"] = str(record.get("active") or "").lower() == "yes"
+        trace["resource_link_count"] = len(result.get("resource_links") or [])
+        return result
+    except CurrentApiCardinalityError:
+        trace["safe_source_state"]="SAM_FAMILY_CARDINALITY"
+        raise
+    except CurrentApiIncompletePageError:
+        trace["safe_source_state"]="SAM_PAGINATION_INCOMPLETE"
+        raise
+    except CurrentApiError as exc:
+        match = re.fullmatch(r"SAM Opportunities API HTTP ([0-9]{3})", str(exc))
+        if match and match.group(1) in {"400","401","403","404","408","429","500","502","503","504"}:
+            trace["safe_source_state"]="SAM_HTTP_"+match.group(1)
+        else:
+            trace["safe_source_state"]="SAM_API_ERROR"
+        raise
+    except Exception:
+        trace["safe_source_state"]="SAM_OBSERVATION_OTHER_ERROR"
+        raise
 
 
 def _require_exact_original_resource(api_observation: dict) -> str:
@@ -312,16 +345,21 @@ def main(argv=None) -> int:
     case = read_private_case(case_path)
     private = root / "private"
     private.mkdir(mode=0o700)
+    source_trace={}
+    def source_fetch(**kwargs):
+        return _traced_scoped_fetch(source_trace, fetch_latest_active, **kwargs)
     try:
         source = observe_scoped_case(
             case, solicitation_number=SOL, posted_from="10/25/2026",
             posted_to="10/28/2026", api_key=key, private_dir=private,
-            opener=build_opener(ScopedApiRedirects()).open)
+            opener=build_opener(ScopedApiRedirects()).open,
+            fetcher=source_fetch)
         if not source["selected_notice_matches_latest_api"]:
             raise RuntimeError("Actual current notice is not the selected exact notice")
     except Exception as exc:
         print(json.dumps({"status": "BLOCKED_EXACT_PURSUIT_SAM_SOURCE",
                           "safe_error_type": type(exc).__name__,
+                          "sanitized_source_diagnostics": source_trace,
                           "customer_delivery_authorized": False}))
         return 2
 
