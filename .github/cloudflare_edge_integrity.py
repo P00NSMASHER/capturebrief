@@ -48,6 +48,11 @@ def verify_public_html_bytes(expected: bytes, observed: bytes) -> str:
     # restores the complete reviewed source, with no other mutation.
     if len(observed) - beacon.end() > 128:
         raise ValueError("Cloudflare analytics tag is not at document tail")
+    # A tag placed inside the content tree (even if fully removable) is not
+    # the documented Cloudflare tail insertion. Require it after main/footer.
+    last_content_close = max(observed.rfind(b"</main>"), observed.rfind(b"</footer>"))
+    if last_content_close < 0 or beacon.start() <= last_content_close:
+        raise ValueError("Cloudflare analytics tag precedes the end of page content")
     original = expected.replace(EMAIL_START, b"").replace(EMAIL_END, b"")
     clean = observed[:beacon.start()] + observed[beacon.end():]
     if clean == original:
