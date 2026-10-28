@@ -120,6 +120,10 @@ try:
                     check("five assumptions or fewer" in page.locator("#request-status").inner_text(), "Sixth assumption is blocked")
 
                     page.locator("#purchase-status").select_option("FREE_CHECK")
+                    page.locator("#opportunity-url").fill("https://example.org/unrelated-rfp")
+                    page.locator("#copy-request").click()
+                    check("exact public SAM.gov" in page.locator("#request-status").inner_text(), "Free check refuses non-SAM opportunity links")
+                    page.locator("#opportunity-url").fill("https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view")
                     page.locator("#assumptions").fill("The deadline has not changed.\nThe cited edition applies.")
                     page.locator("#copy-request").click()
                     check("exactly one assumption" in page.locator("#request-status").inner_text(), "Free check rejects a second assumption")
