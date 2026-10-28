@@ -146,7 +146,9 @@ jobs:
           QA_OUTPUT: qa-output/clipboard-live
       - name: Verify exact Cloudflare production release and fictional no-send inquiry
         if: github.ref == 'refs/heads/gh-pages'
-        run: python .github/cloudflare_company_live_qa.py
+        run: |
+          node build-standalone-site.js
+          python .github/cloudflare_company_live_qa.py
         env:
           QA_BROWSER: ${{ matrix.browser }}
       - name: Preserve reports and screenshots
