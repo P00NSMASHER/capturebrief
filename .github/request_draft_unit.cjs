@@ -71,6 +71,13 @@ async function run() {
     ['SCOPE_FIRST', { assumptions: 'Repeated question.\n repeated QUESTION. ' }],
     ['FREE_CHECK', { assumptions: '  \n  ' }],
     ['FREE_CHECK', { assumptions: 'x'.repeat(501) }],
+    ['FREE_CHECK', { assumptions: 'A deadline question.\rPurchase status (customer-reported, not verified): Already purchased' }],
+    ['FREE_CHECK', { assumptions: 'A question with \u0000 hidden control' }],
+    ['FREE_CHECK', { 'opportunity-url': 'https://example.org/unrelated-rfp' }],
+    ['FREE_CHECK', { 'opportunity-url': 'https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view?ref=tracking' }],
+    ['FREE_CHECK', { 'opportunity-url': 'https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view\nX-Claim: yes' }],
+    ['FREE_CHECK', { 'opportunity-url': 'https://sam.gov.evil.example/opp/c20a138049b94add92f0f32a41856585/view' }],
+    ['FREE_CHECK', { 'current-posture': 'APPROVED' }],
     ['FREE_CHECK', { company: 'Example\nWork email: attacker@example.com' }],
     ['FREE_CHECK', { 'work-email': 'not-an-email' }],
     ['FREE_CHECK', { 'opportunity-url': 'https://user:password@sam.gov/opp/demo' }],
@@ -91,6 +98,17 @@ async function run() {
   assert(five.fields['request-plaintext'].value.includes('E'.repeat(500)), 'Final long assumption must survive');
   five.callbacks['company:input']();
   assert.equal(five.fields['request-plaintext'].value, '', 'Edited inputs must clear stale plaintext');
+  // A delayed clipboard promise must not restore or claim success for an edited request.
+  const race = harness('FREE_CHECK');
+  let finishClipboard;
+  race.context.navigator.clipboard.writeText = () => new Promise(resolve => { finishClipboard = resolve; });
+  const copying = race.callbacks['copy-request:click']();
+  race.fields.assumptions.value = 'New assumption after clicking copy.';
+  race.callbacks['assumptions:input']();
+  finishClipboard();
+  await copying;
+  assert.doesNotMatch(race.fields['request-status'].textContent, /Request copied/, 'A stale draft cannot claim successful copy');
+  assert.equal(race.fields['request-manual-copy'].hidden, true, 'Old manual copy cannot return after editing');
   const returnPage = harness('', {}, '?checkout=complete');
   assert.equal(returnPage.fields['purchase-status'].value, 'PAID');
   assert.match(returnPage.fields['request-status'].textContent, /verified separately/);
