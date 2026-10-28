@@ -36,6 +36,7 @@ jobs:
         run: |
           python -m compileall -q scripts/replay_verified_public_case_pdf.py
           python -m unittest tests.test_replay_verified_public_case_pdf -v
+          python scripts/replay_verified_public_case_pdf.py --help
 
   first-party-public-original:
     needs: contract
