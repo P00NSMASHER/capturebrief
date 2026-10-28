@@ -9,7 +9,7 @@ No private buyer input, automatic source approval, payment or external send.
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import io
 import json
@@ -19,15 +19,18 @@ import re
 import sys
 import tempfile
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode, urlsplit
+from urllib.parse import parse_qsl, urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from capturebrief_core.scoped_source import (
-    ScopedApiRedirects, observe_scoped_case, retain_review_source, read_private_case,
+    ScopedApiRedirects, observe_scoped_case, retain_review_source,
+    read_private_case, verify_scoped_capture,
 )
+from capturebrief_core.current_api import validate_api_observation
+from capturebrief_core.source_policy import require_approved_automation
 from scripts.import_request_draft import import_request
 from scripts.scoped_private_backup import create_backup
 from tests.test_free_trial import free_draft
@@ -38,7 +41,11 @@ RESOURCE = "bef67716955a4d909f2cbf8b6b8533da"
 FILENAME = "2031JW27Q00011 Global Macro - Final RFQ.pdf"
 SAM_NOTICE = "https://sam.gov/opp/" + NOTICE + "/view"
 PUBLIC_FILE = ("https://sam.gov/api/prod/opps/v3/opportunities/resources/files/"
-               + RESOURCE + "/download?" + urlencode({"fn": FILENAME}))
+               + RESOURCE + "/download")
+# Observed immutable path SHA-256 from the exact original SAM-origin 303,
+# never a trust assertion about other S3 objects or about complete history.
+PINNED_GSA_ATTACHMENT_PATH_SHA256 = "ff7a750b5254bc3b158a86f82ccae090c2404414b2a983cc2b0206f87c7fa2c3"
+GSA_ATTACHMENT_BUCKET = "iae-fbo-attachments.s3.amazonaws.com"
 # Public-data-only demo key. Never use as a real customer recovery key.
 DEMO_KEY = b"DEMO_PUBLIC_GOVERNMENT_SOURCE_NO_CUSTOMER_NOT_A_PRODUCTION_SECRET_2026"
 MAX_PDF = 2 * 1024 * 1024
@@ -87,6 +94,101 @@ class OfficialPdfRedirectBlocked(RuntimeError):
         }
 
 
+def _require_exact_original_resource(api_observation: dict) -> str:
+    """Only a single original resource declared by exact verified SAM v2 receipt."""
+    validate_api_observation(api_observation)
+    record = api_observation["record"]
+    if (str(record.get("noticeId") or "").lower() != NOTICE
+            or str(record.get("solicitationNumber") or "").strip().upper() != SOL):
+        raise ValueError("The resource record is not the case's reviewed pursuit")
+    links = api_observation.get("resource_links") or []
+    if links != [PUBLIC_FILE]:
+        raise ValueError("Official one-file public PDF source is missing or altered")
+    require_approved_automation(PUBLIC_FILE, expected="SAM_API_RESOURCE_LINK")
+    return PUBLIC_FILE
+
+
+def _approved_s3_signed_redirect(
+    original: str, target: str, *, now: datetime | None = None,
+    expected_path_sha256: str = PINNED_GSA_ATTACHMENT_PATH_SHA256,
+) -> bool:
+    """Allow only a fresh, one-object GSA-attached SigV4 HTTPS 303.
+
+    A SAM.gov-origin redirected S3 URL is a *transport* chain, not source
+    authenticity or a customer-ready historical-amendment assertion.
+    """
+    try:
+        start, signed = urlsplit(original), urlsplit(target)
+        if (original != PUBLIC_FILE or
+                start.scheme != "https" or start.hostname != "sam.gov" or
+                start.username is not None or start.password is not None or
+                start.port not in (None, 443) or start.query or start.fragment or
+                signed.scheme != "https" or signed.hostname != GSA_ATTACHMENT_BUCKET or
+                signed.username is not None or signed.password is not None or
+                signed.port not in (None, 443) or signed.fragment or
+                len(target) > 8192):
+            return False
+        if (not signed.path.startswith("/") or not signed.path.lower().endswith(".pdf")
+                or RESOURCE not in signed.path.lower()
+                or hashlib.sha256(signed.path.encode()).hexdigest() != expected_path_sha256):
+            return False
+        fields = parse_qsl(signed.query, keep_blank_values=True,
+                           strict_parsing=True, max_num_fields=10)
+        allowed = {
+            "X-Amz-Algorithm", "X-Amz-Date", "X-Amz-Credential",
+            "X-Amz-Expires", "X-Amz-SignedHeaders", "X-Amz-Signature",
+            "response-content-disposition",
+        }
+        vals = dict(fields)
+        if len(fields) != 7 or len(vals) != 7 or set(vals) != allowed:
+            return False
+        if (vals["X-Amz-Algorithm"] != "AWS4-HMAC-SHA256" or
+                vals["X-Amz-SignedHeaders"] != "host" or
+                re.fullmatch(r"[0-9a-f]{64}", vals["X-Amz-Signature"]) is None or
+                re.fullmatch(r"[0-9]{8}T[0-9]{6}Z", vals["X-Amz-Date"]) is None):
+            return False
+        lifetime_text=vals["X-Amz-Expires"]
+        if (not lifetime_text.isascii() or not lifetime_text.isdecimal() or
+                len(lifetime_text) > 5 or not 1 <= int(lifetime_text) <= 14400):
+            return False
+        when=datetime.strptime(vals["X-Amz-Date"], "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc)
+        checked=now or datetime.now(timezone.utc)
+        if checked.utcoffset() is None:
+            return False
+        checked=checked.astimezone(timezone.utc)
+        if when > checked + timedelta(minutes=5) or when + timedelta(seconds=int(lifetime_text),minutes=2) < checked:
+            return False
+        scope = vals["X-Amz-Credential"].split("/")
+        if (len(scope) != 5 or
+                re.fullmatch(r"[A-Z0-9]{16,64}", scope[0]) is None or
+                scope[1] != vals["X-Amz-Date"][:8] or
+                not re.fullmatch(r"[a-z0-9-]{4,24}",scope[2]) or
+                scope[3:] != ["s3","aws4_request"]):
+            return False
+        # filename is a signed response header, not a fresh source identifier.
+        if len(vals["response-content-disposition"]) > 512:
+            return False
+        return True
+    except (TypeError,ValueError,OverflowError,UnicodeError):
+        return False
+
+
+class OfficialAttachmentRedirectGuard(HTTPRedirectHandler):
+    def __init__(self, source: str):
+        super().__init__()
+        if source != PUBLIC_FILE:
+            raise ValueError("Only exact API-bound official source is supported")
+        self.source=source
+        self.used=False
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if (self.used or code != 303 or req.full_url != self.source or
+                not _approved_s3_signed_redirect(self.source,newurl)):
+            raise OfficialPdfRedirectBlocked(urlsplit(newurl).hostname, code, newurl)
+        self.used=True
+        return super().redirect_request(req,fp,code,msg,headers,newurl)
+
+
 class SameHost(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         source = urlsplit(req.full_url)
@@ -102,14 +204,18 @@ class SameHost(HTTPRedirectHandler):
 
 def fetch_official_pdf(opener=None) -> tuple[bytes, dict]:
     """No third-party mirror may satisfy the original-file requirement."""
-    open_ = opener or build_opener(SameHost()).open
+    require_approved_automation(PUBLIC_FILE, expected="SAM_API_RESOURCE_LINK")
+    open_ = opener or build_opener(OfficialAttachmentRedirectGuard(PUBLIC_FILE)).open
     req = Request(PUBLIC_FILE, headers={
         "Accept": "application/pdf,application/octet-stream",
         "User-Agent": "CaptureBrief-public-source-readonly/1.0",
     })
     with open_(req, timeout=25) as response:
         final = urlsplit(response.geturl())
-        if final.scheme != "https" or final.hostname != "sam.gov":
+        if (response.geturl() != PUBLIC_FILE and
+                not _approved_s3_signed_redirect(PUBLIC_FILE, response.geturl())):
+            raise RuntimeError("Official PDF delivery is not bound to the verified GSA 303")
+        if final.scheme != "https" or final.hostname not in {"sam.gov", GSA_ATTACHMENT_BUCKET}:
             raise RuntimeError("Official PDF origin was not proven")
         length = response.headers.get("Content-Length")
         if length and (not length.isdigit() or int(length) > MAX_PDF):
@@ -123,7 +229,9 @@ def fetch_official_pdf(opener=None) -> tuple[bytes, dict]:
     # never silently treated as the version originally posted on October 26.
     return original, {
         "status": "FIRST_PARTY_PDF_TRANSPORT_OBSERVED_REVIEW_REQUIRED",
-        "source_host": "sam.gov", "sha256": hashlib.sha256(original).hexdigest(),
+        "source_host": "sam.gov", "signed_delivery_host": GSA_ATTACHMENT_BUCKET if final.hostname == GSA_ATTACHMENT_BUCKET else None,
+        "s3_original_resource_path_verified": final.hostname == GSA_ATTACHMENT_BUCKET,
+        "sha256": hashlib.sha256(original).hexdigest(),
         "bytes": len(original), "publisher_human_reviewed": False,
     }
 
@@ -219,6 +327,12 @@ def main(argv=None) -> int:
 
     doc = {"status": "FIRST_PARTY_PDF_NOT_YET_OBSERVED"}
     try:
+        private_capture = private / ("case-" + source["case_tag"]) / source["private_observation_file"]
+        retained_observation = json.loads(private_capture.read_text(encoding="utf-8"))
+        official_link = _require_exact_original_resource(
+            verify_scoped_capture(case, retained_observation))
+        if official_link != PUBLIC_FILE:
+            raise RuntimeError("Live source link does not match official case record")
         original, doc = fetch_official_pdf()
         doc.update(read_pdf_deadlines(original))
         input_file = root / "original-public-rfq.pdf"

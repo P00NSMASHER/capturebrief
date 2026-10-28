@@ -67,6 +67,69 @@ class PublicCaseProofTests(unittest.TestCase):
         assert "X-Amz-Signature" in safe["redirect_query_parameter_names_only"]
         assert "SECRET_DO_NOT_ECHO" not in json.dumps(safe)
 
+    def test_pinned_sam_s3_presigned_transport_enforces_exact_source_and_expiry(self):
+        from datetime import datetime, timezone, timedelta
+        from urllib.parse import urlencode
+        import hashlib
+        now = datetime(2026, 10, 28, 18, 0, tzinfo=timezone.utc)
+        path = "/official/attachments/" + case.RESOURCE + "/public.pdf"
+        official = "https://sam.gov/api/prod/opps/v3/opportunities/resources/files/" + case.RESOURCE + "/download"
+        assert case.PUBLIC_FILE == official
+        stamp = now.strftime("%Y%m%dT%H%M%SZ")
+        scope = now.strftime("%Y%m%d") + "/us-east-1/s3/aws4_request"
+        fields = {
+            "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+            "X-Amz-Credential": "AKIAY3LPYEEX5FRGIQ4E/" + scope,
+            "X-Amz-Date": stamp, "X-Amz-Expires": "3600",
+            "X-Amz-SignedHeaders": "host", "X-Amz-Signature": "b"*64,
+            "response-content-disposition": "attachment",
+        }
+        target = "https://iae-fbo-attachments.s3.amazonaws.com" + path + "?" + urlencode(fields)
+        expected_path = hashlib.sha256(path.encode()).hexdigest()
+        assert case._approved_s3_signed_redirect(
+            official, target, now=now, expected_path_sha256=expected_path)
+        for changed in (
+            target.replace("iae-fbo-attachments.s3.amazonaws.com", "evil.example"),
+            target.replace("3600", "999999"),
+            target.replace("AKIAY3LPYEEX5FRGIQ4E", "NOT_A_REAL_ACCESS_ID"),
+            target.replace(case.RESOURCE, "f"*32),
+            target + "&X-Amz-Signature=" + "c"*64,
+            target.replace("us-east-1", "US_EAST_NA"),
+        ):
+            with self.subTest(changed=changed[:150]):
+                assert not case._approved_s3_signed_redirect(
+                    official, changed, now=now, expected_path_sha256=expected_path)
+        assert not case._approved_s3_signed_redirect(
+            official, target, now=now+timedelta(hours=2),
+            expected_path_sha256=expected_path)
+        assert not case._approved_s3_signed_redirect(
+            official.replace("sam.gov","sam.gov.evil.example"), target,
+            now=now, expected_path_sha256=expected_path)
+
+    def test_official_resource_only_matches_authenticated_current_action(self):
+        from copy import deepcopy
+        original = {
+            "source_url": "https://api.sam.gov/prod/opportunities/v2/search",
+            "source_contract": "SAM_GET_OPPORTUNITIES_V2",
+            "automation_mode": "APPROVED_API",
+            "observed_at": "2026-10-28T17:30:00+00:00",
+            "payload_sha256": "a"*64, "response_sha256": "b"*64,
+            "pagination": {"complete": True,"total_records":1,
+                           "returned_records":1,"limit":100,"offset":0},
+            "record": {"noticeId":case.NOTICE, "solicitationNumber":case.SOL,
+                       "active":"Yes", "postedDate":"2026-10-26"},
+            "resource_links":[case.PUBLIC_FILE]
+        }
+        assert case._require_exact_original_resource(original) == case.PUBLIC_FILE
+        for other in (
+            {**original, "resource_links":[case.PUBLIC_FILE+"?fn=untrusted.pdf"]},
+            {**original, "record":{**original["record"], "noticeId":"f"*32}},
+            {**original, "resource_links":[]},
+            {**original, "resource_links":[case.PUBLIC_FILE,case.PUBLIC_FILE]},
+        ):
+            with self.assertRaises((ValueError,RuntimeError)):
+                case._require_exact_original_resource(other)
+
     def test_history_missing_unauthorized_and_wrong_family_never_approves(self):
         def payload(value):
             def open_(req,timeout):
