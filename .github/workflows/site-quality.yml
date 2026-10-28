@@ -31,6 +31,13 @@ jobs:
         run: node build-standalone-site.test.js
       - name: Compile production smoke acceptance before publication
         run: python -m py_compile .github/cloudflare_company_live_qa.py
+      - name: Compare public Cloudflare response bytes with generated release (diagnostic only)
+        if: matrix.browser == 'chromium'
+        run: |
+          node build-standalone-site.js
+          python .github/cloudflare_byte_diagnostic.py
+      - name: Reject unsigned Cloudflare response alterations in standalone tests
+        run: PYTHONPATH=.github python -m unittest test_cloudflare_edge_integrity -v
       - name: Use bounded official Ubuntu package downloads
         run: |
           sudo python3 - <<'PY'
@@ -139,7 +146,9 @@ jobs:
           QA_OUTPUT: qa-output/clipboard-live
       - name: Verify exact Cloudflare production release and fictional no-send inquiry
         if: github.ref == 'refs/heads/gh-pages'
-        run: python .github/cloudflare_company_live_qa.py
+        run: |
+          node build-standalone-site.js
+          python .github/cloudflare_company_live_qa.py
         env:
           QA_BROWSER: ${{ matrix.browser }}
       - name: Preserve reports and screenshots

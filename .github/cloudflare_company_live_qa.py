@@ -13,6 +13,9 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
+
+from cloudflare_edge_integrity import verify_public_html_bytes
 
 BASE = "https://capturebrief.retallyrecovery.com/"
 HOST = "capturebrief.retallyrecovery.com"
@@ -124,13 +127,24 @@ def main() -> None:
     by_path = {item["path"]: item for item in manifest}
     assert len(by_path) == len(manifest), "Duplicate public file manifest path"
     checked = []
+    edge_transforms = {}
     for path in ("index.html", "assets/capturebrief.js", "assets/capturebrief.css",
                  "privacy.html", "terms.html", "data-handling.html"):
         assert path in by_path, "Public release manifest omitted a required source"
+        # Rebuild locally from this exact checked-out commit, and independently
+        # verify Cloudflare's advertised manifest before considering edge rewrites.
+        expected = (Path("dist") / path).read_bytes()
+        assert hashlib.sha256(expected).hexdigest() == by_path[path]["sha256"], \
+            "Production fingerprint advertises different build source: " + path
         payload, _ = fetch(path)
-        assert hashlib.sha256(payload).hexdigest() == by_path[path]["sha256"], \
-            "Served production bytes differ from reviewed build manifest: " + path
+        if hashlib.sha256(payload).hexdigest() == by_path[path]["sha256"]:
+            mode = "EXACT_BYTES"
+        elif path.endswith(".html"):
+            mode = verify_public_html_bytes(expected, payload)
+        else:
+            raise AssertionError("Served production asset changed beyond approved build: " + path)
         checked.append(path)
+        edge_transforms[path] = mode
         if path == "index.html":
             assert b"at most ten businesses" in payload
             assert b"Preparing an email draft does not send an inquiry" in payload
@@ -140,7 +154,7 @@ def main() -> None:
     print(json.dumps({
         "status": "EXACT_COMMIT_PRODUCTION_INQUIRY_VERIFIED_NO_SEND",
         "commit": EXPECTED_SHA, "purchase_policy": info["purchasePolicy"],
-        "verified_assets": checked, **browser_result,
+        "verified_assets": checked, "edge_modes": edge_transforms, **browser_result,
         "source_history_complete": False,
         "customer_delivery_authorized": False,
         "payment_authorized": False,
