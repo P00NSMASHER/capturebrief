@@ -6,8 +6,10 @@ on:
       - 'capturebrief_core/scoped_source.py'
       - 'scripts/prepare_scoped_sam.py'
       - 'scripts/scoped_private_backup.py'
+      - 'scripts/free_check_registry_backup.py'
       - 'tests/test_scoped_source.py'
       - 'tests/test_scoped_private_backup.py'
+      - 'tests/test_free_check_registry_backup.py'
       - '.github/workflows/scoped-private-evidence-qa.yml'
   push:
     branches: [main]
@@ -15,8 +17,10 @@ on:
       - 'capturebrief_core/scoped_source.py'
       - 'scripts/prepare_scoped_sam.py'
       - 'scripts/scoped_private_backup.py'
+      - 'scripts/free_check_registry_backup.py'
       - 'tests/test_scoped_source.py'
       - 'tests/test_scoped_private_backup.py'
+      - 'tests/test_free_check_registry_backup.py'
       - '.github/workflows/scoped-private-evidence-qa.yml'
 
 permissions:
@@ -28,7 +32,7 @@ concurrency:
 
 jobs:
   encrypted-backup-evidence:
-    name: Offline scoped-source and AES-GCM replay / ${{ matrix.os }}
+    name: Offline scoped-source, registry and AES-GCM replay / ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -46,6 +50,6 @@ jobs:
       - name: Install pinned release-tested cryptography dependency
         run: 'python -m pip install --disable-pip-version-check --only-binary=:all: cryptography==46.0.4'
       - name: Compile only scoped source and secure backup
-        run: python -m compileall -q capturebrief_core/scoped_source.py scripts/prepare_scoped_sam.py scripts/scoped_private_backup.py
+        run: python -m compileall -q capturebrief_core/scoped_source.py scripts/prepare_scoped_sam.py scripts/scoped_private_backup.py scripts/free_check_registry_backup.py
       - name: Run real code against deliberately synthetic offline tests
-        run: python -m unittest tests.test_scoped_source tests.test_scoped_private_backup tests.test_founder_curated_admission -v
+        run: python -m unittest tests.test_scoped_source tests.test_scoped_private_backup tests.test_founder_curated_admission tests.test_free_check_registry_backup -v

@@ -46,6 +46,7 @@ The existing paid and scope-first formats remain valid.
    per reservation and ten businesses total. Identical retries are idempotent;
    concurrent reservations are serialized. There is no reset/delete command
    or automatic conversion. Retain and back up the original registry.
+   **Registry recovery:** the scoped SAM source backup does not protect the ten-business reservation database. After each committed reservation, create a separate encrypted WAL-consistent registry backup, independently copy it off-device and rehearse restore using `FREE-CHECK-REGISTRY-RECOVERY.md`. A recovered snapshot remains reconciliation-required; never restart the cohort from an old file.
 4. Confirm scope and a feasible delivery date before accepting the engagement.
    The reservation is `RESERVED_REVIEW_REQUIRED`, not proof of admission or
    source readiness. No trial is represented as completed until a real checked
