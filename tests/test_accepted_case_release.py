@@ -447,6 +447,32 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
             _json_file(disguised)
         self.assertEqual(_json_file(metadata), {"schema": "fake"})
 
+    @unittest.skipUnless(os.name == "nt", "Native Windows junction regression")
+    def test_python311_windows_junction_ancestor_blocks_case_and_metadata(self):
+        # Python 3.11 lacks Path.is_junction(). A real NTFS directory
+        # junction must still be detected through lstat reparse attributes.
+        import subprocess
+
+        external = Path(self.tmp.name) / "junction-target"
+        original = external / "actual-case"
+        original.mkdir(parents=True)
+        (original / "manifest.json").write_text('{"format": "fake"}')
+        alias = Path(self.tmp.name) / "junction-alias"
+        proc = subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(alias), str(external)],
+            capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        disguised_root = alias / "actual-case"
+        disguised_file = disguised_root / "manifest.json"
+        self.assertFalse(disguised_root.is_symlink())
+        self.assertFalse(disguised_file.is_symlink())
+        # Both root selection and individual metadata reading must fail.
+        with self.assertRaises(AcceptedCaseBlocked):
+            _root(disguised_root)
+        with self.assertRaises(AcceptedCaseBlocked):
+            _json_file(disguised_file)
+
     def test_one_use_signed_nonce_reserved_atomically_and_never_sends(self):
         verdict = self.check()  # FICTIONAL fixture, mocked existing core.
         ledger_dir = Path(self.tmp.name) / "shared-trusted-ledger"
