@@ -201,16 +201,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
-        now = datetime.now(timezone.utc)
         # Key is kept in the environment by an exact-current-main-only
         # Actions job. It is never accepted as a CLI value, printed or saved.
-        result, code = run_probe(os.environ.get("SAM_API_KEY", ""), now=lambda: now)
+        result, code = run_probe(os.environ.get("SAM_API_KEY", ""))
         if code != 0:
             raise RealSourceBlocked("Official API verification is not currently available")
         output = evaluate_public_case(
             active_bytes=_read_source(args.active_original, bound=ACTIVE_BOUND),
             archive_bytes=_read_source(args.fy2027_original, bound=ARCHIVE_BOUND),
-            probe=result, checked_at=now,
+            probe=result, checked_at=datetime.now(timezone.utc),
         )
     except Exception:
         # Network errors may contain a signed GSA delivery URL or an API key.
