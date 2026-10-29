@@ -16,6 +16,12 @@ import re
 import shutil
 from datetime import datetime, timezone
 
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from capturebrief_core.scoped_source import (
     private_root, read_private_case, verify_scoped_capture, retain_review_source,
 )
