@@ -76,6 +76,8 @@ The existing paid and scope-first formats remain valid.
 
 ## Current launch status and remaining work
 
+**First-customer distinction (October 29, 2026):** no first buyer, customer feedback, completed customer delivery, or customer signoff is required for PRELAUNCH readiness. Operator rehearsals should use authentic publicly reusable government originals and fictional customer fixtures. Future received requests still require company identity/scope checks, per-case official history/source review, internally reviewed report, private off-device recovery and approval for every actual delivery. See FIRST-CUSTOMER-READINESS.md.
+
 For the no-card offer, run the offer-specific admission report:
 
 ```sh

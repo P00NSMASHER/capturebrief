@@ -53,6 +53,38 @@ class FounderCuratedFreeAdmissionTests(unittest.TestCase):
         self.assertEqual(report["gates"]["trial_identity"]["status"], "BUSINESS_ELIGIBILITY_REVIEW_REQUIRED")
         self.assertEqual(report["gates"]["operator"]["status"], "INDEPENDENT_REVIEW_AND_SEND_APPROVAL_REQUIRED")
 
+    def test_first_customer_prelaunch_does_not_require_customer_or_customer_review(self):
+        report = inspect(now=NOW, stage="admission", offer="free",
+                         launch_mode="founder_curated")
+        policy = report["first_customer_prelaunch_policy"]
+        self.assertIs(policy["customer_required"], False)
+        self.assertIs(policy["customer_feedback_required"], False)
+        self.assertIs(policy["customer_report_or_customer_signoff_required"], False)
+        self.assertIs(policy["real_customer_delivery_or_payment_proven"], False)
+        self.assertTrue(policy["independent_internal_operator_qa_required"])
+        self.assertTrue(policy["full_internal_report_review_and_explicit_send_approval_required_at_delivery"])
+        self.assertTrue(policy["complete_official_history_required_per_future_case"])
+        prelaunch = set(report["pre_pilot_gates"])
+        per_case = set(report["post_pilot_gates"])
+        self.assertEqual(prelaunch, {
+            "production", "prelaunch_private_workspace",
+            "prelaunch_offdevice_recovery", "prelaunch_internal_qa",
+        })
+        self.assertTrue({"intake", "trial_identity", "operator", "real_case",
+                         "history_route", "current_action", "release", "delivery"} <= per_case)
+        self.assertFalse(prelaunch.intersection(per_case))
+        # A complete buyer deliverable is not invented merely because the
+        # prelaunch scorecard no longer has circular customer conditions.
+        self.assertFalse(report["approved_to_accept_payment_or_send_customer_material"])
+        self.assertFalse(report["technical_preflight_passed"])
+
+    def test_first_customer_policy_is_not_applied_to_paid_or_full_catalog(self):
+        report = inspect(now=NOW, stage="admission", offer="free",
+                         launch_mode="full_catalog")
+        self.assertIsNone(report["first_customer_prelaunch_policy"])
+        self.assertIn("catalog", report["pre_pilot_gates"])
+        self.assertIn("source_index", report["pre_pilot_gates"])
+
     def test_fake_buyer_claim_cannot_become_approved_review(self):
         case = build_case_from_intake({
             "email": "buyer@example.com",

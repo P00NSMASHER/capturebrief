@@ -249,6 +249,20 @@ def inspect(
     # Case-specific SAM_HISTORY remains subject to existing receipt, current
     # action, manifest, reference, Decision Evidence and actual free-report gates.
     if launch_mode == "founder_curated":
+        # PRE-FIRST-CUSTOMER readiness cannot depend on having a customer, a
+        # customer's feedback, their accepted scope or their reviewed report.
+        # The operator's private environment can and should be rehearsed using
+        # fictional cases plus authentic publicly reusable government originals.
+        # These are operational setup requirements, never self-signed PASSes.
+        result("prelaunch_private_workspace", "OPERATOR_PRIVATE_STORAGE_REHEARSAL_REQUIRED",
+               "Provision an approved encrypted workspace, restricted ACLs and retention policy "
+               "before handling the first real request; no customer records are needed to rehearse.")
+        result("prelaunch_offdevice_recovery", "OPERATOR_OFFDEVICE_RECOVERY_REHEARSAL_REQUIRED",
+               "Test an encrypted full-case/registry restore from off-device custody using public "
+               "or fictional data and separately held recovery material; a CI fixture alone is insufficient.")
+        result("prelaunch_internal_qa", "INDEPENDENT_NO_CUSTOMER_DRILL_REQUIRED",
+               "Independently exercise no-card intake, immutable case evidence, report preparation, "
+               "source-conflict HOLD behavior and no-send release gates without a real customer.")
         result("history_route", "CASE_SPECIFIC_FIRST_PARTY_REVIEW_REQUIRED",
                "Independently retain and review the COMPLETE official action/attachment history "
                "for this exact pursuit; SAM_HISTORY is human-supervised, not a fabricated full catalog")
@@ -289,16 +303,32 @@ def inspect(
         "approved_to_accept_payment_or_send_customer_material": False,
         "status": status,
         "inquiry_preparation_only": launch_mode == "founder_curated",
+        "first_customer_prelaunch_policy": (
+            {
+                "customer_required": False,
+                "customer_feedback_required": False,
+                "customer_report_or_customer_signoff_required": False,
+                "real_customer_delivery_or_payment_proven": False,
+                "independent_internal_operator_qa_required": True,
+                "complete_official_history_required_per_future_case": True,
+                "actual_customer_identity_and_scope_checked_after_inbound_request": True,
+                "full_internal_report_review_and_explicit_send_approval_required_at_delivery": True,
+                "separate_operational_setup_required": True,
+            }
+            if launch_mode == "founder_curated" else None
+        ),
         "full_catalog_diagnostic_gates": (["catalog", "source_index"] if launch_mode == "founder_curated" else []),
         "pre_pilot_gates": (
-            ["intake", "trial_identity", "operator", "production"]
+            ["production", "prelaunch_private_workspace",
+             "prelaunch_offdevice_recovery", "prelaunch_internal_qa"]
             if launch_mode == "founder_curated" else
             ["catalog", "source_index", "intake", "trial_identity", "operator", "production"]
             if offer == "free" else
             ["catalog", "source_index", "intake", "payment", "operator", "production"]
         ),
         "post_pilot_gates": (
-            ["history_route", "current_action", "private_recovery", "real_case", "release", "delivery"]
+            ["intake", "trial_identity", "operator", "history_route",
+             "current_action", "private_recovery", "real_case", "release", "delivery"]
             if launch_mode == "founder_curated" else
             ["real_case", "release", "delivery"] if offer == "free" else
             ["real_case", "release", "delivery", "watch"]
