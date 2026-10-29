@@ -231,6 +231,47 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
         with self.assertRaises(AcceptedCaseBlocked):
             self.check()
 
+    def test_current_api_host_cannot_be_relabelled_as_full_history(self):
+        for row in self.rows:
+            if row["kind"] == "HISTORY":
+                row["source_url"] = "https://api.sam.gov/opportunities/v2/search"
+        self.sign()
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.check()
+
+    def test_future_published_amendment_is_rejected(self):
+        self.manifest["source_closure"]["actions"][1]["published_at"] = (
+            NOW + timedelta(days=2)).isoformat()
+        self.sign()
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.check()
+
+    def test_signed_but_inconsistent_report_receipt_is_rejected(self):
+        # New exact bytes + new inventory hash + adjusted restore list can all
+        # be signed by FICTIONAL testers, but the report receipt remains
+        # inconsistent with the actual report and must still fail.
+        path = self.root / "report_receipt.bin"
+        wrong = canonical({"case_sha256": sha256(canonical(self.case)),
+                           "report_sha256": "0" * 64})
+        path.write_bytes(wrong)
+        if os.name != "nt":
+            path.chmod(0o600)
+        for row in self.rows:
+            if row["id"] == "report_receipt":
+                row["sha256"] = sha256(wrong)
+        proof_path = self.root / "recovery.bin"
+        proof = json.loads(proof_path.read_text())
+        proof["restored_files"]["report_receipt"] = sha256(wrong)
+        proof_path.write_bytes(canonical(proof))
+        if os.name != "nt":
+            proof_path.chmod(0o600)
+        for row in self.rows:
+            if row["id"] == "recovery":
+                row["sha256"] = sha256(canonical(proof))
+        self.sign()
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.check()
+
     def test_incorporated_edition_and_missing_resources_block(self):
         self.manifest["source_closure"]["incorporated_sources"][0]["edition"] = "2027"
         self.sign()
