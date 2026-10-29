@@ -138,7 +138,9 @@ python scripts/scoped_private_backup.py restore \
 
 The CLI requests an independently retained recovery phrase interactively;
 never paste it in chat, email or commits. A local restore proves only local
-authenticated-byte recovery. An encrypted backup must be independently
+authenticated-byte recovery. The free-check reservation registry is **not included** in the per-case `.cbak`. Back up and independently restore that registry using `FREE-CHECK-REGISTRY-RECOVERY.md`; a stale restored snapshot must not reset admission limits.
+
+An encrypted backup must be independently
 copied OFF DEVICE, fetched again, and restored under independent key control
 before accepting real engagements. A separate private GitHub repository can
 hold **encrypted backups only** if later provisioned and permission-scoped;
