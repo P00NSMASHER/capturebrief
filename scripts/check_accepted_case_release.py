@@ -17,6 +17,7 @@ sys.path.insert(0, str(REPO))
 from capturebrief_core.accepted_case_release import (
     AcceptedCaseBlocked, _json_file, _root, inspect_accepted_case,
 )
+from capturebrief_core.authorization_ledger import reserve_once
 
 
 def main(argv=None) -> int:
@@ -26,6 +27,10 @@ def main(argv=None) -> int:
     parser.add_argument("--release-manifest", type=Path, required=True)
     parser.add_argument("--trusted-signers", type=Path, required=True,
                         help="Externally provisioned owner-only roster, NOT in the case root")
+    parser.add_argument("--reserve-once", action="store_true",
+                        help="Atomically reserve this approved one-message nonce, without sending")
+    parser.add_argument("--authorization-ledger", type=Path,
+                        help="One durable shared private SQLite ledger for ALL accepted cases")
     args = parser.parse_args(argv)
     try:
         root = _root(args.private_root)
@@ -38,11 +43,21 @@ def main(argv=None) -> int:
             raise AcceptedCaseBlocked("Keep case/manifest in approved root and signer trust separate")
         _root(roster.parent)
         trusted = _json_file(roster)
+        release = _json_file(manifest)
         result = inspect_accepted_case(
-            _json_file(case), _json_file(manifest),
+            _json_file(case), release,
             private_root=root, trusted_keys=trusted,
         )
-    except (AcceptedCaseBlocked, ValueError, OSError, TypeError, KeyError):
+        if args.reserve_once:
+            if args.authorization_ledger is None:
+                raise AcceptedCaseBlocked("Shared append-only authorization ledger required")
+            ledger = args.authorization_ledger.expanduser().absolute()
+            if ledger.is_relative_to(root):
+                raise AcceptedCaseBlocked("Shared authorization ledger must reside outside the case-specific root")
+            result = reserve_once(release, verification=result, ledger_path=ledger)
+        elif args.authorization_ledger is not None:
+            raise AcceptedCaseBlocked("Ledger path is meaningful only with --reserve-once")
+    except (AcceptedCaseBlocked, ValueError, OSError, TypeError, KeyError, AttributeError):
         # Errors can reveal private customer details in exception strings.
         # This operator entrypoint reports a safe fixed-class denial only.
         print(json.dumps({"status": "CUSTOMER_DELIVERY_BLOCKED",
