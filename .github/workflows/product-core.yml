@@ -143,6 +143,7 @@ jobs:
           tests.test_rule_evidence
           tests.test_rule_sync
           tests.test_history_index
+          tests.test_source_coverage_audit
           tests.test_resolution_sync
           tests.test_atomic_io
           tests.test_retain_fy2027_candidate
