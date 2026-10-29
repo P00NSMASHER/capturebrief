@@ -33,6 +33,7 @@ sys.path.insert(0, str(REPO))
 
 from capturebrief_core.accepted_case_release import (
     _file as verified_private_file, _json_file as private_json, _root as private_root,
+    _reject_private_path_links,
 )
 from capturebrief_core.atomic_io import atomic_write_bytes, exclusive_path_lock
 from scripts.scoped_private_backup import (
@@ -109,9 +110,14 @@ def _validated_inventory(inv: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _collect(root: Path, input_file: Path) -> tuple[str,list[tuple[dict[str,Any],bytes]]]:
-    if not input_file.is_relative_to(root):
+    # On Windows, a TemporaryDirectory can use an 8.3 alias while the
+    # approved _root() resolves to the long canonical path. Reject symlink/
+    # junction ancestors BEFORE resolving, then compare canonical parents.
+    _reject_private_path_links(input_file)
+    canonical = input_file.resolve(strict=True)
+    if not canonical.is_relative_to(root):
         raise ValueError("Case source inventory must be inside the private case root")
-    inv = private_json(input_file)
+    inv = private_json(canonical)
     entries = _validated_inventory(inv)
     loaded = []
     total = 0
