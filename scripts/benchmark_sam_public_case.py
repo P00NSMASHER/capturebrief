@@ -200,22 +200,72 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--fy2027-original", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args(argv)
+    phase = "API_ACCESS"
+    reason = "UNAVAILABLE"
     try:
-        # Key is kept in the environment by an exact-current-main-only
-        # Actions job. It is never accepted as a CLI value, printed or saved.
+        # Existing key is injected only on exact-current-main production runs.
         result, code = run_probe(os.environ.get("SAM_API_KEY", ""))
         if code != 0:
-            raise RealSourceBlocked("Official API verification is not currently available")
+            # Strict whitelist: upstream exception text might expose a signed
+            # source URL, but these statuses are fixed application enums.
+            allowed = {
+                "BLOCKED_SAM_API_KEY_UNAVAILABLE",
+                "BLOCKED_PROBE_NOTICE_NOT_ACTIVE",
+                "BLOCKED_API_FAMILY_CARDINALITY",
+                "BLOCKED_API_INCOMPLETE_RESPONSE",
+                "BLOCKED_API_OBSERVATION_FAILED",
+            }
+            reason = result.get("status") if result.get("status") in allowed else "UNAVAILABLE"
+            raise RealSourceBlocked("Official current API probe returned a non-green result")
+        phase = "ORIGINAL_INPUT"
+        active = _read_source(args.active_original, bound=ACTIVE_BOUND)
+        archive = _read_source(args.fy2027_original, bound=ARCHIVE_BOUND)
+        phase = "OFFICIAL_CROSSREADBACK"
         output = evaluate_public_case(
-            active_bytes=_read_source(args.active_original, bound=ACTIVE_BOUND),
-            archive_bytes=_read_source(args.fy2027_original, bound=ARCHIVE_BOUND),
+            active_bytes=active, archive_bytes=archive,
             probe=result, checked_at=datetime.now(timezone.utc),
         )
-    except Exception:
-        # Network errors may contain a signed GSA delivery URL or an API key.
-        # Never print source exception text or a raw document.
+    except RealSourceBlocked as exc:
+        # Only our own fixed non-credential error descriptions are eligible.
+        if phase != "API_ACCESS":
+            expected = {
+                "The two official original extracts were empty": "EXTRACT_EMPTY",
+                "Original ACTIVE extract lacks exact active seed": "ACTIVE_SEED_MISSING_OR_INACTIVE",
+                "Source extract URL does not match exact official seed notice": "WRONG_SEED_URL",
+                "Source-family identity cannot be independently anchored": "FAMILY_UNANCHORED",
+                "Cross-source family dropped the buyer notice": "SEED_MISSING_FROM_FAMILY",
+                "Same solicitation has conflicting publisher agencies/offices": "FAMILY_AGENCY_COLLISION",
+                "Unapproved or mismatched public notice URL": "HISTORICAL_NOTICE_URL_INVALID",
+                "API notice differs from source benchmark's exact seed": "API_NOTICE_MISMATCH",
+                "Fresh authenticated current API evidence is unavailable": "CURRENT_API_CONTRACT_INVALID",
+                "API current observation is stale or future-dated": "API_FRESHNESS",
+                "API current readback was ambiguous or incomplete": "API_PAGINATION_OR_CARDINALITY",
+                "Complete bounded first-party original bytes required": "EXTRACT_BOUND",
+                "A complete regular source original is required": "SOURCE_FILE_MISSING",
+                "Source byte count is missing or outside the bound": "SOURCE_FILE_BOUND",
+                "Source original changed during read": "SOURCE_CHANGED_DURING_READ",
+            }
+            reason = expected.get(str(exc), "UNEXPECTED_SOURCE_CONTRACT")
         print(json.dumps({
             "schema": VERSION, "status": "OFFICIAL_CASE_SOURCE_CROSSREADBACK_BLOCKED",
+            "phase": phase, "reason_code": reason,
+            "history_complete": False, "customer_release_authorized": False,
+            "external_send_authorized": False,
+        }, sort_keys=True))
+        return 2
+    except Exception as exc:
+        # Raw provider row/URL/error text is not released. Only a fixed
+        # diagnostic class from an explicit source-validation allowlist.
+        allowed_errors = {
+            "DataServicesError": "SOURCE_EXTRACT_SCHEMA_OR_DUPLICATE",
+            "FamilyAmbiguous": "SOURCE_FAMILY_AMBIGUOUS",
+            "UnicodeDecodeError": "SOURCE_ENCODING_INVALID",
+        }
+        print(json.dumps({
+            "schema": VERSION, "status": "OFFICIAL_CASE_SOURCE_CROSSREADBACK_BLOCKED",
+            "phase": phase,
+            "reason_code": allowed_errors.get(type(exc).__name__,
+                                              "UNCLASSIFIED_CHECK_BLOCKED"),
             "history_complete": False, "customer_release_authorized": False,
             "external_send_authorized": False,
         }, sort_keys=True))
