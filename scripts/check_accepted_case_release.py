@@ -44,8 +44,9 @@ def main(argv=None) -> int:
         _root(roster.parent)
         trusted = _json_file(roster)
         release = _json_file(manifest)
+        customer_case = _json_file(case)
         result = inspect_accepted_case(
-            _json_file(case), release,
+            customer_case, release,
             private_root=root, trusted_keys=trusted,
         )
         if args.reserve_once:
@@ -54,7 +55,12 @@ def main(argv=None) -> int:
             ledger = args.authorization_ledger.expanduser().absolute()
             if ledger.is_relative_to(root):
                 raise AcceptedCaseBlocked("Shared authorization ledger must reside outside the case-specific root")
-            result = reserve_once(release, verification=result, ledger_path=ledger)
+            # Recheck the complete original and six signatures INSIDE the
+            # ledger call, not by trusting a copied or stale success JSON.
+            result = reserve_once(
+                release, case=customer_case, private_root=root,
+                trusted_keys=trusted, ledger_path=ledger,
+            )
         elif args.authorization_ledger is not None:
             raise AcceptedCaseBlocked("Ledger path is meaningful only with --reserve-once")
     except (AcceptedCaseBlocked, ValueError, OSError, TypeError, KeyError, AttributeError):
