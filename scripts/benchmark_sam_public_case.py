@@ -19,6 +19,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -61,6 +62,23 @@ def _clock(value: datetime | None) -> datetime:
     if not isinstance(now, datetime) or now.utcoffset() is None:
         raise RealSourceBlocked("Source crosscheck requires a real UTC clock")
     return now.astimezone(timezone.utc)
+
+
+def _official_notice_link(value: str | None, notice_id: str) -> bool:
+    if not isinstance(value, str) or not isinstance(notice_id, str):
+        return False
+    try:
+        u = urlsplit(value)
+        return (u.scheme == "https" and u.hostname == "sam.gov"
+                and u.port in (None, 443)
+                and not u.username and not u.password and not u.query
+                and not u.fragment
+                and u.path in (
+                    f"/opp/{notice_id}/view",
+                    f"/workspace/contract/opp/{notice_id}/view",
+                ))
+    except ValueError:
+        return False
 
 
 def evaluate_public_case(
@@ -116,8 +134,8 @@ def evaluate_public_case(
     active_rows = [r for r in snapshots[0]["matches"] if r["notice_id"].lower() == SEED]
     if len(active_rows) != 1 or str(active_rows[0].get("active", "")).strip().lower() != "yes":
         raise RealSourceBlocked("Original ACTIVE extract lacks exact active seed")
-    if any((r.get("link") or "").lower().find(SEED) < 0 for r in active_rows):
-        raise RealSourceBlocked("Source extract URL does not refer to the official seed notice")
+    if any(not _official_notice_link(r.get("link"), SEED) for r in active_rows):
+        raise RealSourceBlocked("Source extract URL does not match exact official seed notice")
     family_rows, family = _family_filter(snapshots, seed_notice_id=SEED)
     if (not family_rows or not family.get("aac_code")
             or not family.get("office") or not family.get("solicitation_number")):
@@ -125,12 +143,17 @@ def evaluate_public_case(
     expected_ids = sorted({str(r["notice_id"]).lower() for r in family_rows})
     if SEED not in expected_ids:
         raise RealSourceBlocked("Cross-source family dropped the buyer notice")
-    if any(r["notice_id"].lower() != SEED and r["notice_id"].lower() in {
-        active_rows[0]["notice_id"].lower()
-    } for r in family_rows):
-        raise RealSourceBlocked("Family association conflicts with seed")
-    if any(row.get("link") and "sam.gov" not in row["link"].lower() for row in family_rows):
-        raise RealSourceBlocked("Unapproved public link in selected family")
+    # A shared solicitation number is not a family key by itself. Report
+    # inconsistent AAgency/office as ambiguous, never filter the conflict.
+    matched = [row for snap in snapshots for row in snap["matches"]]
+    if any(str(row.get("aac_code") or "").strip().upper() != family["aac_code"]
+           or str(row.get("office") or "").strip().upper() != family["office"]
+           for row in matched):
+        raise RealSourceBlocked("Same solicitation has conflicting publisher agencies/offices")
+    if any(not _official_notice_link(row.get("link"), row["notice_id"])
+           for row in family_rows):
+        raise RealSourceBlocked("Unapproved or mismatched public notice URL")
+
     # This is a strict source *membership* check. Even a single observed
     # action does not prove there were no earlier/deleted amendments.
     return {
