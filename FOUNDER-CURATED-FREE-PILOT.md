@@ -1,6 +1,6 @@
 # CaptureBrief founder-curated first-check pilot: scoped path, not a source bypass
 
-**Scope:** at most ten independently identity-reviewed businesses, one free assumption about one publicly accessible federal IT/cyber/cloud pursuit each. This is the equivalent of PermitPlate's supervised founder-curated launch lane, **not** its scored/automated product, and not a claim that any buyer has received a valid check. There is no card, payment, automatic conversion, or free change watch.
+**Scope:** at most ten independently identity-reviewed businesses, one free assumption about one publicly accessible federal IT/cyber/cloud pursuit each. **Prelaunch does not require an existing customer, customer review, customer feedback or a completed customer report.** Those are not launch blockers. Each *future* accepted case still requires independently authenticated intake, sources, private custody, internal operator report review and a separately authorized message. This is the equivalent of PermitPlate's supervised founder-curated launch lane, **not** its scored/automated product, and not a claim that any buyer has received a valid check. There is no card, payment, automatic conversion, or free change watch.
 
 ## The important separation
 
