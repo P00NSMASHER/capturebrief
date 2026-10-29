@@ -202,7 +202,7 @@ def _kind(files: dict[str, dict[str, Any]], fid: Any, expected: str) -> None:
 
 
 def _source_closure(case: dict[str, Any], manifest: dict[str, Any],
-                    files: dict[str, dict[str, Any]]) -> None:
+                    files: dict[str, dict[str, Any]], now: datetime) -> None:
     closure = manifest.get("source_closure")
     if not isinstance(closure, dict):
         raise AcceptedCaseBlocked("Independent family history and incorporated-source review missing")
@@ -217,6 +217,11 @@ def _source_closure(case: dict[str, Any], manifest: dict[str, Any],
         raise AcceptedCaseBlocked("Family history original must be retained from official SAM.gov")
     if not _official(files[closure["resource_inventory_file"]].get("source_url"), sam_only=True):
         raise AcceptedCaseBlocked("Resource/tombstone inventory must be a reviewed official SAM.gov snapshot")
+    # The GSA Opportunities v2 API supplies only latest active. A signed
+    # history/attachment inventory from that API host cannot certify versions.
+    for fid in (closure["history_file"], closure["resource_inventory_file"]):
+        if urlsplit(files[fid]["source_url"]).hostname.casefold().rstrip(".") != "sam.gov":
+            raise AcceptedCaseBlocked("Latest-active API host is not authoritative history")
     actions = closure.get("actions")
     expected = case.get("packet", {}).get("history_action_ids")
     if (not isinstance(actions, list) or not actions or len(actions) > 60
@@ -235,12 +240,14 @@ def _source_closure(case: dict[str, Any], manifest: dict[str, Any],
         _kind(files, action.get("original_file"), "ACTION_ORIGINAL")
         if not _official(files[action["original_file"]].get("source_url"), sam_only=True):
             raise AcceptedCaseBlocked("Historical action original has no official publisher source")
+        if urlsplit(files[action["original_file"]]["source_url"]).hostname.casefold().rstrip(".") != "sam.gov":
+            raise AcceptedCaseBlocked("Version history cannot be supplied by the latest-active API alone")
         if action["type"] == "AMENDMENT" and not (
             isinstance(action.get("amendment_number"), str)
             and action["amendment_number"].strip()):
             raise AcceptedCaseBlocked("Amendment identity/version is missing")
-        if not timestamp(action.get("published_at")):
-            raise AcceptedCaseBlocked("Action publication time is missing")
+        if timestamp(action.get("published_at")) > now:
+            raise AcceptedCaseBlocked("History action publication is future-dated")
     if (len(seen) != len(expected) or seen != set(expected)
             or case.get("packet", {}).get("family_status") is None):
         raise AcceptedCaseBlocked("Actual case history differs from reviewed original set")
@@ -495,7 +502,7 @@ def inspect_accepted_case(
             raise AcceptedCaseBlocked("Retained original case is corrupt") from None
         if canonical(original) != canonical(case):
             raise AcceptedCaseBlocked("Retained original case is not the reviewed case")
-    _source_closure(case, manifest, files)
+    _source_closure(case, manifest, files, checked)
     _restore_and_identity(manifest, files, data, checked)
     verify_attestations(manifest, trusted_keys, checked)
     readiness = evaluate_delivery_readiness(case, now=checked)
