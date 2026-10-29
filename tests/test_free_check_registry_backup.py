@@ -7,6 +7,7 @@ import sqlite3
 import tempfile
 import unittest
 from datetime import timedelta
+from contextlib import closing
 from pathlib import Path
 
 from capturebrief_core.free_trial import reserve_free_check, TrialConflict
@@ -43,7 +44,7 @@ class FreeRegistryRecoveryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             private, registry, saved, case, receipt = self._prepare(root)
-            with sqlite3.connect(registry) as active:
+            with closing(sqlite3.connect(registry)) as active, active:
                 self.assertEqual(active.execute("PRAGMA journal_mode=WAL").fetchone()[0], "wal")
                 result = backup.create_backup(registry, saved, PHRASE)
                 self.assertEqual(result["reservation_count"], 1)
@@ -56,7 +57,7 @@ class FreeRegistryRecoveryTests(unittest.TestCase):
             status = backup.restore_backup(saved, recovered, PHRASE)
             self.assertTrue(status["reconciliation_required_before_use"])
             self.assertFalse(status["independent_offdevice_restore_proven"])
-            with sqlite3.connect(recovered) as restored:
+            with closing(sqlite3.connect(recovered)) as restored:
                 self.assertEqual(restored.execute(
                     "SELECT COUNT(*) FROM free_check_reservations"
                 ).fetchone()[0], 1)
@@ -102,12 +103,12 @@ class FreeRegistryRecoveryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _, registry, saved, *_ = self._prepare(root)
-            with sqlite3.connect(registry) as db:
+            with closing(sqlite3.connect(registry)) as db, db:
                 db.execute("CREATE TABLE other_stored_data (secret TEXT)")
             with self.assertRaises(ValueError):
                 backup.create_backup(registry, saved, PHRASE)
             self.assertFalse(saved.exists())
-            with sqlite3.connect(registry) as db:
+            with closing(sqlite3.connect(registry)) as db, db:
                 db.execute("DROP TABLE other_stored_data")
                 db.execute("PRAGMA ignore_check_constraints=ON")
                 db.execute("UPDATE free_check_reservations SET customer_release_authorized=1")
@@ -119,11 +120,11 @@ class FreeRegistryRecoveryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _, registry, saved, *_ = self._prepare(root)
-            with sqlite3.connect(registry) as db:
+            with closing(sqlite3.connect(registry)) as db, db:
                 db.execute("UPDATE free_check_reservations SET business_sha256='bad'")
             with self.assertRaises(ValueError):
                 backup.create_backup(registry, saved, PHRASE)
-            with sqlite3.connect(registry) as db:
+            with closing(sqlite3.connect(registry)) as db, db:
                 db.execute("UPDATE free_check_reservations SET business_sha256=?", ("1" * 64,))
                 for i in range(10):
                     digests = [hashlib.sha256((str(i) + str(j)).encode()).hexdigest() for j in range(4)]
