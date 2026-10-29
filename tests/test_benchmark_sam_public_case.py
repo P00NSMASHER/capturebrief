@@ -186,6 +186,10 @@ class SAMPublicCaseCrossreadbackTests(unittest.TestCase):
             self.assertEqual(run.returncode, 2)
             self.assertFalse((root/"receipt.json").exists())
             self.assertIn("OFFICIAL_CASE_SOURCE_CROSSREADBACK_BLOCKED", run.stdout)
+            redacted = json.loads(run.stdout)
+            self.assertEqual(redacted["phase"], "API_ACCESS")
+            self.assertEqual(redacted["reason_code"], "BLOCKED_SAM_API_KEY_UNAVAILABLE")
+            self.assertFalse(redacted["customer_release_authorized"])
             self.assertNotIn("api_key=", run.stdout + run.stderr)
 
 
