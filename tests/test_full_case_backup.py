@@ -155,6 +155,26 @@ class FullCaseBackupTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.create()
 
+    def test_windows_device_names_casefold_collisions_and_reparse_sensitive_paths_fail(self):
+        for bad in ("evidence/NUL.bin", "evidence/CON", "evidence/COM1.dat",
+                    "evidence/trailing.", ".git/private.bin", "evidence/a:stream.bin"):
+            with self.subTest(path=bad):
+                self.entries[1]["path"] = bad
+                self.write_inv()
+                with self.assertRaises(ValueError):
+                    self.create()
+                self.assertFalse(self.archive.exists())
+        self.entries[1]["path"] = self.entries[0]["path"].upper()
+        self.write_inv()
+        with self.assertRaises(ValueError):
+            self.create()
+        self.entries[1]["path"] = "evidence/doc-01.bin"
+        self.entries[1]["id"] = self.entries[0]["id"].upper()
+        self.write_inv()
+        with self.assertRaises(ValueError):
+            self.create()
+        self.assertFalse(self.archive.exists())
+
     def test_archive_destination_must_be_fresh_and_encrypted(self):
         self.create()
         with self.assertRaises(ValueError):
