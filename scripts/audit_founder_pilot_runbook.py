@@ -7,6 +7,7 @@ authorization, delivery, or a successful real-world recovery drill.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 RUNBOOK = Path(__file__).resolve().parents[1] / "FIRST-PILOT-OPERATOR-RUNBOOK.md"
@@ -40,11 +41,13 @@ FORBIDDEN = {
 def violations(document: str) -> list[str]:
     if not isinstance(document, str):
         raise TypeError("Runbook text must be a string")
-    normalized = document.casefold()
+    # Markdown line wrapping is not a policy change. Match the visible phrase
+    # across newlines while preserving exact required/forbidden token content.
+    normalized = re.sub(r"\\s+", " ", document.casefold())
     problems = [f"MISSING_{key.upper()}" for key, value in REQUIRED.items()
-                if value.casefold() not in normalized]
+                if re.sub(r"\\s+", " ", value.casefold()) not in normalized]
     problems.extend(f"STALE_{key.upper()}" for key, value in FORBIDDEN.items()
-                    if value.casefold() in normalized)
+                    if re.sub(r"\\s+", " ", value.casefold()) in normalized)
     return sorted(problems)
 
 
