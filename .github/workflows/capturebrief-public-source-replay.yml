@@ -5,6 +5,8 @@ on:
     paths:
       - scripts/replay_verified_public_case_pdf.py
       - tests/test_replay_verified_public_case_pdf.py
+      - scripts/prepare_founder_review_packet.py
+      - tests/test_prepare_founder_review_packet.py
       - .github/workflows/capturebrief-public-source-replay.yml
   push:
     branches: [main]
@@ -35,7 +37,7 @@ jobs:
       - name: Test pinned prior source; reject fake release claims
         run: |
           python -m compileall -q scripts/replay_verified_public_case_pdf.py
-          python -m unittest tests.test_replay_verified_public_case_pdf -v
+          python -m unittest tests.test_replay_verified_public_case_pdf tests.test_prepare_founder_review_packet -v
           python scripts/replay_verified_public_case_pdf.py --help
 
   first-party-public-original:
@@ -85,6 +87,12 @@ jobs:
           python scripts/replay_verified_public_case_pdf.py \
             --artifact-dir "$RUNNER_TEMP/prior-public-source" \
             --private-output "$RUNNER_TEMP/sam-public-original-replay"
+      - name: Prepare one verified-source internal owner review packet (no delivery)
+        run: |
+          python scripts/prepare_founder_review_packet.py \
+            --source-pdf "$RUNNER_TEMP/sam-public-original-replay/retrieved-public-original.pdf" \
+            --source-proof "$RUNNER_TEMP/sam-public-original-replay/safe-proof.json" \
+            --output-dir "$RUNNER_TEMP/sam-public-review-preview"
       - name: Exact current main required before saving public-only encrypted test bundle
         env:
           EXPECTED_SHA: ${{ github.sha }}
@@ -99,6 +107,8 @@ jobs:
           path: |
             ${{ runner.temp }}/sam-public-original-replay/backup/public-case-with-official-original.cbak
             ${{ runner.temp }}/sam-public-original-replay/safe-proof.json
+            ${{ runner.temp }}/sam-public-review-preview/review-packet.json
+            ${{ runner.temp }}/sam-public-review-preview/review-preview.md
           retention-days: 3
           if-no-files-found: error
 
@@ -153,6 +163,15 @@ jobs:
           assert proof["historical_family_complete"] is False
           assert proof["customer_release_authorized"] is False
           assert proof["production_recovery_key_custody_verified"] is False
+          review=json.loads(next(source.rglob("review-packet.json")).read_text())
+          from scripts.prepare_founder_review_packet import prepare
+          locally_derived, _=prepare(originals[0].read_bytes(),proof)
+          assert review==locally_derived
+          assert review["status"]=="FIRST_PARTY_CONFLICT_REVIEW_DRAFT_NOT_DELIVERABLE"
+          assert review["suggested_posture"]=="HOLD"
+          assert len(review["findings"])==4
+          assert review["reviewer_approved"] is False
+          assert review["customer_release_authorized"] is False
           print(json.dumps({
               "status":"OFFICIAL_PUBLIC_PDF_ENCRYPTED_AND_INDEPENDENTLY_RESTORED_REVIEW_PENDING",
               "pdf_sha256":proof["pdf_sha256"],
