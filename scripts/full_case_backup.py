@@ -51,6 +51,8 @@ MAX_PLAIN = 256 * 1024 * 1024
 MAX_CONTAINER = MAX_PLAIN + 1024 * 1024
 SHA = re.compile(r"^[0-9a-f]{64}$")
 ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{1,127}$")
+SAFE_PATH_COMPONENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,119}$")
+WIN_DEVICE_NAME = re.compile(r"^(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[.]|$)", re.I)
 REQUIRED = {
     "CASE", "HISTORY", "RESOURCE_INVENTORY", "ACTION_ORIGINAL",
     "RESOURCE_ORIGINAL", "BUSINESS_EVIDENCE", "INBOUND_RECEIPT",
@@ -65,10 +67,14 @@ def _relative(value: Any) -> str:
     if not isinstance(value, str) or not 1 <= len(value) <= 240:
         raise ValueError("Case inventory path must be a short relative file path")
     path = PurePosixPath(value)
+    segments = value.split("/")
     if (path.is_absolute() or path.as_posix() != value
-            or any(segment in ("", ".", "..") for segment in value.split("/"))
-            or "\\" in value or ":" in value):
-        raise ValueError("Case inventory path traversal refused")
+            or "\\" in value or ":" in value
+            or any(not SAFE_PATH_COMPONENT.fullmatch(part)
+                   or part.endswith(".") or WIN_DEVICE_NAME.match(part)
+                   or part.casefold() in (".git", "gh-pages")
+                   for part in segments)):
+        raise ValueError("Case inventory path traversal or Windows device alias refused")
     return value
 
 
@@ -96,11 +102,11 @@ def _validated_inventory(inv: dict[str, Any]) -> list[dict[str, Any]]:
             item["id"], item["kind"], _relative(item["path"]), item["sha256"]
         )
         if (not isinstance(fid,str) or not ID.fullmatch(fid)
-                or fid in ids or relative in paths
+                or fid.casefold() in ids or relative.casefold() in paths
                 or kind not in REQUIRED|OPTIONAL
                 or not isinstance(sha,str) or not SHA.fullmatch(sha)):
             raise ValueError("Duplicate, unknown or malformed inventory original")
-        ids.add(fid);paths.add(relative)
+        ids.add(fid.casefold());paths.add(relative.casefold())
         kinds[kind] = kinds.get(kind,0)+1
         checked.append(item)
     if (any(kinds.get(k,0) < 1 for k in REQUIRED)
@@ -158,6 +164,7 @@ def create_complete_backup(
 ) -> dict[str,Any]:
     root = private_root(root_path)
     case_id,loaded = _collect(root,Path(inventory_file).expanduser().absolute())
+    _reject_private_path_links(Path(output_file).expanduser().absolute())
     target = _new_file(output_file)
     plain = _plain(case_id,loaded)
     AESGCM,_ = _crypto()
@@ -192,6 +199,7 @@ def _open_complete(
     source: str|Path,passphrase: bytes,
 ) -> tuple[str,list[tuple[dict[str,Any],bytes]]]:
     backup = Path(source).expanduser().absolute()
+    _reject_private_path_links(backup)
     private_root(backup.parent)
     if backup.suffix != ".cbak" or backup.is_symlink() or not backup.is_file():
         raise ValueError("Encrypted case archive must be an existing private .cbak file")
@@ -299,6 +307,7 @@ def restore_complete_backup(
 ) -> dict[str,Any]:
     case_id,loaded=_open_complete(source,passphrase)
     target=Path(destination).expanduser().absolute()
+    _reject_private_path_links(target)
     if target.exists() or target.is_symlink():
         raise ValueError("Restore destination must be a new private directory")
     parent=private_root(target.parent)
