@@ -150,9 +150,13 @@ def _official(url: Any, *, sam_only: bool = False) -> bool:
     except ValueError:
         return False
     host = (parsed.hostname or "").casefold().rstrip(".")
+    try:
+        port = parsed.port
+    except ValueError:
+        return False
     return (parsed.scheme == "https" and bool(host)
             and not parsed.username and not parsed.password and not parsed.fragment
-            and not parsed.port and not re.search(r"(api.?key|token|signature|credential)=", parsed.query, re.I)
+            and not port and not re.search(r"(api.?key|token|signature|credential)=", parsed.query, re.I)
             and ((host == "sam.gov" or host.endswith(".sam.gov")) if sam_only
                  else (host.endswith(".gov") or host == "acquisition.gov")))
 
