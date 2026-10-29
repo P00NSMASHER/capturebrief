@@ -290,7 +290,10 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
     def test_escape_and_symlink_source_are_never_read(self):
         with self.assertRaises(AcceptedCaseBlocked):
             _file(self.root, "../evil", "0"*64)
-        (self.root / "shortcut").symlink_to(self.root / "case.bin")
+        try:
+            (self.root / "shortcut").symlink_to(self.root / "case.bin")
+        except (OSError, NotImplementedError):
+            self.skipTest("Symlink creation not available on this runner")
         with self.assertRaises(AcceptedCaseBlocked):
             _file(self.root, "shortcut", next(x["sha256"] for x in self.rows if x["id"]=="case"))
 
