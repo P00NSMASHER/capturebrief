@@ -10,6 +10,8 @@ import copy
 import hashlib
 import json
 import os
+import sqlite3
+from contextlib import closing
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -201,6 +203,17 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
         return inspect_accepted_case(self.case, self.manifest,
             private_root=self.root, trusted_keys=self.trust, now=NOW)
 
+    def reserve(self, ledger_path, *, mock_core=True):
+        params = dict(
+            case=self.case, private_root=self.root, trusted_keys=self.trust,
+            ledger_path=ledger_path, at=NOW,
+        )
+        if mock_core:
+            with patch("capturebrief_core.accepted_case_release.evaluate_delivery_readiness",
+                       return_value=SimpleNamespace(eligible=True)):
+                return reserve_once(self.manifest, **params)
+        return reserve_once(self.manifest, **params)
+
     def test_cryptographic_case_gate_positive_IS_FICTIONAL_WITH_MOCKED_CORE(self):
         result = self.check()
         self.assertEqual(result["source_action_count"], 2)
@@ -352,28 +365,68 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
         ledger_dir = Path(self.tmp.name) / "shared-trusted-ledger"
         ledger_dir.mkdir(mode=0o700)
         ledger_path = ledger_dir / "approved-nonces.sqlite"
-        first = reserve_once(self.manifest, verification=verdict, ledger_path=ledger_path, at=NOW)
+        first = self.reserve(ledger_path)
         self.assertEqual(first["status"], "SINGLE_MESSAGE_AUTHORIZATION_RESERVED_MANUAL_SEND_PENDING")
         self.assertFalse(first["external_send_performed"])
         self.assertTrue(ledger_path.is_file())
         with self.assertRaises(AcceptedCaseBlocked):
-            reserve_once(self.manifest, verification=verdict, ledger_path=ledger_path, at=NOW)
+            self.reserve(ledger_path)
 
     def test_nonce_claim_requires_prior_verified_release_and_unexpired_window(self):
         ledger_dir = Path(self.tmp.name) / "shared-trusted-ledger"
         ledger_dir.mkdir(mode=0o700)
         ledger_path = ledger_dir / "approved-nonces.sqlite"
+        # A copied successful status can no longer be used as an authorization:
+        # reserve independently executes the REAL core, which rejects the fixture.
+        self.assertEqual(self.check()["status"],
+                         "EVIDENCE_AND_PER_MESSAGE_APPROVAL_VERIFIED_MANUAL_SEND_ONLY")
         with self.assertRaises(AcceptedCaseBlocked):
-            reserve_once(self.manifest, verification={
-                "status": "CUSTOMER_DELIVERY_BLOCKED"
-            }, ledger_path=ledger_path, at=NOW)
+            self.reserve(ledger_path, mock_core=False)
         self.assertFalse(ledger_path.exists())
         self.manifest["delivery"]["expires_at"] = (NOW - timedelta(minutes=2)).isoformat()
+        self.sign()
         with self.assertRaises(AcceptedCaseBlocked):
-            reserve_once(self.manifest, verification={
-                "status": "EVIDENCE_AND_PER_MESSAGE_APPROVAL_VERIFIED_MANUAL_SEND_ONLY"
-            }, ledger_path=ledger_path, at=NOW)
+            self.reserve(ledger_path)
         self.assertFalse(ledger_path.exists())
+
+    def test_nonce_reservation_rechecks_modified_source_after_prior_green_verdict(self):
+        ledger_dir = Path(self.tmp.name) / "shared-trusted-ledger"
+        ledger_dir.mkdir(mode=0o700)
+        ledger_path = ledger_dir / "approved-nonces.sqlite"
+        verdict = self.check()
+        self.assertEqual(verdict["status"],
+                         "EVIDENCE_AND_PER_MESSAGE_APPROVAL_VERIFIED_MANUAL_SEND_ONLY")
+        (self.root / "actionB.bin").write_bytes(b"TAMPERED AFTER VERIFICATION")
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.reserve(ledger_path)
+        self.assertFalse(ledger_path.exists())
+
+    def test_unexpected_ledger_table_or_trigger_blocks_new_signed_reservation(self):
+        ledger_dir = Path(self.tmp.name) / "shared-trusted-ledger"
+        ledger_dir.mkdir(mode=0o700)
+        ledger_path = ledger_dir / "approved-nonces.sqlite"
+        with closing(sqlite3.connect(ledger_path)) as db, db:
+            db.execute("CREATE TABLE attacker_can_reset_ledger (secret TEXT)")
+        if os.name != "nt":
+            ledger_path.chmod(0o600)
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.reserve(ledger_path)
+        with closing(sqlite3.connect(ledger_path)) as db, db:
+            db.execute("DROP TABLE attacker_can_reset_ledger")
+        self.reserve(ledger_path)
+        with closing(sqlite3.connect(ledger_path)) as db, db:
+            db.execute("CREATE TRIGGER wipe_old_nonce AFTER INSERT ON "
+                       "single_message_authorizations BEGIN "
+                       "DELETE FROM single_message_authorizations "
+                       "WHERE nonce_sha256 != NEW.nonce_sha256; END")
+        self.manifest["delivery"]["authorization_nonce"] = "cd" * 16
+        self.sign()
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.reserve(ledger_path)
+        with closing(sqlite3.connect(ledger_path)) as db, db:
+            self.assertEqual(db.execute(
+                "SELECT COUNT(*) FROM single_message_authorizations"
+            ).fetchone()[0], 1)
 
     def test_official_source_scope_rejects_arbitrary_urls(self):
         self.assertFalse(_official("https://evil.example/history", sam_only=True))

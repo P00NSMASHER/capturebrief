@@ -8,7 +8,7 @@ a different ledger per customer or reset the ledger after recovery.
 """
 from __future__ import annotations
 
-import hashlib
+import re
 import os
 import sqlite3
 from contextlib import closing
@@ -16,7 +16,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .accepted_case_release import AcceptedCaseBlocked, _root, canonical, sha256
+from .accepted_case_release import (
+    AcceptedCaseBlocked, _root, canonical, sha256,
+    inspect_accepted_case, timestamp,
+)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS single_message_authorizations (
@@ -30,23 +33,65 @@ CREATE TABLE IF NOT EXISTS single_message_authorizations (
 """
 
 
+def _validate_ledger(db: sqlite3.Connection, checked_at: datetime) -> None:
+    """Reject unexpected objects, noncanonical schema or corrupted reservations."""
+    if db.execute("PRAGMA quick_check").fetchone() != ("ok",):
+        raise AcceptedCaseBlocked("Authorization ledger SQLite integrity failed")
+    objects = db.execute("SELECT type, name, sql FROM sqlite_master ORDER BY name").fetchall()
+    tables = [row for row in objects if row[0] == "table"]
+    expected_sql = re.sub(r"\s+", " ", _SCHEMA.strip().replace(
+        "CREATE TABLE IF NOT EXISTS", "CREATE TABLE", 1)).strip().casefold()
+    if (len(tables) != 1 or tables[0][1] != "single_message_authorizations"
+            or re.sub(r"\s+", " ", tables[0][2]).strip().casefold() != expected_sql):
+        raise AcceptedCaseBlocked("Authorization ledger schema differs from approved one-time contract")
+    if any(not (kind == "table" and name == "single_message_authorizations"
+                    or kind == "index" and
+                       name.startswith("sqlite_autoindex_single_message_authorizations_")
+                       and sql is None)
+           for kind, name, sql in objects):
+        raise AcceptedCaseBlocked("Authorization ledger contains unexpected triggers or tables")
+    columns = tuple(row[1] for row in db.execute(
+        "PRAGMA table_info(single_message_authorizations)"))
+    if columns != (
+        "nonce_sha256", "case_sha256", "manifest_sha256",
+        "recipient_sha256", "reserved_at", "state",
+    ):
+        raise AcceptedCaseBlocked("Authorization ledger columns are not approved")
+    for nonce, case, manifest, recipient, reserved, state in db.execute(
+        "SELECT nonce_sha256, case_sha256, manifest_sha256, "
+        "recipient_sha256, reserved_at, state FROM single_message_authorizations"
+    ):
+        if (state != "MANUAL_SEND_PENDING_NO_PROVIDER_EVIDENCE"
+                or any(not isinstance(d, str) or not re.fullmatch(r"[0-9a-f]{64}", d)
+                       for d in (nonce, case, manifest, recipient))
+                or not isinstance(reserved, str)
+                or timestamp(reserved) > checked_at):
+            raise AcceptedCaseBlocked("Existing authorization contains invalid or future reservation")
+
+
 def reserve_once(
     manifest: dict[str, Any], *,
-    verification: dict[str, Any], ledger_path: str | Path,
+    case: dict[str, Any], private_root: str | Path,
+    trusted_keys: dict[str, Any], ledger_path: str | Path,
     at: datetime | None = None,
 ) -> dict[str, Any]:
-    """Reserve a unique per-message approval; no transport side effect."""
-    if verification.get("status") != "EVIDENCE_AND_PER_MESSAGE_APPROVAL_VERIFIED_MANUAL_SEND_ONLY":
-        raise AcceptedCaseBlocked("Full signed release verification must run before reserving")
-    at = at or datetime.now(timezone.utc)
-    if at.utcoffset() is None:
+    """Reverify original signed source, report and human approval BEFORE reserving.
+
+    Deliberately no 'verification' status parameter: a string or copied success
+    JSON must never stand in for independently inspecting immutable originals.
+    """
+    at = at if at is not None else datetime.now(timezone.utc)
+    if not isinstance(at, datetime) or at.utcoffset() is None:
         raise AcceptedCaseBlocked("Authorization reservation timestamp lacks timezone")
-    delivery = manifest.get("delivery")
-    if not isinstance(delivery, dict):
-        raise AcceptedCaseBlocked("No reviewed delivery envelope")
-    # Recheck the one-message window, as it can expire while a UI is waiting.
-    from .accepted_case_release import timestamp
-    if timestamp(delivery.get("expires_at")) <= at.astimezone(timezone.utc):
+    at = at.astimezone(timezone.utc)
+    verified = inspect_accepted_case(
+        case, manifest, private_root=private_root, trusted_keys=trusted_keys,
+        now=at,
+    )
+    if verified.get("status") != "EVIDENCE_AND_PER_MESSAGE_APPROVAL_VERIFIED_MANUAL_SEND_ONLY":
+        raise AcceptedCaseBlocked("Full signed release verification is required for nonce reservation")
+    delivery = manifest["delivery"]
+    if timestamp(delivery.get("expires_at")) <= at:
         raise AcceptedCaseBlocked("Signed single-message release expired before reservation")
     path = Path(ledger_path).expanduser().absolute()
     if (path.suffix != ".sqlite" or path.is_symlink()
@@ -71,6 +116,7 @@ def reserve_once(
             db.execute("BEGIN IMMEDIATE")
             try:
                 db.execute(_SCHEMA)
+                _validate_ledger(db, at)
                 db.execute(
                     "INSERT INTO single_message_authorizations "
                     "(nonce_sha256, case_sha256, manifest_sha256, recipient_sha256, reserved_at, state) "
