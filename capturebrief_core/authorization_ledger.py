@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS single_message_authorizations (
 """
 
 
-def _validate_ledger(db: sqlite3.Connection) -> None:
+def _validate_ledger(db: sqlite3.Connection, checked_at: datetime) -> None:
     """Reject unexpected objects, noncanonical schema or corrupted reservations."""
     if db.execute("PRAGMA quick_check").fetchone() != ("ok",):
         raise AcceptedCaseBlocked("Authorization ledger SQLite integrity failed")
@@ -65,7 +65,7 @@ def _validate_ledger(db: sqlite3.Connection) -> None:
                 or any(not isinstance(d, str) or not re.fullmatch(r"[0-9a-f]{64}", d)
                        for d in (nonce, case, manifest, recipient))
                 or not isinstance(reserved, str)
-                or timestamp(reserved) > datetime.now(timezone.utc)):
+                or timestamp(reserved) > checked_at):
             raise AcceptedCaseBlocked("Existing authorization contains invalid or future reservation")
 
 
@@ -116,7 +116,7 @@ def reserve_once(
             db.execute("BEGIN IMMEDIATE")
             try:
                 db.execute(_SCHEMA)
-                _validate_ledger(db)
+                _validate_ledger(db, at)
                 db.execute(
                     "INSERT INTO single_message_authorizations "
                     "(nonce_sha256, case_sha256, manifest_sha256, recipient_sha256, reserved_at, state) "
