@@ -58,6 +58,20 @@ python scripts/check_accepted_case_release.py \
   --trusted-signers /approved/trust/CaptureBrief/signers.json
 ~~~
 
+After all independently reviewed evidence and signatures exist, the operator must reserve **one** approved message nonce immediately before the manual handoff, using a **single durable append-only ledger shared across every accepted case**. Never create a new ledger per recipient or reset it after a restore:
+
+~~~sh
+python scripts/check_accepted_case_release.py \
+  --private-root /approved/private/CaptureBrief/case-123 \
+  --case /approved/private/CaptureBrief/case-123/case.json \
+  --release-manifest /approved/private/CaptureBrief/case-123/release.json \
+  --trusted-signers /approved/trust/CaptureBrief/signers.json \
+  --reserve-once \
+  --authorization-ledger /approved/private/CaptureBrief/approved-message-nonces.sqlite
+~~~
+
+The command atomically records only the recipient digest, exact signed-manifest digest and nonce digest, never sends a message or claims recipient delivery. Concurrent or later reuse of the **same** nonce/manifest within this shared ledger fails closed. The receipt state is MANUAL_SEND_PENDING_NO_PROVIDER_EVIDENCE. Preserve and independently back up this ledger, and reconcile its state after any restoration; a restored stale snapshot must not resurrect an already used authorization.
+
 Exit **2** = CUSTOMER_DELIVERY_BLOCKED; nothing sent. Exit **0** = exact case, originals, roster signatures, core source/Decision Evidence and one-message approval verified, **manual send only**. It does **not** claim customer receipt, prevent a human outside the software from reusing an approval, independently authenticate signer identity, or prove a remote event happened except through signed custodian evidence. Owner must verify the real transport receipt and record it separately. Every later delivery needs a new explicit approval and nonce. Never enable checkout or automatic messaging from this read-only result.
 
 ## What cannot be completed simply by merging code
