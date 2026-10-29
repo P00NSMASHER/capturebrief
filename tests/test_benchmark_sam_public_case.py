@@ -57,7 +57,7 @@ def fixture():
         "latest_active_observation_verified": True,
         "api_key_present_in_runtime": True,
         "public_probe_solicitation": benchmark.SOLICITATION,
-        "source_endpoint": "https://api.sam.gov/opportunities/v2/search",
+        "source_endpoint": benchmark.SEARCH_URL,
         "full_history_verified": False,
         "customer_delivery_verified": False,
         "external_send_authorized": False,
@@ -92,6 +92,25 @@ class SAMPublicCaseCrossreadbackTests(unittest.TestCase):
         self.assertFalse(out["customer_release_authorized"])
         self.assertFalse(out["external_send_authorized"])
 
+    def test_benchmark_uses_exact_production_endpoint_from_real_probe(self):
+        # The authenticated API client uses /prod/opportunities/v2/search.
+        # Earlier benchmark code incorrectly checked the alias lacking /prod,
+        # resulting in CURRENT_API_CONTRACT_INVALID on genuine main-only runs.
+        from capturebrief_core.current_api import SEARCH_URL
+        self.assertEqual(SEARCH_URL, "https://api.sam.gov/prod/opportunities/v2/search")
+        active, archive, probe = fixture()
+        self.assertEqual(probe["source_endpoint"], SEARCH_URL)
+        self.assertEqual(benchmark.evaluate_public_case(
+            active_bytes=active, archive_bytes=archive, probe=probe,
+            checked_at=NOW,
+        )["source_slot_count"], 2)
+        probe["source_endpoint"] = SEARCH_URL.replace("/prod/", "/")
+        with self.assertRaises(benchmark.RealSourceBlocked):
+            benchmark.evaluate_public_case(
+                active_bytes=active, archive_bytes=archive, probe=probe,
+                checked_at=NOW,
+            )
+
     def test_one_observed_action_never_claims_no_amendments(self):
         active, _, probe = fixture()
         archive = csv_bytes(record("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
@@ -106,6 +125,8 @@ class SAMPublicCaseCrossreadbackTests(unittest.TestCase):
         mutations = [
             {"notice_id_sha256": "0" * 64},
             {"status": "PUBLIC_API_OBSERVATION_UNAVAILABLE"},
+            {"source_endpoint": "https://api.sam.gov/opportunities/v2/search"},
+            {"source_endpoint": "https://api.sam.gov/prod/opportunities/v1/search"},
             {"api_key_present_in_runtime": False},
             {"api_access_verified": False},
             {"full_history_verified": True},
