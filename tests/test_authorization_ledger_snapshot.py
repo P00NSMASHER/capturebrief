@@ -165,12 +165,15 @@ class AuthorizationSnapshotTests(unittest.TestCase):
 
         def atomic_swap_after_read(path):
             data = native_read(path)
-            if path == self.snapshot and not swapped:
+            # _path() canonicalizes Windows 8.3/long-path aliases before
+            # reading; compare the final file name, then swap the ACTUAL
+            # opened path instead of the test fixture's spelling.
+            if path.name == self.snapshot.name and not swapped:
                 alternate = self.private / "foreign-same-length.sqlite"
                 alternate.write_bytes(b"X" * len(original))
                 if os.name != "nt":
                     alternate.chmod(0o600)
-                os.replace(alternate, self.snapshot)
+                os.replace(alternate, path)
                 swapped.append(True)
             return data
 
