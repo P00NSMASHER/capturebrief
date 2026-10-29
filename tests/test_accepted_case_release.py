@@ -297,6 +297,59 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
         with self.assertRaises(AcceptedCaseBlocked):
             self.check()
 
+    def test_action_original_cannot_relabel_another_sam_notice(self):
+        # An approved-looking SAM.gov URL must match the exact action,
+        # not merely share the official hostname.
+        original = next(row for row in self.rows if row["id"] == "actionB")
+        original["source_url"] = "https://sam.gov/opp/actA/view"
+        self.sign()
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.check()
+
+    def test_resource_original_cannot_point_to_unrelated_url_or_wrong_notice(self):
+        row = next(x for x in self.rows if x["id"] == "res1")
+        for source_url in (
+            "https://example.org/resource.pdf",
+            "https://sam.gov/opp/actA/view",
+            "https://sam.gov/api/prod/opps/v3/opportunities/resources/files/not-res1/download",
+        ):
+            with self.subTest(url=source_url):
+                row["source_url"] = source_url
+                self.sign()
+                with self.assertRaises(AcceptedCaseBlocked):
+                    self.check()
+        row["source_url"] = ("https://sam.gov/api/prod/opps/v3/opportunities/"
+                             "resources/files/res1/download?fn=source.pdf")
+        self.sign()
+        self.assertEqual(self.check()["reviewed_resource_count"], 1)
+
+    def test_distinct_attachment_ids_cannot_reuse_one_source_original(self):
+        self.manifest["source_closure"]["resources"].append({
+            "resource_id": "res2", "action_id": "actA", "state": "SUPERSEDED",
+            "original_file": "res1",
+        })
+        self.sign()
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.check()
+        self.manifest["source_closure"]["resources"].pop()
+        self.manifest["source_closure"]["actions"][1]["original_file"] = "actionA"
+        self.sign()
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.check()
+
+    def test_data_services_collection_requires_exact_reviewed_record_locator(self):
+        row = next(x for x in self.rows if x["id"] == "actionB")
+        row["source_url"] = ("https://sam.gov/data-services/"
+                             "Contract%20Opportunities/Archived%20Data")
+        row["record_locator"] = "actA"  # wrong record in first-party file
+        self.sign()
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.check()
+        row["record_locator"] = "actB"
+        self.sign()
+        # This only exercises the gate with fictional keys and a mocked core.
+        self.assertEqual(self.check()["source_action_count"], 2)
+
     def test_missing_primary_storage_separate_restore_or_complete_inventory_blocks(self):
         self.manifest["private_storage"]["separate_recovery_key_custody"] = False
         self.sign()
