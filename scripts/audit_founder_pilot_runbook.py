@@ -43,11 +43,11 @@ def violations(document: str) -> list[str]:
         raise TypeError("Runbook text must be a string")
     # Markdown line wrapping is not a policy change. Match the visible phrase
     # across newlines while preserving exact required/forbidden token content.
-    normalized = re.sub(r"\\s+", " ", document.casefold())
+    normalized = re.sub(r"\s+", " ", document.casefold())
     problems = [f"MISSING_{key.upper()}" for key, value in REQUIRED.items()
-                if re.sub(r"\\s+", " ", value.casefold()) not in normalized]
+                if re.sub(r"\s+", " ", value.casefold()) not in normalized]
     problems.extend(f"STALE_{key.upper()}" for key, value in FORBIDDEN.items()
-                    if re.sub(r"\\s+", " ", value.casefold()) in normalized)
+                    if re.sub(r"\s+", " ", value.casefold()) in normalized)
     return sorted(problems)
 
 
