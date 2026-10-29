@@ -203,6 +203,28 @@ class SourceCoverageAuditTests(unittest.TestCase):
                                       verify_bytes=True)
             self.assertEqual(db.read_bytes(), before)
 
+    def test_current_source_cannot_claim_foreign_snapshot_slot_as_verified(self):
+        """A current slot must bind to its own snapshot, not only matching metadata.
+
+        This mutation preserves the original SHA, source URL, source kind,
+        fiscal year and original file bytes. The index must still fail closed
+        if a snapshot's identity no longer agrees with its current slot.
+        """
+        with tempfile.TemporaryDirectory() as td:
+            db, _ = make_index(Path(td))
+            with closing(sqlite3.connect(db)) as conn, conn:
+                conn.execute(
+                    "UPDATE source_snapshots SET slot='ARCHIVE:9999' "
+                    "WHERE slot='ARCHIVE:2026'"
+                )
+                conn.commit()
+            result = inspect_private_index(
+                db, fiscal_year=2026, now=NOW, verify_bytes=True
+            )
+            self.assertIn("ARCHIVE:2026", result["unverified_slots"])
+            self.assertFalse(result["metadata_complete"])
+            self.assertFalse(result["local_file_hashes_match"])
+
     def test_invalid_public_and_symlink_index_paths_rejected(self):
         with tempfile.TemporaryDirectory() as td:
             db, _ = make_index(Path(td))
