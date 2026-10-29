@@ -159,9 +159,20 @@ def verify_snapshot(path: str | Path) -> dict[str, object]:
         after = item.stat()
     except OSError:
         raise ValueError("Authorization snapshot changed during read") from None
-    if (len(data) != before.st_size or
-            (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) !=
-            (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)):
+    identity_before = (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)
+    identity_after = (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)
+    if len(data) != before.st_size or identity_before != identity_after:
+        raise ValueError("Authorization snapshot changed during read")
+    # Windows' stat metadata can fail to distinguish a rapid same-size
+    # replacement. Independently re-open this bounded file and compare bytes
+    # before reporting a source-path digest. Still not a permanent-lock claim.
+    with item.open("rb") as stream:
+        confirmation = stream.read(MAX_LEDGER_BYTES + 1)
+    _reject_private_path_links(item)
+    latest = item.stat()
+    if (confirmation != data or
+            (latest.st_dev, latest.st_ino, latest.st_size, latest.st_mtime_ns)
+            != identity_after):
         raise ValueError("Authorization snapshot changed during read")
     count = _validate_bytes(data)
     return {
