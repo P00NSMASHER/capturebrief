@@ -61,6 +61,19 @@ def _reject_private_path_links(path: Path) -> None:
         junction = getattr(segment, "is_junction", None)
         if segment.is_symlink() or (callable(junction) and junction()):
             raise AcceptedCaseBlocked("Private evidence path must not traverse a link or junction")
+        if os.name == "nt":
+            # Path.is_junction is only available starting in Python 3.12.
+            # Our Windows release runners use Python 3.11, where lstat()
+            # exposes name-surrogate junctions via the reparse-point bit.
+            # Reject ALL reparse points, not only the familiar junction tag.
+            try:
+                attributes = getattr(os.lstat(segment), "st_file_attributes", 0)
+            except FileNotFoundError:
+                continue  # Missing files still fail the later existence checks.
+            except OSError:
+                raise AcceptedCaseBlocked("Private evidence path is not safely inspectable") from None
+            if attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT:
+                raise AcceptedCaseBlocked("Private evidence path traverses a Windows reparse point")
 
 
 def canonical(obj: Any) -> bytes:
