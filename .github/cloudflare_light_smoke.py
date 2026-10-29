@@ -22,7 +22,49 @@ SOURCES = (
 )
 
 
+
+def verify_complete_manifest(info: dict) -> None:
+    """Bind every advertised public file and build fingerprint to local dist.
+
+    Cloudflare and the independent CI rebuild can differ in builtAt only.
+    Hash-matching a few HTML/JS files does NOT validate the entire manifest.
+    """
+    try:
+        locally_built = json.loads(
+            (Path("dist") / "build-info.json").read_text(encoding="utf-8")
+        )
+    except (OSError, UnicodeError, ValueError):
+        raise AssertionError("No intact locally rebuilt Cloudflare manifest") from None
+    if not isinstance(info, dict) or not isinstance(locally_built, dict):
+        raise AssertionError("Cloudflare manifest is not a complete object")
+    if not isinstance(info.get("builtAt"), str) or not info["builtAt"]:
+        raise AssertionError("Cloudflare manifest lacks build timestamp")
+    immutable_remote = {key: value for key, value in info.items() if key != "builtAt"}
+    immutable_local = {key: value for key, value in locally_built.items() if key != "builtAt"}
+    if immutable_remote != immutable_local:
+        raise AssertionError(
+            "Cloudflare advertised public-file inventory or source fingerprints "
+            "differ from the exact locally rebuilt release"
+        )
+    # A locally corrupted or missing emitted file must not be excused just
+    # because the earlier local build-info manifest still lists its digest.
+    for item in locally_built.get("files", []):
+        if not isinstance(item, dict) or not isinstance(item.get("path"), str):
+            raise AssertionError("Malformed local public-file inventory")
+        path = item["path"]
+        if path.startswith("/") or ".." in Path(path).parts:
+            raise AssertionError("Unsafe local public-file inventory path")
+        try:
+            data = (Path("dist") / path).read_bytes()
+        except OSError:
+            raise AssertionError("Local public-file inventory entry missing") from None
+        if (len(data) != item.get("bytes") or
+                hashlib.sha256(data).hexdigest() != item.get("sha256")):
+            raise AssertionError("Local public-file inventory digest differs: " + path)
+
+
 def inspect_release(info: dict) -> dict:
+    verify_complete_manifest(info)
     if info.get("sourceCommit") != EXPECTED_SHA or info.get("sourceBranch") != "gh-pages":
         raise AssertionError("Cloudflare is not serving the exact checked-out production commit")
     if (info.get("canonical") != BASE or
