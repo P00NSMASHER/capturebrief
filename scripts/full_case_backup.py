@@ -115,6 +115,20 @@ def _validated_inventory(inv: dict[str, Any]) -> list[dict[str, Any]]:
     return sorted(checked, key=lambda item: item["id"])
 
 
+def _check_original_case_id(case_id: str, items: list[tuple[dict[str,Any],bytes]]) -> None:
+    """Never allow a private case backup to be relabeled as another customer."""
+    matches = [data for row,data in items if row["kind"] == "CASE"]
+    if len(matches) != 1:
+        raise ValueError("Exactly one reviewed original case is required")
+    try:
+        original = json.loads(matches[0].decode("utf-8"), object_pairs_hook=_unique)
+    except (ValueError, UnicodeError):
+        raise ValueError("Original case must be unique-key JSON, not an asserted label") from None
+    if (not isinstance(original, dict)
+            or original.get("case_id") != case_id):
+        raise ValueError("Inventory case identity differs from original private case bytes")
+
+
 def _collect(root: Path, input_file: Path) -> tuple[str,list[tuple[dict[str,Any],bytes]]]:
     # On Windows, a TemporaryDirectory can use an 8.3 alias while the
     # approved _root() resolves to the long canonical path. Reject symlink/
@@ -134,6 +148,7 @@ def _collect(root: Path, input_file: Path) -> tuple[str,list[tuple[dict[str,Any]
         if total > MAX_PLAIN - 1024 * 1024:
             raise ValueError("Complete case source bytes exceed secure backup limit")
         loaded.append((item,content))
+    _check_original_case_id(inv["case_id"], loaded)
     return inv["case_id"], loaded
 
 
@@ -288,6 +303,7 @@ def _open_complete(
             if hashlib.sha256(data).hexdigest()!=row["sha256"]:
                 raise ValueError("Backup's original source hash mismatch")
             loaded.append((expected[i],data))
+    _check_original_case_id(manifest["case_id"], loaded)
     return manifest["case_id"],loaded
 
 
