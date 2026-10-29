@@ -352,6 +352,8 @@ def _restore_and_identity(manifest: dict[str, Any], files: dict[str, dict[str, A
             }):
         raise AcceptedCaseBlocked("Off-device restored full case does not match every retained original")
     recovered_at = timestamp(proof.get("restored_at"))
+    if timestamp(storage.get("recovery_completed_at")) != recovered_at:
+        raise AcceptedCaseBlocked("Recovery custodian signoff time differs from original restore receipt")
     if recovered_at > now or now - recovered_at > timedelta(days=30):
         raise AcceptedCaseBlocked("Independent restoration evidence is stale or future-dated")
     email = business.get("verified_recipient")
@@ -431,7 +433,6 @@ def verify_attestations(manifest: dict[str, Any], trusted_keys: dict[str, Any],
     prerequisite_time = max(
         timestamp(manifest["business"]["verified_at"]),
         timestamp(manifest["report"]["reviewed_at"]),
-        timestamp(json.loads(next(x for x in []))["restored_at"]) if False else
         timestamp(manifest["private_storage"]["recovery_completed_at"]),
     )
     for row in attestations:
