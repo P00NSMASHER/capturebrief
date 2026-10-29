@@ -22,7 +22,7 @@ from unittest.mock import patch
 from capturebrief_core.authorization_ledger import reserve_once
 from capturebrief_core.accepted_case_release import (
     AcceptedCaseBlocked, canonical, inspect_accepted_case, sha256,
-    signature_payload, verify_attestations, _file, _official,
+    signature_payload, verify_attestations, _file, _official, _json_file, _root,
     RECOVERY_SCHEMA, ROLES, SCHEMA, TRUST_SCHEMA,
 )
 
@@ -412,6 +412,40 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
             self.skipTest("Symlink creation not available on this runner")
         with self.assertRaises(AcceptedCaseBlocked):
             _file(self.root, "shortcut", next(x["sha256"] for x in self.rows if x["id"]=="case"))
+
+    def test_root_rejects_symlinked_parent_not_only_final_directory(self):
+        # /tmp/alias/approved-case is not itself a symlink. Its parent is.
+        alias = Path(self.tmp.name) / "alias-to-approved-parent"
+        try:
+            alias.symlink_to(Path(self.tmp.name), target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Directory symlinks are unavailable on this runner")
+        disguised = alias / "approved-case"
+        self.assertFalse(disguised.is_symlink())
+        with self.assertRaises(AcceptedCaseBlocked):
+            _root(disguised)
+        # The real approved path is still available and unchanged.
+        self.assertEqual(_root(self.root), self.root.resolve())
+
+    def test_metadata_rejects_symlinked_ancestor_to_external_private_file(self):
+        # A regular case.json under a linked directory must not be read,
+        # even if the final file itself has strict 0600 permissions.
+        external = Path(self.tmp.name) / "external-private"
+        external.mkdir(mode=0o700)
+        metadata = external / "case.json"
+        metadata.write_text('{"schema": "fake"}')
+        if os.name != "nt":
+            metadata.chmod(0o600)
+        alias = self.root / "linked-dir"
+        try:
+            alias.symlink_to(external, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Directory symlinks are unavailable on this runner")
+        disguised = alias / "case.json"
+        self.assertFalse(disguised.is_symlink())
+        with self.assertRaises(AcceptedCaseBlocked):
+            _json_file(disguised)
+        self.assertEqual(_json_file(metadata), {"schema": "fake"})
 
     def test_one_use_signed_nonce_reserved_atomically_and_never_sends(self):
         verdict = self.check()  # FICTIONAL fixture, mocked existing core.
