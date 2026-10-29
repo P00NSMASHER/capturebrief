@@ -28,6 +28,7 @@ from capturebrief_core.data_services import (
     ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD, _family_filter, scan_extract_bytes,
 )
 from capturebrief_core.model import parse_dt
+from capturebrief_core.current_api import SEARCH_URL
 from scripts.verify_sam_current_access import (
     SOLICITATION, run_probe,
 )
@@ -97,7 +98,7 @@ def evaluate_public_case(
             or probe.get("latest_active_observation_verified") is not True
             or probe.get("api_key_present_in_runtime") is not True
             or probe.get("public_probe_solicitation") != SOLICITATION
-            or probe.get("source_endpoint") != "https://api.sam.gov/opportunities/v2/search"
+            or probe.get("source_endpoint") != SEARCH_URL
             or probe.get("full_history_verified") is not False
             or probe.get("customer_delivery_verified") is not False
             or probe.get("external_send_authorized") is not False):
