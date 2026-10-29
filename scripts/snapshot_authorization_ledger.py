@@ -146,11 +146,22 @@ def create_snapshot(source: str | Path, output: str | Path) -> dict[str, object]
 
 def verify_snapshot(path: str | Path) -> dict[str, object]:
     item = _path(path, must_exist=True)
-    size = item.stat().st_size
-    if not 0 < size <= MAX_LEDGER_BYTES:
+    # A one-time size check is insufficient: an equally sized SQLite file
+    # could replace this path *during* read_bytes(), leaving a stale digest
+    # reported as verification of the new file. This is a read-only guard,
+    # not evidence that the file can never change after verification.
+    before = item.stat()
+    if not 0 < before.st_size <= MAX_LEDGER_BYTES:
         raise ValueError("Authorization snapshot source exceeds allowed size")
     data = item.read_bytes()
-    if len(data) != size:
+    _reject_private_path_links(item)
+    try:
+        after = item.stat()
+    except OSError:
+        raise ValueError("Authorization snapshot changed during read") from None
+    if (len(data) != before.st_size or
+            (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) !=
+            (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)):
         raise ValueError("Authorization snapshot changed during read")
     count = _validate_bytes(data)
     return {
