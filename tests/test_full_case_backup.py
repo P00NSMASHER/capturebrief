@@ -49,7 +49,10 @@ class FullCaseBackupTests(unittest.TestCase):
             name=f"evidence/doc-{i:02d}.bin"
             path=self.root/name
             path.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
-            raw=(f"FICTIONAL {kind} record {i}; buyer@example.invalid\n").encode()
+            raw=(json.dumps({"case_id":"CB-FAKE-OWNER-REVIEW-2026",
+                              "fictional_source_data":True},sort_keys=True).encode()
+                 if kind=="CASE" else
+                 (f"FICTIONAL {kind} record {i}; buyer@example.invalid\n").encode())
             path.write_bytes(raw)
             if os.name!="nt":
                 path.chmod(0o600)
@@ -171,6 +174,20 @@ class FullCaseBackupTests(unittest.TestCase):
         self.entries[1]["path"] = "evidence/doc-01.bin"
         self.entries[1]["id"] = self.entries[0]["id"].upper()
         self.write_inv()
+        with self.assertRaises(ValueError):
+            self.create()
+        self.assertFalse(self.archive.exists())
+
+    def test_forged_case_id_cannot_relabel_authenticated_originals(self):
+        self.inv.write_text(json.dumps({
+            "schema":backup.INPUT_SCHEMA,
+            "case_id":"CB-DIFFERENT-CUSTOMER-NOT-THE-ORIGINAL",
+            "files":self.entries,
+            "customer_release_authorized":False,
+            "external_send_authorized":False,
+        }))
+        if os.name!="nt":
+            self.inv.chmod(0o600)
         with self.assertRaises(ValueError):
             self.create()
         self.assertFalse(self.archive.exists())
