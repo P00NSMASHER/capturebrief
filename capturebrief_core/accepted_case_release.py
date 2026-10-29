@@ -51,6 +51,18 @@ class AcceptedCaseBlocked(ValueError):
     """An accepted-case claim cannot be independently authorized for delivery."""
 
 
+def _reject_private_path_links(path: Path) -> None:
+    """Reject symlink/junction components, including otherwise invisible parents.
+
+    In particular, checking only the final file or root path misses
+    /private/alias/case.json where alias is a symlink to a public checkout.
+    """
+    for segment in (path, *path.parents):
+        junction = getattr(segment, "is_junction", None)
+        if segment.is_symlink() or (callable(junction) and junction()):
+            raise AcceptedCaseBlocked("Private evidence path must not traverse a link or junction")
+
+
 def canonical(obj: Any) -> bytes:
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
                       allow_nan=False).encode("utf-8")
@@ -82,7 +94,8 @@ def _unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 
 
 def _json_file(path: Path) -> dict[str, Any]:
-    if path.is_symlink() or not path.is_file() or not 0 < path.stat().st_size <= MAX_JSON:
+    _reject_private_path_links(path.expanduser().absolute())
+    if not path.is_file() or not 0 < path.stat().st_size <= MAX_JSON:
         raise AcceptedCaseBlocked("Private manifest or key roster unavailable or oversized")
     try:
         result = json.loads(path.read_bytes().decode("utf-8"), object_pairs_hook=_unique,
@@ -98,13 +111,15 @@ def _json_file(path: Path) -> dict[str, Any]:
 
 def _root(path: str | Path) -> Path:
     root = Path(path).expanduser().absolute()
-    if root.is_symlink() or not root.is_dir():
+    _reject_private_path_links(root)
+    if not root.is_dir():
         raise AcceptedCaseBlocked("Approved private root must be a real existing directory")
     if os.name != "nt" and (root.stat().st_mode & 0o077):
         raise AcceptedCaseBlocked("Private root must be owner-only on POSIX")
-    if any((parent / ".git").exists() for parent in (root, *root.parents)):
+    resolved = root.resolve(strict=True)
+    if any((parent / ".git").exists() for parent in (resolved, *resolved.parents)):
         raise AcceptedCaseBlocked("Private customer data must not be stored in a Git checkout")
-    return root.resolve(strict=True)
+    return resolved
 
 
 def _file(root: Path, relative: str, expected: str, *, limit: int = MAX_FILE) -> bytes:
