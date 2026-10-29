@@ -320,6 +320,63 @@ def mark_payment_recheck_blocked(
             raise
 
 
+def _validated_hold_sessions(
+    connection: sqlite3.Connection, orders: list[sqlite3.Row],
+) -> set[str]:
+    """Reject detached or contradictory payment holds using the SAME read snapshot.
+
+    SQLite foreign keys are optional at connection level; a damaged/restored
+    registry can contain orphan hold rows. Never quietly omit those rows from
+    a read-only operator view or trust a hold bound to a different original
+    case, request, or provider provenance. Does not authenticate Stripe.
+    """
+    exists = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='payment_holds'"
+    ).fetchone()
+    if exists is None:
+        return set()  # Legacy registry without a hold table.
+    originals = {row["session_ref"]: row for row in orders}
+    # There can be at most one hold per original order. A bounded N+1
+    # read detects unexpected extras without loading an unbounded table.
+    holds = connection.execute(
+        """SELECT session_ref, case_sha256, request_sha256,
+                  first_blocked_at, blocked_reconciliation_sha256,
+                  synthetic_provider FROM payment_holds LIMIT ?""",
+        (len(orders) + 1,),
+    ).fetchall()
+    if len(holds) > len(orders):
+        raise ValueError("Private payment hold has no original order")
+    held: set[str] = set()
+    for hold in holds:
+        reference = originals.get(hold["session_ref"])
+        if reference is None:
+            raise ValueError("Private payment hold has no original order")
+        expected_synthetic = (
+            1 if reference["payment_state"] == "SYNTHETIC_CONSISTENT_NOT_LIVE_PROOF"
+            else 0
+        )
+        if (
+            hold["case_sha256"] != reference["case_sha256"]
+            or hold["request_sha256"] != reference["request_sha256"]
+            or type(hold["synthetic_provider"]) is not int
+            or hold["synthetic_provider"] != expected_synthetic
+            or not isinstance(hold["blocked_reconciliation_sha256"], str)
+            or _SHA.fullmatch(hold["blocked_reconciliation_sha256"]) is None
+        ):
+            raise ValueError("Private payment hold contradicts original order")
+        raw_date = hold["first_blocked_at"]
+        if not isinstance(raw_date, str):
+            raise ValueError("Private payment hold has invalid original timestamp")
+        try:
+            recorded = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError("Private payment hold has invalid original timestamp") from exc
+        if recorded.utcoffset() is None:
+            raise ValueError("Private payment hold timestamp has no timezone")
+        held.add(hold["session_ref"])
+    return held
+
+
 def order_summary(database_path: str | Path) -> dict[str, Any]:
     """Read private registry without creating files or revealing provider IDs."""
     file = _private_db(database_path)
@@ -330,13 +387,19 @@ def order_summary(database_path: str | Path) -> dict[str, Any]:
     if conn:
         with closing(conn):
             try:
+                conn.execute("BEGIN")
+                # A read transaction pins orders and holds to one SQLite
+                # snapshot, even if another worker appends a hold meanwhile.
+                # BEGIN must precede the first SELECT.
                 data = conn.execute("SELECT * FROM orders ORDER BY created_at,session_ref").fetchall()
-                has_holds = conn.execute(
-                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='payment_holds'"
-                ).fetchone() is not None
-                blocked_ids = ({x["session_ref"] for x in conn.execute(
-                    "SELECT session_ref FROM payment_holds"
-                )} if has_holds else set())
+                blocked_ids = _validated_hold_sessions(conn, data)
+                conn.execute("ROLLBACK")
+            except (ValueError, TypeError, KeyError):
+                return {"status": "PRIVATE_ORDER_REGISTRY_BLOCKED", "orders": [],
+                        "rejected_registry_rows": 1, "payment_rechecks_blocked": 0,
+                        "review_only": True, "all_customer_release_authorized": False,
+                        "any_external_send_authorized": False,
+                        "actual_delivery_verified": False}
             except sqlite3.DatabaseError:
                 return {"status": "PRIVATE_ORDER_REGISTRY_INVALID", "orders": [],
                         "all_customer_release_authorized": False}

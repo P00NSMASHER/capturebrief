@@ -29,6 +29,7 @@ from capturebrief_core.fulfillment_plan import build_fulfillment_plan
 from capturebrief_core.model import canonical_json, sha256_hex
 from capturebrief_core.private_order_registry import (
     _private_db, _read_only_connection, _record_is_safe, _tag,
+    _validated_hold_sessions,
 )
 from scripts.batch_import_request_drafts import _private_directory
 from scripts.review_private_cases import _load_unverified_pair
@@ -85,17 +86,19 @@ def inspect_fulfillment(
             blocked_sessions = set()
         else:
             try:
+                # Keep both sets on one SQLite snapshot, and reject orphaned
+                # holds or conflicting immutable case/request/provenance data.
+                connection.execute("BEGIN")
                 stored = connection.execute("SELECT * FROM orders ORDER BY created_at,session_ref").fetchall()
-                hold_table = connection.execute(
-                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='payment_holds'"
-                ).fetchone()
-                blocked_sessions = ({row["session_ref"] for row in connection.execute(
-                    "SELECT session_ref FROM payment_holds"
-                )} if hold_table else set())
-            except sqlite3.DatabaseError:
+                blocked_sessions = _validated_hold_sessions(connection, stored)
+                connection.execute("ROLLBACK")
+            except (sqlite3.DatabaseError, ValueError, TypeError, KeyError):
                 return {
                     "status": "PRIVATE_ORDER_FULFILLMENT_BLOCKED",
-                    "blocked": 1, "orders": [], "external_send_authorized": False,
+                    "blocked": 1, "orders": [], "review_only": True,
+                    "customer_release_authorized": False,
+                    "external_send_authorized": False,
+                    "delivery_verified": False, "watch_started": False,
                 }
         if len(stored) > max_orders:
             raise ValueError("Too many private orders for bounded review")
