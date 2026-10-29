@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import sqlite3
+from contextlib import closing
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -404,14 +405,16 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
         ledger_dir = Path(self.tmp.name) / "shared-trusted-ledger"
         ledger_dir.mkdir(mode=0o700)
         ledger_path = ledger_dir / "approved-nonces.sqlite"
-        with sqlite3.connect(ledger_path) as db:
+        with closing(sqlite3.connect(ledger_path)) as db, db:
             db.execute("CREATE TABLE attacker_can_reset_ledger (secret TEXT)")
+        if os.name != "nt":
+            ledger_path.chmod(0o600)
         with self.assertRaises(AcceptedCaseBlocked):
             self.reserve(ledger_path)
-        with sqlite3.connect(ledger_path) as db:
+        with closing(sqlite3.connect(ledger_path)) as db, db:
             db.execute("DROP TABLE attacker_can_reset_ledger")
         self.reserve(ledger_path)
-        with sqlite3.connect(ledger_path) as db:
+        with closing(sqlite3.connect(ledger_path)) as db, db:
             db.execute("CREATE TRIGGER wipe_old_nonce AFTER INSERT ON "
                        "single_message_authorizations BEGIN "
                        "DELETE FROM single_message_authorizations "
@@ -420,7 +423,7 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
         self.sign()
         with self.assertRaises(AcceptedCaseBlocked):
             self.reserve(ledger_path)
-        with sqlite3.connect(ledger_path) as db:
+        with closing(sqlite3.connect(ledger_path)) as db, db:
             self.assertEqual(db.execute(
                 "SELECT COUNT(*) FROM single_message_authorizations"
             ).fetchone()[0], 1)
