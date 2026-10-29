@@ -115,8 +115,15 @@ def _snapshot(path: str | Path) -> tuple[bytes, int]:
         if pages * size > MAX_SNAPSHOT:
             raise ValueError("Registry database including WAL exceeds bounded snapshot")
         with closing(sqlite3.connect(":memory:")) as snapshot:
+            snapshot.execute("PRAGMA temp_store=MEMORY")
             db.backup(snapshot)
+            # SQLite backup retains the source WAL header in its in-memory
+            # copy. VACUUM normalizes it to a portable rollback-mode file,
+            # without staging any unencrypted temporary database on disk.
+            snapshot.execute("VACUUM")
             data = snapshot.serialize()
+            if data[18:20] != b"\x01\x01":
+                raise ValueError("Registry snapshot journal header was not normalized")
     return data, _validate_snapshot(data)
 
 
