@@ -127,7 +127,7 @@ class AuthorizationSnapshotTests(unittest.TestCase):
         ledger.initialize_empty_ledger(self.ledger)
         ledger.create_snapshot(self.ledger, self.snapshot)
         original = self.snapshot.read_bytes()
-        self.snapshot.write_bytes(original[:64] + b"X" + original[65:])
+        self.snapshot.write_bytes(original[:18] + b"\x02\x02" + original[20:])
         with self.assertRaises((ValueError, sqlite3.DatabaseError)):
             ledger.verify_snapshot(self.snapshot)
         self.snapshot.write_bytes(original)
