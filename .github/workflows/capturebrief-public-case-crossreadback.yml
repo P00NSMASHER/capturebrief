@@ -1,0 +1,133 @@
+name: CaptureBrief PermitPlate-style official public case crossreadback
+
+on:
+  pull_request:
+    paths:
+      - scripts/benchmark_sam_public_case.py
+      - tests/test_benchmark_sam_public_case.py
+      - .github/workflows/capturebrief-public-case-crossreadback.yml
+  push:
+    branches: [main]
+    paths:
+      - scripts/benchmark_sam_public_case.py
+      - tests/test_benchmark_sam_public_case.py
+      - .github/workflows/capturebrief-public-case-crossreadback.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: capturebrief-official-crossreadback-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  offline-source-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Reproduce fictional missing, changed and ambiguous source outcomes
+        run: |
+          python -m compileall -q scripts/benchmark_sam_public_case.py
+          python -m unittest tests.test_benchmark_sam_public_case -v
+
+  genuine-public-two-surface-source:
+    needs: offline-source-contract
+    if: github.repository == 'P00NSMASHER/capturebrief' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Enforce exact current main before public downloads
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "P00NSMASHER/capturebrief"
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$GITHUB_SHA" = "$EXPECTED_SHA"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          remote="$(timeout 20s git ls-remote --exit-code https://github.com/P00NSMASHER/capturebrief.git refs/heads/main 2>/dev/null)"
+          test "$remote" = "$EXPECTED_SHA"$'\trefs/heads/main'
+      - name: Fetch full bounded GSA ACTIVE and FY2027 originals
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -m 700 "$RUNNER_TEMP/source-correlation"
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from capturebrief_core.data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD
+          from capturebrief_core.history_index import download_extract_to_file
+          root=Path(os.environ["RUNNER_TEMP"])/"source-correlation"
+          for filename,url,bound in (
+              ("active.csv",ACTIVE_DOWNLOAD,320*1024*1024),
+              ("fy2027.csv",ARCHIVE_DOWNLOAD.format(fy=2027),15*1024*1024),
+          ):
+              source=download_extract_to_file(
+                  root/filename,source_url=url,max_bytes=bound,timeout=150,
+              )
+              if source["size_bytes"]<=0:
+                  raise SystemExit("SOURCE_FULL_ORIGINAL_EMPTY")
+              (root/filename).chmod(0o600)
+          print("Full first-party bounded originals retrieved; no raw rows logged")
+          PY
+      - name: Compare GSA API to complete source originals, NO SEND
+        env:
+          SAM_API_KEY: ${{ secrets.SAM_API_KEY }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          umask 077
+          python scripts/benchmark_sam_public_case.py \
+            --active-original "$RUNNER_TEMP/source-correlation/active.csv" \
+            --fy2027-original "$RUNNER_TEMP/source-correlation/fy2027.csv" \
+            --out "$RUNNER_TEMP/source-correlation/candidate-receipt.json"
+      - name: Reject stale main and unsupported full-history claims
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          remote="$(timeout 20s git ls-remote --exit-code https://github.com/P00NSMASHER/capturebrief.git refs/heads/main 2>/dev/null)"
+          test "$remote" = "$EXPECTED_SHA"$'\trefs/heads/main'
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path(os.environ["RUNNER_TEMP"])/"source-correlation/candidate-receipt.json"
+          v=json.loads(p.read_text())
+          assert v["status"]=="OFFICIAL_DATA_SERVICES_AND_ACTIVE_API_CORRELATED_HISTORY_REVIEW_REQUIRED"
+          assert v["independent_current_api_correlated"] is True
+          for k in ("full_historical_action_set_verified",
+                    "full_attachment_manifest_verified",
+                    "incorporated_rules_applicability_verified",
+                    "production_offdevice_recovery_verified",
+                    "customer_release_authorized","external_send_authorized"):
+              assert v[k] is False
+          print("PUBLIC SOURCE CORRELATED; HISTORICAL COMPLETENESS AND RELEASE REMAIN HELD")
+          PY
+      - name: Retain fingerprints/counts only, never raw or customer records
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: capturebrief-public-case-crossreadback-${{ github.sha }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/source-correlation/candidate-receipt.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Remove temporary original source files
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/source-correlation/active.csv" \
+                "$RUNNER_TEMP/source-correlation/fy2027.csv"
