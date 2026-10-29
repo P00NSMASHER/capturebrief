@@ -51,7 +51,6 @@ def source_findings(text_pages: list[str]) -> list[dict]:
 
 
 def prepare(original: bytes, proof: dict) -> tuple[dict, str]:
-    from pypdf import PdfReader
     if (not isinstance(original, bytes) or len(original) != SOURCE_BYTES or
             hashlib.sha256(original).hexdigest() != SOURCE_SHA):
         raise ValueError("Original source does not match the authenticated public evidence")
@@ -66,6 +65,7 @@ def prepare(original: bytes, proof: dict) -> tuple[dict, str]:
                 "customer_release_authorized", "external_send_authorized", "payment_authorized",
                 "production_recovery_key_custody_verified", "customer_case_admission_verified"))):
         raise ValueError("Public-original provenance or release boundary invalid")
+    from pypdf import PdfReader
     reader = PdfReader(io.BytesIO(original), strict=True)
     findings = source_findings([page.extract_text() or "" for page in reader.pages])
     packet = {
