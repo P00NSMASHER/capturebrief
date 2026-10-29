@@ -9,6 +9,7 @@ on:
       - 'scripts/free_check_registry_backup.py'
       - 'tests/test_scoped_source.py'
       - 'capturebrief_core/accepted_case_release.py'
+      - 'capturebrief_core/authorization_ledger.py'
       - 'scripts/check_accepted_case_release.py'
       - 'tests/test_accepted_case_release.py'
       - 'ACCEPTED-CASE-RELEASE-GATES.md'
@@ -24,6 +25,7 @@ on:
       - 'scripts/free_check_registry_backup.py'
       - 'tests/test_scoped_source.py'
       - 'capturebrief_core/accepted_case_release.py'
+      - 'capturebrief_core/authorization_ledger.py'
       - 'scripts/check_accepted_case_release.py'
       - 'tests/test_accepted_case_release.py'
       - 'ACCEPTED-CASE-RELEASE-GATES.md'
@@ -58,6 +60,6 @@ jobs:
       - name: Install pinned release-tested cryptography dependency
         run: 'python -m pip install --disable-pip-version-check --only-binary=:all: cryptography==46.0.4'
       - name: Compile only scoped source and secure backup
-        run: python -m compileall -q capturebrief_core/scoped_source.py capturebrief_core/accepted_case_release.py scripts/prepare_scoped_sam.py scripts/scoped_private_backup.py scripts/free_check_registry_backup.py scripts/check_accepted_case_release.py
+        run: python -m compileall -q capturebrief_core/scoped_source.py capturebrief_core/accepted_case_release.py capturebrief_core/authorization_ledger.py scripts/prepare_scoped_sam.py scripts/scoped_private_backup.py scripts/free_check_registry_backup.py scripts/check_accepted_case_release.py
       - name: Run real code against deliberately synthetic offline tests
         run: python -m unittest tests.test_scoped_source tests.test_scoped_private_backup tests.test_founder_curated_admission tests.test_free_check_registry_backup tests.test_accepted_case_release -v
