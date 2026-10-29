@@ -222,5 +222,29 @@ class GitHubPrivateCustodyTests(unittest.TestCase):
         self.assertEqual(self.provider.writes, 0)
 
 
+    def test_magic_prefix_with_plaintext_cannot_be_uploaded(self):
+        # Red-team case: the existing magic-prefix check accepts plaintext.
+        self.source.write_bytes(custody.MAGIC + b"PRIVATE_RECORDS_NOT_AESGCM")
+        if os.name != "nt":
+            self.source.chmod(0o600)
+        with self.assertRaises(custody.PrivateStorageBlocked):
+            custody.store_encrypted_backup(
+                self.source, self.TOKEN, transport=self.provider
+            )
+        self.assertEqual(self.provider.writes, 0)
+
+    def test_remote_magic_prefix_without_envelope_cannot_be_retrieved(self):
+        # Matching SHA-256 proves object identity, not encrypted file format.
+        malformed = custody.MAGIC + b"FAKE_CIPHERTEXT_NO_HEADER"
+        digest = hashlib.sha256(malformed).hexdigest()
+        self.provider.files[custody._remote_path(digest)] = malformed
+        dest = self.root / "bad-remote-envelope.cbak"
+        with self.assertRaises(custody.PrivateStorageBlocked):
+            custody.retrieve_encrypted_backup(
+                digest, dest, self.TOKEN, transport=self.provider
+            )
+        self.assertFalse(dest.exists())
+
+
 if __name__ == "__main__":
     unittest.main()
