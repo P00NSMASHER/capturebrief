@@ -5,6 +5,7 @@ import base64
 import hashlib
 import json
 import os
+import struct
 import subprocess
 import sys
 import tempfile
@@ -80,7 +81,22 @@ class GitHubPrivateCustodyTests(unittest.TestCase):
         self.root = Path(self.temp.name) / "owner-private"
         self.root.mkdir(mode=0o700)
         self.source = self.root / "fictional-case.cbak"
-        self.raw = custody.MAGIC + b"NOT_ACTUAL_AES_ENCRYPTED_FAKE_TEST_ONLY"
+        # Format-shaped fictional fixture, not a GCM-authenticated backup.
+        # That distinction is intentional: the transport cannot verify a
+        # cryptographic tag without the separately controlled recovery phrase.
+        self.plain = b"FICTIONAL_FORMAT_ONLY_NO_CUSTOMER_DATA"
+        self.header = {
+            "schema": custody.SCHEMA,
+            "cipher": "AES-256-GCM", "kdf": "scrypt",
+            "n": custody.KDF_N, "r": custody.KDF_R, "p": custody.KDF_P,
+            "salt_b64": base64.b64encode(bytes(range(16))).decode("ascii"),
+            "nonce_b64": base64.b64encode(bytes(range(12))).decode("ascii"),
+            "plaintext_sha256": hashlib.sha256(self.plain).hexdigest(),
+            "plaintext_bytes": len(self.plain),
+        }
+        head = json.dumps(self.header, sort_keys=True, separators=(",", ":")).encode()
+        self.raw = (custody.MAGIC + struct.pack(">I", len(head)) + head
+                    + b"\xa5" * len(self.plain) + b"\xf0" * 16)
         self.source.write_bytes(self.raw)
         if os.name != "nt":
             self.source.chmod(0o600)
@@ -244,6 +260,60 @@ class GitHubPrivateCustodyTests(unittest.TestCase):
                 digest, dest, self.TOKEN, transport=self.provider
             )
         self.assertFalse(dest.exists())
+
+
+    def test_noncanonical_or_forged_envelope_fields_block_upload(self):
+        start = len(custody.MAGIC)
+        length = struct.unpack(">I", self.raw[start:start + 4])[0]
+        body = self.raw[start + 4 + length:]
+        mutations = (
+            ("wrong-schema", {"schema": "not-a-complete-case"}),
+            ("wrong-algorithm", {"cipher": "NONE"}),
+            ("wrong-kdf", {"kdf": "pbkdf2"}),
+            ("boolean-kdf-n", {"n": True}),
+            ("bad-salt", {"salt_b64": "AQ=="}),
+            ("bad-nonce", {"nonce_b64": "invalid%%"}),
+            ("bad-source-hash", {"plaintext_sha256": "f" * 63}),
+            ("false-plaintext-length", {"plaintext_bytes": len(self.plain) + 1}),
+        )
+        for label, fields in mutations:
+            with self.subTest(label=label):
+                head = json.dumps(
+                    {**self.header, **fields}, sort_keys=True,
+                    separators=(",", ":")
+                ).encode()
+                self.source.write_bytes(
+                    custody.MAGIC + struct.pack(">I", len(head)) + head + body
+                )
+                if os.name != "nt":
+                    self.source.chmod(0o600)
+                with self.assertRaises(custody.PrivateStorageBlocked):
+                    custody.store_encrypted_backup(
+                        self.source, self.TOKEN, transport=self.provider
+                    )
+                self.assertEqual(self.provider.writes, 0)
+        duplicate = json.dumps(self.header, sort_keys=True, separators=(",", ":"))
+        duplicate = duplicate[:-1] + ',"schema":"duplicate-schema"}'
+        raw_header = duplicate.encode()
+        self.source.write_bytes(
+            custody.MAGIC + struct.pack(">I", len(raw_header)) + raw_header + body
+        )
+        if os.name != "nt":
+            self.source.chmod(0o600)
+        with self.assertRaises(custody.PrivateStorageBlocked):
+            custody.store_encrypted_backup(
+                self.source, self.TOKEN, transport=self.provider
+            )
+        self.assertEqual(self.provider.writes, 0)
+        self.source.write_bytes(self.raw + b"TRAILING_PLAINTEXT")
+        if os.name != "nt":
+            self.source.chmod(0o600)
+        with self.assertRaises(custody.PrivateStorageBlocked):
+            custody.store_encrypted_backup(
+                self.source, self.TOKEN, transport=self.provider
+            )
+        self.assertEqual(self.provider.writes, 0)
+
 
 
 if __name__ == "__main__":
