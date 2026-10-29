@@ -18,7 +18,7 @@ import sqlite3
 import stat
 import struct
 from contextlib import closing
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from capturebrief_core.atomic_io import atomic_write_bytes, exclusive_path_lock
@@ -84,6 +84,10 @@ def _validate_snapshot(data: bytes) -> int:
         rows = db.execute("SELECT * FROM free_check_reservations").fetchall()
         if len(rows) > MAX_COHORT_SIZE:
             raise ValueError("Registry exceeds ten-business cap")
+        # Use one UTC bound for the entire recovered snapshot. A timestamp
+        # arbitrarily far in the future cannot be valid historical custody.
+        # Allow five minutes for ordinary workstation clock skew.
+        future_limit = datetime.now(timezone.utc) + timedelta(minutes=5)
         for row in rows:
             if (any(not isinstance(row[k], str) or not SHA.fullmatch(row[k])
                     for k in DIGEST_COLUMNS)
@@ -96,6 +100,8 @@ def _validate_snapshot(data: bytes) -> int:
                 if (at.tzinfo is None or at.utcoffset() is None
                         or at.utcoffset().total_seconds() != 0):
                     raise ValueError("Reservation timestamp must be UTC")
+                if at > future_limit:
+                    raise ValueError("Registry contains a future-dated reservation")
             except (TypeError, AttributeError, ValueError):
                 raise ValueError("Invalid registry reservation timestamp") from None
         return len(rows)
