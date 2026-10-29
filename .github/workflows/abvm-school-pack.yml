@@ -19,7 +19,7 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
       - name: Check out published Pages branch
         uses: actions/checkout@v4
@@ -70,3 +70,25 @@ jobs:
           git add abvm/data/study-pack.json
           git commit -m "Refresh verified ABVM school pack"
           git push origin HEAD:gh-pages
+
+      # The GITHUB_TOKEN push above deploys Cloudflare but cannot trigger
+      # another GitHub push workflow. Verify inside this same refresh run.
+      - name: Prepare pinned tools for CaptureBrief production verification
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.4'
+
+      - name: Verify exact CaptureBrief Cloudflare release after ABVM refresh
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          # GitHub's event SHA belongs to main, not the checked-out gh-pages
+          # branch. Pin the verifier to the exact committed production source.
+          export GITHUB_SHA="$(git rev-parse HEAD)"
+          node build-standalone-site.test.js
+          python -m py_compile .github/cloudflare_light_smoke.py
+          PYTHONPATH=.github python -m unittest test_cloudflare_edge_integrity -v
+          node build-standalone-site.js
+          python .github/cloudflare_light_smoke.py
