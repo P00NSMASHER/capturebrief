@@ -97,13 +97,13 @@ def _validate_snapshot(data: bytes) -> int:
             try:
                 raw = row["reserved_at"]
                 at = datetime.fromisoformat(raw.replace("Z", "+00:00"))
-                if (at.tzinfo is None or at.utcoffset() is None
-                        or at.utcoffset().total_seconds() != 0):
-                    raise ValueError("Reservation timestamp must be UTC")
-                if at > future_limit:
-                    raise ValueError("Registry contains a future-dated reservation")
             except (TypeError, AttributeError, ValueError):
                 raise ValueError("Invalid registry reservation timestamp") from None
+            if (at.tzinfo is None or at.utcoffset() is None
+                    or at.utcoffset().total_seconds() != 0):
+                raise ValueError("Reservation timestamp must be UTC")
+            if at > future_limit:
+                raise ValueError("Registry contains a future-dated reservation")
         return len(rows)
 
 
