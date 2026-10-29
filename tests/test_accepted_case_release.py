@@ -84,7 +84,14 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
             ("report_receipt", "REPORT_RECEIPT"), ("registry", "REGISTRY_SNAPSHOT"),
             ("body", "MESSAGE_BODY"),
         ):
-            self.add(ident, kind, ("FICTIONAL " + kind).encode())
+            if kind == "REPORT_RECEIPT":
+                receipt = {
+                    "case_sha256": sha256(canonical(self.case)),
+                    "report_sha256": next(x["sha256"] for x in self.rows if x["id"] == "report"),
+                }
+                self.add(ident, kind, canonical(receipt))
+            else:
+                self.add(ident, kind, ("FICTIONAL " + kind).encode())
         self.add("backup", "OFFDEVICE_BACKUP", b"FICTIONAL encrypted backup bytes")
         files_to_restore = {
             x["id"]: x["sha256"] for x in self.rows
@@ -136,6 +143,7 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
                 "offdevice_provider_receipt": "fictional QA remote download",
                 "key_custodian_id": "qa-external-custodian",
                 "primary_device_id": "qa-primary", "restore_device_id": "qa-independent",
+                "recovery_completed_at": (NOW-timedelta(minutes=30)).isoformat(),
             },
             "business": {
                 "identity_file": "identity", "inbound_receipt_file": "inbound",
