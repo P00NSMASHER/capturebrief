@@ -11,6 +11,9 @@ import json
 import sys
 from pathlib import Path
 
+REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO))
+
 from capturebrief_core.accepted_case_release import (
     AcceptedCaseBlocked, _json_file, _root, inspect_accepted_case,
 )
