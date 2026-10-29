@@ -114,6 +114,30 @@ class GitHubPrivateCustodyTests(unittest.TestCase):
         self.assertEqual(self.provider.writes, 0)
         self.assertFalse(result["production_backup_present"])
 
+    def test_repository_requires_explicit_boolean_write_permission_in_metadata(self):
+        # GitHub omitting permission metadata is not evidence of Contents:write.
+        # Never report an operator preflight as verified from absent or forged proof.
+        for permissions in (
+            None, {}, {"pull": True}, {"push": "true"},
+            {"push": 1}, {"push": False},
+        ):
+            with self.subTest(permissions=permissions):
+                def without_write_proof(method, path, token, body=None):
+                    code, response = self.provider(method, path, token, body)
+                    if method == "GET" and path == custody.API_PREFIX:
+                        response = dict(response)
+                        if permissions is None:
+                            response.pop("permissions", None)
+                        else:
+                            response["permissions"] = permissions
+                    return code, response
+
+                with self.assertRaises(custody.PrivateStorageBlocked):
+                    custody.inspect_private_destination(
+                        self.TOKEN, transport=without_write_proof
+                    )
+                self.assertEqual(self.provider.writes, 0)
+
     def test_dedicated_repository_missing_public_wrong_branch_or_permission_blocks(self):
         for change in (
             {"visible": False}, {"private": False}, {"branch": "gh-pages"},
