@@ -128,6 +128,28 @@ class FullCaseBackupTests(unittest.TestCase):
             )
         self.assertFalse((self.recovered/"tampered").exists())
 
+    def test_snapshot_kinds_reject_hash_matching_non_sqlite_originals(self):
+        # A correct inventory SHA proves only bytes, not that the recovered
+        # registry/nonce history is a functioning SQLite snapshot.
+        for kind in ("REGISTRY_SNAPSHOT", "AUTHORIZATION_LEDGER_SNAPSHOT"):
+            entry = next(row for row in self.entries if row["kind"] == kind)
+            path = self.root / entry["path"]
+            prior = path.read_bytes()
+            forged = b"FICTIONAL_BYTES_WITH_MATCHING_SHA_BUT_NO_SQLITE_STATE"
+            path.write_bytes(forged)
+            if os.name != "nt":
+                path.chmod(0o600)
+            entry["sha256"] = hashlib.sha256(forged).hexdigest()
+            self.write_inv()
+            with self.subTest(kind=kind), self.assertRaises(ValueError):
+                self.create()
+            self.assertFalse(self.archive.exists())
+            path.write_bytes(prior)
+            if os.name != "nt":
+                path.chmod(0o600)
+            entry["sha256"] = hashlib.sha256(prior).hexdigest()
+        self.write_inv()
+
     def test_missing_registry_or_shared_authorization_ledger_blocks_backup(self):
         for kind in ("REGISTRY_SNAPSHOT","AUTHORIZATION_LEDGER_SNAPSHOT",
                      "HISTORY","REPORT","RESOURCE_INVENTORY"):
