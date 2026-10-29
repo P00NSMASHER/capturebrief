@@ -110,6 +110,10 @@ def _collect(source_root: str | Path, inventory_path: str | Path
     root = _root(source_root)
     path = Path(inventory_path).expanduser().absolute()
     _reject_private_path_links(path)
+    # Windows TemporaryDirectory paths may use either a short 8.3 spelling
+    # or their canonical long spelling. Resolve only AFTER rejecting link and
+    # junction ancestors, then compare two canonical locations.
+    path = path.resolve(strict=True)
     if not path.is_relative_to(root) or path.stat().st_size > MAX_INPUT:
         raise ValueError("Snapshot inventory must be an owner-only file inside the case root")
     inv = _json_file(path)
