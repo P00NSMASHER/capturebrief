@@ -9,11 +9,14 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
 
 from scripts import full_case_backup as backup
+from capturebrief_core.free_trial import _SCHEMA as FICTIONAL_REGISTRY_SCHEMA
+from capturebrief_core.authorization_ledger import _SCHEMA as FICTIONAL_NONCE_SCHEMA
 
 try:
     import cryptography
@@ -23,6 +26,16 @@ except ImportError:
     CRYPTO = False
 
 TEST_KEY=b"FICTIONAL_TEST_RECOVERY_KEY_NOT_OWNER_CUSTODY_2026"
+
+def empty_fictional_sqlite_original(kind: str) -> bytes:
+    """Genuine empty SQLite state, with no customer or fake signing evidence."""
+    schema = (FICTIONAL_REGISTRY_SCHEMA if kind == "REGISTRY_SNAPSHOT"
+              else FICTIONAL_NONCE_SCHEMA)
+    with sqlite3.connect(":memory:") as connection:
+        connection.execute(schema)
+        connection.commit()
+        return connection.serialize()
+
 
 KINDS=(
     "CASE","HISTORY","RESOURCE_INVENTORY","ACTION_ORIGINAL",
@@ -52,7 +65,9 @@ class FullCaseBackupTests(unittest.TestCase):
             raw=(json.dumps({"case_id":"CB-FAKE-OWNER-REVIEW-2026",
                               "fictional_source_data":True},sort_keys=True).encode()
                  if kind=="CASE" else
-                 (f"FICTIONAL {kind} record {i}; buyer@example.invalid\n").encode())
+                 empty_fictional_sqlite_original(kind)
+                 if kind in ("REGISTRY_SNAPSHOT", "AUTHORIZATION_LEDGER_SNAPSHOT")
+                 else (f"FICTIONAL {kind} record {i}; buyer@example.invalid\n").encode())
             path.write_bytes(raw)
             if os.name!="nt":
                 path.chmod(0o600)
@@ -140,6 +155,29 @@ class FullCaseBackupTests(unittest.TestCase):
             if os.name != "nt":
                 path.chmod(0o600)
             entry["sha256"] = hashlib.sha256(forged).hexdigest()
+            self.write_inv()
+            with self.subTest(kind=kind), self.assertRaises(ValueError):
+                self.create()
+            self.assertFalse(self.archive.exists())
+            path.write_bytes(prior)
+            if os.name != "nt":
+                path.chmod(0o600)
+            entry["sha256"] = hashlib.sha256(prior).hexdigest()
+        self.write_inv()
+
+    def test_snapshot_kinds_reject_wrong_sqlite_table_with_matching_sha(self):
+        for kind in ("REGISTRY_SNAPSHOT", "AUTHORIZATION_LEDGER_SNAPSHOT"):
+            entry = next(row for row in self.entries if row["kind"] == kind)
+            path = self.root / entry["path"]
+            prior = path.read_bytes()
+            with sqlite3.connect(":memory:") as db:
+                db.execute("CREATE TABLE not_authorized (opaque_text TEXT)")
+                db.commit()
+                malformed = db.serialize()
+            path.write_bytes(malformed)
+            if os.name != "nt":
+                path.chmod(0o600)
+            entry["sha256"] = hashlib.sha256(malformed).hexdigest()
             self.write_inv()
             with self.subTest(kind=kind), self.assertRaises(ValueError):
                 self.create()
