@@ -17,6 +17,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from capturebrief_core.authorization_ledger import reserve_once
 from capturebrief_core.accepted_case_release import (
     AcceptedCaseBlocked, canonical, inspect_accepted_case, sha256,
     signature_payload, verify_attestations, _file, _official,
@@ -345,6 +346,34 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
             self.skipTest("Symlink creation not available on this runner")
         with self.assertRaises(AcceptedCaseBlocked):
             _file(self.root, "shortcut", next(x["sha256"] for x in self.rows if x["id"]=="case"))
+
+    def test_one_use_signed_nonce_reserved_atomically_and_never_sends(self):
+        verdict = self.check()  # FICTIONAL fixture, mocked existing core.
+        ledger_dir = Path(self.tmp.name) / "shared-trusted-ledger"
+        ledger_dir.mkdir(mode=0o700)
+        ledger_path = ledger_dir / "approved-nonces.sqlite"
+        first = reserve_once(self.manifest, verification=verdict, ledger_path=ledger_path, at=NOW)
+        self.assertEqual(first["status"], "SINGLE_MESSAGE_AUTHORIZATION_RESERVED_MANUAL_SEND_PENDING")
+        self.assertFalse(first["external_send_performed"])
+        self.assertTrue(ledger_path.is_file())
+        with self.assertRaises(AcceptedCaseBlocked):
+            reserve_once(self.manifest, verification=verdict, ledger_path=ledger_path, at=NOW)
+
+    def test_nonce_claim_requires_prior_verified_release_and_unexpired_window(self):
+        ledger_dir = Path(self.tmp.name) / "shared-trusted-ledger"
+        ledger_dir.mkdir(mode=0o700)
+        ledger_path = ledger_dir / "approved-nonces.sqlite"
+        with self.assertRaises(AcceptedCaseBlocked):
+            reserve_once(self.manifest, verification={
+                "status": "CUSTOMER_DELIVERY_BLOCKED"
+            }, ledger_path=ledger_path, at=NOW)
+        self.assertFalse(ledger_path.exists())
+        self.manifest["delivery"]["expires_at"] = (NOW - timedelta(minutes=2)).isoformat()
+        with self.assertRaises(AcceptedCaseBlocked):
+            reserve_once(self.manifest, verification={
+                "status": "EVIDENCE_AND_PER_MESSAGE_APPROVAL_VERIFIED_MANUAL_SEND_ONLY"
+            }, ledger_path=ledger_path, at=NOW)
+        self.assertFalse(ledger_path.exists())
 
     def test_official_source_scope_rejects_arbitrary_urls(self):
         self.assertFalse(_official("https://evil.example/history", sam_only=True))
