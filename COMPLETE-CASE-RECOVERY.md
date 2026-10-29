@@ -35,7 +35,23 @@ Required kinds are CASE, HISTORY, RESOURCE_INVENTORY, at least one ACTION_ORIGIN
 }
 ~~~
 
-Use independently **WAL-consistent SQLite snapshots** for the trial registry and the shared one-use authorization ledger. Never copy an actively written SQLite DB as an ordinary file. Existing free_check_registry_backup.py has a consistent registry snapshot operation. The one-use authorization ledger must be quiesced and snapshotted consistently. A stale restored authorization ledger must **never** be promoted over authoritative history: reconcile later activity before any future send or new admission.
+Use independently **WAL-consistent SQLite snapshots** for the trial registry and the shared one-use authorization ledger. Never copy an actively written SQLite DB as an ordinary file. Existing free_check_registry_backup.py has a consistent encrypted registry snapshot operation. The new command `scripts/snapshot_authorization_ledger.py` safely initializes one **empty** shared nonce ledger before customers exist, then captures a consistent SQLite snapshot including committed WAL records, validates the exact immutable schema, rejects added triggers, normalizes the journal header in memory for Linux/Windows portability, and writes a new protected 0600 snapshot. No message is sent or approved.
+
+~~~
+# In an owner-approved private directory, before admitting any real customer:
+python scripts/snapshot_authorization_ledger.py init \
+  --ledger /approved/private/CaptureBrief/approved-message-nonces.sqlite
+
+# Use a new snapshot file for each complete case/recovery revision:
+python scripts/snapshot_authorization_ledger.py snapshot \
+  --ledger /approved/private/CaptureBrief/approved-message-nonces.sqlite \
+  --snapshot-file /approved/private/CaptureBrief/nonce-snapshot-REVISION.sqlite
+
+python scripts/snapshot_authorization_ledger.py verify \
+  --snapshot-file /approved/private/CaptureBrief/nonce-snapshot-REVISION.sqlite
+~~~
+
+Include the returned snapshot's SHA-256 in the complete-case encrypted backup inventory as `AUTHORIZATION_LEDGER_SNAPSHOT`. The **single canonical ledger remains authoritative**: the utility has no restore, overwrite or reset command. Even a valid snapshot can be stale, so reconcile every later authorization before any future send or trial admission. This is distinct from the off-device, independently keyed recovery test required for actual operations.
 
 ## Encrypted local backup and independent off-device restore
 
