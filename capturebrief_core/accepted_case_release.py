@@ -163,6 +163,42 @@ def _official(url: Any, *, sam_only: bool = False) -> bool:
                  else (host.endswith(".gov") or host == "acquisition.gov")))
 
 
+def _sam_record_reference(row: dict[str, Any], *, action_id: str,
+                          resource_id: str | None = None) -> None:
+    """Bind recognizable first-party notice/resource URLs to their exact IDs.
+
+    Archived SAM Data Services extracts use a collection URL, so those require
+    an independently reviewed explicit record_locator. A URL and a digest do
+    not themselves prove provider authenticity or complete family history.
+    """
+    source_url = row.get("source_url")
+    if not _official(source_url, sam_only=True):
+        raise AcceptedCaseBlocked("Official SAM original source URL is missing")
+    parsed = urlsplit(source_url)
+    if (parsed.hostname or "").casefold().rstrip(".") != "sam.gov":
+        raise AcceptedCaseBlocked("History/resource original needs first-party SAM.gov provenance")
+    path = parsed.path.rstrip("/")
+    notice = re.fullmatch(r"/(?:workspace/contract/)?opp/([^/]+)/view", path, re.I)
+    if notice:
+        if notice.group(1).casefold() != action_id.casefold():
+            raise AcceptedCaseBlocked("SAM original points to a different historical action")
+        return
+    resource = re.fullmatch(
+        r"/api/prod/opps/v3/opportunities/resources/files/([^/]+)/download",
+        path, re.I,
+    )
+    if resource and resource_id:
+        if resource.group(1).casefold() != resource_id.casefold():
+            raise AcceptedCaseBlocked("SAM download URL identifies another resource")
+        return
+    if path.casefold().startswith("/data-services/contract%20opportunities/"):
+        expected = resource_id if resource_id is not None else action_id
+        if row.get("record_locator") == expected:
+            return
+        raise AcceptedCaseBlocked("Data Services original lacks an exact reviewed record locator")
+    raise AcceptedCaseBlocked("Unrecognized or unrelated SAM original evidence location")
+
+
 def _files(manifest: dict[str, Any], root: Path) -> tuple[dict[str, dict[str, Any]], dict[str, bytes]]:
     rows = manifest.get("files")
     if not isinstance(rows, list) or not 12 <= len(rows) <= 100:
@@ -228,6 +264,7 @@ def _source_closure(case: dict[str, Any], manifest: dict[str, Any],
             or not isinstance(expected, list) or not expected):
         raise AcceptedCaseBlocked("Missing complete original-to-current family action set")
     seen: set[str] = set()
+    used_action_originals: set[str] = set()
     for action in actions:
         if not isinstance(action, dict) or action.get("type") not in {
             "SOLICITATION", "AMENDMENT", "MODIFICATION", "CANCELLATION", "REINSTATEMENT", "OTHER"
@@ -237,11 +274,12 @@ def _source_closure(case: dict[str, Any], manifest: dict[str, Any],
         if not isinstance(notice, str) or not SAFE_ID.fullmatch(notice) or notice in seen:
             raise AcceptedCaseBlocked("Duplicate or unbounded official action identity")
         seen.add(notice)
-        _kind(files, action.get("original_file"), "ACTION_ORIGINAL")
-        if not _official(files[action["original_file"]].get("source_url"), sam_only=True):
-            raise AcceptedCaseBlocked("Historical action original has no official publisher source")
-        if urlsplit(files[action["original_file"]]["source_url"]).hostname.casefold().rstrip(".") != "sam.gov":
-            raise AcceptedCaseBlocked("Version history cannot be supplied by the latest-active API alone")
+        original = action.get("original_file")
+        _kind(files, original, "ACTION_ORIGINAL")
+        if original in used_action_originals:
+            raise AcceptedCaseBlocked("One retained action original cannot represent multiple notices")
+        used_action_originals.add(original)
+        _sam_record_reference(files[original], action_id=notice)
         if action["type"] == "AMENDMENT" and not (
             isinstance(action.get("amendment_number"), str)
             and action["amendment_number"].strip()):
@@ -255,6 +293,7 @@ def _source_closure(case: dict[str, Any], manifest: dict[str, Any],
     if not isinstance(resources, list) or len(resources) > 100:
         raise AcceptedCaseBlocked("Deleted-inclusive resource inventory missing")
     seen_resources: set[str] = set()
+    used_resource_originals: set[str] = set()
     for item in resources:
         if not isinstance(item, dict) or item.get("state") not in {
             "CURRENT", "SUPERSEDED", "DELETED_WITH_RETAINED_ORIGINAL"
@@ -265,7 +304,13 @@ def _source_closure(case: dict[str, Any], manifest: dict[str, Any],
                 or resource in seen_resources or item.get("action_id") not in seen):
             raise AcceptedCaseBlocked("Resource does not belong uniquely to the reviewed history")
         seen_resources.add(resource)
-        _kind(files, item.get("original_file"), "RESOURCE_ORIGINAL")
+        original = item.get("original_file")
+        _kind(files, original, "RESOURCE_ORIGINAL")
+        if original in used_resource_originals:
+            raise AcceptedCaseBlocked("One retained resource original cannot represent multiple attachment IDs")
+        used_resource_originals.add(original)
+        _sam_record_reference(files[original], action_id=item["action_id"],
+                              resource_id=resource)
     required = {
         str(x.get("artifact_id")) for x in case.get("packet", {}).get("artifacts", [])
         if isinstance(x, dict) and x.get("required_for_analysis") is True
@@ -286,8 +331,12 @@ def _source_closure(case: dict[str, Any], manifest: dict[str, Any],
         }:
             raise AcceptedCaseBlocked("Incorporated-source applicability is unresolved")
         rid = item.get("rule_version_id")
-        if not isinstance(rid, str) or rid in rule_ids or not item.get("basis_locator"):
-            raise AcceptedCaseBlocked("Incorporated rule version/basis is missing")
+        if (not isinstance(rid, str) or rid in rule_ids
+                or not isinstance(item.get("basis_locator"), str)
+                or not item["basis_locator"].strip()
+                or not isinstance(item.get("edition"), str)
+                or not item["edition"].strip()):
+            raise AcceptedCaseBlocked("Incorporated rule edition or exact basis is missing")
         rule_ids.add(rid)
         _kind(files, item.get("original_file"), "INCORPORATED_RULE")
         if not _official(files[item["original_file"]].get("source_url")):
