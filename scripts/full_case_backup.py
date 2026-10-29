@@ -185,7 +185,13 @@ def create_complete_backup(
 def _open_complete(
     source: str|Path,passphrase: bytes,
 ) -> tuple[str,list[tuple[dict[str,Any],bytes]]]:
-    raw = _bytes(Path(source).expanduser().absolute(), MAX_CONTAINER+MAX_HEADER+len(MAGIC)+128)
+    backup = Path(source).expanduser().absolute()
+    private_root(backup.parent)
+    if backup.suffix != ".cbak" or backup.is_symlink() or not backup.is_file():
+        raise ValueError("Encrypted case archive must be an existing private .cbak file")
+    if os.name != "nt" and backup.stat().st_mode & 0o077:
+        raise ValueError("Encrypted backup file cannot be accessible by other users")
+    raw = _bytes(backup, MAX_CONTAINER+MAX_HEADER+len(MAGIC)+128)
     offset=len(MAGIC)
     if not raw.startswith(MAGIC) or len(raw)<offset+4+16:
         raise ValueError("Unsupported or truncated complete-case backup")
