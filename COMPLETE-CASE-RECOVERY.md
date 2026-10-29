@@ -4,6 +4,10 @@
 
 Earlier scoped AES-GCM backup protected only intake and selected source originals. The separate free-check registry backup protected ten-business reservations. **Neither included the entire report and one-use delivery-authorization ledger.** New scripts/full_case_backup.py can encrypt one complete bounded source/review/report/registry snapshot. It does not upload it off-device, establish production key custody or authorize customer contact.
 
+## Chosen off-device provider
+
+The owner selected the **existing GitHub private-cloud provider used by PermitPlate**. PermitPlate operational data reside in private `P00NSMASHER/permitplate-state`; CaptureBrief **must not reuse its contents or token**. Provision the separate private repository `P00NSMASHER/capturebrief-state` under the same account, use the strict encrypted-only transport in `scripts/github_private_custody.py`, and follow `CAPTUREBRIEF-PRIVATE-GITHUB-RECOVERY.md`. Until its repository, distinct token and second-device restore are genuinely verified, this is a selected design, not an approved backup proof. No R2 or paid service.
+
 ## Required owner-approved environment
 
 Choose an encrypted restricted primary location and a **separate** approved encrypted off-device destination with access policy, audit trail and retention/deletion rules. Keep the production recovery key under independent custody, outside the primary machine, backup and public source. A GitHub Actions test artifact is not a production backup. Never mix CaptureBrief customer data with the unrelated private PermitPlate state repository.
