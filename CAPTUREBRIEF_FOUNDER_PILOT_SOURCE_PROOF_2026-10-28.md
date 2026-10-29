@@ -17,7 +17,7 @@
 | No-card, single-assumption, ten-business trial inquiry | IMPLEMENTED | Composed email is not proof of a received request or enrollment. |
 | Source retrieval and one meaningful real-world finding | DEMONSTRATED | Genuine publisher original and conflicting dates. |
 | Encryption and independent test restore | DEMONSTRATED FOR PUBLIC TEST ONLY | Never claim production backup custody from the demo key. |
-| Real buyer identity, capacity, written acceptance and delivery date | PER-CUSTOMER REVIEW REQUIRED | Do not fabricate a customer or acceptance. |
+| First real buyer, customer feedback and reviewed customer report | NOT A PRELAUNCH BLOCKER | No existing customer is required to complete launch preparation; verify identity/scope and internally review a report only when processing a genuine request. |
 | Complete first-party SAM action/amendment history | NOT VERIFIED | Public API v2 returns only latest active; management-history API returned an access error. |
 | Deletion-aware attachment set, references and exact rule applicability | NOT FULLY VERIFIED | Current attachment PDF alone cannot prove complete family closure. |
 | Independent operator source review and Decision Evidence | NOT SIGNED OFF | Automated page matching is not a human attestation. |
