@@ -1,180 +1,170 @@
-# CaptureBrief — supervised first-pilot operating runbook
+# CaptureBrief first-pilot operator runbook | founder-curated, no-card
 
-Version: 2026-10-18 candidate. Applies only to a **single human-supervised,
-public-source federal IT/cyber/cloud pursuit**. This document does not turn
-software QA into first-customer validation or change any customer terms.
+**Operating contract (2026-10-29):** one free assumption, one public federal
+IT/cyber/cloud pursuit, at most ten independently verified businesses.
+The inquiry has **no card**, no charge, no subscription, no automatic upgrade,
+no included 14-day change watch and no automatic delivery. The original paid
+pilot and its payment/watch process are separate; do not invoke them here.
 
-## A. Source, identity, and prepayment intake
+**Truth boundary:** no customer is required for prelaunch. A prospective
+customer's feedback, reviewed customer report, payment or signoff is not a
+prelaunch gate. A software passing on fictional/public-only examples does not
+prove private storage acceptance, real off-device recovery, human review or
+permission to publish a first report.
 
-1. Confirm that the incoming request actually arrived in the controlled
-   Gmail account. A generated browser draft or clipboard copy is not delivery.
-2. Capture the sending address, customer-reported work email, company,
-   public SAM.gov notice URL, current GO/HOLD/PASS/UNSURE posture, up to
-   five distinct non-sensitive assumptions, and explicit public-only consent.
-3. Validate those fields using CaptureBrief's existing intake core. The
-   buyer's assertions create only UNPROVEN case assumptions and cannot
-   establish a sourcing, deadline, eligibility or payment fact.
-4. Reject private documents, credentials, CUI, protected portals,
-   pricing/staffing strategy and proprietary proposal contents. The first
-   pilot must be fully supportable using public official sources.
-5. Match the opportunity to the actual public **IT/cyber/cloud** offer
-   and confirm what is being reviewed before promising a delivery date.
-6. State clearly what the service will **not** do (no legal advice, no
-   bid submission, no guarantee of eligibility or award). Confirm the
-   customer owns bid and procurement decisions.
+## 1. Prelaunch drill, before a first customer exists
 
-## B. Payment: live account, never website assertion
+1. Independently open the production **Cloudflare Pages** deployment for
+   `retally-capturebrief`, mapped to `capturebrief.retallyrecovery.com`, on
+   the `gh-pages` production branch. Record the actual deployment ID, commit
+   and response/body evidence, not merely the presence of a green GitHub check.
+   Rehearse the browser form with *fictional, non-sent* values. Confirm it
+   constructs a locally controlled draft only, never posts to a submission
+   backend, initiates checkout, sends mail or falsely claims delivery.
+   A **draft is not a submitted request**. Verify the live page's correct
+   free-offer copy, one-assumption limit, public-only consent and no-card terms.
+2. Run the no-customer readiness gate **with the selected offer and mode**:
 
-1. If a free scope check was requested, confirm fit before requesting
-   payment. If a live Checkout payment is claimed, independently inspect
-   CaptureBrief's own **live** Stripe account.
-2. Match the account, customer identity, product, one-time USD 149.00
-   amount, unique payment or Checkout Session ID and terminal paid state.
-   A URL containing checkout=complete, selected PAID field, email, browser
-   screenshot, invoice link, or sandbox payment is NOT payment evidence.
-3. Record processor reference and billing reconciliation only in the
-   private operator system; never the public GitHub repository.
-4. Decline and refund out-of-scope paid requests *before work begins*,
-   consistent with the published terms. Verify actual refund via Stripe
-   and retain an opaque receipt; do not claim it has happened from a
-   simulated test.
-5. Do not start work or send a payment/acceptance email solely on the
-   strength of the customer's claim.
+   ```sh
+   python scripts/pilot_preflight.py --stage admission --offer free --launch-mode founder_curated
+   ```
 
-## C. Evidence production, review, and release
+   The result is **FOUNDER_CURATED_INQUIRY_REVIEW_REQUIRED**, not permission to
+   admit a business, charge, contact anyone or deliver a report. The FY2027
+   full-catalog diagnostics must not be misread as case-specific approval.
+   Independently run `python scripts/audit_founder_pilot_runbook.py` and the
+   cross-platform `tests.test_founder_pilot_runbook` regression gate.
+3. In an owner-approved encrypted operator workspace outside Git/Pages/CI,
+   rehearse a *fictional* request import, read-only source review, one-off
+   report preparation, a deliberately conflicting public-source HOLD, denial
+   and no-send controls. Do not create a real customer, populate the actual
+   ten-business registry, impersonate a reviewer or invent evidence. Test
+   rollback without resetting any existing reservation or message nonce.
+4. Demonstrate an actual full-case encrypted backup of fictional/public-only
+   evidence, including report, original sources, registry and authorization
+   ledger **consistent SQLite snapshots**. Perform a provider-retrieved
+   restore on a **second authorized device** using a **separately held recovery key**.
+   Independently reconcile source/report/SHA inventories with a saved original
+   baseline and check that an older ledger snapshot cannot authorize a
+   duplicate message. CI runner-to-runner copies are engineering checks only,
+   **not proof of an operator-owned private-cloud restore**.
+5. Obtain independent operator review of the rehearsal procedure and test
+   evidence. Record actual primary-device and receiving-device identities,
+   source SHA receipts, time, private access/retention approval, separate
+   recovery custodian, and the exact deployed website revision. Keep private
+   files, access details, customer identifiers and secrets out of public PRs
+   and automation logs. Mark unperformed steps BLOCKED, never PASSED.
 
-1. Obtain a fresh official SAM Public Opportunities API v2 observation
-   through the approved key-bearing operator environment, and retain
-   canonical raw-response, pagination and current-action proof. Never
-   use a UI-only/web-search observation as a substitute.
-2. Establish explicit history scope. For a FULL_CATALOG claim in FY2027,
-   the reviewed catalog must be current through FY2027 and **every**
-   required active/archive source slot must have retained approved,
-   hash-bound and fresh original bytes. A filename seen on a website
-   does not satisfy this.
-3. Confirm every controlling public solicitation, amendment, attachment,
-   reference and exact source version. Separate current rules from
-   superseded ones, and record every unresolved or source-limited item.
-4. Require human review for acquisition rule applicability and each
-   decision-relevant conclusion; never manufacture signoff or resolve
-   unsupported bidder-specific facts.
-5. Independently run case audit, Decision Evidence and delivery checks.
-   Bundle only if READY_FOR_HUMAN_RELEASE and TRACE_COMPLETE with
-   non-synthetic evidence:
-       python -m capturebrief_core.trace_cli bundle case.json -o delivery.zip > delivery-receipt.json
-6. Independently verify actual ZIP bytes against the separately retained
-   original build receipt; the ZIP integrity pass alone does not prove
-   source correctness:
-       python -m capturebrief_core.trace_cli verify-bundle delivery.zip --expected-sha256 ORIGINAL_SHA
-7. Keep the ZIP, raw case, reviews and original receipts in protected
-   operator storage. Never put customer records in public GitHub,
-   GitHub Pages, GitHub Actions logs or public artifacts.
+## 2. The existing private GitHub provider, strictly isolated
 
-## D. The 14-day targeted watch
+The selected cloud provider is GitHub private repositories, reused from
+PermitPlate **as a provider only**. Provision a *separately private*,
+initialized `P00NSMASHER/capturebrief-state` repository and a new fine-grained
+`CAPTUREBRIEF_STATE_TOKEN` restricted to its Contents read/write. **Never upload
+to `P00NSMASHER/permitplate-state`**, and never reuse
+`PERMITPLATE_STATE_TOKEN`. Put the token in the approved operator secret store,
+not source, issue, Actions secrets by default, chat or a CLI argument. Keep
+AES-GCM recovery material outside both repositories and off the primary host.
 
-1. At actual delivery, freeze the validated case and build the 14-day
-   baseline with capturebrief_core.trace_cli watch-baseline.
-2. Record agreed official public watch targets, cadence, responsible
-   operator and end timestamp in the private engagement record. The
-   watch is scheduled, not continuous. Do not promise sources that
-   cannot be checked under the approved collection policy.
-3. At each scheduled check, independently fetch and retain fresh,
-   approved first-party observations for agreed sources. Merely rerunning
-   a comparator on an old case is not a fresh check.
-   For an already history-resolved active case, the on-demand approved
-   SAM current-action portion can run with an operator-held API key:
+An inaccessible/missing destination, unapproved retention/access plan, absent
+scoped token, missing separate custodian or missing real second-device proof
+means **prelaunch private recovery remains BLOCKED**. Do not turn a mock
+preflight or GitHub readback into a successful independent recovery claim.
 
-       python scripts/run_current_watch_cycle.py /private/case.json /private/baseline.json \
-         --updated-case /private/case-refreshed.json \
-         --receipt-dir /private/watch-receipts
+For the separate public/fictional rehearsal, after owner provisioning, run:
 
-   This command uses SAM_API_KEY from the operator environment, requires
-   a complete retained history receipt, fetches and verifies only the
-   documented latest-active API source, and produces an immutable review
-   receipt. A no-active-match or missing historical action is a REVIEW
-   REQUIRED event, never proof of termination. It does not fetch archived
-   CSVs, all references or rule editions; those agreed watch sources
-   still require separate approved observations. It is not scheduled,
-   not a completeness certification, and never sends updates.
-4. Use scripts/run_watch_receipt.py on the delivered baseline and the
-   actually refreshed private case. It writes an immutable, content-
-   addressed receipt outside the public repo. Exit 0 = fresh proven
-   unchanged; 3 = human review required/expired/stale/change; 2 =
-   invalid input or another controlled failure.
+```sh
+# Private operator host only; no actual customer evidence.
+python scripts/github_private_custody.py preflight
+python scripts/full_case_backup.py create --private-root /approved/private/fictional-case --inventory /approved/private/fictional-case/backup-inventory.json --backup-file /approved/staging/fictional.cbak
+python scripts/full_case_backup.py verify --backup-file /approved/staging/fictional.cbak
+python scripts/github_private_custody.py upload --encrypted-case /approved/staging/fictional.cbak --approve-upload
 
-   For the FIRST scheduled check after delivery:
+# Second authorized device, independent download and original-inventory replay:
+python scripts/github_private_custody.py retrieve --sha256 EXACT_CIPHERTEXT_SHA256 --output /approved/recovered/fictional.cbak
+python scripts/full_case_backup.py restore --backup-file /approved/recovered/fictional.cbak --output-dir /approved/recovered/new-empty-case
+```
 
-       python scripts/run_watch_receipt.py /private/baseline.json \
-         /private/fresh-case.json --receipt-dir /private/watch-receipts
+The transport supports **at most 900,000 encrypted bytes per complete archive**,
+and blocks oversized/private-repo usage rather than dropping evidence or silently
+incurring charges. Never paste a token or recovery phrase into a command log.
+Do not substitute PermitPlate's private repository, public code, Actions artifacts
+or a public Cloudflare bucket for this isolated encrypted destination. Follow
+`CAPTUREBRIEF-PRIVATE-GITHUB-RECOVERY.md` and `COMPLETE-CASE-RECOVERY.md`
+for the complete signed and separately held proof inventory.
 
-   For EVERY SUBSEQUENT scheduled check, provide the original private JSON
-   receipt from the immediately preceding check, including unsuccessful
-   checks:
+## 3. Later, upon a genuine first inbound request (not prelaunch)
 
-       python scripts/run_watch_receipt.py /private/baseline.json \
-         /private/next-fresh-case.json --receipt-dir /private/watch-receipts \
-         --previous-receipt /private/watch-receipts/watch-PRIOR-SHA.json
+1. Verify *actual receipt* in the controlled inbox. A browser, URL parameter,
+   clipboard or locally prepared email draft is **not** independent delivery
+   evidence. Check the real sending channel, consent, legal business identity,
+   request scope, canonical business key and that no alias of the same company
+   previously consumed a reservation. Never assume customer-supplied identity
+   or an email address is independent verification.
+2. The pilot is exactly **one free assumption** about one public opportunity
+   and **at most ten** business reservations. Only after independent
+   verification, retain a SHA of the privately held identity review and use
+   `scripts/register_free_check.py` against one durable private
+   `free-checks.sqlite`. Reservations are irreversible, alias-aware and
+   concurrent-safe; no simulated customer may be added to the live registry.
+   Preserve a WAL-consistent encrypted snapshot after each real reservation.
+3. The SAM.gov Opportunities API v2 is **latest-active only** and cannot prove
+   complete history. For *this exact pursuit*, obtain fresh current-action
+   evidence plus the **complete official action and amendment history**,
+   including preceding/withdrawn actions, original solicitation, all versions,
+   deletion-inclusive attachments, incorporated FAR/DFARS/agency rule editions,
+   reviews and exact citations. Bind buyer notice, solicitation, current
+   action and every supporting original to one independently reviewed family.
+   Unknown or conflicting dates, missing documents, incomplete amendments or
+   unreviewed incorporation remain **HOLD**. Never fill holes with a
+   fictional action, a generic source probe, partial latest-active API data or
+   an invented human review.
+4. Prepare the reviewed result privately and check the genuine
+   `inspect_free_check` gates, `evaluate_delivery_readiness`, full Decision
+   Evidence and exact report bytes/receipt. Use the original immutable
+   reservation/scope and `scripts/build_free_check.py` only after evidence
+   is independently complete. A rendered report or local SHA match alone
+   cannot establish source truth, recipient authorization or delivery.
+5. Include complete-case originals, business/scope evidence, source history,
+   private registry snapshot, shared one-use authorization-ledger snapshot,
+   report and message body in approved private custody. Make an updated
+   encrypted off-device backup and preserve a separately verified restore
+   record; reconcile snapshots before any further authorization.
 
-   The tool rejects a later check in a directory containing another
-   receipt for the same engagement unless a previous receipt is provided.
-   Before any new receipt is recorded, it verifies that the entire saved
-   chain is present and has intact content-addressed SHA-256 digests. A
-   provided predecessor must match the LATEST retained observation exactly,
-   not just an older signed receipt. Deleted/intervening receipts, same-time
-   forks and mismatched chains fail closed. An engagement-wide lock
-   serializes source-comparison and receipt publication to prevent
-   concurrent scheduled retries from making divergent valid chains.
-   The comparator requires every agreed monitored source to have a new
-   observation since the LAST check, not merely newer than delivery.
-   A previous REVIEW_REQUIRED result cannot silently become clean without
-   human disposition. Only an exact same-time replay is idempotent.
-   Watch receipts must remain in one dedicated private directory; do not
-   delete, edit or move them during the engagement. Retain backups of the
-   original files as required by the data-retention policy.
-   Run the source-refresh step BEFORE the comparison. Do not reuse old
-   source bytes/timestamps. The on-demand SAM source cycle also supports
-   --previous-receipt, and it now validates the complete saved receipt
-   chain BEFORE publishing the refreshed customer-case file. A failed
-   source check or broken predecessor leaves no new published case.
-   Concurrent attempts on the same private receipt directory are
-   serialized with the existing fail-closed filesystem lock.
-5. When status changes, reviewer assesses affected assumptions; the
-   original buyer decision must not be silently changed. Record changed,
-   missing, stale, inaccessible and expired source results distinctly.
-6. Draft—but DO NOT send—the affected finding/update until the owner
-   explicitly approves that specific recipient, text and attachments.
-7. Confirm completion/expiration against the exact 14-day deadline;
-   do not label a 14-day watch complete from a simulated clock.
+## 4. Human release is **one exact message**, never automatic
 
-## E. Written operating acceptance, privacy and follow-up
+The accepted-case release gate is distinct from inquiry preparation. Before
+**each** external delivery the original source reviewer, storage owner,
+recovery custodian, business verifier, report reviewer and delivery approver
+must be **six distinct Ed25519** authorized signing keys, with exact recipient,
+subject, body, attachment digest, immutable case/source bytes, expiry and
+single-use nonce bound to the same manifest. Use the owner-controlled trust
+roster outside the case root and the durable **shared** nonce ledger.
+Check `ACCEPTED-CASE-RELEASE-GATES.md` and run the read-only verifier before
+any reservation. Reserve with `--reserve-once --authorization-ledger` only
+after all real signatures and evidence are independently established.
 
-- Before any live work: retain the customer's written scope, public
-  evidence boundary, agreed delivery date, correction/cancellation terms,
-  and an authorized contact.
-- Separate operator review, case audit, delivery integrity, and external
-  message approval. No single PASS flag substitutes for the rest.
-- Protect access to messages, payment references and case records; retain
-  only as long as legitimately needed for service, correction, security
-  and accounting/legal obligations. Handle deletion requests using the
-  published data-handling policy; do not promise a fixed retention period
-  without a documented business/legal schedule.
-- Track real buyer usefulness, actual delivery effort, repeat demand,
-  refunds and corrections using the existing outcome ledger, without
-  fictional revenue or fake testimonials.
-- Complete independent exact-head QA and the normal protected PR
-  release review before deploying product or website source changes.
+The gate writes no email; **no external message is sent** by the verifier,
+registry, backup scripts, preflight or report builder. Its status
+`MANUAL_SEND_PENDING_NO_PROVIDER_EVIDENCE` is not a delivery receipt. A real
+owner must review the precise outgoing message and manually authorize each
+transport. Preserve provider evidence separately and never send from a
+passing test fixture. Missing one signature, stale recovery, incomplete source
+family, wrong body/recipient or used nonce remains DENIED.
 
-## F. Go/no-go
+## 5. Acceptance evidence and exit criteria
 
-NO-GO unless a real in-scope first buyer can be processed from
-verified arrival + payment (or scope-first) through approved-source
-acquisition, independent human-review, verified customer bundle and
-an actually operable fresh-source watch. External emails/deliveries
-require explicit approval **for each specific message**.
+The operator must preserve: a verified production Cloudflare deployment/response,
+no-submit browser test, no-card ten-business/adversarial regression results,
+official public-source HOLD demonstrations, functioning protected private
+workspace, independently held key, actual isolated private-state ciphertext
+upload/readback, genuinely independent second-device full inventory restore,
+reconciled immutable registries, exact signed-message denial tests, and
+independent internal runbook assessment. Verify exact-head Linux and Windows
+checks and separately review the PR before any release.
 
-Operator preflight is read-only:
-    python scripts/pilot_preflight.py
-
-This output always distinguishes core technical checks from processor,
-inbox, signoff, and publication proof. It does not charge, send or grant
-release permission.
+Even after technical prelaunch passes, the first real request still needs
+its own business/consent checks, entire official source family, completed
+internally reviewed report and a new per-message approval. A prelaunch PASS
+must never be represented as real customer delivery, payment, or full
+government-catalog coverage.
