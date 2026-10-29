@@ -1,0 +1,44 @@
+name: CaptureBrief Cloudflare exact-source smoke (every production commit)
+on:
+  push:
+    branches: [gh-pages]
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - .github/cloudflare_light_smoke.py
+      - .github/cloudflare_edge_integrity.py
+      - .github/cloudflare_company_live_qa.py
+      - .github/workflows/capturebrief-every-deploy-smoke.yml
+      - build-standalone-site.js
+      - build-standalone-site.test.js
+permissions:
+  contents: read
+concurrency:
+  group: capturebrief-exact-production-smoke-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  every-production-commit:
+    if: github.repository == 'P00NSMASHER/capturebrief'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.4'
+      - name: Validate source builder and pinned Cloudflare edge transformation
+        run: |
+          node build-standalone-site.test.js
+          python -m py_compile .github/cloudflare_light_smoke.py
+          PYTHONPATH=.github python -m unittest test_cloudflare_edge_integrity -v
+      - name: Rebuild exact source and independently inspect actual Cloudflare response bytes
+        if: github.event_name == 'push' && github.ref == 'refs/heads/gh-pages'
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node build-standalone-site.js
+          python .github/cloudflare_light_smoke.py
