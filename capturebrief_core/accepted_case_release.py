@@ -91,6 +91,8 @@ def _json_file(path: Path) -> dict[str, Any]:
         raise AcceptedCaseBlocked("Private JSON evidence is malformed") from None
     if not isinstance(result, dict):
         raise AcceptedCaseBlocked("Private JSON evidence must be an object")
+    if os.name != "nt" and path.stat().st_mode & 0o077:
+        raise AcceptedCaseBlocked("Private case, approval or trust roster must be owner-only")
     return result
 
 
@@ -100,7 +102,7 @@ def _root(path: str | Path) -> Path:
         raise AcceptedCaseBlocked("Approved private root must be a real existing directory")
     if os.name != "nt" and (root.stat().st_mode & 0o077):
         raise AcceptedCaseBlocked("Private root must be owner-only on POSIX")
-    if ".git" in root.parts:
+    if any((parent / ".git").exists() for parent in (root, *root.parents)):
         raise AcceptedCaseBlocked("Private customer data must not be stored in a Git checkout")
     return root.resolve(strict=True)
 
@@ -308,6 +310,15 @@ def _restore_and_identity(manifest: dict[str, Any], files: dict[str, dict[str, A
         (delivery.get("body_file"), "MESSAGE_BODY"),
     ):
         _kind(files, fid, kind)
+    try:
+        report_receipt = json.loads(data[report["report_receipt_file"]], object_pairs_hook=_unique)
+    except (ValueError, UnicodeError):
+        raise AcceptedCaseBlocked("Report receipt cannot be independently read") from None
+    if (not isinstance(report_receipt, dict)
+            or report_receipt.get("case_sha256") != manifest["case_sha256"]
+            or report_receipt.get("report_sha256", report_receipt.get("bundle_sha256"))
+                 != files[report["report_file"]]["sha256"]):
+        raise AcceptedCaseBlocked("Report receipt does not match the actual completed bytes and case")
     if (storage.get("approved_by_owner") is not True
             or storage.get("encrypted_at_rest") is not True
             or storage.get("private_acl_checked") is not True
@@ -416,17 +427,27 @@ def verify_attestations(manifest: dict[str, Any], trusted_keys: dict[str, Any],
     unsigned = {k: v for k, v in manifest.items() if k != "attestations"}
     by_role: set[str] = set()
     distinct_keys: set[str] = set()
+    distinct_public_keys: set[bytes] = set()
+    prerequisite_time = max(
+        timestamp(manifest["business"]["verified_at"]),
+        timestamp(manifest["report"]["reviewed_at"]),
+        timestamp(json.loads(next(x for x in []))["restored_at"]) if False else
+        timestamp(manifest["private_storage"]["recovery_completed_at"]),
+    )
     for row in attestations:
         if not isinstance(row, dict) or set(row) != {
             "role", "key_id", "signed_at", "signature_base64"
         }:
             raise AcceptedCaseBlocked("Unsigned or malformed approval evidence")
         role, key_id = row["role"], row["key_id"]
-        if role in by_role or (role, key_id) not in lookup or key_id in distinct_keys:
+        if (role in by_role or (role, key_id) not in lookup or key_id in distinct_keys
+                or lookup[(role, key_id)] in distinct_public_keys):
             raise AcceptedCaseBlocked("Missing trusted signer or reused identity across independent roles")
         signed_at = timestamp(row["signed_at"])
         if signed_at > now or now - signed_at > timedelta(days=7):
             raise AcceptedCaseBlocked("Human approval was not fresh")
+        if signed_at < prerequisite_time:
+            raise AcceptedCaseBlocked("Signoff predates full report review or independent recovery")
         if role == "DELIVERY_APPROVER" and now - signed_at > timedelta(hours=24):
             raise AcceptedCaseBlocked("One-message authorization must be approved within 24 hours")
         try:
@@ -438,6 +459,7 @@ def verify_attestations(manifest: dict[str, Any], trusted_keys: dict[str, Any],
             raise AcceptedCaseBlocked("Human/recovery release attestation signature did not verify") from None
         by_role.add(role)
         distinct_keys.add(key_id)
+        distinct_public_keys.add(lookup[(role, key_id)])
     if by_role != set(ROLES):
         raise AcceptedCaseBlocked("Every independent business, source, recovery and delivery approval is required")
 
