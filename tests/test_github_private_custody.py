@@ -228,10 +228,10 @@ class GitHubPrivateCustodyTests(unittest.TestCase):
     def test_new_write_must_reserve_repo_headroom_but_duplicate_is_allowed(self):
         # GitHub's repo-size estimate is KiB, not an upload admission check.
         # A repository already at the configured bound must never grow.
-        encrypted = custody.MAGIC + b"F" * 2048
-        self.source.write_bytes(encrypted)
-        if os.name != "nt":
-            self.source.chmod(0o600)
+        # Reuse the canonical full-case envelope from setUp. A magic-only
+        # surrogate is correctly rejected by the independent encryption
+        # integrity gate and cannot exercise the storage-budget branch.
+        encrypted = self.raw
         self.provider.size = custody.MAX_REPOSITORY_KB - 1
         with self.assertRaises(custody.PrivateStorageBlocked):
             custody.store_encrypted_backup(
