@@ -31,8 +31,14 @@ def classify_sam_url(url: str) -> str:
     CaptureBrief intentionally does not treat a technically public web-UI endpoint as an
     approved automation source. Public APIs and Data Services extracts are separate contracts.
     """
+    # urllib.parse silently discards leading C0/space and embedded CR/LF/TAB.
+    # Never authorize a reconstructed URL as the original publisher source.
+    # First-party HTTP URLs are ASCII; non-ASCII data must be percent-encoded.
+    if (not isinstance(url, str) or not url or not url.isascii()
+            or any(ord(char) < 0x21 or ord(char) >= 0x7f or char == "\\" for char in url)):
+        return "UNAPPROVED"
     try:
-        p = urlparse(str(url or ""))
+        p = urlparse(url)
         # Exact approved hosts are not enough: credentials and nonstandard
         # ports must never enter an automated first-party collection route.
         if p.username is not None or p.password is not None or p.fragment or p.port not in (None, 443):
