@@ -42,7 +42,7 @@ try{
   assert.equal(info.purchasePolicy,'SCOPE_FIRST_PENDING_SOURCE_READINESS');
   assert.equal(info.sourceBranch,process.env.CF_PAGES_BRANCH||'gh-pages');
   assert.deepEqual(site.listFilesRecursive(out),site.PUBLIC_FILES.concat(site.GENERATED_FILES,'build-info.json').sort());
-  assert.equal(info.publicFileCount,site.PUBLIC_FILES.length+3);
+  assert.equal(info.publicFileCount,site.PUBLIC_FILES.length+site.GENERATED_FILES.length);
   assert.equal(read('_headers'),"/*\n"+
     "  Strict-Transport-Security: max-age=86400\n"+
     "  X-Content-Type-Options: nosniff\n"+
@@ -63,6 +63,20 @@ try{
   assert(read('index.html').includes('name="robots" content="index,follow"'));
 
   assert(info.files.some(file=>file.path==='_headers'),'Header configuration must be fingerprinted');
+
+  // Reproduce the customer-visible 404: main's old sample URLs were never
+  // published by the authoritative gh-pages/Cloudflare company site.
+  const redirects=read('_redirects').trim().split('\n');
+  assert.deepEqual(redirects,[
+    '/sample /decision-evidence 301',
+    '/sample.html /decision-evidence 301',
+    '/decision-evidence-sample /decision-evidence 301',
+    '/decision-evidence-sample.html /decision-evidence 301'
+  ],'Previously shared sample URLs must resolve to the published example');
+  assert(site.PUBLIC_FILES.includes('decision-evidence.html'),'Redirect target must be published');
+  assert(info.files.some(file=>file.path==='_redirects'),'Redirect rules must be fingerprinted');
+  assert(!read('sitemap.xml').includes('/sample</loc>'),'Sitemap must not advertise obsolete alias');
+
   for(const name of site.listFilesRecursive(out)){
     assert(!fs.readFileSync(path.join(out,name)).includes('UNRELATED_SOURCE_CANARY'),name+' leaked unrelated content');
   }
