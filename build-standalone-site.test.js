@@ -42,7 +42,7 @@ try{
   assert.equal(info.purchasePolicy,'SCOPE_FIRST_PENDING_SOURCE_READINESS');
   assert.equal(info.sourceBranch,process.env.CF_PAGES_BRANCH||'gh-pages');
   assert.deepEqual(site.listFilesRecursive(out),site.PUBLIC_FILES.concat(site.GENERATED_FILES,'build-info.json').sort());
-  assert.equal(info.publicFileCount,site.PUBLIC_FILES.length+3);
+  assert.equal(info.publicFileCount,site.PUBLIC_FILES.length+site.GENERATED_FILES.length);
   assert.equal(read('_headers'),"/*\n"+
     "  Strict-Transport-Security: max-age=86400\n"+
     "  X-Content-Type-Options: nosniff\n"+
