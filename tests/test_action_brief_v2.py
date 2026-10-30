@@ -95,7 +95,7 @@ class ActionBriefV2Tests(unittest.TestCase):
         self.assertLess(txt.index("id=\"finding-A\""), txt.index("id=\"finding-Z\""))
         self.assertIn("Source limited", txt)
         self.assertIn("Evidence to request", txt)
-        self.assertNotIn("automatic approval", txt.lower())
+        self.assertIn("no automatic approval", txt.lower())
 
     def test_missing_or_ambiguous_links_are_not_emitted_as_clickable_urls(self):
         case = {"case_id": "CB-X", "family_id": "F", "current_posture": "HOLD"}
