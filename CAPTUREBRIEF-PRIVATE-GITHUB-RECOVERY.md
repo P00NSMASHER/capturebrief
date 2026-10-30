@@ -2,7 +2,26 @@
 
 **Decision (October 29, 2026):** Reuse PermitPlate's established **private GitHub repository** storage model, with **no new paid storage service** and no customer-contact automation. PermitPlate's actual operational repository is `P00NSMASHER/permitplate-state` and is private. CaptureBrief must **not** store its own customer files, keys, ciphertext or trial registry inside PermitPlate's repository.
 
-Use a **separate dedicated private GitHub repository** under the same existing account: `P00NSMASHER/capturebrief-state`. This repository was **not provisioned at the inspection**. The code refuses to upload until the destination is both present and verified private, with canonical `main`, no fork or archived/disabled state, and a dedicated write token.
+Use a **separate dedicated private GitHub repository** under the same existing account: `P00NSMASHER/capturebrief-state`. The separate repository was **confirmed private with an initialized `main` on October 30, 2026**. The owner reports placing a fine-grained token in the public application's `CAPTUREBRIEF_STATE_TOKEN` Actions secret; its effective permission and first authenticated transfer require the new main-only readback test, not an assertion based on the secret's name. The code refuses any unapproved destination or credential scope.
+
+## Live owner-secret functional rehearsal
+
+After merging the dedicated QA change, the existing scoped-security Actions
+workflow will run a **main-branch-only** check against the new GitHub private
+repository. The first job verifies private visibility with the Actions
+secret, then encrypts 13 **fictional** case components with a **published
+test-only recovery key**, stores only AES-256-GCM ciphertext in the private
+repository and re-reads its exact SHA-256. A **separate Windows runner**
+downloads the ciphertext using the same scoped Actions secret, decrypts it
+with the publicly known test key and verifies every reconstructed fake file.
+
+The private cloud can only be considered FUNCTIONALLY TESTED if both
+authenticated jobs pass on the same merged revision and the private
+repository still contains no real customer information. This test does
+**not** establish secure production key custody or an owner-approved
+independent-device disaster-recovery procedure; the test key is public and
+should never be used for customer records. No customer contact or billing
+is authorized.
 
 ## Owner-only setup, no new service or paid membership
 
