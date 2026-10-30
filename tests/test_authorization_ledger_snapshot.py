@@ -148,6 +148,43 @@ class AuthorizationSnapshotTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             ledger.create_snapshot(self.ledger, self.ledger)
 
+    def test_verifier_rejects_same_size_atomic_replacement_mid_read(self):
+        """The inspected SHA must not describe a different file after read.
+
+        An attacker or racing process can replace the SQLite snapshot with an
+        equally sized object between read_bytes() and integrity reporting.
+        Both objects are fictional and no authorization is ever released.
+        """
+        from unittest.mock import patch
+
+        ledger.initialize_empty_ledger(self.ledger)
+        ledger.create_snapshot(self.ledger, self.snapshot)
+        original = self.snapshot.read_bytes()
+        native_read = Path.read_bytes
+        swapped = []
+
+        def atomic_swap_after_read(path):
+            data = native_read(path)
+            # _path() canonicalizes Windows 8.3/long-path aliases before
+            # reading; compare the final file name, then swap the ACTUAL
+            # opened path instead of the test fixture's spelling.
+            if path.name == self.snapshot.name and not swapped:
+                alternate = self.private / "foreign-same-length.sqlite"
+                alternate.write_bytes(b"X" * len(original))
+                if os.name != "nt":
+                    alternate.chmod(0o600)
+                os.replace(alternate, path)
+                swapped.append(True)
+            return data
+
+        with patch.object(Path, "read_bytes", atomic_swap_after_read):
+            with self.assertRaisesRegex(ValueError, "changed during read"):
+                ledger.verify_snapshot(self.snapshot)
+
+        self.assertEqual(swapped, [True])
+        self.assertEqual(self.snapshot.stat().st_size, len(original))
+        self.assertNotEqual(self.snapshot.read_bytes(), original)
+
     def test_cli_is_read_only_on_errors_and_never_claims_customer_delivery(self):
         root = Path(__file__).resolve().parents[1]
         proc = subprocess.run(

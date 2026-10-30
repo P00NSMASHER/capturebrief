@@ -35,7 +35,8 @@ ROLES = (
 REQUIRED_KINDS = {
     "CASE", "HISTORY", "RESOURCE_INVENTORY", "BUSINESS_EVIDENCE",
     "INBOUND_RECEIPT", "SCOPE_AGREEMENT", "REPORT",
-    "REPORT_RECEIPT", "REGISTRY_SNAPSHOT", "OFFDEVICE_BACKUP",
+    "REPORT_RECEIPT", "REGISTRY_SNAPSHOT", "AUTHORIZATION_LEDGER_SNAPSHOT",
+    "OFFDEVICE_BACKUP",
     "RECOVERY_RECEIPT", "MESSAGE_BODY",
 }
 SINGLETON_KINDS = REQUIRED_KINDS
@@ -293,6 +294,7 @@ def _source_closure(case: dict[str, Any], manifest: dict[str, Any],
         raise AcceptedCaseBlocked("Missing complete original-to-current family action set")
     seen: set[str] = set()
     used_action_originals: set[str] = set()
+    published_actions: list[tuple[str, datetime]] = []
     for action in actions:
         if not isinstance(action, dict) or action.get("type") not in {
             "SOLICITATION", "AMENDMENT", "MODIFICATION", "CANCELLATION", "REINSTATEMENT", "OTHER"
@@ -312,8 +314,21 @@ def _source_closure(case: dict[str, Any], manifest: dict[str, Any],
             isinstance(action.get("amendment_number"), str)
             and action["amendment_number"].strip()):
             raise AcceptedCaseBlocked("Amendment identity/version is missing")
-        if timestamp(action.get("published_at")) > now:
+        published_at = timestamp(action.get("published_at"))
+        if published_at > now:
             raise AcceptedCaseBlocked("History action publication is future-dated")
+        published_actions.append((action["type"], published_at))
+    # A reviewed family must contain the original solicitation. Treat OTHER
+    # as potentially pre-solicitation rather than assuming the list is sorted,
+    # but an amendment, modification, cancellation or reinstatement cannot
+    # originate before the earliest retained solicitation in its family.
+    original_dates = [at for kind, at in published_actions if kind == "SOLICITATION"]
+    if not original_dates:
+        raise AcceptedCaseBlocked("Reviewed action family lacks an original solicitation")
+    earliest_original = min(original_dates)
+    if any(kind in {"AMENDMENT", "MODIFICATION", "CANCELLATION", "REINSTATEMENT"}
+           and at < earliest_original for kind, at in published_actions):
+        raise AcceptedCaseBlocked("Historical dependent action predates solicitation")
     if (len(seen) != len(expected) or seen != set(expected)
             or case.get("packet", {}).get("family_status") is None):
         raise AcceptedCaseBlocked("Actual case history differs from reviewed original set")
@@ -386,6 +401,7 @@ def _restore_and_identity(manifest: dict[str, Any], files: dict[str, dict[str, A
     for fid, kind in (
         (storage.get("backup_file"), "OFFDEVICE_BACKUP"),
         (storage.get("recovery_receipt_file"), "RECOVERY_RECEIPT"),
+        (storage.get("authorization_ledger_snapshot_file"), "AUTHORIZATION_LEDGER_SNAPSHOT"),
         (business.get("identity_file"), "BUSINESS_EVIDENCE"),
         (business.get("inbound_receipt_file"), "INBOUND_RECEIPT"),
         (business.get("signed_scope_file"), "SCOPE_AGREEMENT"),
@@ -394,6 +410,16 @@ def _restore_and_identity(manifest: dict[str, Any], files: dict[str, dict[str, A
         (delivery.get("body_file"), "MESSAGE_BODY"),
     ):
         _kind(files, fid, kind)
+    # A signed list of filenames is not proof that the one-use send ledger
+    # was actually preserved. Reuse the WAL-consistent snapshot's canonical
+    # SQLite/schema/nonce verifier before accepting its restore receipt.
+    try:
+        from scripts.snapshot_authorization_ledger import _validate_bytes as check_nonce_snapshot
+        check_nonce_snapshot(data[storage["authorization_ledger_snapshot_file"]], now=now)
+    except (ImportError, OSError, ValueError):
+        raise AcceptedCaseBlocked(
+            "Signed case lacks a valid, independently recoverable one-use authorization ledger snapshot"
+        ) from None
     try:
         report_receipt = json.loads(data[report["report_receipt_file"]], object_pairs_hook=_unique)
     except (ValueError, UnicodeError):

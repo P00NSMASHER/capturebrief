@@ -5,6 +5,7 @@ import base64
 import hashlib
 import json
 import os
+import struct
 import subprocess
 import sys
 import tempfile
@@ -80,7 +81,22 @@ class GitHubPrivateCustodyTests(unittest.TestCase):
         self.root = Path(self.temp.name) / "owner-private"
         self.root.mkdir(mode=0o700)
         self.source = self.root / "fictional-case.cbak"
-        self.raw = custody.MAGIC + b"NOT_ACTUAL_AES_ENCRYPTED_FAKE_TEST_ONLY"
+        # Format-shaped fictional fixture, not a GCM-authenticated backup.
+        # That distinction is intentional: the transport cannot verify a
+        # cryptographic tag without the separately controlled recovery phrase.
+        self.plain = b"FICTIONAL_FORMAT_ONLY_NO_CUSTOMER_DATA"
+        self.header = {
+            "schema": custody.SCHEMA,
+            "cipher": "AES-256-GCM", "kdf": "scrypt",
+            "n": custody.KDF_N, "r": custody.KDF_R, "p": custody.KDF_P,
+            "salt_b64": base64.b64encode(bytes(range(16))).decode("ascii"),
+            "nonce_b64": base64.b64encode(bytes(range(12))).decode("ascii"),
+            "plaintext_sha256": hashlib.sha256(self.plain).hexdigest(),
+            "plaintext_bytes": len(self.plain),
+        }
+        head = json.dumps(self.header, sort_keys=True, separators=(",", ":")).encode()
+        self.raw = (custody.MAGIC + struct.pack(">I", len(head)) + head
+                    + b"\xa5" * len(self.plain) + b"\xf0" * 16)
         self.source.write_bytes(self.raw)
         if os.name != "nt":
             self.source.chmod(0o600)
@@ -209,6 +225,51 @@ class GitHubPrivateCustodyTests(unittest.TestCase):
         self.assertNotIn("GITHUB_TEST_TOKEN", result.stdout + result.stderr)
         self.assertEqual(self.provider.writes, 0)
 
+    def test_new_write_must_reserve_repo_headroom_but_duplicate_is_allowed(self):
+        # GitHub's repo-size estimate is KiB, not an upload admission check.
+        # A repository already at the configured bound must never grow.
+        # Reuse the canonical full-case envelope from setUp. A magic-only
+        # surrogate is correctly rejected by the independent encryption
+        # integrity gate and cannot exercise the storage-budget branch.
+        encrypted = self.raw
+        self.provider.size = custody.MAX_REPOSITORY_KB - 1
+        with self.assertRaises(custody.PrivateStorageBlocked):
+            custody.store_encrypted_backup(
+                self.source, self.TOKEN, transport=self.provider
+            )
+        self.assertEqual(self.provider.writes, 0)
+        self.assertEqual(self.provider.files, {})
+
+        # An exact-address replay is read-only, so should remain idempotent.
+        digest = hashlib.sha256(encrypted).hexdigest()
+        self.provider.files[custody._remote_path(digest)] = encrypted
+        replay = custody.store_encrypted_backup(
+            self.source, self.TOKEN, transport=self.provider
+        )
+        self.assertFalse(replay["new_write"])
+        self.assertEqual(replay["sha256"], digest)
+        self.assertEqual(self.provider.writes, 0)
+
+    def test_new_write_rechecks_changed_remote_budget_before_commit(self):
+        # Initial preflight may be stale by the time the remote SHA lookup ends.
+        # The second private-repo metadata read must gate the actual PUT.
+        inspections = 0
+
+        def growing_remote(method, path, token, body=None):
+            nonlocal inspections
+            if method == "GET" and path == custody.API_PREFIX:
+                inspections += 1
+                if inspections == 2:
+                    self.provider.size = custody.MAX_REPOSITORY_KB - 1
+            return self.provider(method, path, token, body)
+
+        with self.assertRaises(custody.PrivateStorageBlocked):
+            custody.store_encrypted_backup(
+                self.source, self.TOKEN, transport=growing_remote
+            )
+        self.assertEqual(inspections, 2)
+        self.assertEqual(self.provider.writes, 0)
+
     def test_bad_digest_and_oversized_repository_metadata_rejected(self):
         for value in ("", "0" * 63, "ab/../1" + "f" * 55, None):
             with self.subTest(value=value):
@@ -220,6 +281,84 @@ class GitHubPrivateCustodyTests(unittest.TestCase):
                 self.source, self.TOKEN, transport=self.provider
             )
         self.assertEqual(self.provider.writes, 0)
+
+
+    def test_magic_prefix_with_plaintext_cannot_be_uploaded(self):
+        # Red-team case: the existing magic-prefix check accepts plaintext.
+        self.source.write_bytes(custody.MAGIC + b"PRIVATE_RECORDS_NOT_AESGCM")
+        if os.name != "nt":
+            self.source.chmod(0o600)
+        with self.assertRaises(custody.PrivateStorageBlocked):
+            custody.store_encrypted_backup(
+                self.source, self.TOKEN, transport=self.provider
+            )
+        self.assertEqual(self.provider.writes, 0)
+
+    def test_remote_magic_prefix_without_envelope_cannot_be_retrieved(self):
+        # Matching SHA-256 proves object identity, not encrypted file format.
+        malformed = custody.MAGIC + b"FAKE_CIPHERTEXT_NO_HEADER"
+        digest = hashlib.sha256(malformed).hexdigest()
+        self.provider.files[custody._remote_path(digest)] = malformed
+        dest = self.root / "bad-remote-envelope.cbak"
+        with self.assertRaises(custody.PrivateStorageBlocked):
+            custody.retrieve_encrypted_backup(
+                digest, dest, self.TOKEN, transport=self.provider
+            )
+        self.assertFalse(dest.exists())
+
+
+    def test_noncanonical_or_forged_envelope_fields_block_upload(self):
+        start = len(custody.MAGIC)
+        length = struct.unpack(">I", self.raw[start:start + 4])[0]
+        body = self.raw[start + 4 + length:]
+        mutations = (
+            ("wrong-schema", {"schema": "not-a-complete-case"}),
+            ("wrong-algorithm", {"cipher": "NONE"}),
+            ("wrong-kdf", {"kdf": "pbkdf2"}),
+            ("boolean-kdf-n", {"n": True}),
+            ("bad-salt", {"salt_b64": "AQ=="}),
+            ("bad-nonce", {"nonce_b64": "invalid%%"}),
+            ("bad-source-hash", {"plaintext_sha256": "f" * 63}),
+            ("false-plaintext-length", {"plaintext_bytes": len(self.plain) + 1}),
+        )
+        for label, fields in mutations:
+            with self.subTest(label=label):
+                head = json.dumps(
+                    {**self.header, **fields}, sort_keys=True,
+                    separators=(",", ":")
+                ).encode()
+                self.source.write_bytes(
+                    custody.MAGIC + struct.pack(">I", len(head)) + head + body
+                )
+                if os.name != "nt":
+                    self.source.chmod(0o600)
+                with self.assertRaises(custody.PrivateStorageBlocked):
+                    custody.store_encrypted_backup(
+                        self.source, self.TOKEN, transport=self.provider
+                    )
+                self.assertEqual(self.provider.writes, 0)
+        duplicate = json.dumps(self.header, sort_keys=True, separators=(",", ":"))
+        duplicate = duplicate[:-1] + ',"schema":"duplicate-schema"}'
+        raw_header = duplicate.encode()
+        self.source.write_bytes(
+            custody.MAGIC + struct.pack(">I", len(raw_header)) + raw_header + body
+        )
+        if os.name != "nt":
+            self.source.chmod(0o600)
+        with self.assertRaises(custody.PrivateStorageBlocked):
+            custody.store_encrypted_backup(
+                self.source, self.TOKEN, transport=self.provider
+            )
+        self.assertEqual(self.provider.writes, 0)
+        self.source.write_bytes(self.raw + b"TRAILING_PLAINTEXT")
+        if os.name != "nt":
+            self.source.chmod(0o600)
+        with self.assertRaises(custody.PrivateStorageBlocked):
+            custody.store_encrypted_backup(
+                self.source, self.TOKEN, transport=self.provider
+            )
+        self.assertEqual(self.provider.writes, 0)
+
 
 
 if __name__ == "__main__":

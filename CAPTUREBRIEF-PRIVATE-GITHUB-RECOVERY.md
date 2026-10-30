@@ -2,7 +2,17 @@
 
 **Decision (October 29, 2026):** Reuse PermitPlate's established **private GitHub repository** storage model, with **no new paid storage service** and no customer-contact automation. PermitPlate's actual operational repository is `P00NSMASHER/permitplate-state` and is private. CaptureBrief must **not** store its own customer files, keys, ciphertext or trial registry inside PermitPlate's repository.
 
-Use a **separate dedicated private GitHub repository** under the same existing account: `P00NSMASHER/capturebrief-state`. This repository was **not provisioned at the inspection**. The code refuses to upload until the destination is both present and verified private, with canonical `main`, no fork or archived/disabled state, and a dedicated write token.
+Use a **separate dedicated private GitHub repository** under the same existing account: `P00NSMASHER/capturebrief-state`. The separate repository was **confirmed private with an initialized `main` on October 30, 2026**. The owner reports placing a fine-grained token in the public application's `CAPTUREBRIEF_STATE_TOKEN` Actions secret; its effective permission and first authenticated transfer require the new main-only readback test, not an assertion based on the secret's name. The code refuses any unapproved destination or credential scope.
+
+## Live owner-secret functional rehearsal: VERIFIED WITH FICTIONAL CASES
+
+**Verified October 30, 2026:** [CaptureBrief Actions run #41024445424](https://github.com/P00NSMASHER/capturebrief/actions/runs/41024445424) completed **successfully on both Linux and Windows** at merged commit `09562f7f73370b30879b01d3c6e8b3634cc8e27c`. Each independently started runner used GitHub's protected `CAPTUREBRIEF_STATE_TOKEN` repository secret to read the private `P00NSMASHER/capturebrief-state` repository, then encrypted a **fully fictional** 13-component case using the public `TEST_KEY`, uploaded only AES-256-GCM bytes, re-read the content-addressed bytes from the actual private repository, decrypted them locally and verified 13 exact original hashes.
+
+Two small encrypted demo objects were observed under `encrypted/complete-case/v1/` in `P00NSMASHER/capturebrief-state`. No real customer identity, customer report, plaintext, production encryption key, external send or payment was involved. PermitPlate's private operational repository is a different repository and was never a backup destination.
+
+**Precisely established:** owner-created GitHub Actions secret WORKS for private GitHub authenticated reading and a small real write/readback, and the application backup/restore code interoperates with GitHub on both Linux and Windows. **Not established:** independently held production recovery key, actual off-device restore by a separate authorized owner device, permission-policy approval, customer data storage authorization, or complete SAM.gov amendment history. The two tests each restored a file on their own runner, **not the same archive across two different physical devices**.
+
+The one-time automatic live upload was removed after successful verification. Subsequent routine CI uses mocked provider storage and fictional test keys without reading the private repository secret or uploading new ciphertext. New live exercises require an explicit, separately reviewed main-branch test action.
 
 ## Owner-only setup, no new service or paid membership
 
@@ -18,6 +28,8 @@ Private storage on GitHub is a provider choice, not blanket permission to handle
 `scripts/github_private_custody.py` uploads **only the AES-256-GCM encrypted .cbak** created by `scripts/full_case_backup.py`. It uses GitHub's HTTPS Contents API and your existing GitHub account. It **never** writes PermitPlate's state repository, never accepts a caller-supplied alternate repo, and does not open a new service or create a charge.
 
 The pilot is intentionally size-limited to **900,000 encrypted bytes per complete-case bundle**, and the configured private repository must remain within a **40,000 KB inspected size**. Larger backups must **fail closed** for an explicitly reviewed storage plan, not silently create extra cloud charges or drop original evidence. GitHub private repositories can consume account storage, so confirm free-plan limits before expanding this bounded pilot. No automatic pruning or deletion is implemented.
+
+Before an upload or retrieval the transport now checks the **canonical, bounded full-case AES-GCM envelope format**, including field types, salt/nonce, declared plaintext size, payload length and tag-length position. These checks reject a plaintext file with only a forged magic prefix. **They do not authenticate the ciphertext or prove a valid complete-case ZIP without the independently held recovery phrase.** The operator must first run `full_case_backup.py verify`; only an actual separate-device restore can establish operational recovery.
 
 Each encrypted backup is stored immutably at a content-addressed path that includes its SHA-256. GitHub's private API must re-read and match every byte after upload, including on retries. A digest/path collision or wrong remote original blocks; no overwrites or forced pushes. Only hashes, sizes and non-sensitive status appear on output.
 

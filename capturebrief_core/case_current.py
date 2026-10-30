@@ -22,10 +22,13 @@ def _norm(value: Any) -> str:
 def _history_solicitation_numbers(case: dict[str, Any]) -> set[str]:
     out: set[str] = set()
     for receipt in (case.get("packet") or {}).get("history_receipts") or []:
-        family = (receipt.get("evidence_payload") or {}).get("family") or {}
-        value = _norm(family.get("solicitation_number"))
-        if value:
-            out.add(value)
+        payload = receipt.get("evidence_payload")
+        family = payload.get("family") if isinstance(payload, dict) else None
+        value = _norm(family.get("solicitation_number") if isinstance(family, dict) else None)
+        # Retain the empty marker. If even ONE accepted history receipt lacks
+        # a positive family identity, another receipt matching the API cannot
+        # silently stand in for its missing historical correlation.
+        out.add(value)
     return out
 
 
@@ -75,9 +78,10 @@ def apply_current_api_observation(
     if not api_sol:
         raise CaseCurrentError("API observation lacks solicitationNumber")
     history_sols = _history_solicitation_numbers(result)
-    if history_sols and api_sol not in history_sols:
+    if history_sols != {api_sol}:
         raise CaseCurrentError(
-            f"API solicitation family {api_sol} disagrees with history family {sorted(history_sols)}"
+            "API solicitation family must positively and unambiguously match "
+            "every accepted history receipt"
         )
     active = str(record.get("active") if record.get("active") is not None else "").strip().lower()
     if active in {"no", "false", "0"}:

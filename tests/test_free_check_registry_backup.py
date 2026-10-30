@@ -116,6 +116,21 @@ class FreeRegistryRecoveryTests(unittest.TestCase):
                 backup.create_backup(registry, saved, PHRASE)
             self.assertFalse(saved.exists())
 
+    def test_future_reservation_cannot_be_encrypted_as_valid_registry(self):
+        # A forged future reservation is not independent business evidence.
+        # Both source snapshots and later recovery must reject its timeline.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _, registry, saved, *_ = self._prepare(root)
+            with closing(sqlite3.connect(registry)) as db, db:
+                db.execute(
+                    "UPDATE free_check_reservations SET reserved_at=?",
+                    ("9999-12-31T23:59:59+00:00",),
+                )
+            with self.assertRaisesRegex(ValueError, "future"):
+                backup.create_backup(registry, saved, PHRASE)
+            self.assertFalse(saved.exists())
+
     def test_invalid_digest_and_more_than_ten_rows_are_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

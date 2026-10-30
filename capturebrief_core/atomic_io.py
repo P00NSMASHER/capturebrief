@@ -210,6 +210,39 @@ def exclusive_path_lock(
             pass
 
 
+
+def _reject_linked_snapshot_path(path: str | Path) -> None:
+    """Refuse link/junction escapes before retaining an immutable original.
+
+    Check the lexical chain, not a resolved path: resolution would hide the
+    link that redirected the source or the protected output directory.
+    Windows Python 3.11 lacks Path.is_junction, so inspect reparse attributes.
+    This defends stable paths; an untrusted concurrent filesystem writer still
+    requires separately controlled workspace permissions.
+    """
+    raw = Path(path)
+    if ".." in raw.parts:
+        raise ValueError("snapshot path may not traverse parent components")
+    full = raw.absolute()
+    for component in (full, *full.parents):
+        if component.is_symlink():
+            raise ValueError("snapshot path must not traverse symlinks or junctions")
+        is_junction = getattr(component, "is_junction", None)
+        if is_junction is not None and is_junction():
+            raise ValueError("snapshot path must not traverse symlinks or junctions")
+        if os.name == "nt":
+            # GitHub Actions uses Python 3.11, which does not have is_junction.
+            import ctypes
+            from ctypes import wintypes
+            get_attrs = ctypes.windll.kernel32.GetFileAttributesW
+            get_attrs.argtypes = [wintypes.LPCWSTR]
+            get_attrs.restype = wintypes.DWORD
+            attrs = get_attrs(str(component))
+            if attrs != 0xFFFFFFFF and attrs & 0x0400:  # REPARSE_POINT
+                raise ValueError("snapshot path must not traverse reparse points")
+
+
+
 def ensure_exact_file(
     source_path: str | Path,
     target_path: str | Path,
@@ -227,6 +260,8 @@ def ensure_exact_file(
     """
     source=Path(source_path)
     target=Path(target_path)
+    _reject_linked_snapshot_path(source)
+    _reject_linked_snapshot_path(target)
     if not source.is_file():
         raise FileNotFoundError(source)
     if expected_sha256 is not None and (
@@ -246,6 +281,9 @@ def ensure_exact_file(
     expected_sha256=source_sha
     expected_size=source_size
 
+    # Recheck both paths after hashing and before destination creation.
+    _reject_linked_snapshot_path(source)
+    _reject_linked_snapshot_path(target)
     target.parent.mkdir(parents=True,exist_ok=True)
 
     def existing_result() -> dict[str,object]:
