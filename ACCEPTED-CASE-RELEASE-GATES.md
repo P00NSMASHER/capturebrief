@@ -58,7 +58,14 @@ python scripts/check_accepted_case_release.py \
   --trusted-signers /approved/trust/CaptureBrief/signers.json
 ~~~
 
-After all independently reviewed evidence and signatures exist, the operator must reserve **one** approved message nonce immediately before the manual handoff, using a **single durable append-only ledger shared across every accepted case**. Never create a new ledger per recipient or reset it after a restore:
+After all independently reviewed evidence and signatures exist, the operator must reserve **one** approved message nonce immediately before the manual handoff, using a **single durable append-only ledger shared across every accepted case**. Never create a new ledger per recipient or reset it after a restore. **First initialize this one canonical ledger once, before customers, in the approved private location** (see COMPLETE-CASE-RECOVERY.md):
+
+~~~sh
+python scripts/snapshot_authorization_ledger.py init \\
+  --ledger /approved/private/CaptureBrief/approved-message-nonces.sqlite
+~~~
+
+The reservation tool now **requires that exact operator-preprovisioned existing SQLite schema**. It refuses a missing/deleted ledger or an empty SQLite file rather than creating a new nonce history. If the original disappears, stop and independently restore/reconcile every later authorization; do **not** initialize a replacement and call it the same ledger. This protection does not authenticate the operator's choice of ledger path: the custodian still must consistently supply the unique approved path, retain its durable identity, and verify backups across all cases. Only then reserve a message nonce:
 
 ~~~sh
 python scripts/check_accepted_case_release.py \
