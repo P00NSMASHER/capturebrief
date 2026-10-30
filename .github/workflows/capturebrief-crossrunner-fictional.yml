@@ -54,5 +54,8 @@ jobs:
     needs: fictional-full-case-producer
     runs-on: windows-2025
     steps:
-      - name: Verify Windows runner available
-        run: echo Consumer initialized
+      - name: Download prior runner artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: capturebrief-fictional-crossrunner
+          path: ${{ runner.temp }}/capturebrief-crossrunner-fictional/
