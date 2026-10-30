@@ -107,6 +107,20 @@ def verify_browser() -> dict:
             assert "fictional@example.com" in draft
             assert not posts, "The inquiry composer attempted a network POST"
             assert page.url.startswith(BASE) and not page.url.startswith("mailto:")
+
+            # On the same exact Cloudflare production commit, independently
+            # open the V2 public-source product example and its five findings.
+            sample = page.goto(BASE + "pursuit-qa-v2.html?qa_v2=" + EXPECTED_SHA[:12],
+                               wait_until="domcontentloaded", timeout=30000)
+            assert sample is not None and sample.status == 200
+            assert page.locator("#v2-document-heading").count() == 1
+            assert page.locator(".v2-finding").count() == 5
+            assert page.locator("#print-v2").count() == 1
+            assert page.locator('a[href*="FAA-SAVES-CaptureBrief-2.0.txt"]').count() >= 1
+            assert "illustrative" in page.locator(".v2-banner").inner_text().lower()
+            assert "deadline has passed" in page.locator(".v2-banner").inner_text().lower() or "response date has passed" in page.locator(".v2-banner").inner_text().lower()
+            assert not posts, "V2 read-only sample unexpectedly posted data"
+
             page.locator("#assumptions").fill("A different fictional question.")
             assert "Request copied" not in page.locator("#request-status").inner_text()
             return {"browser": BROWSER, "fictional_local_draft_verified": True,
