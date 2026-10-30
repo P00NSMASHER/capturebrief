@@ -569,6 +569,7 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
         ledger_dir = Path(self.tmp.name) / "shared-trusted-ledger"
         ledger_dir.mkdir(mode=0o700)
         ledger_path = ledger_dir / "approved-nonces.sqlite"
+        initialize_empty_ledger(ledger_path)
         first = self.reserve(ledger_path)
         self.assertEqual(first["status"], "SINGLE_MESSAGE_AUTHORIZATION_RESERVED_MANUAL_SEND_PENDING")
         self.assertFalse(first["external_send_performed"])
@@ -609,6 +610,7 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
         ledger_dir = Path(self.tmp.name) / "shared-trusted-ledger"
         ledger_dir.mkdir(mode=0o700)
         ledger_path = ledger_dir / "approved-nonces.sqlite"
+        initialize_empty_ledger(ledger_path)
         with closing(sqlite3.connect(ledger_path)) as db, db:
             db.execute("CREATE TABLE attacker_can_reset_ledger (secret TEXT)")
         if os.name != "nt":
