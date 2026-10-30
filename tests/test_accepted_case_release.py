@@ -253,6 +253,36 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
         with self.assertRaises(AcceptedCaseBlocked):
             self.check()
 
+    def test_reviewed_family_without_any_original_solicitation_is_blocked(self):
+        # Re-signing a fictional set of amendment-only actions must not let
+        # it masquerade as a complete solicitation/amendment family.
+        for number, action in enumerate(self.manifest["source_closure"]["actions"], 1):
+            action["type"] = "AMENDMENT"
+            action["amendment_number"] = f"{number:04d}"
+        self.sign()
+        with self.assertRaisesRegex(AcceptedCaseBlocked, "solicitation"):
+            self.check()
+
+    def test_amendment_published_before_first_solicitation_is_blocked(self):
+        # Exact hashed originals, identity set and fictional signatures still
+        # agree; the historical dependency itself is impossible.
+        self.manifest["source_closure"]["actions"][1]["published_at"] = (
+            NOW - timedelta(days=3)).isoformat()
+        self.sign()
+        with self.assertRaisesRegex(AcceptedCaseBlocked, "predates"):
+            self.check()
+
+    def test_pre_solicitation_other_and_unordered_valid_actions_remain_possible(self):
+        # Source arrays need not be sorted; a presolicitation OTHER may
+        # precede the first SOLICITATION. The guard checks temporal facts,
+        # not arbitrary array order.
+        actions = self.manifest["source_closure"]["actions"]
+        actions[0]["type"] = "OTHER"
+        actions[1]["type"] = "SOLICITATION"
+        actions.reverse()
+        self.sign()
+        self.assertEqual(self.check()["source_action_count"], 2)
+
     def test_future_published_amendment_is_rejected(self):
         self.manifest["source_closure"]["actions"][1]["published_at"] = (
             NOW + timedelta(days=2)).isoformat()
