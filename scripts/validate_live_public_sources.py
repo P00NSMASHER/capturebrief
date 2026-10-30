@@ -103,15 +103,44 @@ def validate_archive(year, *, downloader=None) -> dict:
     if not candidates:
         raise ValueError("No historical solicitation is available for parser comparison")
     selected = list(dict.fromkeys(candidates[i] for i in (0, len(candidates)//2, len(candidates)-1)))
+    # Independently bind the parser's normalized original-row projection
+    # AND snapshot identity to the actual bytes read in this component run.
+    # NoticeId equality alone misses a corrupted AAC, office, action date,
+    # source year, record hash or different original CSV bearing the same IDs.
+    def original_projection(row: dict) -> dict:
+        raw_hash = hashlib.sha256(json.dumps(
+            row, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+        ).encode("utf-8")).hexdigest()
+        return {
+            "notice_id": str(row.get("NoticeId") or "").strip(),
+            "solicitation_number": str(row.get("Sol#") or "").strip(),
+            "posted_date": str(row.get("PostedDate") or "").strip() or None,
+            "notice_type": str(row.get("Type") or "").strip() or None,
+            "active": str(row.get("Active") or "").strip() or None,
+            "aac_code": str(row.get("AAC Code") or "").strip() or None,
+            "office": str(row.get("Office") or "").strip() or None,
+            "link": str(row.get("Link") or "").strip() or None,
+            "row_sha256": raw_hash,
+        }
+
+    original_sha = hashlib.sha256(data).hexdigest()
     matched_rows = 0
     for solicitation in selected:
         parsed = scan_extract_bytes(data, source_url=url, source_kind="ARCHIVE",
                                     solicitation_number=solicitation, fiscal_year=year)
-        expected = [row for row in rows if " ".join((row.get("Sol#") or "").upper().split()) == solicitation]
-        if (parsed["rows_scanned"] != len(rows)
-                or sorted(item["notice_id"] for item in parsed["matches"])
-                    != sorted((row.get("NoticeId") or "").strip() for row in expected)):
-            raise ValueError("Product scanner disagrees with original public rows")
+        expected = [original_projection(row) for row in rows
+                    if " ".join((row.get("Sol#") or "").upper().split()) == solicitation]
+        if not isinstance(parsed, dict) or not isinstance(parsed.get("matches"), list):
+            raise ValueError("Product scanner source correlation missing")
+        if (type(parsed.get("rows_scanned")) is not int
+                or parsed["rows_scanned"] != len(rows)
+                or parsed.get("source_kind") != "ARCHIVE"
+                or parsed.get("fiscal_year") != year
+                or parsed.get("source_url") != url
+                or parsed.get("extract_sha256") != original_sha
+                or sorted(parsed["matches"], key=lambda item: item["notice_id"])
+                   != sorted(expected, key=lambda item: item["notice_id"])):
+            raise ValueError("Product scanner disagrees with original public row or source receipt")
         matched_rows += len(expected)
     return {
         "status": ("REAL_CURRENT_YEAR_EXTRACT_COMPONENT_PASS" if year == 2027
