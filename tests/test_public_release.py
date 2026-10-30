@@ -10,7 +10,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from scripts.package_public_release import PUBLIC_FILES, package_release
+from scripts.package_public_release import PUBLIC_FILES, PUBLIC_SOURCE_ALIASES, package_release
 
 
 class PublicReleaseTests(unittest.TestCase):
@@ -22,7 +22,8 @@ class PublicReleaseTests(unittest.TestCase):
         self.git("init", "--quiet")
         self.git("config", "user.name", "Release Test")
         self.git("config", "user.email", "release-test@example.invalid")
-        for name in PUBLIC_FILES:
+        for name in sorted({PUBLIC_SOURCE_ALIASES.get(name, name)
+                            for name in PUBLIC_FILES}):
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("Test public content: " + name, encoding="utf-8")
@@ -34,7 +35,7 @@ class PublicReleaseTests(unittest.TestCase):
         for name in PUBLIC_FILES:
             dest = dist / name
             dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(self.root / name, dest)
+            shutil.copyfile(self.root / PUBLIC_SOURCE_ALIASES.get(name, name), dest)
 
     def tearDown(self):
         self.temp.cleanup()
@@ -72,6 +73,31 @@ class PublicReleaseTests(unittest.TestCase):
         first = self.package()
         second = package_release(self.root, Path(self.temp.name)/"again", self.sha)
         self.assertEqual(first["archive_sha256"], second["archive_sha256"])
+
+    def test_x402_discovery_files_must_be_pinned_in_release_allowlist(self):
+        expected = {
+            ".well-known/x402", "openapi.json",
+            "x402/pa-entity/.well-known/x402", "x402/pa-entity/openapi.json",
+        }
+        self.assertTrue(expected.issubset(PUBLIC_FILES),
+                        f"reviewed discovery entries missing: {sorted(expected - PUBLIC_FILES)}")
+
+    def test_discovery_aliases_match_only_reviewed_product_source(self):
+        self.assertEqual({
+            ".well-known/x402": "x402/pa-entity/.well-known/x402",
+            "openapi.json": "x402/pa-entity/openapi.json",
+        }, PUBLIC_SOURCE_ALIASES)
+        for alias, source in PUBLIC_SOURCE_ALIASES.items():
+            alias_file = self.root / "dist" / alias
+            self.assertEqual(alias_file.read_bytes(),
+                             (self.root / "dist" / source).read_bytes())
+            original = alias_file.read_bytes()
+            alias_file.write_bytes(b"unreviewed public metadata")
+            try:
+                with self.assertRaisesRegex(ValueError, "pinned source"):
+                    self.package()
+            finally:
+                alias_file.write_bytes(original)
 
     def test_internal_file_is_rejected(self):
         (self.root / "dist" / "OUTBOUND-COMMUNICATIONS.md").write_text("internal policy")
@@ -123,6 +149,61 @@ class PublicReleaseTests(unittest.TestCase):
             self.package()
         self.assertEqual(hashlib.sha256((self.output / first["archive"]).read_bytes()).hexdigest(),
                          first["archive_sha256"])
+
+
+class ActualPublicBuilderParityTests(unittest.TestCase):
+    def test_real_netlify_script_matches_strict_release_packager(self):
+        bash = shutil.which("bash")
+        if not bash:
+            self.skipTest("Bash is unavailable; Linux Product Core CI runs this test")
+        # Recreate only the reviewed public source bytes in a throwaway Git repo.
+        # Never remove/modify the developer's existing build artifacts.
+        source = Path(__file__).resolve().parents[1]
+        inputs = set(PUBLIC_FILES) - {".well-known/x402", "openapi.json"}
+        inputs.update({
+            "netlify-build.sh", "x402/pa-entity/.well-known/x402",
+            "x402/pa-entity/openapi.json",
+        })
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "checkout"
+            root.mkdir()
+            for name in sorted(inputs):
+                if name.startswith("assets/"):
+                    continue
+                item = root / name
+                item.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source / name, item)
+            shutil.copytree(source / "assets", root / "assets")
+            def git(*args):
+                return subprocess.run(
+                    ["git", "-C", str(root), *args], check=True,
+                    capture_output=True, text=True,
+                ).stdout.strip()
+            git("init", "--quiet")
+            git("config", "user.name", "Synthetic Release Test")
+            git("config", "user.email", "no-reply@example.invalid")
+            git("add", ".")
+            git("commit", "--quiet", "-m", "explicit public-site fixture")
+            revision = git("rev-parse", "HEAD")
+            subprocess.run(
+                [bash, "netlify-build.sh"], cwd=root,
+                check=True, capture_output=True, text=True,
+            )
+            output = root / "release-output"
+            receipt = package_release(root, output, revision)
+            self.assertIs(receipt["deployed"], False)
+            with zipfile.ZipFile(output / receipt["archive"]) as archive:
+                self.assertEqual(
+                    set(archive.namelist()), PUBLIC_FILES | {"release-manifest.json"}
+                )
+                self.assertEqual(
+                    archive.read(".well-known/x402"),
+                    archive.read("x402/pa-entity/.well-known/x402"),
+                )
+                self.assertEqual(
+                    archive.read("openapi.json"),
+                    archive.read("x402/pa-entity/openapi.json"),
+                )
 
 
 if __name__ == "__main__":

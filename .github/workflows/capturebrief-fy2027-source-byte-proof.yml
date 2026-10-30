@@ -1,0 +1,137 @@
+name: CaptureBrief FY2027 public source byte proof
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/capturebrief-fy2027-source-byte-proof.yml"
+
+# Bounded PUBLIC source observation. The receipt is evidence of this object read,
+# not catalog approval, private retention, a source-index update or a release.
+permissions:
+  contents: read
+
+jobs:
+  observe-public-origin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read exact SAM-listed FY2027 original and compute SHA-256
+        shell: bash
+        env:
+          SOURCE_URL: https://s3.amazonaws.com/falextracts/Contract%20Opportunities/Archived%20Data/FY2027_archived_opportunities.csv
+        run: |
+          set -euo pipefail
+          : "$RUNNER_TEMP"
+          output="$RUNNER_TEMP/capturebrief-FY2027-original.csv"
+          headers="$RUNNER_TEMP/capturebrief-FY2027-headers.txt"
+          export CAPTUREBRIEF_SOURCE_RECEIPT="$RUNNER_TEMP/capturebrief-FY2027-source-receipt.json"
+          trap 'rm -f "$output" "$headers"' EXIT
+          # Bounded exact public object, NO redirects and NO credentials.
+          response_code="$(curl --proto '=https' --silent --show-error \
+              --fail --max-redirs 0 --connect-timeout 12 --max-time 65 \
+              --max-filesize 10000000 --retry 0 \
+              --dump-header "$headers" --output "$output" \
+              --write-out '%{http_code}' "$SOURCE_URL")"
+          [[ "$response_code" == "200" ]]
+          test -f "$output"
+          export CAPTUREBRIEF_EXTRACT_BYTES="$output"
+          export CAPTUREBRIEF_EXTRACT_HEADERS="$headers"
+
+          python - <<'PY'
+          import csv
+          import datetime
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path(os.environ["CAPTUREBRIEF_EXTRACT_BYTES"])
+          headers_path = Path(os.environ["CAPTUREBRIEF_EXTRACT_HEADERS"])
+          length = path.stat().st_size
+          if length <= 0 or length > 10000000:
+              raise SystemExit("PUBLIC_SOURCE_PROBE_BLOCKED: unexpected byte count")
+          sha = hashlib.sha256()
+          with path.open("rb") as fp:
+              for part in iter(lambda: fp.read(512 * 1024), b""):
+                  sha.update(part)
+          response_headers = headers_path.read_text(encoding="latin-1")
+          # Use last origin header block, not proxy CONNECT 200.
+          blocks = [
+              part for part in response_headers.replace("\r\n", "\n").split("\n\n")
+              if part.strip().startswith("HTTP/")
+          ]
+          if not blocks:
+              raise SystemExit("PUBLIC_SOURCE_PROBE_BLOCKED: HTTP headers missing")
+          lines = blocks[-1].split("\n")
+          if "200" not in lines[0].split():
+              raise SystemExit("PUBLIC_SOURCE_PROBE_BLOCKED: non-200 origin response")
+          attrs = {}
+          for line in lines[1:]:
+              if ":" in line:
+                  key, value = line.split(":", 1)
+                  attrs[key.strip().lower()] = value.strip()
+          declared = attrs.get("content-length")
+          if declared is not None and (not declared.isdecimal() or int(declared) != length):
+              raise SystemExit("PUBLIC_SOURCE_PROBE_BLOCKED: invalid Content-Length")
+          csv.field_size_limit(10_000_000)
+          with path.open("r", encoding="utf-8-sig", errors="replace", newline="") as fp:
+              reader = csv.reader(fp)
+              columns = next(reader, [])
+              required = {"NoticeId", "Sol#", "PostedDate", "Type", "Active", "AAC Code", "Office", "Link"}
+              if not required.issubset(set(columns)):
+                  raise SystemExit("PUBLIC_SOURCE_PROBE_BLOCKED: source CSV header invalid")
+              row_count = sum(1 for _ in reader)
+          if row_count <= 0:
+              raise SystemExit("PUBLIC_SOURCE_PROBE_BLOCKED: no rows")
+          output = {
+              "schema": "capturebrief-public-sam-byte-observation-v1",
+              "status": "WHOLE_PUBLIC_OBJECT_READ_UNREVIEWED",
+              "filename": "FY2027_archived_opportunities.csv",
+              "object_url": os.environ["SOURCE_URL"],
+              "observed_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              "source_listed_at": "2026-10-19T04:59:14Z",
+              "source_listing_refreshed": False,
+              "workflow_run_id": os.environ["GITHUB_RUN_ID"],
+              "repository_commit": os.environ["GITHUB_SHA"],
+              "http_status": 200,
+              "size_bytes": length,
+              "sha256": sha.hexdigest(),
+              "csv_rows_seen": row_count,
+              "required_header_fields_present": True,
+              "source_last_modified": attrs.get("last-modified"),
+              "source_etag": attrs.get("etag"),
+              "earlier_one_byte_probe_size": 1607260,
+              "same_size_as_prior_partial_probe": length == 1607260,
+              "human_catalog_reviewed": False,
+              "full_catalog_coverage_proven": False,
+              "customer_release_authorized": False,
+              "original_bytes_retained": False,
+              "private_source_index_updated": False,
+              "off_device_restore_verified": False,
+          }
+          receipt_json = json.dumps(output, indent=2, sort_keys=True) + "\n"
+          Path(os.environ["CAPTUREBRIEF_SOURCE_RECEIPT"]).write_text(receipt_json, encoding="utf-8")
+          print(receipt_json, end="")
+          summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary:
+              with open(summary, "a", encoding="utf-8") as out:
+                  out.write("### FY2027 original public-source byte observation\n\n")
+                  out.write("**UNREVIEWED:** not independent publisher certification, catalog acceptance, or customer release.\n\n")
+                  out.write(f"- Exact object bytes: {length}\n")
+                  out.write(f"- SHA-256: {sha.hexdigest()}\n")
+                  out.write(f"- CSV data rows: {row_count}\n")
+                  out.write(f"- Prior size unchanged: {length == 1607260}\n")
+          PY
+          # Original CSV and response headers are removed by the EXIT trap.
+          # Only the non-sensitive receipt below is retained; no source content.
+
+      - name: Retain public observation receipt only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: capturebrief-fy2027-source-receipt-${{ github.run_id }}
+          path: ${{ runner.temp }}/capturebrief-FY2027-source-receipt.json
+          if-no-files-found: error
+          retention-days: 7

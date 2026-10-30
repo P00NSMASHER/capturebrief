@@ -1,25 +1,31 @@
 # CaptureBrief deployment target
 
-Updated: 2026-09-21, following the owner's explicit hosting correction.
+Updated: 2026-10-27 after checking the current standalone-site build contract.
 
 ## Authoritative website target
 
-Use GitHub Pages, not Netlify.
+The current company site uses the existing Cloudflare Pages standalone build.
+The shared GitHub Pages site is a separate legacy surface.
 
 - Repository: `P00NSMASHER/capturebrief`
 - Website branch: `gh-pages`
-- Canonical website URL: `https://p00nsmasher.github.io/capturebrief/`
+- Canonical company website: `https://capturebrief.retallyrecovery.com/`
+- Existing Cloudflare Pages project: `retally-capturebrief`
+- Build command on the website source branch:
+  `node build-standalone-site.test.js && node build-standalone-site.js`
+- Publish only the allowlisted `dist/` artifact. The full branch also contains
+  sibling projects and must not be deployed wholesale to the company hostname.
+- Legacy shared website: `https://p00nsmasher.github.io/capturebrief/`
 - Product engine and its regression tests: `main`
 
-The inspected website branch was at
-`d4d9dea6e6adad230be0b49c3d7e06d5ace7f6c1`. Its `index.html` declares the
-GitHub Pages canonical URL, uses the redesigned enterprise assets, and offers
-an email-based scope request. Its website QA workflow is
-`.github/workflows/site-quality.yml` on `gh-pages`.
+The standalone build is documented in `STANDALONE_SITE.md` on `gh-pages`.
+It sets the company hostname and produces `/build-info.json` with source and
+artifact fingerprints. Website QA remains on `gh-pages`; product-core QA is
+on `main`. The old Netlify-oriented `main/index.html` is not the company site.
 
-These are repository observations, not a claim of a new deployment or a fresh
-live-browser verification. Re-read branch heads and the actual Pages deployment
-when verifying a release.
+These are source/build contracts, not a claim that a proposed change has been
+deployed. Verify live bytes and `/build-info.json` against the reviewed website
+revision after each release.
 
 ## Operating rules
 
@@ -27,9 +33,10 @@ when verifying a release.
    its design, assets, and other project pages. Do not overwrite that branch with
    `main` or with an older Netlify-oriented static bundle.
 2. Product-engine work belongs on `main`. Passing Product Core tests does not
-   prove that a website change has been published to GitHub Pages.
-3. Use Pages deployment evidence and the GitHub-hosted URL for website release
-   verification. An old Netlify deploy, missing Netlify credentials, or Netlify
+   prove that a website change has been published to the company hostname.
+3. Use Cloudflare deployment evidence, the company hostname and its
+   `/build-info.json` for company-site release verification. Check the shared
+   GitHub Pages site separately when it changes. An old Netlify deploy, missing Netlify credentials, or Netlify
    form submission counts are not CaptureBrief launch blockers or current-site
    conversion metrics.
 4. Older Netlify-named scripts, reports, and release archives are legacy
@@ -43,3 +50,17 @@ when verifying a release.
 
 This document supersedes older hosting assumptions. It changes no price,
 customer promise, source-evidence gate, or communication approval rule.
+
+## Legacy PA x402 monitoring (2026-10-22)
+
+The retired `capturebrief.netlify.app` discovery/proxy endpoint is not a
+CaptureBrief website health target. The `PA x402 legacy contract regression`
+workflow retains only offline discovery and single-forward proxy tests; it must
+not poll that origin or register it as a replacement for the current seller.
+The workflow boundary has a regression test to prevent either action returning.
+
+Live PA x402 deployment, discovery and payment checks belong to
+[`P00NSMASHER/x402-product-factory`](https://github.com/P00NSMASHER/x402-product-factory).
+A passing compatibility test here proves neither live availability nor a paid
+transaction. The company hostname and shared GitHub Pages site are separate
+publication targets, both built from the website branch rather than engine `main`.

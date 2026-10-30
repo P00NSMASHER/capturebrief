@@ -24,7 +24,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
       - name: Check out trusted validator
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -88,3 +88,23 @@ jobs:
           git -C .published \
             -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $basic" \
             push origin HEAD:gh-pages
+
+      # Preserve the current post-publication CaptureBrief Cloudflare
+      # verification after updating gh-pages; do not drop this release gate.
+      - name: Prepare pinned tools for CaptureBrief production verification
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Verify exact CaptureBrief Cloudflare release after ABVM refresh
+        working-directory: .published
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          export GITHUB_SHA="$(git rev-parse HEAD)"
+          node build-standalone-site.test.js
+          python -m py_compile .github/cloudflare_light_smoke.py
+          PYTHONPATH=.github python -m unittest test_cloudflare_edge_integrity -v
+          node build-standalone-site.js
+          python .github/cloudflare_light_smoke.py

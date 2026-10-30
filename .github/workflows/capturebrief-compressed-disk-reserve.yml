@@ -1,0 +1,50 @@
+name: CaptureBrief compressed-original disk reserve (SYNTHETIC ONLY)
+
+on:
+  push:
+    branches:
+      - security/fy2027-compressed-disk-reserve-20261019
+    paths:
+      - '.github/workflows/capturebrief-compressed-disk-reserve.yml'
+      - 'scripts/source_disk_budget.py'
+      - 'scripts/retain_compressed_sam_archive_candidate.py'
+      - 'tests/test_source_disk_budget.py'
+  pull_request:
+    paths:
+      - '.github/workflows/capturebrief-compressed-disk-reserve.yml'
+      - 'scripts/source_disk_budget.py'
+      - 'scripts/retain_compressed_sam_archive_candidate.py'
+      - 'tests/test_source_disk_budget.py'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-space:
+    name: Disk reserve / ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 12
+    env:
+      PYTHONPATH: '.'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile read-only disk-budget candidate
+        run: python -m compileall -q scripts/source_disk_budget.py
+      - name: Test exact minimum reserve, missing space and denied network fetch
+        run: python -m unittest tests.test_source_disk_budget -v
+      - name: Verify no production catalog or customer approval
+        run: >-
+          python -c "from scripts.source_disk_budget import
+          UNALLOCATED_RESERVE_BYTES;
+          assert UNALLOCATED_RESERVE_BYTES >= 4*1024**3;
+          print('Independent archive/index/encryption/recovery verification still required.')"

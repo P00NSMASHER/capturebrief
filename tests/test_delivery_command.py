@@ -10,8 +10,11 @@ import unittest
 import zipfile
 from pathlib import Path
 
+from tests.synthetic_ready_case import write_current_synthetic_case
+
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "fixtures" / "ready_trace_case.json"
+FROZEN_FIXTURE_AS_OF = "2026-09-21T17:30:00Z"
 
 
 def command(*args):
@@ -25,7 +28,8 @@ class DeliveryCommandTests(unittest.TestCase):
     def test_bundle_command_leaves_a_real_zip_and_prints_separate_receipt(self):
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory) / "delivery.zip"
-            result = command("bundle", FIXTURE, "-o", target)
+            fresh_case = write_current_synthetic_case(Path(directory) / "fresh-synthetic-case.json")
+            result = command("bundle", fresh_case, "-o", target)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertTrue(zipfile.is_zipfile(target),
                             "The successful bundle command replaced its ZIP with JSON")
@@ -37,11 +41,22 @@ class DeliveryCommandTests(unittest.TestCase):
                 self.assertIn("decision-evidence.html", archive.namelist())
                 self.assertIsNone(archive.testzip())
 
+    def test_fixture_clock_cannot_override_a_copied_customer_case(self):
+        with tempfile.TemporaryDirectory() as directory:
+            copied = Path(directory) / "copied.json"
+            copied.write_bytes(FIXTURE.read_bytes())
+            output = Path(directory) / "fake.zip"
+            result = command("bundle", copied, "-o", output,
+                             "--fixture-as-of", FROZEN_FIXTURE_AS_OF)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("original bundled fictional fixture", result.stderr)
+            self.assertFalse(output.exists())
+
     def test_input_case_cannot_be_used_as_output_even_with_overwrite(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "case.json"
-            original = FIXTURE.read_bytes()
-            source.write_bytes(original)
+            write_current_synthetic_case(source)
+            original = source.read_bytes()
             result = command("bundle", source, "-o", source, "--overwrite")
             self.assertNotEqual(result.returncode, 0)
             self.assertEqual(source.read_bytes(), original)
@@ -50,7 +65,8 @@ class DeliveryCommandTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory) / "delivery.zip"
             target.write_bytes(b"keep existing delivery")
-            result = command("bundle", FIXTURE, "-o", target)
+            fresh_case = write_current_synthetic_case(Path(directory) / "fresh-synthetic-case.json")
+            result = command("bundle", fresh_case, "-o", target)
             self.assertNotEqual(result.returncode, 0)
             self.assertEqual(target.read_bytes(), b"keep existing delivery")
 
@@ -58,7 +74,8 @@ class DeliveryCommandTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory) / "delivery.zip"
             target.write_bytes(b"old delivery")
-            result = command("bundle", FIXTURE, "-o", target, "--overwrite")
+            fresh_case = write_current_synthetic_case(Path(directory) / "fresh-synthetic-case.json")
+            result = command("bundle", fresh_case, "-o", target, "--overwrite")
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertTrue(zipfile.is_zipfile(target))
             self.assertEqual(json.loads(result.stdout)["bundle_sha256"],

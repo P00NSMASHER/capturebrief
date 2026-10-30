@@ -66,14 +66,21 @@ def _ledger_lock(path: Path, *, timeout_seconds: float = DEFAULT_LOCK_TIMEOUT_SE
             pass
 
 
-def _verify_unlocked(path: Path) -> dict[str, Any]:
+def _verify_unlocked(
+    path: Path, *, captured_bytes: bytes | None = None,
+) -> dict[str, Any]:
     errors: list[dict[str, Any]] = []
     previous = GENESIS
     count = 0
-    if not path.exists():
-        return {"valid": True, "records": 0, "head_sha256": GENESIS, "errors": []}
+    if captured_bytes is None:
+        if not path.exists():
+            return {"valid": True, "records": 0, "head_sha256": GENESIS, "errors": []}
+        captured_bytes = path.read_bytes()
 
-    for idx, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    # The producer uses LF framing. splitlines() incorrectly treats U+0085,
+    # U+2028 and U+2029 *inside valid JSON strings* as record boundaries.
+    text = captured_bytes.decode("utf-8", "strict")
+    for idx, line in enumerate(text.split("\n"), start=1):
         if not line.strip():
             continue
         count += 1
@@ -162,3 +169,52 @@ def verify_ledger(
     p = Path(path)
     with _ledger_lock(p, timeout_seconds=lock_timeout_seconds):
         return _verify_unlocked(p)
+
+def read_verified_outcome_snapshot(
+    path: str | Path,
+    *,
+    max_bytes: int = 16 * 1024 * 1024,
+    lock_timeout_seconds: float = DEFAULT_LOCK_TIMEOUT_SECONDS,
+) -> dict[str, Any]:
+    """Capture one verified byte snapshot for an approved private observer.
+
+    The owner/runtime MUST independently authorize the exact source location
+    and protect its transport. This function neither locates/authenticates a
+    commercial ledger, publishes customer records, nor validates Stripe or
+    business identities. The lock sidecar is temporary; source bytes are not
+    modified. A missing file is NOT treated as an empty observed ledger.
+    """
+    if type(max_bytes) is not int or not 0 < max_bytes <= 16 * 1024 * 1024:
+        raise ValueError("invalid bounded outcome snapshot limit")
+    p = Path(path)
+    if p.is_symlink() or not p.is_file():
+        raise FileNotFoundError("approved outcome ledger is missing or not a regular file")
+    try:
+        with _ledger_lock(p, timeout_seconds=lock_timeout_seconds):
+            if p.is_symlink() or not p.is_file():
+                raise ValueError("approved outcome ledger changed during snapshot")
+            with p.open("rb") as stream:
+                captured = stream.read(max_bytes + 1)
+            if len(captured) > max_bytes:
+                raise ValueError("outcome snapshot exceeds bounded allowance")
+            # Do not pass an incomplete append or an ignored blank frame into
+            # an otherwise valid-looking downstream snapshot.
+            if captured and (not captured.endswith(b"\n") or
+                             any(not frame for frame in captured[:-1].split(b"\n"))):
+                raise ValueError("outcome snapshot is not complete LF-framed JSONL")
+            try:
+                status = _verify_unlocked(p, captured_bytes=captured)
+            except (ValueError, TypeError, AttributeError, UnicodeError, KeyError):
+                raise ValueError("outcome snapshot chain validation failed") from None
+            if not status["valid"]:
+                raise ValueError("outcome snapshot chain validation failed")
+            # Observed-at means time captured, NOT time last customer worked,
+            # settled, paid or authorized. The result is private raw bytes.
+            return {
+                "present": True,
+                "content": captured,
+                "snapshot_sha256": sha256_hex(captured),
+                "observed_at": datetime.now(timezone.utc).isoformat(timespec="microseconds"),
+            }
+    except LedgerLockedError:
+        raise ValueError("approved outcome ledger is locked") from None

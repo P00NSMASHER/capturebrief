@@ -14,7 +14,7 @@ class SimulatedPilotTests(unittest.TestCase):
             "REFUND_BEFORE_WORK": 4,
             "DECLINED_BEFORE_PAYMENT": 2,
         })
-        self.assertEqual(report["golden_delivery_check"]["file_count"], 7)
+        self.assertEqual(report["golden_delivery_check"]["file_count"], 8)
         self.assertFalse(report["golden_delivery_check"]["external_send_authorized"])
         self.assertTrue(report["passed"], report["failures"])
 

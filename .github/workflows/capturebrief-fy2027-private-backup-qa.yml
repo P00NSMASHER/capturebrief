@@ -1,0 +1,52 @@
+name: CaptureBrief FY2027 private encrypted backup QA (NO UPLOAD)
+
+on:
+  push:
+    branches:
+      - security/fy2027-offdevice-backup-candidate-20261019
+    paths:
+      - '.github/workflows/capturebrief-fy2027-private-backup-qa.yml'
+      - 'scripts/fy2027_encrypted_backup.py'
+      - 'tests/test_fy2027_encrypted_backup.py'
+      - 'PRIVATE-FY2027-ENCRYPTED-BACKUP.md'
+  pull_request:
+    paths:
+      - '.github/workflows/capturebrief-fy2027-private-backup-qa.yml'
+      - 'scripts/fy2027_encrypted_backup.py'
+      - 'tests/test_fy2027_encrypted_backup.py'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-crypto-qa:
+    name: Offline backup / ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 12
+    env:
+      PYTHONPATH: '.'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned optional audited crypto dependency
+        run: python -m pip install cryptography==46.0.4
+      - name: Fail if exact dependency is missing or downgraded
+        run: python -c "import cryptography; assert cryptography.__version__ == '46.0.4'"
+      - name: Compile Python operator utility
+        run: python -m compileall -q scripts/fy2027_encrypted_backup.py
+      - name: Independent fake-byte encrypt, decrypt, tamper and restore tests
+        run: python -m unittest tests.test_fy2027_encrypted_backup -v
+      - name: Enforce no release authority or cloud upload in QA
+        run: >-
+          python -c "from scripts.fy2027_encrypted_backup import ORIGINAL_SHA256, ORIGINAL_BYTES;
+          assert len(ORIGINAL_SHA256) == 64 and ORIGINAL_BYTES == 1607260;
+          print('Synthetic offline only; source approval, cloud copy, restore proof remain blocked.')"

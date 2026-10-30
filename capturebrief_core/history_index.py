@@ -25,9 +25,13 @@ from .data_services import (
     ARCHIVE_DOWNLOAD,
     REQUIRED_COLUMNS,
     FamilyAmbiguous,
+    _require_exact_original_source_slot,
 )
 from .model import canonical_json, history_set_digest, parse_dt, sha256_hex
-from .source_policy import require_approved_automation
+from .source_policy import (
+    open_approved_extract, require_approved_automation,
+    require_approved_extract_delivery,
+)
 
 INDEX_SCHEMA_VERSION = 2
 DEFAULT_MAX_EXTRACT_BYTES = 2_000_000_000
@@ -167,7 +171,7 @@ def _download_extract_unlocked(
     source_url: str,
     timeout: float = 120.0,
     max_bytes: int = DEFAULT_MAX_EXTRACT_BYTES,
-    opener=urlopen,
+    opener=None,
 ) -> dict[str, Any]:
     require_approved_automation(source_url, expected="SAM_DATA_SERVICES_EXTRACT")
     if max_bytes <= 0:
@@ -176,14 +180,35 @@ def _download_extract_unlocked(
     dest.parent.mkdir(parents=True,exist_ok=True)
     digest=hashlib.sha256()
     size=0
-    req=Request(source_url,headers={"User-Agent":"CaptureBrief/0.3"})
+    req=Request(source_url,headers={
+        "User-Agent":"CaptureBrief/0.3",
+        "Accept-Encoding":"identity",
+    })
     fd,temp_name=tempfile.mkstemp(prefix=f".{dest.name}.",suffix=".download",dir=str(dest.parent))
     tmp=Path(temp_name)
     try:
         try:
-            response=opener(req,timeout=timeout)
+            response=open_approved_extract(req,timeout=timeout,source_url=source_url,opener=opener)
             with response, os.fdopen(fd,"wb",closefd=False) as out:
-                declared=response.headers.get("Content-Length") if getattr(response,"headers",None) else None
+                final_url=response.geturl() if hasattr(response,"geturl") else source_url
+                final_host=require_approved_extract_delivery(source_url,final_url)
+                # Only the complete, unencoded original is acceptable as
+                # immutable Data Services source evidence. Range responses or
+                # transparent transfer compression can yield a valid SHA-256
+                # for the WRONG bytes and contaminate current-source claims.
+                status=getattr(response,"status",None)
+                if status is None and hasattr(response,"getcode"):
+                    status=response.getcode()
+                if status!=200:
+                    raise HistoryIndexError("extract original response must be HTTP 200")
+                headers=getattr(response,"headers",None)
+                if headers is None:
+                    raise HistoryIndexError("extract original response headers missing")
+                if str(headers.get("Content-Encoding","identity")).strip().lower()!="identity":
+                    raise HistoryIndexError("extract original transfer encoding must be identity")
+                if headers.get("Content-Range"):
+                    raise HistoryIndexError("extract original must not contain a byte-range header")
+                declared=headers.get("Content-Length")
                 declared_size=None
                 if declared not in (None,""):
                     try:
@@ -207,8 +232,6 @@ def _download_extract_unlocked(
                     raise HistoryIndexError(
                         f"extract byte count {size} does not match Content-Length {declared_size}"
                     )
-                final_url=response.geturl() if hasattr(response,"geturl") else source_url
-                require_approved_automation(final_url,expected="SAM_DATA_SERVICES_EXTRACT")
                 out.flush()
                 os.fsync(out.fileno())
                 source_etag=response.headers.get("ETag") if getattr(response,"headers",None) else None
@@ -222,9 +245,13 @@ def _download_extract_unlocked(
         os.replace(tmp,dest)
         fsync_directory(dest.parent)
     except HTTPError as exc:
-        raise HistoryIndexError(f"Data Services HTTP {exc.code}") from exc
-    except URLError as exc:
-        raise HistoryIndexError(f"Data Services transport failure: {exc.reason}") from exc
+        # urllib HTTPError can carry a complete temporary signed S3 URL.
+        # Suppress traceback chaining as well as redacting the error text.
+        raise HistoryIndexError(f"Data Services HTTP {exc.code}") from None
+    except URLError:
+        # urllib's underlying exception may embed X-Amz-* tokens, credentials
+        # or private paths. Never expose that cause in traceback/log output.
+        raise HistoryIndexError("Data Services transport failure") from None
     finally:
         if tmp.exists():
             tmp.unlink()
@@ -234,7 +261,10 @@ def _download_extract_unlocked(
         "sha256":digest.hexdigest(),
         "size_bytes":size,
         "observed_at":datetime.now(timezone.utc).isoformat(),
-        "final_url":final_url,
+        "final_url_retained":False,
+        "redirect_used":final_url!=source_url,
+        "final_delivery_host":final_host,
+        "final_url_sha256":hashlib.sha256(final_url.encode("utf-8")).hexdigest(),
         "source_etag":source_etag,
         "source_last_modified":source_last_modified,
     }
@@ -246,7 +276,7 @@ def download_extract_to_file(
     source_url: str,
     timeout: float = 120.0,
     max_bytes: int = DEFAULT_MAX_EXTRACT_BYTES,
-    opener=urlopen,
+    opener=None,
     lock_timeout_seconds: float = 5.0,
 ) -> dict[str, Any]:
     """Stream one approved Data Services extract to disk with atomic publication."""
@@ -272,7 +302,7 @@ def fetch_and_ingest_slot(
     snapshot_dir: str | Path | None = None,
     observed_at: str | None = None,
     max_bytes: int = DEFAULT_MAX_EXTRACT_BYTES,
-    opener=urlopen,
+    opener=None,
     lock_timeout_seconds: float = 5.0,
 ) -> dict[str, Any]:
     """Fetch and ingest one slot while preserving exact immutable source bytes."""
@@ -341,7 +371,10 @@ def ingest_extract_file(
     """
     require_approved_automation(source_url, expected="SAM_DATA_SERVICES_EXTRACT")
     kind = source_kind.upper()
-    slot = _slot(kind, fiscal_year)
+    # Bind imported publisher bytes to their *exact* source slot BEFORE
+    # source retention, index creation, or release-bearing current_sources writes.
+    # A class-approved SAM endpoint alone cannot certify another FY.
+    slot = _require_exact_original_source_slot(kind, fiscal_year, source_url)
     observed_at = observed_at or datetime.now(timezone.utc).isoformat()
     if not parse_dt(observed_at):
         raise ValueError("observed_at must be timezone-aware ISO-8601")
@@ -405,19 +438,46 @@ def ingest_extract_file(
         rows_scanned = 0
         batch: list[tuple[Any, ...]] = []
 
-        with retained_path.open("r", encoding=_encoding(retained_path), errors="replace", newline="") as handle:
-            reader = csv.DictReader(handle, restkey="_extra")
-            missing = REQUIRED_COLUMNS - set(reader.fieldnames or [])
+        # Fail closed on undecodable publisher bytes. Replacement characters can
+        # silently alter NoticeId, solicitation and source-row digests while
+        # leaving a superficially complete source index.
+        with retained_path.open("r", encoding=_encoding(retained_path), errors="strict", newline="") as handle:
+            reader = csv.DictReader(handle, restkey="_extra", strict=True)
+            columns = list(reader.fieldnames or [])
+            missing = REQUIRED_COLUMNS - set(columns)
             if missing:
                 raise HistoryIndexError(f"extract missing required columns: {sorted(missing)}")
+            if (len(columns) != len(set(columns))
+                    or any(not isinstance(name, str) or not name.strip()
+                           for name in columns)
+                    or "_extra" in columns):
+                raise HistoryIndexError("extract contains duplicate, blank or reserved CSV headers")
             for row_number, row in enumerate(reader, start=1):
+                # A row containing extra fields is exposed under DictReader's
+                # _extra key, which is intentionally not included in raw-row
+                # canonicalization below. An omitted trailing column becomes
+                # None and otherwise silently changes the original evidence.
+                # Reject both before a source snapshot can be committed.
+                if "_extra" in row or any(row.get(name) is None for name in columns):
+                    raise HistoryIndexError(
+                        f"source original row {row_number} has an invalid column count"
+                    )
+                # Never create an apparently complete original-history
+                # snapshot containing an action with no primary NoticeId.
+                # Such a row cannot be linked or independently reviewed,
+                # even if its Sol# and agency data are present.
+                notice_id = str(row.get("NoticeId") or "").strip()
+                if not notice_id:
+                    raise HistoryIndexError(
+                        f"source original row {row_number} has empty NoticeId"
+                    )
                 rows_scanned += 1
                 raw = {k: row.get(k) for k in reader.fieldnames or []}
                 batch.append(
                     (
                         snapshot_id,
                         row_number,
-                        str(row.get("NoticeId") or "").strip(),
+                        notice_id,
                         _norm(row.get("Sol#")),
                         str(row.get("Sol#") or "").strip() or None,
                         str(row.get("CGAC") or "").strip() or None,
@@ -473,11 +533,45 @@ def ingest_extract_file(
         }
 
 
+def _retained_source_bytes_match(row: dict[str, Any], *, allowed_root: Path) -> bool:
+    """Verify one indexed ORIGINAL against its recorded source fingerprint.
+
+    SQLite declarations and a passed ingestion run do not prove a retained
+    source still exists or that nobody altered it after ingestion.
+    Restrict untrusted DB local_path fields to the private index's approved
+    source root BEFORE opening any bytes. This establishes only local
+    byte integrity, never publisher authenticity or human source approval.
+    """
+    try:
+        raw = row.get("local_path")
+        if not isinstance(raw, str) or not raw:
+            return False
+        path = Path(raw)
+        if not path.is_absolute() or path.is_symlink() or not path.is_file():
+            return False
+        candidate = path.resolve(strict=True)
+        if not candidate.is_relative_to(allowed_root):
+            return False
+        expected_bytes = row.get("size_bytes")
+        expected_sha = row.get("extract_sha256")
+        if (type(expected_bytes) is not int or expected_bytes < 1
+                or not isinstance(expected_sha, str) or len(expected_sha) != 64
+                or any(char not in "0123456789abcdef" for char in expected_sha)):
+            return False
+        if candidate.stat().st_size != expected_bytes:
+            return False
+        observed_sha, observed_size = _file_sha256(candidate)
+        return observed_size == expected_bytes and observed_sha == expected_sha
+    except (OSError, ValueError, TypeError):
+        return False
+
+
 def index_status(
     index_path: str | Path,
     *,
     fiscal_year: int | None = None,
     now: datetime | None = None,
+    snapshot_root: str | Path | None = None,
 ) -> dict[str, Any]:
     fiscal_year = fiscal_year or fiscal_year_for_datetime()
     now = now or datetime.now(timezone.utc)
@@ -486,36 +580,105 @@ def index_status(
     now = now.astimezone(timezone.utc)
     required_years = catalog_years_for_fiscal_year(fiscal_year)
     required_slots = {"ACTIVE", *{f"ARCHIVE:{year}" for year in required_years}}
+    # An index with its source bytes missing is NEVER complete. Database
+    # paths are untrusted; by default only files under the private index's
+    # containing directory are eligible. Explicit alternate source roots
+    # must be provided by the authorized operator, not read from the DB.
+    root = (Path(snapshot_root) if snapshot_root is not None
+            else Path(index_path).expanduser().absolute().parent)
+    if root.is_symlink() or not root.is_dir():
+        raise HistoryIndexError("Private retained-source root is unavailable or unsafe")
+    root = root.resolve(strict=True)
     init_index(index_path)
     with closing(_connect(index_path)) as conn:
         rows = conn.execute(
             "SELECT c.slot,c.checked_at,c.collection_mode,c.source_etag,c.source_last_modified,"
-            "s.snapshot_id,s.source_kind,s.fiscal_year,s.source_url,s.extract_sha256,"
+            "s.snapshot_id,s.slot AS snapshot_slot,s.source_kind,s.fiscal_year,s.source_url,s.extract_sha256,"
             "s.size_bytes,s.observed_at,s.local_path,s.rows_scanned "
             "FROM current_sources c JOIN source_snapshots s ON s.snapshot_id=c.snapshot_id"
         ).fetchall()
     snapshots = [dict(row) for row in rows]
+    # Validate that the current SQLite projection still contains exactly the
+    # rows that the original ingest reported; otherwise a deleted/blank
+    # action could be silently omitted from a complete historical receipt.
+    # This is a cheap DB projection check in addition to full source-byte
+    # hashing, not independent publisher adjudication.
+    with closing(_connect(index_path)) as conn:
+        counts = {
+            int(row["snapshot_id"]): dict(row)
+            for row in conn.execute(
+                "SELECT r.snapshot_id, COUNT(*) AS n, "
+                "MIN(r.row_number) AS first_row, MAX(r.row_number) AS last_row, "
+                "COUNT(DISTINCT r.notice_id) AS distinct_notice_ids, "
+                "SUM(CASE WHEN TRIM(r.notice_id)='' THEN 1 ELSE 0 END) AS blank_ids "
+                "FROM opportunity_rows r "
+                "WHERE r.snapshot_id IN (SELECT snapshot_id FROM current_sources) "
+                "GROUP BY r.snapshot_id"
+            ).fetchall()
+        }
     present = {row["slot"] for row in snapshots}
     missing = sorted(required_slots - present)
     stale: list[str] = []
     unverified: list[str] = []
+    missing_or_mismatched_bytes: list[str] = []
+    indexed_row_count_mismatches: list[str] = []
     fresh: list[str] = []
     for row in snapshots:
         slot = row["slot"]
         if slot not in required_slots:
             continue
-        if row.get("collection_mode") != APPROVED_FETCH:
-            unverified.append(slot)
-            continue
+        expected_kind = "ACTIVE" if slot == "ACTIVE" else "ARCHIVE"
+        expected_year = None if slot == "ACTIVE" else int(slot.partition(":")[2])
+        expected_url = (ACTIVE_DOWNLOAD if expected_year is None
+                        else ARCHIVE_DOWNLOAD.format(fy=expected_year))
         checked = parse_dt(row.get("checked_at"))
-        if not checked:
+        observed = parse_dt(row.get("observed_at"))
+        if (row.get("collection_mode") != APPROVED_FETCH
+                or row.get("snapshot_slot") != slot
+                or row.get("source_kind") != expected_kind
+                or row.get("fiscal_year") != expected_year
+                or row.get("source_url") != expected_url
+                or row.get("rows_scanned") is None
+                or type(row.get("rows_scanned")) is not int
+                or row["rows_scanned"] < 0
+                or checked is None or observed is None):
             unverified.append(slot)
             continue
         max_age = ACTIVE_MAX_AGE if slot == "ACTIVE" else ARCHIVE_MAX_AGE
         if now - checked > max_age or checked > now + timedelta(minutes=5):
             stale.append(slot)
-        else:
-            fresh.append(slot)
+            continue
+        # A checked_at intentionally stale predates later source observations;
+        # preserve its STALE remediation classification instead of misleading
+        # callers by relabeling the known stale slot as UNVERIFIED.
+        if observed > checked + timedelta(minutes=5):
+            unverified.append(slot)
+            continue
+        # A source with a valid CSV header and no notice rows is legitimate
+        # (FY1969 and FY1981 are both header-only). Anything else must have
+        # exactly one indexed action per original row, contiguous row numbers,
+        # and nonblank primary notice identities.
+        expected_count = row["rows_scanned"]
+        stats = counts.get(int(row["snapshot_id"]), {})
+        actual_count = stats.get("n", 0)
+        if (actual_count != expected_count
+                or (expected_count and (
+                    stats.get("first_row") != 1
+                    or stats.get("last_row") != expected_count
+                    or stats.get("blank_ids") != 0
+                    or stats.get("distinct_notice_ids") != expected_count
+                ))):
+            unverified.append(slot)
+            indexed_row_count_mismatches.append(slot)
+            continue
+        # Mandatory full-byte replay for *release-bearing* source coverage.
+        # A previous index/cache status is insufficient to certify retained
+        # source originals at the moment a COMPLETE claim is produced.
+        if not _retained_source_bytes_match(row, allowed_root=root):
+            unverified.append(slot)
+            missing_or_mismatched_bytes.append(slot)
+            continue
+        fresh.append(slot)
     return {
         "complete": not missing and not stale and not unverified,
         "fiscal_year": fiscal_year,
@@ -528,6 +691,10 @@ def index_status(
         "missing_slots": missing,
         "stale_slots": sorted(stale),
         "unverified_slots": sorted(unverified),
+        "missing_or_mismatched_source_bytes_slots": sorted(missing_or_mismatched_bytes),
+        "indexed_row_count_mismatch_slots": sorted(indexed_row_count_mismatches),
+        "local_original_hashes_verified": not missing and not stale and not unverified,
+        "publisher_origin_independently_attested": False,
         "freshness_policy": {
             "active_max_age_hours": int(ACTIVE_MAX_AGE.total_seconds() // 3600),
             "archive_max_age_hours": int(ARCHIVE_MAX_AGE.total_seconds() // 3600),
@@ -569,6 +736,44 @@ def _current_family_rows(conn: sqlite3.Connection, solicitation_number: str) -> 
     return [dict(row) for row in rows]
 
 
+def _notice_ids_have_other_solicitation(
+    conn: sqlite3.Connection,
+    notice_ids: list[str],
+    *,
+    required_slots: set[str],
+    solicitation_number: str,
+) -> bool:
+    """Find in-scope NoticeId reuse under a conflicting solicitation number.
+
+    A full catalog may contain a NoticeId in multiple current source
+    snapshots. If one snapshot assigns a DIFFERENT Sol#, selecting only
+    the requested Sol# would silently omit part of the notice's history.
+    Treat this as review-required instead of claiming completeness.
+    This is a parameter-bound read-only query; it never includes future
+    or unapproved source slots. Bound batches to older SQLite parameter
+    limits without disclosing individual notice/solicitation identifiers.
+    """
+    if not notice_ids or not required_slots:
+        return False
+    slots = sorted(required_slots)
+    for begin in range(0, len(notice_ids), 250):
+        block = notice_ids[begin:begin+250]
+        slot_markers = ",".join("?" for _ in slots)
+        id_markers = ",".join("?" for _ in block)
+        sql = (
+            "SELECT 1 FROM opportunity_rows r "
+            "JOIN current_sources c ON c.snapshot_id=r.snapshot_id "
+            f"WHERE c.slot IN ({slot_markers}) "
+            f"AND r.notice_id IN ({id_markers}) "
+            "AND r.solicitation_norm != ? LIMIT 1"
+        )
+        if conn.execute(
+            sql, (*slots, *block, _norm(solicitation_number)),
+        ).fetchone() is not None:
+            return True
+    return False
+
+
 def issue_history_receipt_from_index(
     index_path: str | Path,
     *,
@@ -576,18 +781,66 @@ def issue_history_receipt_from_index(
     seed_notice_id: str,
     observed_at: str | None = None,
     fiscal_year: int | None = None,
+    snapshot_root: str | Path | None = None,
 ) -> dict[str, Any]:
     observed_at = observed_at or datetime.now(timezone.utc).isoformat()
     if not parse_dt(observed_at):
         raise ValueError("observed_at must be timezone-aware ISO-8601")
+    # Real official SAM FY2027 archive already includes notices with blank
+    # solicitation numbers. Joining on the normalized empty string would
+    # silently group unrelated notices, even if their AAC/office matches.
+    # Reject before opening the index or constructing a history receipt.
+    if not _norm(solicitation_number):
+        raise ValueError("Solicitation number must be nonempty for history-family matching")
     fiscal_year = fiscal_year or fiscal_year_for_datetime()
-    coverage = index_status(index_path, fiscal_year=fiscal_year, now=parse_dt(observed_at))
+    coverage = index_status(
+        index_path, fiscal_year=fiscal_year, now=parse_dt(observed_at),
+        snapshot_root=snapshot_root,
+    )
 
+    # Unapproved and future fiscal years may exist in the same SQLite index.
+    # They must never enter actions for an earlier approved historical catalog.
+    required_slots = set(coverage["required_slots"])
+    # The coverage check and the family SELECT used to run in different
+    # database snapshots. An approved sync could replace a current source
+    # between the two, letting a *new* notice be included under the OLD
+    # source's already-verified coverage and yield a false COMPLETE result.
+    # Pin all current-slot attributes inspected by index_status, then
+    # open one read transaction for the comparison and the family SELECT.
+    source_fields = (
+        "slot", "checked_at", "collection_mode", "source_etag",
+        "source_last_modified", "snapshot_id", "snapshot_slot", "source_kind",
+        "fiscal_year", "source_url", "extract_sha256", "size_bytes",
+        "observed_at", "local_path", "rows_scanned",
+    )
+    expected_sources = {
+        item["slot"]: tuple(item.get(key) for key in source_fields)
+        for item in coverage["snapshots"] if item["slot"] in required_slots
+    }
     with closing(_connect(index_path)) as conn:
-        rows = _current_family_rows(conn, solicitation_number)
+        conn.execute("BEGIN")
+        current = conn.execute(
+            "SELECT c.slot,c.checked_at,c.collection_mode,c.source_etag,c.source_last_modified,"
+            "s.snapshot_id,s.slot AS snapshot_slot,s.source_kind,s.fiscal_year,s.source_url,s.extract_sha256,"
+            "s.size_bytes,s.observed_at,s.local_path,s.rows_scanned "
+            "FROM current_sources c JOIN source_snapshots s "
+            "ON s.snapshot_id=c.snapshot_id"
+        ).fetchall()
+        observed_sources = {
+            item["slot"]: tuple(item[key] for key in source_fields)
+            for item in current if item["slot"] in required_slots
+        }
+        source_changed = observed_sources != expected_sources
+        rows = [] if source_changed else [
+            row for row in _current_family_rows(conn, solicitation_number)
+            if row.get("slot") in required_slots
+        ]
+        conn.execute("ROLLBACK")
 
     seed = next((row for row in rows if row.get("notice_id") == seed_notice_id), None)
     errors: list[str] = []
+    if source_changed:
+        errors.append("SOURCE_SNAPSHOT_CHANGED_DURING_RECEIPT")
     if seed is None:
         errors.append("SEED_NOTICE_NOT_IN_CURRENT_INDEX")
         family_rows: list[dict[str, Any]] = []
@@ -601,14 +854,88 @@ def issue_history_receipt_from_index(
         seed_aac = _norm(seed.get("aac_code"))
         seed_office = _norm(seed.get("office"))
         if seed_aac:
-            family_rows = [row for row in rows if _norm(row.get("aac_code")) == seed_aac]
+            anchored = [
+                row for row in rows if _norm(row.get("aac_code")) == seed_aac
+            ]
+            known_offices = {
+                _norm(row.get("office")) for row in anchored
+                if _norm(row.get("office"))
+            }
+            office_unspecified = any(
+                not _norm(row.get("office")) for row in anchored
+            )
+            # The same solicitation and AAC do not independently establish
+            # identity across distinct offices (or mixed missing offices).
+            # A reassignment may be genuine, but requires adjudication: a
+            # possibly unrelated office must never be silently represented
+            # as one COMPLETE family.
+            if not seed_office:
+                # Even if all same-AAC sibling rows lack Office, their
+                # identity is not sufficiently anchored for completeness.
+                errors.append("FAMILY_SEED_OFFICE_MISSING")
+                if len(known_offices) > 1 or (known_offices and office_unspecified):
+                    errors.append("FAMILY_OFFICE_COLLISION_REQUIRES_REVIEW")
+                family_rows = [
+                    row for row in anchored
+                    if row.get("notice_id") == seed_notice_id
+                ]
+            elif len(known_offices) > 1 or (known_offices and office_unspecified):
+                errors.append("FAMILY_OFFICE_COLLISION_REQUIRES_REVIEW")
+                family_rows = [
+                    row for row in anchored
+                    if _norm(row.get("office")) == seed_office
+                ]
+            else:
+                family_rows = anchored
+            if any(
+                not _norm(row.get("aac_code"))
+                and (
+                    not _norm(row.get("office"))
+                    or _norm(row.get("office")) == seed_office
+                )
+                for row in rows
+            ):
+                # A blank-AAC sibling with the SAME or UNKNOWN office
+                # could belong to this family and blocks completeness.
+                # One with a distinct known office can be excluded by
+                # the independently supplied office anchor without
+                # creating an unnecessary false-positive review hold.
+                errors.append("FAMILY_UNANCHORED_AAC_PEER_REQUIRES_REVIEW")
         elif seed_office:
-            family_rows = [row for row in rows if _norm(row.get("office")) == seed_office]
+            anchored = [
+                row for row in rows if _norm(row.get("office")) == seed_office
+            ]
+            known_aacs = {
+                _norm(row.get("aac_code")) for row in anchored
+                if _norm(row.get("aac_code"))
+            }
+            aac_unspecified = any(
+                not _norm(row.get("aac_code")) for row in anchored
+            )
+            # Without a seed AAC, a notice from a different agency
+            # cannot be safely linked by office name and Sol# alone.
+            # Mixed known/unknown or multiple agency codes require
+            # separate adjudication even if the office text matches.
+            # The seed itself has no AAC: there is no independently
+            # verifiable agency anchor. Even if every sibling is also
+            # missing AAC, their shared Office/Sol# cannot certify a
+            # complete family. Preserve only exact seed observations.
+            errors.append("FAMILY_AAC_ANCHOR_MISSING")
+            if len(known_aacs) > 1 or (known_aacs and aac_unspecified):
+                errors.append("FAMILY_AAC_COLLISION_REQUIRES_REVIEW")
+            family_rows = [
+                row for row in anchored
+                if row.get("notice_id") == seed_notice_id
+            ]
         else:
-            aacs = {_norm(row.get("aac_code")) for row in rows if _norm(row.get("aac_code"))}
-            if len(aacs) > 1:
-                raise FamilyAmbiguous(f"solicitation number spans multiple AAC codes: {sorted(aacs)}")
-            family_rows = rows
+            # Neither an agency code nor an office name anchors this
+            # seed to other notices. Permit observation of only the
+            # exact seed; never certify a merged multi-notice family.
+            errors.append("FAMILY_AGENCY_IDENTITY_MISSING")
+            family_rows = [
+                row for row in rows
+                if row.get("notice_id") == seed_notice_id
+            ]
         family = {
             "solicitation_number": seed.get("solicitation_raw") or solicitation_number,
             "aac_code": seed.get("aac_code"),
@@ -637,6 +964,32 @@ def issue_history_receipt_from_index(
         by_notice.setdefault(notice_id, []).append(observation)
 
     action_ids = sorted(by_notice)
+    if action_ids:
+        # Cross-snapshot observations for the SAME NoticeId may carry
+        # different AAC or Office identifiers even when the source Sol#
+        # is identical. An AAC-based family filter can hide the
+        # contradictory observation while falsely claiming COMPLETE.
+        # Flag any change, including known/blank transitions, as
+        # requiring adjudication. Only required FY slots are in rows.
+        action_id_set = set(action_ids)
+        identities_by_notice: dict[str, set[tuple[str, str]]] = {}
+        for row in rows:
+            notice = str(row.get("notice_id") or "")
+            if notice in action_id_set:
+                identities_by_notice.setdefault(notice, set()).add((
+                    _norm(row.get("aac_code")),
+                    _norm(row.get("office")),
+                ))
+        if any(len(identities) > 1 for identities in identities_by_notice.values()):
+            errors.append("NOTICE_ID_SOURCE_IDENTITY_DRIFT_REQUIRES_REVIEW")
+        with closing(_connect(index_path)) as conn:
+            if _notice_ids_have_other_solicitation(
+                conn, action_ids, required_slots=required_slots,
+                solicitation_number=solicitation_number,
+            ):
+                errors.append(
+                    "NOTICE_ID_SOLICITATION_HISTORY_CONFLICT_REQUIRES_REVIEW"
+                )
     if seed_notice_id and seed_notice_id not in action_ids:
         errors.append("SEED_NOTICE_OUTSIDE_FILTERED_FAMILY")
     if coverage["missing_slots"]:
@@ -659,7 +1012,9 @@ def issue_history_receipt_from_index(
         "supplied_archive_fys": sorted(
             int(row["fiscal_year"])
             for row in coverage["snapshots"]
-            if row.get("source_kind") == "ARCHIVE" and row.get("fiscal_year") is not None
+            if row.get("source_kind") == "ARCHIVE"
+            and row.get("fiscal_year") is not None
+            and row.get("slot") in required_slots
         ),
         "missing_archive_fys": [
             int(slot.split(":", 1)[1])
@@ -669,6 +1024,7 @@ def issue_history_receipt_from_index(
         "active_extract_present": "ACTIVE" in coverage["present_slots"],
         "catalog_snapshot": cat,
         "coverage_complete": coverage["complete"],
+        "out_of_scope_source_snapshots_excluded": True,
         "stale_slots": coverage["stale_slots"],
         "unverified_slots": coverage["unverified_slots"],
         "freshness_checked_at": coverage["checked_at"],
@@ -682,6 +1038,10 @@ def issue_history_receipt_from_index(
             {"notice_id": notice_id, "observations": observations}
             for notice_id, observations in sorted(by_notice.items())
         ],
+        "retained_original_hashes_verified": coverage["local_original_hashes_verified"],
+        "publisher_origin_independently_attested": False,
+        "missing_or_mismatched_source_bytes_slots": coverage["missing_or_mismatched_source_bytes_slots"],
+        "indexed_row_count_mismatch_slots": coverage["indexed_row_count_mismatch_slots"],
         "source_snapshots": [
             {
                 "source_kind": row["source_kind"],
@@ -700,6 +1060,7 @@ def issue_history_receipt_from_index(
                 ),
             }
             for row in coverage["snapshots"]
+            if row.get("slot") in required_slots
         ],
         "ordering_authoritative": False,
         "current_action_authoritative": False,

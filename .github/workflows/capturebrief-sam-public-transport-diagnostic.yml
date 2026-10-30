@@ -1,0 +1,62 @@
+name: CaptureBrief SAM public transport diagnostic (NO DOWNLOAD)
+
+on:
+  push:
+    branches:
+      - fix/source-policy-secret-redaction-20261018
+    paths:
+      - ".github/workflows/capturebrief-sam-public-transport-diagnostic.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  public-redirect-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Inspect public FY2027 endpoint without following redirects
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import urllib.error
+          import urllib.request
+          from urllib.parse import urlsplit
+          from capturebrief_core.data_services import ARCHIVE_DOWNLOAD
+          from capturebrief_core.source_policy import require_approved_extract_delivery
+          target = ARCHIVE_DOWNLOAD.format(fy=2027)
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  parsed = urlsplit(newurl)
+                  try:
+                      policy = require_approved_extract_delivery(target, newurl)
+                  except Exception:
+                      policy = "REJECTED"
+                  print(json.dumps({
+                      "redirect_status": code,
+                      "destination_host": parsed.hostname,
+                      "destination_path": parsed.path,
+                      "query_parameter_names": [p.partition("=")[0] for p in parsed.query.split("&") if p],
+                      "destination_approved_by_existing_policy": policy,
+                  }))
+                  return None
+          req = urllib.request.Request(target, method="GET", headers={"Range":"bytes=0-0"})
+          try:
+              with urllib.request.build_opener(NoRedirect()).open(req, timeout=18) as res:
+                  print(json.dumps({"http_status":res.status,
+                                    "response_url_host":urlsplit(res.geturl()).hostname,
+                                    "location_present":bool(res.headers.get("Location")),
+                                    "download_performed":False}))
+          except urllib.error.HTTPError as exc:
+              print(json.dumps({"http_status":exc.code,
+                                "redirect_intercepted":exc.code in (301,302,303,307,308),
+                                "download_performed":False}))
+          except Exception as exc:
+              print(json.dumps({"error_type":type(exc).__name__,
+                                "download_performed":False}))
+          PY

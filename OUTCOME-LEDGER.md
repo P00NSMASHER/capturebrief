@@ -123,6 +123,43 @@ Generate the current evidence summary:
 
 The append command refuses to write if the existing ledger fails hash-chain verification.
 
+## Private immutable snapshot for RETALLY Group
+
+The production outcome ledger may be read into RETALLY Group only through an
+**approved, authenticated private runtime**. The producer now exposes a
+bounded, exact-byte observation compatible with RETALLY's optional
+`CaptureBriefOutcomeReader` callback. This is a byte transport contract,
+**not** a live source discovery mechanism or confirmation of a paying customer.
+
+```python
+from capturebrief_core.ledger import read_verified_outcome_snapshot
+
+# Operator configuration must authenticate the producer and authorize the
+# exact existing, protected source. Do not choose a path by scanning folders.
+def approved_immutable_snapshot_reader():
+    return read_verified_outcome_snapshot(approved_private_outcome_ledger_path)
+```
+
+The four-field result contains `present=True`, original immutable
+`content` bytes, `snapshot_sha256` calculated from those exact bytes, and
+an aware UTC `observed_at` capture time. The source is verified **under the
+same producer-side sidecar lock** that serializes writers; the function
+rejects missing, symlinked, malformed, partial, changed, oversized or locked
+sources rather than representing them as a successful empty ledger.
+The maximum capture is 16 MiB. A genuine existing empty ledger can be
+represented as empty only after source authentication; a *missing* ledger
+always fails. The producer's LF record framing is preserved even for valid
+JSON strings containing U+0085, U+2028 or U+2029.
+
+The snapshot may contain pseudonymous case references and opaque payment
+evidence identifiers. It must remain in the approved private runtime, never
+be printed, uploaded to a public repository or rendered on the website.
+Verify the **producer location, role permissions, source continuity and
+transport custody** separately. A correct SHA-256 does not authenticate a
+customer payment, bank settlement, fulfillment event or case-to-business
+mapping. Leave RETALLY's paying-customer and revenue metrics unknown until
+provider and customer evidence is independently reconciled.
+
 ## Commercial proof summary
 
 The summary reports evidence counts, not inferred business success:
