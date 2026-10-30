@@ -63,6 +63,20 @@ try{
   assert(read('index.html').includes('name="robots" content="index,follow"'));
 
   assert(info.files.some(file=>file.path==='_headers'),'Header configuration must be fingerprinted');
+
+  // Reproduce the customer-visible 404: main's old sample URLs were never
+  // published by the authoritative gh-pages/Cloudflare company site.
+  const redirects=read('_redirects').trim().split('\n');
+  assert.deepEqual(redirects,[
+    '/sample /decision-evidence 301',
+    '/sample.html /decision-evidence 301',
+    '/decision-evidence-sample /decision-evidence 301',
+    '/decision-evidence-sample.html /decision-evidence 301'
+  ],'Previously shared sample URLs must resolve to the published example');
+  assert(site.PUBLIC_FILES.includes('decision-evidence.html'),'Redirect target must be published');
+  assert(info.files.some(file=>file.path==='_redirects'),'Redirect rules must be fingerprinted');
+  assert(!read('sitemap.xml').includes('/sample</loc>'),'Sitemap must not advertise obsolete alias');
+
   for(const name of site.listFilesRecursive(out)){
     assert(!fs.readFileSync(path.join(out,name)).includes('UNRELATED_SOURCE_CANARY'),name+' leaked unrelated content');
   }
