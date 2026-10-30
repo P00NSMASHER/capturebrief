@@ -1,0 +1,405 @@
+{
+  "schema": "capturebrief-fy2027-gzip-range-sample-observation-v1",
+  "source_evidence_run": "https://github.com/P00NSMASHER/capturebrief/actions/runs/39353747897",
+  "candidate_code_head": "ce3fa8b05d688838b1a71ab18be6c6cd84f35290",
+  "status": "UNREVIEWED_BOUNDED_PUBLIC_SOURCE_RANGE_SAMPLE_ONLY",
+  "candidate_year_count": 34,
+  "successful_sampled_year_count": 34,
+  "archive_declared_original_bytes": 20333624076,
+  "sampled_source_bytes": 11479599,
+  "sampled_fraction_of_total_declared_bytes": 0.000564562,
+  "gzip_sample_weighted_proxy_bytes": 4937346330,
+  "gzip_proxy_fraction_of_declared_bytes": 0.242816839,
+  "sampling_is_independent_original_file_digest_proof": false,
+  "gzip_proxy_is_actual_compressed_archive_size": false,
+  "gzip_proxy_is_upper_bound": false,
+  "capacity_fits_current_paam_verified": false,
+  "raw_original_bytes_durably_retained": false,
+  "publisher_origin_independently_approved": false,
+  "fiscal_year_catalog_approved": false,
+  "private_history_index_updated": false,
+  "disk_encryption_verified": false,
+  "encrypted_offdevice_backup_and_key_escrow_verified": false,
+  "customer_release_authorized": false,
+  "external_send_authorized": false,
+  "group_evidence": [
+    {
+      "name": "early-history",
+      "observed_at": "2026-10-20T01:30:22.970647+00:00",
+      "years": [
+        1969,
+        1970,
+        1980,
+        1981,
+        1998,
+        1999,
+        2000,
+        2001,
+        2002
+      ],
+      "source_sample_bytes": 1649199,
+      "subset_original_metadata_bytes": 221115170,
+      "subset_gzip_proxy_bytes": 67437146
+    },
+    {
+      "name": "fy2003-2011",
+      "observed_at": "2026-10-20T01:30:22.570120+00:00",
+      "years": [
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011
+      ],
+      "source_sample_bytes": 3538944,
+      "subset_original_metadata_bytes": 4621848325,
+      "subset_gzip_proxy_bytes": 1165627298
+    },
+    {
+      "name": "fy2012-2020",
+      "observed_at": "2026-10-20T01:30:29.348601+00:00",
+      "years": [
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020
+      ],
+      "source_sample_bytes": 3538944,
+      "subset_original_metadata_bytes": 8556414010,
+      "subset_gzip_proxy_bytes": 2009533416
+    },
+    {
+      "name": "fy2021-2027",
+      "observed_at": "2026-10-20T01:30:16.145374+00:00",
+      "years": [
+        2021,
+        2022,
+        2023,
+        2024,
+        2025,
+        2026,
+        2027
+      ],
+      "source_sample_bytes": 2752512,
+      "subset_original_metadata_bytes": 6934246571,
+      "subset_gzip_proxy_bytes": 1694748470
+    }
+  ],
+  "year_observations": [
+    {
+      "fiscal_year": 1969,
+      "declared_original_bytes": 685,
+      "sampled_source_bytes": 513,
+      "sample_gzip_bytes": 388,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.756335,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 1970,
+      "declared_original_bytes": 2712,
+      "sampled_source_bytes": 2031,
+      "sample_gzip_bytes": 1168,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.575086,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 1980,
+      "declared_original_bytes": 1157,
+      "sampled_source_bytes": 867,
+      "sample_gzip_bytes": 580,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.668973,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 1981,
+      "declared_original_bytes": 685,
+      "sampled_source_bytes": 513,
+      "sample_gzip_bytes": 388,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.756335,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 1998,
+      "declared_original_bytes": 96549,
+      "sampled_source_bytes": 72411,
+      "sample_gzip_bytes": 20679,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.285578,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 1999,
+      "declared_original_bytes": 2157836,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 106496,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.270833,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2000,
+      "declared_original_bytes": 1770534,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 101011,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.256884,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2001,
+      "declared_original_bytes": 2406431,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 121785,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.309715,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2002,
+      "declared_original_bytes": 214678581,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 120196,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.305674,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2003,
+      "declared_original_bytes": 324283219,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 108256,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.275309,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2004,
+      "declared_original_bytes": 331835249,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 102689,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.261152,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2005,
+      "declared_original_bytes": 349434253,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 113347,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.288256,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2006,
+      "declared_original_bytes": 394729913,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 98563,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.250659,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2007,
+      "declared_original_bytes": 454622118,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 81390,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.206985,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2008,
+      "declared_original_bytes": 550880793,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 106558,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.270991,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2009,
+      "declared_original_bytes": 677444123,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 94393,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.240054,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2010,
+      "declared_original_bytes": 765674599,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 96387,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.245125,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2011,
+      "declared_original_bytes": 772944058,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 99877,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.254,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2012,
+      "declared_original_bytes": 836409111,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 94393,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.240054,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2013,
+      "declared_original_bytes": 860352514,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 102950,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.261815,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2014,
+      "declared_original_bytes": 907453638,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 85902,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.21846,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2015,
+      "declared_original_bytes": 908653070,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 94249,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.239688,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2016,
+      "declared_original_bytes": 905524721,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 106833,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.27169,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2017,
+      "declared_original_bytes": 988776106,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 92707,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.235766,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2018,
+      "declared_original_bytes": 1041498110,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 71604,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.182098,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2019,
+      "declared_original_bytes": 963400158,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 101991,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.259377,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2020,
+      "declared_original_bytes": 1144346582,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 85485,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.2174,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2021,
+      "declared_original_bytes": 1139857166,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 108784,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.276652,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2022,
+      "declared_original_bytes": 1175188610,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 99267,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.252449,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2023,
+      "declared_original_bytes": 1277614651,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 95949,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.244011,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2024,
+      "declared_original_bytes": 1151944809,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 69404,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.176503,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2025,
+      "declared_original_bytes": 1164543804,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 100120,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.254618,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2026,
+      "declared_original_bytes": 1023490271,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 104012,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.264516,
+      "source_publisher_original_verified": false
+    },
+    {
+      "fiscal_year": 2027,
+      "declared_original_bytes": 1607260,
+      "sampled_source_bytes": 393216,
+      "sample_gzip_bytes": 100895,
+      "disjoint_range_count": 3,
+      "sample_gzip_ratio": 0.256589,
+      "source_publisher_original_verified": false
+    }
+  ]
+}
