@@ -29,6 +29,8 @@ Private storage on GitHub is a provider choice, not blanket permission to handle
 
 The pilot is intentionally size-limited to **900,000 encrypted bytes per complete-case bundle**, and the configured private repository must remain within a **40,000 KB inspected size**. Larger backups must **fail closed** for an explicitly reviewed storage plan, not silently create extra cloud charges or drop original evidence. GitHub private repositories can consume account storage, so confirm free-plan limits before expanding this bounded pilot. No automatic pruning or deletion is implemented.
 
+Before an upload or retrieval the transport now checks the **canonical, bounded full-case AES-GCM envelope format**, including field types, salt/nonce, declared plaintext size, payload length and tag-length position. These checks reject a plaintext file with only a forged magic prefix. **They do not authenticate the ciphertext or prove a valid complete-case ZIP without the independently held recovery phrase.** The operator must first run `full_case_backup.py verify`; only an actual separate-device restore can establish operational recovery.
+
 Each encrypted backup is stored immutably at a content-addressed path that includes its SHA-256. GitHub's private API must re-read and match every byte after upload, including on retries. A digest/path collision or wrong remote original blocks; no overwrites or forced pushes. Only hashes, sizes and non-sensitive status appear on output.
 
 ## Operator commands

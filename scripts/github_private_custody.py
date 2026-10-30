@@ -15,7 +15,9 @@ from __future__ import annotations
 
 import argparse
 import base64
+import binascii
 import hashlib
+import struct
 import json
 import os
 import re
@@ -31,7 +33,8 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from capturebrief_core.accepted_case_release import _root, _reject_private_path_links
 from capturebrief_core.atomic_io import atomic_write_bytes
-from scripts.full_case_backup import MAGIC
+from scripts.full_case_backup import MAGIC, MAX_HEADER, MAX_PLAIN, SCHEMA
+from scripts.scoped_private_backup import KDF_N, KDF_R, KDF_P, _canon, _unique
 
 # Same EXISTING GitHub private-cloud provider as PermitPlate; never its dataset.
 # A dedicated private repository is essential because GitHub tokens have
@@ -152,6 +155,55 @@ def inspect_private_destination(
     }
 
 
+
+def _validate_complete_case_envelope(raw: bytes) -> None:
+    """Bounded keyless format validation, NOT AES-GCM authentication.
+
+    Only full_case_backup.py verify with the separately retained recovery
+    phrase authenticates the original encrypted sources and the GCM tag.
+    This catches plaintext prepended with the public format magic before any
+    remote write and rejects malformed files on retrieval.
+    """
+    start = len(MAGIC)
+    if (not isinstance(raw, bytes) or not raw.startswith(MAGIC)
+            or len(raw) < start + 4 + 16):
+        raise PrivateStorageBlocked("Incomplete full-case encrypted envelope")
+    head_length = struct.unpack(">I", raw[start:start + 4])[0]
+    end = start + 4 + head_length
+    if not 0 < head_length <= MAX_HEADER or len(raw) < end + 16:
+        raise PrivateStorageBlocked("Full-case encrypted envelope header missing")
+    head = raw[start + 4:end]
+    try:
+        header = json.loads(head.decode("utf-8"), object_pairs_hook=_unique)
+    except (UnicodeError, ValueError, TypeError):
+        raise PrivateStorageBlocked("Full-case encrypted envelope metadata invalid") from None
+    fields = {
+        "schema", "cipher", "kdf", "n", "r", "p", "salt_b64",
+        "nonce_b64", "plaintext_sha256", "plaintext_bytes",
+    }
+    if (not isinstance(header, dict) or set(header) != fields
+            or _canon(header) != head
+            or header["schema"] != SCHEMA
+            or header["cipher"] != "AES-256-GCM"
+            or header["kdf"] != "scrypt"
+            or any(type(header[k]) is not int for k in ("n", "r", "p"))
+            or (header["n"], header["r"], header["p"]) != (KDF_N, KDF_R, KDF_P)
+            or type(header["plaintext_bytes"]) is not int
+            or not 0 < header["plaintext_bytes"] <= MAX_PLAIN
+            or not isinstance(header["plaintext_sha256"], str)
+            or not HEX64.fullmatch(header["plaintext_sha256"])
+            or len(raw) != end + header["plaintext_bytes"] + 16):
+        raise PrivateStorageBlocked("Full-case encrypted envelope is inconsistent")
+    try:
+        salt = base64.b64decode(header["salt_b64"], validate=True)
+        nonce = base64.b64decode(header["nonce_b64"], validate=True)
+    except (TypeError, ValueError, binascii.Error):
+        raise PrivateStorageBlocked("Full-case encrypted envelope salt/nonce invalid") from None
+    if (len(salt) != 16 or len(nonce) != 12
+            or base64.b64encode(salt).decode("ascii") != header["salt_b64"]
+            or base64.b64encode(nonce).decode("ascii") != header["nonce_b64"]):
+        raise PrivateStorageBlocked("Full-case encrypted envelope salt/nonce malformed")
+
 def _remote_path(digest: str) -> str:
     if not isinstance(digest, str) or not HEX64.fullmatch(digest):
         raise PrivateStorageBlocked("Exact encrypted backup SHA-256 required")
@@ -187,6 +239,7 @@ def _read_remote(
             hashlib.sha256(raw).hexdigest() != digest or
             not raw.startswith(MAGIC)):
         raise PrivateStorageBlocked("Remote ciphertext does not match content-addressed identity")
+    _validate_complete_case_envelope(raw)
     return raw
 
 
@@ -208,6 +261,7 @@ def _source_bytes(path: str | Path) -> bytes:
         raise PrivateStorageBlocked("Encrypted file changed during inspection")
     if len(raw) != before.st_size or not raw.startswith(MAGIC):
         raise PrivateStorageBlocked("Source is not a complete-case encrypted backup")
+    _validate_complete_case_envelope(raw)
     return raw
 
 
