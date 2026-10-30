@@ -97,7 +97,7 @@ def _inspect_index_for_explicit_years(
         if schema is None or schema["value"] != str(INDEX_SCHEMA_VERSION):
             raise ValueError("History index schema version is not supported")
         rows = [dict(row) for row in conn.execute(
-            "SELECT c.slot, c.checked_at, c.collection_mode, "
+            "SELECT c.slot, s.slot AS snapshot_slot, c.checked_at, c.collection_mode, "
             "s.source_kind, s.fiscal_year, s.source_url, s.extract_sha256, "
             "s.size_bytes, s.observed_at, s.local_path "
             "FROM current_sources c JOIN source_snapshots s "
@@ -117,7 +117,8 @@ def _inspect_index_for_explicit_years(
         expected = ACTIVE_DOWNLOAD if fy is None else ARCHIVE_DOWNLOAD.format(fy=fy)
         checked = parse_dt(row.get("checked_at"))
         observed = parse_dt(row.get("observed_at"))
-        if (row.get("collection_mode") != APPROVED_FETCH
+        if (row.get("snapshot_slot") != slot
+                or row.get("collection_mode") != APPROVED_FETCH
                 or row.get("source_url") != expected
                 or row.get("source_kind") != ("ACTIVE" if fy is None else "ARCHIVE")
                 or row.get("fiscal_year") != fy
