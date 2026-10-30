@@ -209,6 +209,31 @@ class GitHubPrivateCustodyTests(unittest.TestCase):
         self.assertNotIn("GITHUB_TEST_TOKEN", result.stdout + result.stderr)
         self.assertEqual(self.provider.writes, 0)
 
+    def test_new_write_must_reserve_repo_headroom_but_duplicate_is_allowed(self):
+        # GitHub's repo-size estimate is KiB, not an upload admission check.
+        # A repository already at the configured bound must never grow.
+        encrypted = custody.MAGIC + b"F" * 2048
+        self.source.write_bytes(encrypted)
+        if os.name != "nt":
+            self.source.chmod(0o600)
+        self.provider.size = custody.MAX_REPOSITORY_KB - 1
+        with self.assertRaises(custody.PrivateStorageBlocked):
+            custody.store_encrypted_backup(
+                self.source, self.TOKEN, transport=self.provider
+            )
+        self.assertEqual(self.provider.writes, 0)
+        self.assertEqual(self.provider.files, {})
+
+        # An exact-address replay is read-only, so should remain idempotent.
+        digest = hashlib.sha256(encrypted).hexdigest()
+        self.provider.files[custody._remote_path(digest)] = encrypted
+        replay = custody.store_encrypted_backup(
+            self.source, self.TOKEN, transport=self.provider
+        )
+        self.assertFalse(replay["new_write"])
+        self.assertEqual(replay["sha256"], digest)
+        self.assertEqual(self.provider.writes, 0)
+
     def test_bad_digest_and_oversized_repository_metadata_rejected(self):
         for value in ("", "0" * 63, "ab/../1" + "f" * 55, None):
             with self.subTest(value=value):
