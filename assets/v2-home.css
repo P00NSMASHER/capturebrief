@@ -1,0 +1,15 @@
+/* CaptureBrief 2.0 first-customer value proof on the actual company homepage. */
+.capture .v2-home-proof{background:#eef5ef;padding:70px 0;border-top:1px solid #cddfd7;border-bottom:1px solid #cddfd7}
+.capture .v2-home-frame{display:grid;grid-template-columns:1.18fr 1fr;gap:38px;align-items:center}
+.capture .v2-home-headline{font-size:clamp(26px,3.6vw,43px);line-height:1.11;letter-spacing:-.035em;color:#124740;margin:10px 0 18px}
+.capture .v2-home-proof p{color:#3d5e56;line-height:1.65}
+.capture .v2-home-label{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#086b61;font-weight:820}
+.capture .v2-home-actions{display:flex;flex-wrap:wrap;gap:12px;margin:22px 0}
+.capture .v2-home-preview{background:white;border:1px solid #bdd5c7;border-radius:13px;box-shadow:0 22px 55px #183d321c;padding:25px}
+.capture .v2-home-preview small{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:750;color:#587870}
+.capture .v2-home-preview h3{font-size:19px;color:#0e4c42;line-height:1.25;margin:9px 0 15px}
+.capture .v2-home-preview .v2-mini{display:flex;gap:9px;align-items:start;margin:10px 0;padding:10px;background:#f4f9f5;border-left:3px solid #b78c45}
+.capture .v2-home-preview .v2-mini strong{font-size:12px;color:#245f51}.capture .v2-home-preview .v2-mini span{font-size:12px;color:#41635c}
+.capture .v2-home-preview .v2-mini:last-child{border-left-color:#168678}
+.capture .v2-home-safety{font-size:12px!important;color:#546c65!important}
+@media(max-width:700px){.capture .v2-home-proof{padding:44px 0}.capture .v2-home-frame{grid-template-columns:1fr;gap:18px}.capture .v2-home-preview{padding:19px}}

@@ -22,6 +22,8 @@ from cloudflare_edge_integrity import verify_public_html_bytes
 SOURCES = (
     "index.html", "assets/capturebrief.js", "assets/capturebrief.css",
     "privacy.html", "terms.html", "data-handling.html",
+    "pursuit-qa-v2.html", "assets/v2-report.css", "assets/v2-report.js",
+    "samples/FAA-SAVES-CaptureBrief-2.0.txt",
 )
 
 

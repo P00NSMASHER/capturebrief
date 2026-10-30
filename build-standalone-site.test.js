@@ -105,6 +105,36 @@ try{
   site.checkLocalReferences(out);
   assert(read('404.html').includes('href="/assets/enterprise.css?v=2"'),'Nested 404 must load styles from root');
   assert(read('index.html').includes('$149'));
+
+  // CaptureBrief 2.0 must ship a genuine real-public-notice *demonstration*
+  // with printable customer-style layout, explicit fictional-assumption labels
+  // and working same-origin downloadable report. Do not invent active bids.
+  const v2=read('pursuit-qa-v2.html');
+  const v2text=read('samples/FAA-SAVES-CaptureBrief-2.0.txt');
+  const v2js=read('assets/v2-report.js');
+  const v2css=read('assets/v2-report.css');
+  assert(v2.includes('CaptureBrief 2.0'));
+  assert(v2.includes('FAA SAVES'));
+  assert(v2.includes('697DCK-25-R-00302'));
+  assert(v2.includes('8d0ffb0c1a154a70867730271b456760'));
+  assert(v2.includes('All five') || v2.includes('five bidder assumptions'));
+  assert(v2.includes('illustrative') && v2.includes('August 28, 2026'));
+  assert(v2.includes('deadline has passed') || v2.includes('response date has passed'));
+  assert(v2.includes('Print / Save as PDF'));
+  assert(v2.includes('href="/samples/FAA-SAVES-CaptureBrief-2.0.txt"'));
+  assert(v2text.includes('REAL PUBLIC PROCUREMENT, ILLUSTRATIVE BUYER ASSUMPTIONS'));
+  assert(v2text.includes('https://sam.gov/opp/8d0ffb0c1a154a70867730271b456760/view'));
+  assert(v2text.includes('Actual customer involved: NO'));
+  assert(v2css.includes('@media print'));
+  assert(v2js.includes('window.print') && !v2js.includes('fetch('));
+  assert(read('index.html').includes('href="/pursuit-qa-v2"'));
+  assert(read('index.html').includes('href="/samples/FAA-SAVES-CaptureBrief-2.0.txt"'));
+  assert(read('sitemap.xml').includes(site.SITE_BASE+'pursuit-qa-v2</loc>'));
+  assert(info.files.some(file=>file.path==='pursuit-qa-v2.html'));
+  assert(info.files.some(file=>file.path==='samples/FAA-SAVES-CaptureBrief-2.0.txt'));
+  assert(!v2.includes('https://buy.stripe.com'));
+  assert(!v2.includes('https://capturebrief.netlify.app'));
+
   assert(read('index.html').includes('data-purchase-policy="scope-first"'));
   assert.equal((read('index.html').match(/class="[^"]*review-request-link[^"]*" href="#request" data-request-type="SCOPE_FIRST"/g)||[]).length,4);
   assert(read('index.html').includes('JP Enterprises'));

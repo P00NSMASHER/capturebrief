@@ -30,6 +30,7 @@ const PUBLIC_FILES=Object.freeze([
   "404.html",
   "data-handling.html",
   "decision-evidence.html",
+  "pursuit-qa-v2.html",
   "favicon.svg",
   "index.html",
   "privacy.html",
@@ -39,6 +40,9 @@ const PUBLIC_FILES=Object.freeze([
   "assets/enterprise.css",
   "assets/enterprise.js",
   "assets/evidence.css",
+  "assets/v2-report.css",
+  "assets/v2-report.js",
+  "assets/v2-home.css",
   "assets/fonts/azeret-mono-latin-wght-normal.woff2",
   "assets/fonts/familjen-grotesk-latin-wght-normal.woff2",
   "assets/fonts/newsreader-latin-wght-italic.woff2",
@@ -55,7 +59,8 @@ const PUBLIC_FILES=Object.freeze([
   "examples/manifest.json",
   "examples/original.txt",
   "examples/rule-2025.txt",
-  "examples/rule-2026.txt"
+  "examples/rule-2026.txt",
+  "samples/FAA-SAVES-CaptureBrief-2.0.txt"
 ]);
 // Cloudflare Pages recognizes _redirects only when it is in the built dist/.
 // These are legacy links people were actually given for the product sample.

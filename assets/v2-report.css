@@ -1,0 +1,83 @@
+/* CaptureBrief 2.0: buyer-facing decision preview. Zero external fonts/scripts. */
+.v2-page{--v2-ink:#102c32;--v2-green:#086b61;--v2-gold:#c59b3b;--v2-line:#d3dedc;--v2-muted:#506869;--v2-deep:#082d31;background:#f1f5f2;color:var(--v2-ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55}
+.v2-page *{box-sizing:border-box}.v2-page a{color:#08645e;overflow-wrap:anywhere}.v2-page a:focus-visible,.v2-page button:focus-visible{outline:3px solid #d3ac54;outline-offset:3px}
+.v2-page .v2-top{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#082d31;color:#fff;padding:16px max(20px,calc((100% - 1120px)/2))}
+.v2-page .v2-top .word{display:flex;align-items:center;gap:11px;text-decoration:none;color:white;font-weight:850;font-size:18px;letter-spacing:-.045em}
+.v2-page .v2-top img{height:37px;width:37px;object-fit:contain}
+.v2-page .v2-top .brand-note{font-weight:500;color:#b6d2ce;font-size:12px;letter-spacing:0}
+.v2-page .v2-menu{display:flex;align-items:center;gap:15px;flex-wrap:wrap}
+.v2-page .v2-menu a{font-size:12px;color:#d8f2ec;text-decoration:none;font-weight:680}
+.v2-page .v2-menu a:last-child{border:1px solid #6bb3aa;border-radius:100px;padding:8px 12px}
+.v2-page .v2-wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.v2-page .v2-hero{background:linear-gradient(145deg,#082d31,#174a46);color:white;padding:57px 0 72px;position:relative;overflow:hidden}
+.v2-page .v2-hero::after{content:"";position:absolute;inset:auto -70px -160px auto;width:550px;height:550px;border:1px solid #69978a75;border-radius:50%;pointer-events:none}
+.v2-page .v2-kicker{color:#a0e1d2;font-size:12px;letter-spacing:.18em;font-weight:800;text-transform:uppercase}
+.v2-page .v2-hero h1{font-size:clamp(34px,5.7vw,65px);letter-spacing:-.045em;line-height:1.06;margin:13px 0 18px;max-width:800px;color:white}
+.v2-page .v2-hero p{font-size:16px;line-height:1.62;max-width:690px;color:#e0f4ee}
+.v2-page .v2-badges{display:flex;gap:9px;flex-wrap:wrap;margin:22px 0}.v2-page .v2-badges span{font-size:11px;padding:7px 11px;border:1px solid #86aaa4;color:#edfef9;border-radius:100px}
+.v2-page .v2-hero-actions,.v2-page .v2-actions{display:flex;gap:12px;flex-wrap:wrap;margin:25px 0 0}
+.v2-page .v2-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:8px;border:1px solid var(--v2-green);font-size:13px;font-weight:780;min-height:43px;padding:10px 17px;text-decoration:none;background:var(--v2-green);color:#fff;cursor:pointer;letter-spacing:.01em}
+.v2-page .v2-btn:hover{filter:brightness(1.09)}.v2-page .v2-btn.ghost{background:transparent;border-color:#8dbab1;color:#e9fffa}
+.v2-page .v2-btn.paper{background:#fff;color:#174b46;border-color:#adcac5}
+.v2-page .v2-banner{margin-top:-30px;position:relative;z-index:1;background:#fcf4da;border-left:5px solid #d1a43d;padding:15px 19px;border-radius:6px;box-shadow:0 12px 30px #082d3124;color:#51482e;font-size:13px;line-height:1.6}
+.v2-page .v2-doc{margin:29px auto 0;background:#fff;border:1px solid #cbdcd6;border-radius:13px;box-shadow:0 25px 70px #06342f1b;overflow:hidden}
+.v2-page .v2-doc-header{padding:26px 34px;background:#f6faf8;border-bottom:1px solid var(--v2-line);display:flex;align-items:start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.v2-page .v2-doc-header .small{font-size:12px;color:#516c69}
+.v2-page .v2-doc-header h2{font-size:clamp(21px,3vw,31px);line-height:1.15;color:#153e3a;margin:6px 0 9px;letter-spacing:-.03em}
+.v2-page .v2-id{font-size:12px;color:#3d625e;background:#e6f1eb;border:1px solid #c7dfd2;padding:9px 11px;border-radius:8px;max-width:250px}
+.v2-page .v2-document-main{padding:25px 34px}
+.v2-page .v2-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-bottom:23px}
+.v2-page .v2-stat{background:#f4f8f5;border:1px solid #d5e3dc;border-radius:9px;padding:16px}
+.v2-page .v2-stat strong{font-size:31px;line-height:1;display:block;color:#154d45}.v2-page .v2-stat small{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#55716b;font-weight:750}
+.v2-page .v2-lead{border:1px solid #b9d9cd;background:#eff9f3;border-radius:10px;padding:18px 21px;margin-bottom:25px}
+.v2-page .v2-lead strong{display:block;color:#205c4d;font-size:12px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.v2-page .v2-lead p{font-size:14px;margin:0;line-height:1.6}
+.v2-page h2.v2-section-title{font-size:21px;color:#103832;letter-spacing:-.022em;margin:22px 0 13px}
+.v2-page .v2-grid{display:grid;grid-template-columns:1fr;gap:13px}
+.v2-page .v2-finding{border:1px solid #dae5df;border-left:5px solid #b65b42;border-radius:9px;padding:17px 19px;background:#fff;break-inside:avoid}
+.v2-page .v2-finding.verify{border-left-color:#c69d36}.v2-page .v2-finding.monitor{border-left-color:#4e8687}
+.v2-page .v2-labels{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.v2-page .v2-label{font-size:10px;font-weight:830;border-radius:100px;padding:5px 9px;text-transform:uppercase;letter-spacing:.035em;background:#fbece8;color:#8a352b}
+.v2-page .v2-finding.verify .v2-label{color:#80611e;background:#faf2d9}
+.v2-page .v2-finding.monitor .v2-label{color:#275c65;background:#e8f5f6}
+.v2-page .v2-label.dark{color:#526861;background:#edf3ef}
+.v2-page .v2-finding h3{font-size:17px;letter-spacing:-.015em;color:#173c35;margin:10px 0 14px}
+.v2-page .v2-split{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.v2-page .v2-split strong{display:block;color:#326c5f;font-size:11px;letter-spacing:.095em;text-transform:uppercase}
+.v2-page .v2-split p{font-size:13px;line-height:1.58;margin:5px 0 0;color:#243e3b}
+.v2-page .v2-source-line{font-size:12px;line-height:1.65;padding-top:10px;border-top:1px solid #e4eee9;margin-top:13px;color:#57736a}
+.v2-page .v2-source-line a{font-weight:750}
+.v2-page .v2-foot{border-top:1px solid var(--v2-line);margin-top:28px;padding-top:18px;font-size:12px;color:#536c66}
+.v2-page .v2-foot ol{padding-left:21px}.v2-page .v2-foot li{margin:9px 0}
+.v2-page .v2-foot strong{color:#28544d}
+.v2-page .v2-section{padding:48px 0 70px}.v2-page .v2-section h2{font-size:clamp(23px,3vw,36px);line-height:1.18;color:#133d37;margin:0 0 16px;letter-spacing:-.035em}
+.v2-page .v2-secondary{color:#516a65;max-width:800px;line-height:1.68}
+.v2-page .v2-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:25px}
+.v2-page .v2-card{background:white;border:1px solid #cfddd5;border-radius:12px;padding:21px;box-shadow:0 8px 22px #143b3210}
+.v2-page .v2-card h3{font-size:16px;color:#164c41}.v2-page .v2-card p{font-size:13px;color:#526a64}
+.v2-page .v2-cta{background:#123f3a;padding:36px 0;color:#fff}.v2-page .v2-cta h2{color:white;font-size:clamp(21px,3vw,34px)}.v2-page .v2-cta p{color:#d3e7e0}
+.v2-page .v2-bottom{background:#082a27;color:#d6e9df;font-size:12px;padding:20px 0}
+.v2-page .v2-bottom a{color:#c7eede}
+.v2-page .v2-bottom .v2-wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.v2-page .v2-noscript{font-size:12px;line-height:1.5;color:#64726f}
+@media (max-width:750px){.v2-page .v2-menu{gap:11px}.v2-page .v2-hero{padding:33px 0 55px}
+ .v2-page .v2-doc-header,.v2-page .v2-document-main{padding:19px 15px}
+ .v2-page .v2-summary{gap:7px}.v2-page .v2-stat{padding:12px}.v2-page .v2-stat strong{font-size:23px}
+ .v2-page .v2-split{grid-template-columns:1fr;gap:12px}.v2-page .v2-cards{grid-template-columns:1fr}
+ .v2-page .v2-doc{margin-top:17px}.v2-page .v2-banner{margin-top:-22px}
+}
+@page{size:letter;margin:10mm}
+@media print{
+ .v2-page{background:#fff;color:#0c2828;font-size:11pt}.v2-page .v2-top,.v2-page .v2-hero,.v2-page .v2-banner,
+ .v2-page .v2-section,.v2-page .v2-cta,.v2-page .v2-bottom,.v2-page .v2-hero-actions,.v2-page .v2-actions{display:none!important}
+ .v2-page .v2-wrap{max-width:none;padding:0}
+ .v2-page .v2-doc{margin:0;box-shadow:none;border:0;border-radius:0}
+ .v2-page .v2-doc-header{padding:10px 0 12px}.v2-page .v2-doc-header h2{font-size:22px}
+ .v2-page .v2-document-main{padding:14px 0 0}
+ .v2-page .v2-stat{padding:10px;print-color-adjust:exact}
+ .v2-page .v2-lead{padding:10px 13px;margin-bottom:12px;print-color-adjust:exact}
+ .v2-page .v2-finding{padding:10px 12px;break-inside:avoid;print-color-adjust:exact}
+ .v2-page .v2-finding h3{font-size:13px;margin:7px 0}
+ .v2-page .v2-split p{font-size:11px}.v2-page .v2-source-line{font-size:10px}
+ .v2-page .v2-foot{font-size:10px;margin-top:17px}.v2-page .v2-foot li{margin:4px 0}
+}
