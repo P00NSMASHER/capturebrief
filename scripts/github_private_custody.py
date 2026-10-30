@@ -49,6 +49,11 @@ API_PREFIX = "/repos/" + DESTINATION_REPOSITORY
 MAX_ENCRYPTED_BYTES = 900_000  # GitHub Contents API bounded <= 1MB readback
 MAX_API_RESPONSE = 2_200_000
 MAX_REPOSITORY_KB = 40_000  # No silent unbounded paid/cloud consumption
+# A prospective Git commit consumes more than the ciphertext payload alone.
+# GitHub's repository size is approximate and can lag; this is a conservative
+# pre-upload budget gate, NOT evidence of provider billing or account quota.
+NEW_COMMIT_OVERHEAD_KB = 128
+NEW_COMMIT_PAYLOAD_FACTOR = 2
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -148,6 +153,7 @@ def inspect_private_destination(
         "same_provider_as_permitplate": True,
         "separate_from_permitplate_state": True,
         "private_repo_verified": True,
+        "observed_repository_kb": size,
         "production_backup_present": False,
         "independent_device_restore_verified": False,
         "recovery_key_custody_verified": False,
@@ -276,6 +282,18 @@ def store_encrypted_backup(
     digest = hashlib.sha256(raw).hexdigest()
     old = _read_remote(digest, token, transport)
     if old is None:
+        # Recheck immediately before the prospective mutation: initial
+        # preflight only establishes that the repo is currently under budget.
+        # Metadata may lag or race with unrelated writers, so it cannot be
+        # treated as a guarantee against cloud-billing or quota changes.
+        fresh = inspect_private_destination(token, transport=transport)
+        reserved_kb = NEW_COMMIT_OVERHEAD_KB + (
+            NEW_COMMIT_PAYLOAD_FACTOR * len(raw) + 1023
+        ) // 1024
+        if fresh["observed_repository_kb"] + reserved_kb > MAX_REPOSITORY_KB:
+            raise PrivateStorageBlocked(
+                "Insufficient verified private GitHub repository headroom"
+            )
         body = {
             "message": "CaptureBrief immutable encrypted backup " + digest[:12],
             "content": base64.b64encode(raw).decode("ascii"),
