@@ -107,6 +107,10 @@ def verify_browser() -> dict:
             assert "fictional@example.com" in draft
             assert not posts, "The inquiry composer attempted a network POST"
             assert page.url.startswith(BASE) and not page.url.startswith("mailto:")
+            # Check draft invalidation while we are still on the intake form.
+            # Do not navigate to the v2 report until this no-send test is done.
+            page.locator("#assumptions").fill("A different fictional question.")
+            assert "Request copied" not in page.locator("#request-status").inner_text()
 
             # PR workflows inspect the current BASE production SHA; the new
             # V2 route is not deployed until the reviewed gh-pages merge.
@@ -124,8 +128,6 @@ def verify_browser() -> dict:
                 assert "deadline has passed" in page.locator(".v2-banner").inner_text().lower() or "response date has passed" in page.locator(".v2-banner").inner_text().lower()
                 assert not posts, "V2 read-only sample unexpectedly posted data"
 
-            page.locator("#assumptions").fill("A different fictional question.")
-            assert "Request copied" not in page.locator("#request-status").inner_text()
             return {"browser": BROWSER, "fictional_local_draft_verified": True,
                     "form_posts": len(posts)}
         finally:
