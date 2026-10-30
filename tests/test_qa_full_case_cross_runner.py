@@ -6,6 +6,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
+try:
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM  # noqa: F401
+except ImportError:
+    CRYPTOGRAPHY_AVAILABLE = False
+else:
+    CRYPTOGRAPHY_AVAILABLE = True
+
 from scripts.qa_full_case_cross_runner import (
     CIPHERTEXT,
     RECEIPT,
@@ -14,6 +21,10 @@ from scripts.qa_full_case_cross_runner import (
 )
 
 
+@unittest.skipUnless(
+    CRYPTOGRAPHY_AVAILABLE,
+    "Pinned cryptography==46.0.4 required for encrypted cross-runner QA",
+)
 class FictionalCrossRunnerHarnessTests(unittest.TestCase):
     def test_exact_ciphertext_roundtrip_reconciles_all_originals(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
