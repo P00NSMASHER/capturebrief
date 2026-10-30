@@ -261,16 +261,20 @@ class SourceCoverageAuditTests(unittest.TestCase):
             root = Path(td)
             actual = root / "canonical-extracts"
             actual.mkdir()
-            db, _ = make_index(actual)
+            nested = actual / "frozen-originals"
+            nested.mkdir()
+            db, _ = make_index(nested)
             alias = root / "alias-extracts"
             try:
                 alias.symlink_to(actual, target_is_directory=True)
             except (OSError, NotImplementedError):
                 self.skipTest("Directory symlink unavailable on this runner")
+            # The selected root is NOT itself a symlink: only a parent is.
+            # The old root.is_symlink() test failed to notice this.
             with self.assertRaisesRegex(ValueError, "link|junction|private"):
                 inspect_private_index(db, fiscal_year=2026,
                                       now=NOW, verify_bytes=True,
-                                      snapshot_root=alias)
+                                      snapshot_root=alias / "frozen-originals")
 
 if __name__ == '__main__':
     unittest.main()
