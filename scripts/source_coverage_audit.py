@@ -32,7 +32,12 @@ def _private_regular(path: str | Path) -> Path:
     raw = Path(path).expanduser().absolute()
     # Reject every symlink/junction ancestor before resolving or reading the
     # index. A final regular file can still be reached via an unsafe alias.
-    _reject_private_path_links(raw)
+    try:
+        _reject_private_path_links(raw)
+    except ValueError:
+        # Preserve the existing read-only index error contract while
+        # refusing a symlink/junction anywhere in the ancestry.
+        raise ValueError("Index must be a private regular file outside public repository") from None
     if raw.is_relative_to(REPOSITORY) or raw.is_symlink():
         raise ValueError("Index must be a private regular file outside public repository")
     resolved = raw.resolve(strict=True)
