@@ -79,7 +79,7 @@ jobs:
         run: python -m unittest tests.test_scoped_source tests.test_scoped_private_backup tests.test_full_case_backup tests.test_qa_live_capturebrief_state_secret tests.test_authorization_ledger_snapshot tests.test_founder_curated_admission tests.test_free_check_registry_backup tests.test_accepted_case_release -v
 
 
-  encrypted-fictional-cloud-upload:
+  encrypted_fictional_cloud_upload:
     name: Private GitHub secret and fictional ciphertext readback (trusted main only)
     if: github.repository == 'P00NSMASHER/capturebrief' && github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: encrypted-backup-evidence
@@ -118,10 +118,10 @@ jobs:
           PYTHONDONTWRITEBYTECODE: '1'
         run: python scripts/qa_live_capturebrief_state_secret.py upload
 
-  encrypted-fictional-cloud-windows-restore:
+  encrypted_fictional_cloud_windows_restore:
     name: Separate Windows runner downloads and restores private GitHub ciphertext
     if: github.repository == 'P00NSMASHER/capturebrief' && github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: encrypted-fictional-cloud-upload
+    needs: encrypted_fictional_cloud_upload
     runs-on: windows-2022
     timeout-minutes: 8
     steps:
@@ -142,4 +142,4 @@ jobs:
           CAPTUREBRIEF_STATE_TOKEN: ${{ secrets.CAPTUREBRIEF_STATE_TOKEN }}
           PYTHONDONTWRITEBYTECODE: '1'
         run: |
-          python scripts/qa_live_capturebrief_state_secret.py restore --sha256 "${{ needs.encrypted-fictional-cloud-upload.outputs.ciphertext_sha256 }}"
+          python scripts/qa_live_capturebrief_state_secret.py restore --sha256 "${{ needs.encrypted_fictional_cloud_upload.outputs.ciphertext_sha256 }}"
