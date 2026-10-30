@@ -77,16 +77,3 @@ jobs:
         run: python -m compileall -q capturebrief_core/scoped_source.py capturebrief_core/accepted_case_release.py capturebrief_core/authorization_ledger.py scripts/prepare_scoped_sam.py scripts/scoped_private_backup.py scripts/full_case_backup.py scripts/qa_live_capturebrief_state_secret.py scripts/snapshot_authorization_ledger.py scripts/free_check_registry_backup.py scripts/check_accepted_case_release.py
       - name: Run real code against deliberately synthetic offline tests
         run: python -m unittest tests.test_scoped_source tests.test_scoped_private_backup tests.test_full_case_backup tests.test_qa_live_capturebrief_state_secret tests.test_authorization_ledger_snapshot tests.test_founder_curated_admission tests.test_free_check_registry_backup tests.test_accepted_case_release -v
-
-      - name: Main-only read-only check of the new CaptureBrief private repo secret
-        if: github.repository == 'P00NSMASHER/capturebrief' && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          CAPTUREBRIEF_STATE_TOKEN: ${{ secrets.CAPTUREBRIEF_STATE_TOKEN }}
-          PYTHONDONTWRITEBYTECODE: '1'
-        run: python scripts/qa_live_capturebrief_state_secret.py preflight
-      - name: Main-only encrypted FICTIONAL GitHub backup readback and restore
-        if: github.repository == 'P00NSMASHER/capturebrief' && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          CAPTUREBRIEF_STATE_TOKEN: ${{ secrets.CAPTUREBRIEF_STATE_TOKEN }}
-          PYTHONDONTWRITEBYTECODE: '1'
-        run: python scripts/qa_live_capturebrief_state_secret.py roundtrip

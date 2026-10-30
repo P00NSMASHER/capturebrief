@@ -4,24 +4,15 @@
 
 Use a **separate dedicated private GitHub repository** under the same existing account: `P00NSMASHER/capturebrief-state`. The separate repository was **confirmed private with an initialized `main` on October 30, 2026**. The owner reports placing a fine-grained token in the public application's `CAPTUREBRIEF_STATE_TOKEN` Actions secret; its effective permission and first authenticated transfer require the new main-only readback test, not an assertion based on the secret's name. The code refuses any unapproved destination or credential scope.
 
-## Live owner-secret functional rehearsal
+## Live owner-secret functional rehearsal: VERIFIED WITH FICTIONAL CASES
 
-After merging the dedicated QA change, the existing scoped-security Actions
-workflow will run a **main-branch-only** check against the new GitHub private
-repository. The first job verifies private visibility with the Actions
-secret, then encrypts 13 **fictional** case components with a **published
-test-only recovery key**, stores only AES-256-GCM ciphertext in the private
-repository and re-reads its exact SHA-256. A **separate Windows runner**
-downloads the ciphertext using the same scoped Actions secret, decrypts it
-with the publicly known test key and verifies every reconstructed fake file.
+**Verified October 30, 2026:** [CaptureBrief Actions run #41024445424](https://github.com/P00NSMASHER/capturebrief/actions/runs/41024445424) completed **successfully on both Linux and Windows** at merged commit `09562f7f73370b30879b01d3c6e8b3634cc8e27c`. Each independently started runner used GitHub's protected `CAPTUREBRIEF_STATE_TOKEN` repository secret to read the private `P00NSMASHER/capturebrief-state` repository, then encrypted a **fully fictional** 13-component case using the public `TEST_KEY`, uploaded only AES-256-GCM bytes, re-read the content-addressed bytes from the actual private repository, decrypted them locally and verified 13 exact original hashes.
 
-The private cloud can only be considered FUNCTIONALLY TESTED if both
-authenticated jobs pass on the same merged revision and the private
-repository still contains no real customer information. This test does
-**not** establish secure production key custody or an owner-approved
-independent-device disaster-recovery procedure; the test key is public and
-should never be used for customer records. No customer contact or billing
-is authorized.
+Two small encrypted demo objects were observed under `encrypted/complete-case/v1/` in `P00NSMASHER/capturebrief-state`. No real customer identity, customer report, plaintext, production encryption key, external send or payment was involved. PermitPlate's private operational repository is a different repository and was never a backup destination.
+
+**Precisely established:** owner-created GitHub Actions secret WORKS for private GitHub authenticated reading and a small real write/readback, and the application backup/restore code interoperates with GitHub on both Linux and Windows. **Not established:** independently held production recovery key, actual off-device restore by a separate authorized owner device, permission-policy approval, customer data storage authorization, or complete SAM.gov amendment history. The two tests each restored a file on their own runner, **not the same archive across two different physical devices**.
+
+The one-time automatic live upload was removed after successful verification. Subsequent routine CI uses mocked provider storage and fictional test keys without reading the private repository secret or uploading new ciphertext. New live exercises require an explicit, separately reviewed main-branch test action.
 
 ## Owner-only setup, no new service or paid membership
 
