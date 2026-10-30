@@ -139,6 +139,23 @@ def main() -> None:
     assert info.get("sourceRepository") == "P00NSMASHER/capturebrief"
     assert info.get("canonical") == BASE
     assert info.get("purchasePolicy") == "SCOPE_FIRST_PENDING_SOURCE_READINESS"
+    if os.environ.get("GITHUB_EVENT_NAME") == "pull_request":
+        # This PR's new source must NOT be compared to the OLD live homepage.
+        # The website's exact proposed bytes were built and tested earlier in
+        # this workflow. The live production proof concerns its BASE SHA only.
+        # Post-merge push will run the full source-byte and v2 page checks.
+        if os.environ.get("PR_BASE_COMMIT") != EXPECTED_SHA:
+            raise AssertionError("PR production baseline is not the selected base revision")
+        baseline = verify_browser()
+        print(json.dumps({
+            "status": "BASE_PRODUCTION_NO_SEND_VERIFIED_PR_CONTENT_NOT_DEPLOYED",
+            "production_base_sha": EXPECTED_SHA,
+            "proposed_release_live": False,
+            "proposed_source_bytes_verified_on_cloudflare": False,
+            "customer_delivery_authorized": False, "payment_authorized": False,
+            **baseline,
+        }, indent=2, sort_keys=True))
+        return
     manifest = info.get("files")
     assert isinstance(manifest, list) and info.get("publicFileCount") == len(manifest)
     by_path = {item["path"]: item for item in manifest}
