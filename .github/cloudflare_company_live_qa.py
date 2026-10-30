@@ -107,8 +107,27 @@ def verify_browser() -> dict:
             assert "fictional@example.com" in draft
             assert not posts, "The inquiry composer attempted a network POST"
             assert page.url.startswith(BASE) and not page.url.startswith("mailto:")
+            # Check draft invalidation while we are still on the intake form.
+            # Do not navigate to the v2 report until this no-send test is done.
             page.locator("#assumptions").fill("A different fictional question.")
             assert "Request copied" not in page.locator("#request-status").inner_text()
+
+            # PR workflows inspect the current BASE production SHA; the new
+            # V2 route is not deployed until the reviewed gh-pages merge.
+            if os.environ.get("GITHUB_EVENT_NAME") == "push":
+                # On the same exact Cloudflare production commit, independently
+                # open the V2 public-source product example and its five findings.
+                sample = page.goto(BASE + "pursuit-qa-v2.html?qa_v2=" + EXPECTED_SHA[:12],
+                                   wait_until="domcontentloaded", timeout=30000)
+                assert sample is not None and sample.status == 200
+                assert page.locator("#v2-document-heading").count() == 1
+                assert page.locator(".v2-finding").count() == 5
+                assert page.locator("#print-v2").count() == 1
+                assert page.locator('a[href*="FAA-SAVES-CaptureBrief-2.0.txt"]').count() >= 1
+                assert "illustrative" in page.locator(".v2-banner").inner_text().lower()
+                assert "deadline has passed" in page.locator(".v2-banner").inner_text().lower() or "response date has passed" in page.locator(".v2-banner").inner_text().lower()
+                assert not posts, "V2 read-only sample unexpectedly posted data"
+
             return {"browser": BROWSER, "fictional_local_draft_verified": True,
                     "form_posts": len(posts)}
         finally:
@@ -122,6 +141,23 @@ def main() -> None:
     assert info.get("sourceRepository") == "P00NSMASHER/capturebrief"
     assert info.get("canonical") == BASE
     assert info.get("purchasePolicy") == "SCOPE_FIRST_PENDING_SOURCE_READINESS"
+    if os.environ.get("GITHUB_EVENT_NAME") == "pull_request":
+        # This PR's new source must NOT be compared to the OLD live homepage.
+        # The website's exact proposed bytes were built and tested earlier in
+        # this workflow. The live production proof concerns its BASE SHA only.
+        # Post-merge push will run the full source-byte and v2 page checks.
+        if os.environ.get("PR_BASE_COMMIT") != EXPECTED_SHA:
+            raise AssertionError("PR production baseline is not the selected base revision")
+        baseline = verify_browser()
+        print(json.dumps({
+            "status": "BASE_PRODUCTION_NO_SEND_VERIFIED_PR_CONTENT_NOT_DEPLOYED",
+            "production_base_sha": EXPECTED_SHA,
+            "proposed_release_live": False,
+            "proposed_source_bytes_verified_on_cloudflare": False,
+            "customer_delivery_authorized": False, "payment_authorized": False,
+            **baseline,
+        }, indent=2, sort_keys=True))
+        return
     manifest = info.get("files")
     assert isinstance(manifest, list) and info.get("publicFileCount") == len(manifest)
     by_path = {item["path"]: item for item in manifest}

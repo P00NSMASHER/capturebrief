@@ -66,6 +66,25 @@ jobs:
           fi
           python .github/cloudflare_company_live_qa.py
 
+  publication-source-scope:
+    name: Source-only Pages path selection / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Adversarial generated-dist and sibling-source scope regressions
+        run: python -m unittest discover -s .github -p 'test_capturebrief_publication_paths.py' -v
   browser-check:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
@@ -86,6 +105,8 @@ jobs:
         run: node build-standalone-site.test.js
       - name: Compile production smoke acceptance before publication
         run: python -m py_compile .github/cloudflare_company_live_qa.py
+      - name: Reject generated Cloudflare dist as a legacy GitHub Pages source
+        run: python -m unittest discover -s .github -p 'test_capturebrief_publication_paths.py' -v
       - name: Compare public Cloudflare response bytes with generated release (diagnostic only)
         if: matrix.browser == 'chromium'
         run: |
@@ -147,7 +168,10 @@ jobs:
           base = 'https://p00nsmasher.github.io/capturebrief/'
           paths = ['index.html','permitplate/index.html','assets/clarity.css','decision-evidence.html','assets/evidence.css','assets/enterprise.css','assets/enterprise.js','assets/capturebrief.css','assets/capturebrief.js','assets/og-capturebrief.png','assets/visuals/hero-council.webp','assets/visuals/evidence-layers.webp','assets/visuals/reviewer-desk.webp','assets/visuals/change-watch.webp','assets/visuals/architecture-grid.webp','assets/visuals/capturebrief-social.jpg','assets/fonts/newsreader-latin-wght-normal.woff2','assets/fonts/newsreader-latin-wght-italic.woff2','assets/fonts/familjen-grotesk-latin-wght-normal.woff2','assets/fonts/azeret-mono-latin-wght-normal.woff2','favicon.svg','examples/manifest.json']
           paths += [x['path'] for x in json.loads(Path('examples/manifest.json').read_text())['files']]
-          paths += [p.as_posix() for p in Path('.').rglob('*.html') if not p.as_posix().startswith(('.github/', 'qa-output/', '.git/')) and p.as_posix() not in paths]
+          import sys
+          sys.path.insert(0, str(Path('.github').resolve()))
+          from capturebrief_publication_paths import discover_source_html
+          paths += discover_source_html(Path('.'), already_expected=paths)
           expected = {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths}
           observed = {}
           retired_status = None

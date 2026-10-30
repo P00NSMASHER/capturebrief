@@ -45,7 +45,11 @@ class CloudflareCompleteManifestTests(unittest.TestCase):
         def read(path):
             return (Path("dist") / path).read_bytes(), {}
         with patch.object(smoke, "fetch", side_effect=read), patch.object(
-                smoke, "assert_private_not_published", return_value=None):
+                smoke, "assert_private_not_published", return_value=None), patch.object(
+                smoke, "verify_live_sample_aliases", return_value={
+                    "aliases_verified": 4, "target_verified": True,
+                    "external_send_authorized": False, "payment_authorized": False,
+                }):
             return smoke.inspect_release(manifest)
 
     def test_positive_exact_local_manifest(self):

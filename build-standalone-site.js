@@ -30,6 +30,7 @@ const PUBLIC_FILES=Object.freeze([
   "404.html",
   "data-handling.html",
   "decision-evidence.html",
+  "pursuit-qa-v2.html",
   "favicon.svg",
   "index.html",
   "privacy.html",
@@ -39,6 +40,9 @@ const PUBLIC_FILES=Object.freeze([
   "assets/enterprise.css",
   "assets/enterprise.js",
   "assets/evidence.css",
+  "assets/v2-report.css",
+  "assets/v2-report.js",
+  "assets/v2-home.css",
   "assets/fonts/azeret-mono-latin-wght-normal.woff2",
   "assets/fonts/familjen-grotesk-latin-wght-normal.woff2",
   "assets/fonts/newsreader-latin-wght-italic.woff2",
@@ -55,9 +59,21 @@ const PUBLIC_FILES=Object.freeze([
   "examples/manifest.json",
   "examples/original.txt",
   "examples/rule-2025.txt",
-  "examples/rule-2026.txt"
+  "examples/rule-2026.txt",
+  "samples/FAA-SAVES-CaptureBrief-2.0.txt"
 ]);
-const GENERATED_FILES=Object.freeze(['robots.txt','sitemap.xml','_headers']);
+// Cloudflare Pages recognizes _redirects only when it is in the built dist/.
+// These are legacy links people were actually given for the product sample.
+// The main branch has different Netlify-oriented files; only the current
+// gh-pages Decision Evidence example is published on the company hostname.
+const STANDALONE_REDIRECTS=[
+  '/sample /decision-evidence 301',
+  '/sample.html /decision-evidence 301',
+  '/decision-evidence-sample /decision-evidence 301',
+  '/decision-evidence-sample.html /decision-evidence 301',
+  ''
+].join('\n');
+const GENERATED_FILES=Object.freeze(['robots.txt','sitemap.xml','_headers','_redirects']);
 const STANDALONE_HEADERS="/*\n"+
   "  Strict-Transport-Security: max-age=86400\n"+
   "  X-Content-Type-Options: nosniff\n"+
@@ -243,6 +259,7 @@ function build(options={}){
   }
   const pages=PUBLIC_FILES.filter(name=>name.endsWith('.html')&&name!=='404.html');
   fs.writeFileSync(path.join(out,'_headers'),STANDALONE_HEADERS);
+  fs.writeFileSync(path.join(out,'_redirects'),STANDALONE_REDIRECTS);
   fs.writeFileSync(path.join(out,'robots.txt'),'User-agent: *\nAllow: /\nSitemap: '+SITE_BASE+'sitemap.xml\n');
   fs.writeFileSync(path.join(out,'sitemap.xml'),'<?xml version="1.0" encoding="UTF-8"?>\n'+
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+
@@ -283,7 +300,7 @@ if(require.main===module){
     publicFileCount:info.publicFileCount,output:'dist'
   },null,2));
 }
-module.exports={ROOT,OUT,SITE_BASE,LEGACY_SITE_BASE,GROUP_URL,PURCHASE_POLICY,PUBLIC_FILES,GENERATED_FILES,
+module.exports={ROOT,OUT,SITE_BASE,LEGACY_SITE_BASE,GROUP_URL,PURCHASE_POLICY,PUBLIC_FILES,GENERATED_FILES,STANDALONE_REDIRECTS,
   RUNTIME_FILES,sha256File,fingerprint,listFilesRecursive,validateSources,
   hasDirectCheckout,cleanHtmlUrl,rootReference,transformHtml,checkLocalReferences,build};
 

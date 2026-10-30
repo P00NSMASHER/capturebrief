@@ -10,6 +10,9 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import urllib.error
+import urllib.parse
+import urllib.request
 
 from cloudflare_company_live_qa import (
     BASE, EXPECTED_SHA, fetch, current_release, assert_private_not_published,
@@ -19,9 +22,64 @@ from cloudflare_edge_integrity import verify_public_html_bytes
 SOURCES = (
     "index.html", "assets/capturebrief.js", "assets/capturebrief.css",
     "privacy.html", "terms.html", "data-handling.html",
+    "pursuit-qa-v2.html", "assets/v2-report.css", "assets/v2-report.js",
+    "samples/FAA-SAVES-CaptureBrief-2.0.txt",
 )
 
 
+
+class _DoNotFollow(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def verify_live_sample_aliases(info: dict) -> dict:
+    """Verify the exact source-pinned redirects, then inspect actual target bytes.
+
+    Do this only after current_release has confirmed this gh-pages commit.
+    Redirects are static Pages artifacts, not user-controlled browser scripts.
+    """
+    expected_rules = [
+        "/sample /decision-evidence 301",
+        "/sample.html /decision-evidence 301",
+        "/decision-evidence-sample /decision-evidence 301",
+        "/decision-evidence-sample.html /decision-evidence 301",
+    ]
+    raw = (Path("dist") / "_redirects").read_bytes()
+    rules = raw.decode("utf-8").strip().splitlines()
+    if rules != expected_rules:
+        raise AssertionError("Company sample redirect policy differs from approved aliases")
+    manifests = {item.get("path"): item for item in info.get("files", [])
+                 if isinstance(item, dict)}
+    if ("_redirects" not in manifests
+            or hashlib.sha256(raw).hexdigest() != manifests["_redirects"].get("sha256")):
+        raise AssertionError("Deployed redirect rules missing exact-source fingerprint")
+    target_expected = (Path("dist") / "decision-evidence.html").read_bytes()
+    target_observed, _ = fetch("decision-evidence")
+    if target_observed != target_expected:
+        verify_public_html_bytes(target_expected, target_observed)
+    opener = urllib.request.build_opener(_DoNotFollow())
+    for source in ("sample", "sample.html", "decision-evidence-sample",
+                   "decision-evidence-sample.html"):
+        request = urllib.request.Request(
+            BASE + source,
+            headers={"User-Agent": "CaptureBrief-redirect-readonly/1.0",
+                     "Cache-Control": "no-cache"},
+        )
+        try:
+            with opener.open(request, timeout=18) as response:
+                status, location = response.status, response.headers.get("Location")
+        except urllib.error.HTTPError as error:
+            status, location = error.code, error.headers.get("Location")
+        if status != 301 or not location:
+            raise AssertionError("Old sample link did not return expected permanent redirect")
+        actual_url = urllib.parse.urljoin(BASE, location)
+        parsed = urllib.parse.urlsplit(actual_url)
+        if (parsed.scheme != "https" or parsed.hostname != "capturebrief.retallyrecovery.com"
+                or parsed.path != "/decision-evidence"):
+            raise AssertionError("Sample alias redirects outside the approved public example")
+    return {"aliases_verified": 4, "target_verified": True,
+            "external_send_authorized": False, "payment_authorized": False}
 
 def verify_complete_manifest(info: dict) -> None:
     """Bind every advertised public file and build fingerprint to local dist.
@@ -96,10 +154,12 @@ def inspect_release(info: dict) -> dict:
     for forbidden in ("capturebrief_core/scoped_source.py","scripts/scoped_private_backup.py",
                       "abvm/game/index.html"):
         assert_private_not_published(forbidden)
+    redirects=verify_live_sample_aliases(info)
     return {
         "status":"CAPTUREBRIEF_PRODUCTION_EXACT_COMMIT_AND_EDGE_INTEGRITY_VERIFIED",
         "commit":EXPECTED_SHA, "source_count":len(SOURCES),
-        "content_modes":modes, "browser_interaction_in_this_job":False,
+        "content_modes":modes, "sample_aliases":redirects,
+        "browser_interaction_in_this_job":False,
         "form_posts":0, "direct_checkout_authorized":False,
         "customer_release_authorized":False, "external_send_authorized":False,
     }

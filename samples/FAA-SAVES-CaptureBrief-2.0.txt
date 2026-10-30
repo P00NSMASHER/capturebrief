@@ -1,0 +1,92 @@
+CAPTUREBRIEF 2.0 | 90-SECOND DECISION BRIEF
+REAL PUBLIC PROCUREMENT, ILLUSTRATIVE BUYER ASSUMPTIONS
+Archived example assembled October 30, 2026. Not a live bid or customer delivery.
+
+Pursuit: FAA SAVES
+Solicitation: 697DCK-25-R-00302
+Referenced public action: Amendment 0011, posted August 20, 2026
+Public response deadline: August 28, 2026 at 5:00 PM Eastern (NOW PASSED)
+Hypothetical customer posture: earlier submission assumed unchanged
+Actual customer involved: NO
+Production approval or complete official family-chain certified: NO
+
+FIRST ACTION (HISTORICAL)
+Before the expired Small Business Pool deadline, a proposal lead would have
+needed to confirm the complete Amendment 0011 package, including revised
+Tier 2A OEM treatment and the Small Business-only resubmission instructions.
+Today this is a closed case study; it is not a submission recommendation.
+
+3 ACTION-CHANGING / 1 VERIFY-NOW / 1 TIMING UPDATE
+
+A1. "We've already submitted; only revised pages are needed."
+    Status: CONTRADICTED, ACTION-CHANGING
+    Public finding: Amendment 0011 required all Small Business Pool
+    offerors, including earlier submitters, to provide a complete proposal
+    package rather than refer to an earlier package. Potential
+    nonresponsiveness was expressly raised in the announcement.
+    Next action for a comparable OPEN pursuit: Rebuild and check the whole
+    required package, including applicable past-performance material.
+    Source: Amendment 0011, submission instructions.
+
+A2. "F5 and Tanium remain Tier 1A for Small Business."
+    Status: SUPERSEDED, ACTION-CHANGING
+    Public finding: Amendment 0011 moved F5 and Tanium from Tier 1A into
+    Tier 2A for Small Business and revised Section L.11.2.1 and
+    Attachments 2A and 3A.
+    Next action: Review the original revised worksheets and confirm
+    product/pricing and OEM authorization coverage.
+    Source: Amendment 0011, Section L.11.2.1, Attachments 2A and 3A.
+
+A3. "Both pools can resubmit during the extension."
+    Status: CONTRADICTED, ACTION-CHANGING
+    Public finding: The Small Business Pool corrective action did not
+    reopen Unrestricted Pool proposals.
+    Next action: Do not infer cross-pool eligibility or timing.
+    Source: Amendment 0011 pool-specific language.
+
+A4. "Our older official files must still control."
+    Status: SOURCE-LIMITED, VERIFY-NOW
+    Public observation: The record described corrected or reuploaded
+    documents and the latest action changed certain attachments.
+    Required evidence: Retain exact official amendment files, a
+    deletion-aware attachment inventory, dates, provenance, and hashes.
+    If the controlling originals are unavailable, mark HOLD.
+    Source: historical 0009/0010 corrections and Amendment 0011.
+
+A5. "August 12 is still the Small Business deadline."
+    Status: SUPERSEDED, TIMING CONFIRMATION
+    Public finding: Amendment 0011 set August 28, 2026 at 17:00 ET for
+    the Small Business Pool. The deadline has passed.
+    Next action: Preserve the time-zone-correct historical record;
+    do not treat this example as an active opportunity.
+    Source: Amendment 0010 and Amendment 0011 public notices.
+
+PRIMARY GOVERNMENT NOTICE:
+https://sam.gov/opp/8d0ffb0c1a154a70867730271b456760/view
+
+SECONDARY NOTICE-HISTORY CROSS-REFERENCE:
+https://govtribe.com/opportunity/federal-contract-opportunity/screening-information-request-sir-for-the-strategic-sourcing-for-the-acquisition-of-various-supplies-and-equipment-saves-697dck25r00302
+
+LIMITS AND TRUST BOUNDARY
+* This is a demonstration of an action-first briefing format, not a
+  complete authenticated retained-original customer report.
+* All five buyer assumptions are invented. No actual customer, proposal,
+  bid outcome, award or customer ROI is represented.
+* The web sample has not authenticated every attachment or amendment
+  original, nor independently certified the full solicitation-family
+  history. A real case with unresolved evidence stays HOLD.
+* CaptureBrief does not provide legal advice, eligibility certifications,
+  automated submission or win-probability predictions.
+* The included 14-day change watch in a real purchased service begins
+  after the accepted, reviewed customer baseline is delivered. No live
+  watch is operating on this archived example.
+
+WHAT A PAID BUYER RECEIVES
+A concise action-first decision brief, exact preserved reviewed source
+passages/version evidence, reviewed rule applicability where relevant,
+explicit missing-evidence requests, and a bounded 14-day targeted change
+watch. Human release approval and per-case source verification remain
+separate safeguards. Pilot scope and timing are confirmed before any fee.
+
+PUBLIC PRODUCT: https://capturebrief.retallyrecovery.com/
+PRINTABLE SAMPLE: https://capturebrief.retallyrecovery.com/pursuit-qa-v2
