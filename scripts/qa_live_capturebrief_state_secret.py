@@ -177,6 +177,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="action", required=True)
     sub.add_parser("preflight")
     sub.add_parser("upload")
+    sub.add_parser("roundtrip")
     restored = sub.add_parser("restore")
     restored.add_argument("--sha256", required=True)
     args = parser.parse_args(argv)
@@ -187,6 +188,21 @@ def main(argv: list[str] | None = None) -> int:
         elif args.action == "upload":
             phase = "FICTIONAL_AES_GCM_PRIVATE_UPLOAD"
             report = encrypt_upload()
+        elif args.action == "roundtrip":
+            phase = "FICTIONAL_SAME_RUNNER_PRIVATE_CLOUD_ROUNDTRIP"
+            sent = encrypt_upload()
+            received = independently_restore(sent["sha256"])
+            if received["file_count"] != sent["file_count"]:
+                raise ValueError("Fictional original count mismatch")
+            report = {
+                "status": "FICTIONAL_ENCRYPTED_PRIVATE_CLOUD_ROUNDTRIP_VERIFIED",
+                "source_originals_rehashed": received["file_count"],
+                "real_customer_material_used": False,
+                "separate_device_disaster_recovery_proven": False,
+                "production_recovery_key_proven": False,
+                "customer_release_authorized": False,
+                "external_send_performed": False,
+            }
         else:
             phase = "FICTIONAL_SECOND_RUNNER_RESTORE"
             report = independently_restore(args.sha256)
