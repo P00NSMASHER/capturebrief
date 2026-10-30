@@ -88,7 +88,7 @@ class DeliveryVerifyTests(unittest.TestCase):
             expected_case_sha256=self.receipt["case_sha256"],
         )
         self.assertTrue(report["integrity_verified"], report)
-        self.assertEqual(report["verified_file_count"], 6)
+        self.assertEqual(report["verified_file_count"], 7)
         self.assertFalse(report["external_send_authorized"])
         self.assertFalse(report["content_review_performed"])
         self.assertFalse(report["source_currentness_rechecked"])
