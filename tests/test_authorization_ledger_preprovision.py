@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
+from contextlib import closing
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -54,7 +55,7 @@ class SharedNoncePreprovisionTests(unittest.TestCase):
         self.assertFalse(self.ledger.exists(), "a deleted ledger must never be recreated")
 
     def test_existing_empty_sqlite_without_authorization_schema_cannot_be_repaired(self):
-        with sqlite3.connect(self.ledger) as db:
+        with closing(sqlite3.connect(self.ledger)) as db, db:
             db.execute("PRAGMA user_version=1")
         if os.name != "nt":
             self.ledger.chmod(0o600)
@@ -73,7 +74,7 @@ class SharedNoncePreprovisionTests(unittest.TestCase):
         self.assertFalse(first["external_send_performed"])
         with self.assertRaises(AcceptedCaseBlocked):
             self.reserve()
-        with sqlite3.connect(self.ledger) as db:
+        with closing(sqlite3.connect(self.ledger)) as db:
             self.assertEqual(db.execute(
                 "SELECT COUNT(*) FROM single_message_authorizations"
             ).fetchone()[0], 1)
