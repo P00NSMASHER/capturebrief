@@ -215,5 +215,62 @@ class SourceCoverageAuditTests(unittest.TestCase):
                 inspect_private_index(link, fiscal_year=2026, now=NOW)
 
 
-if __name__ == "__main__":
+
+    def test_indexed_original_with_symlinked_parent_is_not_trusted(self):
+        # is_file(), size and SHA may all pass when an intermediate directory
+        # aliases a different original *inside* the same approved root.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            db, paths = make_index(root)
+            original = paths["ARCHIVE:2026"]
+            actual = root / "other-version"
+            actual.mkdir()
+            original.rename(actual / original.name)
+            alias = root / "shortcut"
+            try:
+                alias.symlink_to(actual, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                self.skipTest("Directory symlink unavailable on this runner")
+            with closing(sqlite3.connect(db)) as conn, conn:
+                conn.execute(
+                    "UPDATE source_snapshots SET local_path=? WHERE slot='ARCHIVE:2026'",
+                    (str(alias / original.name),),
+                )
+            result = inspect_private_index(db, fiscal_year=2026,
+                                           now=NOW, verify_bytes=True)
+            self.assertIn("ARCHIVE:2026", result["missing_or_wrong_size_file_slots"])
+            self.assertFalse(result["local_file_hashes_match"])
+
+    def test_index_parent_symlink_cannot_alias_private_database(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            actual = root / "canonical-index"
+            actual.mkdir()
+            db, _ = make_index(actual)
+            alias = root / "alias-index"
+            try:
+                alias.symlink_to(actual, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                self.skipTest("Directory symlink unavailable on this runner")
+            with self.assertRaisesRegex(ValueError, "link|junction|private"):
+                inspect_private_index(alias / db.name, fiscal_year=2026,
+                                      now=NOW, verify_bytes=True)
+
+    def test_approved_extract_root_rejects_symlinked_parent(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            actual = root / "canonical-extracts"
+            actual.mkdir()
+            db, _ = make_index(actual)
+            alias = root / "alias-extracts"
+            try:
+                alias.symlink_to(actual, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                self.skipTest("Directory symlink unavailable on this runner")
+            with self.assertRaisesRegex(ValueError, "link|junction|private"):
+                inspect_private_index(db, fiscal_year=2026,
+                                      now=NOW, verify_bytes=True,
+                                      snapshot_root=alias)
+
+if __name__ == '__main__':
     unittest.main()
