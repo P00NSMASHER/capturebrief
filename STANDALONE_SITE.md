@@ -29,6 +29,37 @@ The exact public file list, count, byte sizes, and SHA-256 values are generated 
 
 `build-info.json` identifies CaptureBrief, its canonical hostname, repository, source branch and `CF_PAGES_COMMIT_SHA` (preferred over other revision variables). It records both source-content and generated-artifact fingerprints.
 
+## CaptureBrief 2.0 buyer-facing report
+
+The **actual company hostname** includes a new real-public-source example,
+**pursuit-qa-v2.html**, with responsive styling in **assets/v2-report.css**,
+a no-network print-to-PDF button, and a downloadable text companion
+**samples/FAA-SAVES-CaptureBrief-2.0.txt**. The homepage links directly to
+both. The page uses the FAA SAVES 697DCK-25-R-00302 notice and its August 20,
+2026 Amendment 0011 as a real historical public example, with an official
+SAM.gov action URL and an independent public notice-history cross-reference.
+
+**Critical disclosure:** the five buyer assumptions are hypothetical. This
+sample is NOT a live procurement opportunity (deadline Aug 28, 2026 has passed),
+not an actual buyer result, not a legal/bid qualification decision and not
+a complete release-cleared archive of every original amendment/attachment.
+Its explicit remaining source-verification actions remain HOLD until original
+bytes are independently established for a real customer.
+
+The standalone source allowlist and exact-fingerprint publication now include
+the new HTML, JS/CSS and downloadable report. CI verifies the article's
+closed-date and illustrative labels, correct government notice identifier,
+five action/verification flags and local download. After the merged production
+release only, both Playwright browsers and the exact Cloudflare edge-byte job
+verify the served v2 sample, original file integrity, print control and
+no customer POST. PR previews continue checking the *currently live* source
+revision without falsely assuming the new page has already been deployed.
+
+The separate **main** product-engine changes under v2 upgrade add
+**action-brief.html** to the real eight-file hash-manifested buyer ZIP. Website
+publication and real case delivery authority are distinct. No payment, token,
+customer send or private intake control changed in this website upgrade.
+
 ## Request and trial contract
 
 The current request composer includes company/contact identity, explicit unverified payment language, lossless legal identifiers, a complete manual-copy fallback, and the one-assumption free-pilot request. Free inquiries require one canonical public SAM.gov notice link and reject control-character injection, while all request types invalidate stale clipboard drafts on edits. The ten-business supervised limit is an operator admission gate, **not** a count enforced by this static no-send website. Those repairs carry forward the relevant intent of historical PR #50 on the current branded website. The trial is supervised: preparing a request neither admits a business, starts work, verifies sources nor sends email. The Python core on `main` remains the authority for intake and delivery readiness. Rebuild both public targets and verify the served bytes before claiming the request change is live.
