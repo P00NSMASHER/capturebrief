@@ -20,6 +20,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from capturebrief_core.authorization_ledger import reserve_once
+from scripts.snapshot_authorization_ledger import initialize_empty_ledger, create_snapshot
 from capturebrief_core.accepted_case_release import (
     AcceptedCaseBlocked, canonical, inspect_accepted_case, sha256,
     signature_payload, verify_attestations, _file, _official, _json_file, _root,
@@ -95,6 +96,13 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
                 self.add(ident, kind, canonical(receipt))
             else:
                 self.add(ident, kind, ("FICTIONAL " + kind).encode())
+        # Real SQLite serialization and schema, with a fictional zero-row ledger.
+        # This is not an independent remote restore or a live customer proof.
+        nonce_live = self.root / "nonce-live.sqlite"
+        nonce_snapshot = self.root / "nonce-snapshot.sqlite"
+        initialize_empty_ledger(nonce_live)
+        create_snapshot(nonce_live, nonce_snapshot)
+        self.add("nonce_snapshot", "AUTHORIZATION_LEDGER_SNAPSHOT", nonce_snapshot.read_bytes())
         self.add("backup", "OFFDEVICE_BACKUP", b"FICTIONAL encrypted backup bytes")
         files_to_restore = {
             x["id"]: x["sha256"] for x in self.rows
@@ -140,6 +148,7 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
             },
             "private_storage": {
                 "backup_file": "backup", "recovery_receipt_file": "recovery",
+                "authorization_ledger_snapshot_file": "nonce_snapshot",
                 "approved_by_owner": True, "encrypted_at_rest": True,
                 "private_acl_checked": True, "separate_recovery_key_custody": True,
                 "approval_reference": "fictional QA approval reference",
@@ -379,6 +388,58 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
         self.sign()
         # This only exercises the gate with fictional keys and a mocked core.
         self.assertEqual(self.check()["source_action_count"], 2)
+
+    def test_signed_case_missing_one_use_authorization_ledger_snapshot_must_block(self):
+        # RED: six fictional test signatures and a recovered registry alone
+        # must never authorize release without the separately preserved
+        # one-message authorization ledger and its off-device receipt.
+        self.assertTrue(any(
+            x["kind"] == "AUTHORIZATION_LEDGER_SNAPSHOT" for x in self.rows
+        ))
+        self.rows[:] = [x for x in self.rows
+                        if x["kind"] != "AUTHORIZATION_LEDGER_SNAPSHOT"]
+        # Even with newly signed claims, the missing original must still block.
+        self.sign()
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.check()
+
+    def test_signed_wrong_type_or_unreadable_nonce_snapshot_blocks(self):
+        self.manifest["private_storage"]["authorization_ledger_snapshot_file"] = "registry"
+        self.sign()
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.check()
+        self.manifest["private_storage"]["authorization_ledger_snapshot_file"] = "nonce_snapshot"
+        changed = b"not a SQLite snapshot even though it is newly signed"
+        row = next(x for x in self.rows if x["id"] == "nonce_snapshot")
+        path = self.root / row["path"]
+        path.write_bytes(changed)
+        if os.name != "nt":
+            path.chmod(0o600)
+        row["sha256"] = sha256(changed)
+        receipt_path = self.root / "recovery.bin"
+        receipt = json.loads(receipt_path.read_bytes())
+        receipt["restored_files"]["nonce_snapshot"] = sha256(changed)
+        updated = canonical(receipt)
+        receipt_path.write_bytes(updated)
+        if os.name != "nt":
+            receipt_path.chmod(0o600)
+        next(x for x in self.rows if x["id"] == "recovery")["sha256"] = sha256(updated)
+        self.sign()
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.check()
+
+    def test_independent_restore_inventory_cannot_omit_nonce_snapshot(self):
+        receipt_path = self.root / "recovery.bin"
+        receipt = json.loads(receipt_path.read_bytes())
+        receipt["restored_files"].pop("nonce_snapshot")
+        updated = canonical(receipt)
+        receipt_path.write_bytes(updated)
+        if os.name != "nt":
+            receipt_path.chmod(0o600)
+        next(x for x in self.rows if x["id"] == "recovery")["sha256"] = sha256(updated)
+        self.sign()
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.check()
 
     def test_missing_primary_storage_separate_restore_or_complete_inventory_blocks(self):
         self.manifest["private_storage"]["separate_recovery_key_custody"] = False

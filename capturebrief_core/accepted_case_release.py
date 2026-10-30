@@ -35,7 +35,8 @@ ROLES = (
 REQUIRED_KINDS = {
     "CASE", "HISTORY", "RESOURCE_INVENTORY", "BUSINESS_EVIDENCE",
     "INBOUND_RECEIPT", "SCOPE_AGREEMENT", "REPORT",
-    "REPORT_RECEIPT", "REGISTRY_SNAPSHOT", "OFFDEVICE_BACKUP",
+    "REPORT_RECEIPT", "REGISTRY_SNAPSHOT", "AUTHORIZATION_LEDGER_SNAPSHOT",
+    "OFFDEVICE_BACKUP",
     "RECOVERY_RECEIPT", "MESSAGE_BODY",
 }
 SINGLETON_KINDS = REQUIRED_KINDS
@@ -400,6 +401,7 @@ def _restore_and_identity(manifest: dict[str, Any], files: dict[str, dict[str, A
     for fid, kind in (
         (storage.get("backup_file"), "OFFDEVICE_BACKUP"),
         (storage.get("recovery_receipt_file"), "RECOVERY_RECEIPT"),
+        (storage.get("authorization_ledger_snapshot_file"), "AUTHORIZATION_LEDGER_SNAPSHOT"),
         (business.get("identity_file"), "BUSINESS_EVIDENCE"),
         (business.get("inbound_receipt_file"), "INBOUND_RECEIPT"),
         (business.get("signed_scope_file"), "SCOPE_AGREEMENT"),
@@ -408,6 +410,16 @@ def _restore_and_identity(manifest: dict[str, Any], files: dict[str, dict[str, A
         (delivery.get("body_file"), "MESSAGE_BODY"),
     ):
         _kind(files, fid, kind)
+    # A signed list of filenames is not proof that the one-use send ledger
+    # was actually preserved. Reuse the WAL-consistent snapshot's canonical
+    # SQLite/schema/nonce verifier before accepting its restore receipt.
+    try:
+        from scripts.snapshot_authorization_ledger import _validate_bytes as check_nonce_snapshot
+        check_nonce_snapshot(data[storage["authorization_ledger_snapshot_file"]], now=now)
+    except (ImportError, OSError, ValueError):
+        raise AcceptedCaseBlocked(
+            "Signed case lacks a valid, independently recoverable one-use authorization ledger snapshot"
+        ) from None
     try:
         report_receipt = json.loads(data[report["report_receipt_file"]], object_pairs_hook=_unique)
     except (ValueError, UnicodeError):
