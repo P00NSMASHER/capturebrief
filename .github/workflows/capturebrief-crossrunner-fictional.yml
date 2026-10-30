@@ -65,3 +65,8 @@ jobs:
         with:
           name: capturebrief-fictional-crossrunner
           path: ${{ runner.temp }}/capturebrief-crossrunner-fictional/
+      - name: Reopen and authenticate all 13 fictional originals
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: cryptography==46.0.4
+          python scripts/qa_full_case_cross_runner.py consume --artifact-dir "$env:RUNNER_TEMP/capturebrief-crossrunner-fictional" --restore-dir "$env:RUNNER_TEMP/capturebrief-crossrunner-restore"
