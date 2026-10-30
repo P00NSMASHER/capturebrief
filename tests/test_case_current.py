@@ -1,8 +1,11 @@
+import copy
 import unittest
 from datetime import datetime, timezone
 
 from capturebrief_core.case_current import CaseCurrentError, apply_current_api_observation
 from capturebrief_core.current_api import SEARCH_URL
+from capturebrief_core.history import make_history_receipt
+from capturebrief_core.model import canonical_json, sha256_hex
 from capturebrief_core.data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD, issue_history_receipt_from_snapshots
 from capturebrief_core.workqueue import build_work_queue
 
@@ -119,6 +122,35 @@ class CaseCurrentTests(unittest.TestCase):
     def test_api_solicitation_must_match_history_family(self):
         with self.assertRaises(CaseCurrentError):
             apply_current_api_observation(case(),observation(sol="OTHER-SOL"))
+
+    def test_history_without_positive_solicitation_family_cannot_authorize_current(self):
+        # A legacy SAM_HISTORY receipt may validate its action IDs and byte
+        # digest without containing any solicitation-family identity. A fresh
+        # latest-active API record cannot fill that missing history proof.
+        candidate = case()
+        candidate["packet"]["history_receipts"] = [make_history_receipt(
+            candidate["packet"]["history_action_ids"],
+            source_url=f"https://sam.gov/opp/{A2}/view",
+            observed_at=NOW,
+            source_surface="SAM_HISTORY",
+            payload={"actions": [A1, A2], "family": {"unreviewed": True}},
+        )]
+        with self.assertRaisesRegex(CaseCurrentError, "solicitation family"):
+            apply_current_api_observation(candidate, observation())
+
+    def test_conflicting_valid_history_family_labels_cannot_use_matching_subset(self):
+        # Both receipts' hashes and action sets pass historical validation;
+        # disagreement about which solicitation they represent must still
+        # block current-source promotion, even when one matches the API.
+        candidate = case()
+        disagreeing = copy.deepcopy(candidate["packet"]["history_receipts"][0])
+        disagreeing["evidence_payload"]["family"]["solicitation_number"] = "OTHER-SOL"
+        disagreeing["evidence_payload_sha256"] = sha256_hex(
+            canonical_json(disagreeing["evidence_payload"])
+        )
+        candidate["packet"]["history_receipts"].append(disagreeing)
+        with self.assertRaisesRegex(CaseCurrentError, "solicitation family"):
+            apply_current_api_observation(candidate, observation())
 
     def test_unapproved_resource_link_blocks_transition(self):
         bad=f"https://sam.gov/opp/{A2}/view"
