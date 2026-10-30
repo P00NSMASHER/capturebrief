@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+from contextlib import closing
 import hashlib
 import json
 import os
@@ -293,11 +294,12 @@ class FreeTrialTests(unittest.TestCase):
                 "not-a-datetime",
             ):
                 with self.subTest(reserved_at=invalid):
-                    with sqlite3.connect(db) as conn:
-                        conn.execute(
-                            "UPDATE free_check_reservations SET reserved_at = ?",
-                            (invalid,),
-                        )
+                    with closing(sqlite3.connect(db)) as conn:
+                        with conn:
+                            conn.execute(
+                                "UPDATE free_check_reservations SET reserved_at = ?",
+                                (invalid,),
+                            )
                     observed = inspect_free_check(case, database_path=db, now=NOW)
                     self.assertFalse(observed["reservation_scope_matches"])
                     self.assertEqual(observed["state"], "BLOCKED_NO_RESERVATION")

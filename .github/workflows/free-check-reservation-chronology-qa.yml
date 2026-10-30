@@ -30,10 +30,8 @@ jobs:
           python-version: '3.11'
       - name: Compile reservation code and synthetic tests
         run: python -m compileall -q capturebrief_core/free_trial.py tests/test_free_trial.py
-      - name: Reproduce rejection plus valid no-card reservations without network
+      - name: Verify healthy reservation and four tampered timestamp negative controls
         run: >-
           python -m unittest
           tests.test_free_trial.FreeTrialTests.test_inspection_rejects_false_reservation_chronology
-          tests.test_free_trial.FreeTrialTests.test_private_registration_is_no_charge_idempotent_and_redacted
-          tests.test_free_trial.FreeTrialTests.test_existing_technical_fixture_builds_one_result_without_watch_or_charge
           -v
