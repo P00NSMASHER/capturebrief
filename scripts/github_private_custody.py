@@ -138,9 +138,8 @@ def inspect_private_destination(
     if type(size) is not int or not 0 <= size <= MAX_REPOSITORY_KB:
         raise PrivateStorageBlocked("Private repository storage exceeds bounded free pilot allowance")
     permissions = data.get("permissions")
-    if permissions is not None and (
-        not isinstance(permissions, dict) or permissions.get("push") is not True
-    ):
+    # Absent permissions are not evidence of Contents:write; fail closed.
+    if not isinstance(permissions, dict) or permissions.get("push") is not True:
         raise PrivateStorageBlocked("Dedicated private repository write permission unverified")
     return {
         "status": "CAPTUREBRIEF_PRIVATE_GITHUB_DESTINATION_VERIFIED",
