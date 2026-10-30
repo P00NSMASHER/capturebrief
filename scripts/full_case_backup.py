@@ -40,6 +40,8 @@ from scripts.scoped_private_backup import (
     _bytes, _canon, _crypto, _key, _new_file, _unique,
     KDF_N, KDF_R, KDF_P,
 )
+from scripts.free_check_registry_backup import _validate_snapshot as _validate_free_registry
+from scripts.snapshot_authorization_ledger import _validate_bytes as _validate_nonce_ledger
 
 SCHEMA = "capturebrief-complete-case-encrypted-backup-v1"
 INPUT_SCHEMA = "capturebrief-complete-case-backup-inventory-v1"
@@ -129,6 +131,29 @@ def _check_original_case_id(case_id: str, items: list[tuple[dict[str,Any],bytes]
         raise ValueError("Inventory case identity differs from original private case bytes")
 
 
+def _check_private_state_snapshots(
+    items: list[tuple[dict[str, Any], bytes]],
+) -> None:
+    """Verify the two required SQLite originals, not just their self-stated SHA.
+
+    A complete-case archive must actually contain recoverable, structurally
+    valid trial reservations and one-use delivery nonce histories. Both
+    validators require their exact existing schema and safe row invariants.
+    They do not infer approval, currentness or authority to restore/live-send.
+    """
+    for row, content in items:
+        try:
+            if row["kind"] == "REGISTRY_SNAPSHOT":
+                _validate_free_registry(content)
+            elif row["kind"] == "AUTHORIZATION_LEDGER_SNAPSHOT":
+                _validate_nonce_ledger(content)
+        except Exception:
+            # Database exceptions may contain source paths or sensitive data.
+            raise ValueError(
+                "Complete-case private SQLite snapshot failed structural verification"
+            ) from None
+
+
 def _collect(root: Path, input_file: Path) -> tuple[str,list[tuple[dict[str,Any],bytes]]]:
     # On Windows, a TemporaryDirectory can use an 8.3 alias while the
     # approved _root() resolves to the long canonical path. Reject symlink/
@@ -149,6 +174,7 @@ def _collect(root: Path, input_file: Path) -> tuple[str,list[tuple[dict[str,Any]
             raise ValueError("Complete case source bytes exceed secure backup limit")
         loaded.append((item,content))
     _check_original_case_id(inv["case_id"], loaded)
+    _check_private_state_snapshots(loaded)
     return inv["case_id"], loaded
 
 
@@ -304,6 +330,7 @@ def _open_complete(
                 raise ValueError("Backup's original source hash mismatch")
             loaded.append((expected[i],data))
     _check_original_case_id(manifest["case_id"], loaded)
+    _check_private_state_snapshots(loaded)
     return manifest["case_id"],loaded
 
 
