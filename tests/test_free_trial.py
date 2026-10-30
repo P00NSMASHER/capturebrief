@@ -273,5 +273,36 @@ class FreeTrialTests(unittest.TestCase):
                     build_free_check_report(bad, root / "blocked.md", database_path=db, now=historical)
 
 
+    def test_inspection_rejects_false_reservation_chronology(self):
+        """A tampered or future-dated SQLite row is not an eligible trial."""
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            case, receipt, _ = private_pair(root)
+            db = root / "trials.sqlite"
+            reserve_free_check(
+                db, case=case, receipt=receipt,
+                reviewed_business_key="domain:example.com",
+                identity_review_sha256=REVIEW, observed_at=NOW,
+            )
+            healthy = inspect_free_check(case, database_path=db, now=NOW)
+            self.assertTrue(healthy["reservation_scope_matches"])
+            for invalid in (
+                (NOW + timedelta(seconds=1)).isoformat(),
+                (NOW - timedelta(seconds=1)).isoformat(),
+                "2026-10-26T14:00:00",  # naive clock without UTC evidence
+                "not-a-datetime",
+            ):
+                with self.subTest(reserved_at=invalid):
+                    with sqlite3.connect(db) as conn:
+                        conn.execute(
+                            "UPDATE free_check_reservations SET reserved_at = ?",
+                            (invalid,),
+                        )
+                    observed = inspect_free_check(case, database_path=db, now=NOW)
+                    self.assertFalse(observed["reservation_scope_matches"])
+                    self.assertEqual(observed["state"], "BLOCKED_NO_RESERVATION")
+                    self.assertIn("FREE_CHECK_RESERVATION_REQUIRED", observed["blocker_codes"])
+
+
 if __name__ == "__main__":
     unittest.main()
