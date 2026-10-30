@@ -350,6 +350,16 @@ class AcceptedCaseReleaseTests(unittest.TestCase):
         # This only exercises the gate with fictional keys and a mocked core.
         self.assertEqual(self.check()["source_action_count"], 2)
 
+    def test_signed_case_missing_one_use_authorization_ledger_snapshot_must_block(self):
+        # RED: six fictional test signatures and a recovered registry alone
+        # must never authorize release without the separately preserved
+        # one-message authorization ledger and its off-device receipt.
+        self.assertFalse(any(
+            x["kind"] == "AUTHORIZATION_LEDGER_SNAPSHOT" for x in self.rows
+        ))
+        with self.assertRaises(AcceptedCaseBlocked):
+            self.check()
+
     def test_missing_primary_storage_separate_restore_or_complete_inventory_blocks(self):
         self.manifest["private_storage"]["separate_recovery_key_custody"] = False
         self.sign()
