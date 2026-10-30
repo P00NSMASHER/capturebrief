@@ -1,0 +1,39 @@
+name: CaptureBrief current-source positive family binding
+
+on:
+  pull_request:
+    paths:
+      - 'capturebrief_core/case_current.py'
+      - 'tests/test_case_current.py'
+      - '.github/workflows/capturebrief-current-family-binding.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: capturebrief-current-source-family-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  positive-source-correlation:
+    name: Fail-closed historical solicitation binding / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - name: Checkout proposed exact revision without token retention
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Configure pinned Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Compile source-correlation logic
+        run: python -m compileall -q capturebrief_core/case_current.py tests/test_case_current.py
+      - name: Adversarial history-family positive and negative controls
+        run: python -m unittest tests.test_case_current -v

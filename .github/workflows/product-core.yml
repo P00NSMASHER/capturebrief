@@ -19,8 +19,10 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.11'
-      - name: Compile product core
-        run: python -m compileall -q capturebrief_core
+      - name: Compile product core and private-cloud transport
+        run: python -m compileall -q capturebrief_core scripts/github_private_custody.py
+      - name: Test zero-network private GitHub storage boundaries
+        run: python -m unittest tests.test_github_private_custody -v
       - name: Run regression corpus
         run: python -m unittest discover -s tests -v
       - name: Netlify public deployment boundary
@@ -67,7 +69,8 @@ jobs:
           assert receipt['external_send_authorized'] is False
           with zipfile.ZipFile(path) as archive:
               assert archive.testzip() is None
-              assert len(archive.namelist()) == 7
+              assert len(archive.namelist()) == 8
+              assert 'action-brief.html' in archive.namelist()
           print('Verified actual CLI ZIP, independent hashes, and separate receipt.')
           PY
           EXPECTED_SHA="$(python -c "import json; print(json.load(open('/tmp/capturebrief-delivery-receipt.json'))['bundle_sha256'])")"
@@ -129,8 +132,10 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.11'
-      - name: Compile product core
-        run: python -m compileall -q capturebrief_core
+      - name: Compile product core and private-cloud transport
+        run: python -m compileall -q capturebrief_core scripts/github_private_custody.py
+      - name: Test zero-network private GitHub storage boundaries
+        run: python -m unittest tests.test_github_private_custody -v
       - name: Verify Windows file and SQLite lifecycle contracts
         run: >-
           python -m unittest
@@ -139,6 +144,7 @@ jobs:
           tests.test_rule_evidence
           tests.test_rule_sync
           tests.test_history_index
+          tests.test_source_coverage_audit
           tests.test_resolution_sync
           tests.test_atomic_io
           tests.test_retain_fy2027_candidate

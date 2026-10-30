@@ -20,7 +20,7 @@ customer receipt, or paid conversion is a prelaunch requirement.
    verification software is tested on adversarial fictional fixtures. Ability
    to demand per-case missing evidence is required; proving all history for
    an as-yet-unknown buyer solicitation is not.
-5. Provide approved, encrypted primary operator workspace, restricted access
+5. Use the approved **PermitPlate-style private GitHub cloud** with an isolated `P00NSMASHER/capturebrief-state` repository and CaptureBrief-only token, plus an encrypted primary operator workspace. Provider selected does not mean its private repo, key custody or independent restore is already provisioned. See CAPTUREBRIEF-PRIVATE-GITHUB-RECOVERY.md. Provide restricted access
    and a retention/deletion policy. Complete an actual **independently downloaded
    off-device encrypted restore using non-customer rehearsal data**, and retain
    evidence with a recovery key held separately from the primary device.

@@ -98,24 +98,29 @@ def reserve_once(
             or not path.parent.is_dir() or path.name.startswith(".")):
         raise AcceptedCaseBlocked("Approved shared authorization ledger must be a .sqlite file")
     _root(path.parent)
-    if path.exists() and (not path.is_file() or (os.name != "nt" and path.stat().st_mode & 0o077)):
-        raise AcceptedCaseBlocked("Existing authorization ledger is not private")
-    try:
-        fd = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-    except FileExistsError:
-        pass
-    else:
-        os.close(fd)
+    # Never silently recreate a lost nonce history or install a fresh schema.
+    # The operator must initialize the SINGLE shared ledger once, separately,
+    # using snapshot_authorization_ledger.py init before any accepted case.
+    # This blocks accidental replay after a missing/deleted shared database;
+    # the operator must independently reconcile an actual restoration.
+    if (not path.is_file() or path.is_symlink()
+            or (os.name != "nt" and path.stat().st_mode & 0o077)):
+        raise AcceptedCaseBlocked("Preprovisioned private shared authorization ledger missing or unsafe")
     nonce_hash = sha256(delivery["authorization_nonce"].encode("ascii"))
     recipient_hash = sha256(delivery["recipient"].casefold().encode("utf-8"))
     manifest_hash = sha256(canonical(manifest))
     try:
-        with closing(sqlite3.connect(path, timeout=10, isolation_level=None)) as db:
+        # mode=rw cannot create a new SQLite database if the path disappears
+        # between validation and connection. URI path works on Linux/Windows.
+        with closing(sqlite3.connect(path.as_uri() + "?mode=rw",
+                                     uri=True, timeout=10,
+                                     isolation_level=None)) as db:
             db.execute("PRAGMA busy_timeout=10000")
             db.execute("PRAGMA synchronous=FULL")
             db.execute("BEGIN IMMEDIATE")
             try:
-                db.execute(_SCHEMA)
+                # Validation MUST precede the nonce insert, and MUST NOT
+                # manufacture a fresh authorization table in an empty DB.
                 _validate_ledger(db, at)
                 db.execute(
                     "INSERT INTO single_message_authorizations "

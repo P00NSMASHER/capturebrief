@@ -183,6 +183,39 @@ class PrivateOrderPipelineTests(unittest.TestCase):
             self.assertEqual(r["blocked"],1)
             self.assertFalse(r["external_send_authorized"])
 
+    def test_execute_preflights_entire_queue_before_any_stripe_or_registry_effect(self):
+        # A lexically later invalid private association must not let an
+        # earlier valid paid order be registered before the batch fails.
+        # No real provider calls or customer records are used in this test.
+        for fault in ("unfinished_filename", "bad_request_hash", "missing_case"):
+            with self.subTest(fault=fault), tempfile.TemporaryDirectory() as td:
+                inbox,cases,assoc,db = self.setup_dirs(td)
+                digest = self.build_association(inbox,cases,assoc)
+                valid = assoc / f"request-{digest}.order.json"
+                sentinel = "f" * 64
+                self.assertLess(valid.name, f"request-{sentinel}.order.json")
+                if fault == "unfinished_filename":
+                    bad = assoc / "zzzz.order.json"
+                    bad.write_text('{"fictional":"incomplete"}', encoding="utf-8")
+                else:
+                    bad = assoc / f"request-{sentinel}.order.json"
+                    payload = {
+                        "schema": "capturebrief-private-checkout-association-v1",
+                        "request_sha256": ("e" * 64 if fault == "bad_request_hash" else sentinel),
+                        "checkout_session_id": "cs_live_FICTIONALOTHER",
+                    }
+                    bad.write_text(json.dumps(payload), encoding="utf-8")
+                before = {p.name: p.read_bytes() for p in assoc.iterdir()}
+                result,calls = self.synthetic(cases,assoc,db,preview=False)
+                self.assertEqual(result["status"], "PRIVATE_ORDER_QUEUE_BLOCKED")
+                self.assertEqual(result["registered"], 0)
+                self.assertGreaterEqual(result["blocked"], 1)
+                self.assertEqual(calls, [], "Invalid batch must never query Stripe")
+                self.assertFalse(db.exists(), "Invalid batch must never create orders")
+                self.assertEqual(before,{p.name:p.read_bytes() for p in assoc.iterdir()})
+                self.assertFalse(result["any_external_send_authorized"])
+
+
     def test_malformed_checkout_mapping_never_masquerades_as_empty_queue(self):
         # A user may save a JSON file with an incomplete digest, old name,
         # or .tmp suffix. It must be visible as BLOCKED, not an empty inbox.

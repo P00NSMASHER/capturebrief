@@ -4,6 +4,10 @@
 
 Earlier scoped AES-GCM backup protected only intake and selected source originals. The separate free-check registry backup protected ten-business reservations. **Neither included the entire report and one-use delivery-authorization ledger.** New scripts/full_case_backup.py can encrypt one complete bounded source/review/report/registry snapshot. It does not upload it off-device, establish production key custody or authorize customer contact.
 
+## Chosen off-device provider
+
+The owner selected the **existing GitHub private-cloud provider used by PermitPlate**. PermitPlate operational data reside in private `P00NSMASHER/permitplate-state`; CaptureBrief **must not reuse its contents or token**. Provision the separate private repository `P00NSMASHER/capturebrief-state` under the same account, use the strict encrypted-only transport in `scripts/github_private_custody.py`, and follow `CAPTUREBRIEF-PRIVATE-GITHUB-RECOVERY.md`. Until its repository, distinct token and second-device restore are genuinely verified, this is a selected design, not an approved backup proof. No R2 or paid service.
+
 ## Required owner-approved environment
 
 Choose an encrypted restricted primary location and a **separate** approved encrypted off-device destination with access policy, audit trail and retention/deletion rules. Keep the production recovery key under independent custody, outside the primary machine, backup and public source. A GitHub Actions test artifact is not a production backup. Never mix CaptureBrief customer data with the unrelated private PermitPlate state repository.
@@ -35,7 +39,23 @@ Required kinds are CASE, HISTORY, RESOURCE_INVENTORY, at least one ACTION_ORIGIN
 }
 ~~~
 
-Use independently **WAL-consistent SQLite snapshots** for the trial registry and the shared one-use authorization ledger. Never copy an actively written SQLite DB as an ordinary file. Existing free_check_registry_backup.py has a consistent registry snapshot operation. The one-use authorization ledger must be quiesced and snapshotted consistently. A stale restored authorization ledger must **never** be promoted over authoritative history: reconcile later activity before any future send or new admission.
+Use independently **WAL-consistent SQLite snapshots** for the trial registry and the shared one-use authorization ledger. Never copy an actively written SQLite DB as an ordinary file. Existing free_check_registry_backup.py has a consistent encrypted registry snapshot operation. The new command `scripts/snapshot_authorization_ledger.py` safely initializes one **empty** shared nonce ledger before customers exist, then captures a consistent SQLite snapshot including committed WAL records, validates the exact immutable schema, rejects added triggers, normalizes the journal header in memory for Linux/Windows portability, and writes a new protected 0600 snapshot. No message is sent or approved.
+
+~~~
+# In an owner-approved private directory, before admitting any real customer:
+python scripts/snapshot_authorization_ledger.py init \
+  --ledger /approved/private/CaptureBrief/approved-message-nonces.sqlite
+
+# Use a new snapshot file for each complete case/recovery revision:
+python scripts/snapshot_authorization_ledger.py snapshot \
+  --ledger /approved/private/CaptureBrief/approved-message-nonces.sqlite \
+  --snapshot-file /approved/private/CaptureBrief/nonce-snapshot-REVISION.sqlite
+
+python scripts/snapshot_authorization_ledger.py verify \
+  --snapshot-file /approved/private/CaptureBrief/nonce-snapshot-REVISION.sqlite
+~~~
+
+Include the returned snapshot's SHA-256 in the complete-case encrypted backup inventory as `AUTHORIZATION_LEDGER_SNAPSHOT`. The **single canonical ledger remains authoritative**: the utility has no restore, overwrite or reset command. Even a valid snapshot can be stale, so reconcile every later authorization before any future send or trial admission. This is distinct from the off-device, independently keyed recovery test required for actual operations.
 
 ## Encrypted local backup and independent off-device restore
 

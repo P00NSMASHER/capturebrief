@@ -1,5 +1,21 @@
 # CaptureBrief Decision Evidence
 
+## CaptureBrief 2.0: action-first buyer handoff
+
+The first item in an approved customer delivery ZIP is now **action-brief.html**, a self-contained, printable 90-second review. The case is not automatically approved to send. The v2 format is generated ONLY after the existing current-action, original-source, exact-review and release-readiness checks succeed, and remains inside the ZIP until individually authorized delivery.
+
+Each approved assumption is ranked by its independently reviewed decision class:
+
+- **Action-changing**: what was contradicted or superseded, and the next task.
+- **Verify before relying**: exactly what controlling evidence must be obtained.
+- **Monitor**: the supported baseline and affected source dependencies.
+
+Cards show the assumption, reviewed finding, next action, owner handoff, quoted retained passage, version/locator, source digest and a checked HTTPS reference where available. **decision-evidence.html** still holds the full trace, rule applicability review and before/after evidence. The existing targeted 14-day watch remains separately in **watch-baseline.json**.
+
+The v2 HTML uses no external JavaScript, stylesheets, tracking or uploads, escapes all case/source strings and supports Print → Save as PDF. No fake financial-loss estimates, PWin forecasts, eligibility determinations, or automated sends are introduced. No real customer or customer feedback is needed to test the format using fictional fixtures.
+
+**Schema compatibility:** Existing brief.md, decision-evidence.*, decision-summary.json, source-version-manifest.json, and watch-baseline.json remain. The ZIP gains an eighth SHA-manifested file, action-brief.html. This is a buyer-visible output upgrade, not a change to source-acceptance policy.
+
 ## Product promise
 
 **Know what your bid decision rests on.**
