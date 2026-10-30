@@ -44,7 +44,7 @@ jobs:
       - name: Transfer only ciphertext and content-digest manifest
         uses: actions/upload-artifact@v4
         with:
-          name: capturebrief-fictional-crossrunner-${{ github.sha }}
+          name: capturebrief-fictional-crossrunner
           path: ${{ runner.temp }}/capturebrief-crossrunner-fictional/
           if-no-files-found: error
           retention-days: 1
