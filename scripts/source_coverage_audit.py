@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote
 
+from capturebrief_core.accepted_case_release import _reject_private_path_links
 from capturebrief_core.archive_catalog import catalog_years_for_fiscal_year
 from capturebrief_core.data_services import ACTIVE_DOWNLOAD, ARCHIVE_DOWNLOAD
 from capturebrief_core.history_index import (
@@ -29,6 +30,9 @@ SHA = re.compile(r"^[a-f0-9]{64}$")
 
 def _private_regular(path: str | Path) -> Path:
     raw = Path(path).expanduser().absolute()
+    # Reject every symlink/junction ancestor before resolving or reading the
+    # index. A final regular file can still be reached via an unsafe alias.
+    _reject_private_path_links(raw)
     if raw.is_relative_to(REPOSITORY) or raw.is_symlink():
         raise ValueError("Index must be a private regular file outside public repository")
     resolved = raw.resolve(strict=True)
@@ -42,6 +46,10 @@ def _source_file_matches(row: dict, *, check_hash: bool, snapshot_root: Path) ->
         path = Path(str(row["local_path"]))
         if not path.is_absolute() or path.is_symlink() or not path.is_file():
             return False
+        # The index is not authority to traverse an attacker-controlled alias
+        # even if it resolves back inside the approved extract directory.
+        # Shared guard also catches Windows junction/reparse ancestors.
+        _reject_private_path_links(path)
         # Database fields are untrusted pointers. Never inspect arbitrary
         # operator/system files: only the explicitly approved extract root.
         resolved = path.resolve(strict=True)
@@ -83,6 +91,7 @@ def _inspect_index_for_explicit_years(
     required = {"ACTIVE", *(f"ARCHIVE:{fy}" for fy in years)}
     path = _private_regular(index_path)
     raw_root = Path(snapshot_root).expanduser().absolute() if snapshot_root is not None else path.parent
+    _reject_private_path_links(raw_root)
     if raw_root.is_symlink() or raw_root.is_relative_to(REPOSITORY):
         raise ValueError("Snapshot root must be a private directory outside public repository")
     allowed_root = raw_root.resolve(strict=True)
