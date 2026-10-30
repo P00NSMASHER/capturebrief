@@ -133,12 +133,12 @@ def _run_delivery_fixture() -> tuple[dict[str, Any], list[str]]:
             manifest = json.loads(archive.read("delivery-manifest.json"))
             combined = b"\n".join(archive.read(name) for name in names)
         required = {
-            "brief.md", "decision-evidence.md", "decision-evidence.html",
+            "action-brief.html", "brief.md", "decision-evidence.md", "decision-evidence.html",
             "decision-summary.json", "source-version-manifest.json",
             "watch-baseline.json", "delivery-manifest.json",
         }
         if set(names) != required:
-            failures.append("golden delivery fixture did not contain the exact seven buyer-safe files")
+            failures.append("golden delivery fixture did not contain the exact eight buyer-safe files")
         if manifest.get("external_send_authorized") is not False:
             failures.append("delivery fixture incorrectly authorized an external send")
         if manifest.get("contains_raw_case") is not False or manifest.get("contains_restricted_source_bytes") is not False:

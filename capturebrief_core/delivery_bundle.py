@@ -14,6 +14,7 @@ from .decision_trace import canonical, digest
 from .delivery_readiness import evaluate_delivery_readiness
 from .render import render_markdown
 from .trace_render import render_trace_html, render_trace_markdown
+from .action_brief_v2 import render_action_brief_v2
 from .watch_baseline import build_watch_baseline
 
 BUNDLE_SCHEMA = "1.0"
@@ -79,6 +80,7 @@ def build_delivery_files(case: dict[str, Any], *, now: datetime | None = None) -
     brief = render_markdown(case, audit, now=now)
     trace_md = render_trace_markdown(case, now=now)
     trace_html = render_trace_html(case, now=now)
+    action_brief_html = render_action_brief_v2(case, trace, audit, now=now)
     source_manifest = _public_source_manifest(case)
     summary = {
         "schema_version": BUNDLE_SCHEMA,
@@ -89,6 +91,7 @@ def build_delivery_files(case: dict[str, Any], *, now: datetime | None = None) -
         "currentness_verdict": audit.currentness_verdict,
         "current_action_id": audit.current_action_id,
         "trace_state": trace.get("trace_state"),
+        "product_format": "CAPTUREBRIEF_V2_ACTION_FIRST",
         "decision_at": trace.get("decision_at"),
         "evaluated_at": now.isoformat().replace("+00:00", "Z"),
         "case_sha256": trace.get("case_sha256"),
@@ -97,6 +100,7 @@ def build_delivery_files(case: dict[str, Any], *, now: datetime | None = None) -
         "external_send_authorized": False,
     }
     return {
+        "action-brief.html": action_brief_html.encode("utf-8"),
         "brief.md": brief.encode("utf-8"),
         "decision-evidence.md": trace_md.encode("utf-8"),
         "decision-evidence.html": trace_html.encode("utf-8"),

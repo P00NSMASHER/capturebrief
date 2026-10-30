@@ -33,7 +33,7 @@ class DeliveryBundleTests(unittest.TestCase):
             with zipfile.ZipFile(target) as zf:
                 names=set(zf.namelist())
                 self.assertEqual(names,{
-                    "brief.md","decision-evidence.md","decision-evidence.html",
+                    "action-brief.html","brief.md","decision-evidence.md","decision-evidence.html",
                     "decision-summary.json","source-version-manifest.json",
                     "watch-baseline.json","delivery-manifest.json",
                 })
@@ -44,6 +44,10 @@ class DeliveryBundleTests(unittest.TestCase):
                     data=zf.read(row["path"])
                     self.assertEqual(row["sha256"],hashlib.sha256(data).hexdigest())
                     self.assertEqual(row["bytes"],len(data))
+                action=zf.read("action-brief.html").decode("utf-8")
+                self.assertIn("CaptureBrief 2.0", action)
+                self.assertIn("What to do",action)
+                self.assertIn("decision-evidence.html",action)
                 source_manifest=json.loads(zf.read("source-version-manifest.json"))
                 self.assertEqual(source_manifest["case_id"],case["case_id"])
                 self.assertNotIn("text",source_manifest["snapshots"][0])
