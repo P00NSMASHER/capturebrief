@@ -104,6 +104,61 @@ def process_private_order_queue(
     statuses = {"preview_ready":0, "registered":0, "reused":0, "blocked":0}
     unexpected_association_entries = 0
     rows: list[dict[str, str]] = []
+
+    # One malformed or missing association anywhere in the bounded queue
+    # blocks execute BEFORE the first Stripe read or registry write. Sorting
+    # alone is not a transaction: a valid entry may precede an invalid one.
+    if not preview_only:
+        invalid: dict[str, str] = {}
+        for file in candidates:
+            try:
+                match = _MATCH.fullmatch(file.name)
+                if match is None:
+                    raise ValueError("Invalid case-association file name")
+                digest = match.group(1)
+                _private_association(file, digest)
+                case_file = cases / f"request-{digest}.case.json"
+                receipt = cases / f"request-{digest}.receipt.json"
+                _load_unverified_pair(case_file, receipt, digest)
+                for target in (case_file, receipt):
+                    lock = target.with_name(target.name + ".intake.lock")
+                    if lock.exists() or lock.is_symlink():
+                        raise ValueError("Private buyer intake is locked")
+            except (OSError, ValueError, UnicodeError, TypeError, KeyError) as exc:
+                invalid[file.name] = type(exc).__name__
+        if invalid:
+            blocked_rows = []
+            for file in candidates:
+                tag = hashlib.sha256(file.name.encode()).hexdigest()[:12]
+                if file.name in invalid:
+                    blocked_rows.append({
+                        "item_tag": tag, "state": "BLOCKED",
+                        "error_type": invalid[file.name],
+                    })
+                else:
+                    blocked_rows.append({
+                        "item_tag": tag, "state": "HELD_QUEUE_PREFLIGHT_FAILED",
+                    })
+            unexpected = sum(
+                1 for file in candidates if _MATCH.fullmatch(file.name) is None
+            )
+            return {
+                "schema": "capturebrief-private-order-queue-v1",
+                "status": "PRIVATE_ORDER_QUEUE_BLOCKED",
+                "preview_only": False,
+                "input_associations": len(candidates),
+                "unexpected_association_entries": unexpected,
+                "ignored_non_association_entries": ignored_non_association_entries,
+                "preview_ready": 0, "registered": 0, "reused": 0,
+                "blocked": len(invalid), "items": blocked_rows,
+                "private_registry_read_only_state": order_summary(db)["status"],
+                "provider_mode": ("SYNTHETIC_TEST_ONLY" if synthetic_test_mode
+                                  else "DIRECT_STRIPE_WHEN_EXECUTED"),
+                "all_work_authorized": False,
+                "any_external_send_authorized": False,
+                "any_customer_release_authorized": False,
+            }
+
     for file in candidates:
         tag = hashlib.sha256(file.name.encode()).hexdigest()[:12]
         try:
