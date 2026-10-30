@@ -21,7 +21,12 @@ class ABVMCloudflareVerificationContractTests(unittest.TestCase):
         cls.workflow = WORKFLOW.read_text(encoding="utf-8")
 
     def test_production_verifier_runs_after_token_authored_publish(self):
-        publish = self.workflow.index("git push origin HEAD:gh-pages")
+        # The updated publisher uses scoped one-step authentication instead
+        # of retaining checkout credentials; require publication before QA.
+        publish = self.workflow.index("push origin HEAD:gh-pages")
+        self.assertIn("git -C .published", self.workflow[:publish])
+        self.assertIn("GH_TOKEN: ${{ github.token }}", self.workflow[:publish])
+        self.assertIn("persist-credentials: false", self.workflow[:publish])
         verifier = self.workflow.index(
             "- name: Verify exact CaptureBrief Cloudflare release after ABVM refresh"
         )
