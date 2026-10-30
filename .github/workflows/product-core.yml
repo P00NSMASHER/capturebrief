@@ -69,7 +69,8 @@ jobs:
           assert receipt['external_send_authorized'] is False
           with zipfile.ZipFile(path) as archive:
               assert archive.testzip() is None
-              assert len(archive.namelist()) == 7
+              assert len(archive.namelist()) == 8
+              assert 'action-brief.html' in archive.namelist()
           print('Verified actual CLI ZIP, independent hashes, and separate receipt.')
           PY
           EXPECTED_SHA="$(python -c "import json; print(json.load(open('/tmp/capturebrief-delivery-receipt.json'))['bundle_sha256'])")"
@@ -143,6 +144,7 @@ jobs:
           tests.test_rule_evidence
           tests.test_rule_sync
           tests.test_history_index
+          tests.test_source_coverage_audit
           tests.test_resolution_sync
           tests.test_atomic_io
           tests.test_retain_fy2027_candidate

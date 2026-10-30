@@ -22,7 +22,7 @@ MAX_BUNDLE_BYTES = 32 * 1024 * 1024
 MAX_MEMBER_BYTES = 16 * 1024 * 1024
 MAX_EXPANDED_BYTES = 64 * 1024 * 1024
 PAYLOAD_FILES = frozenset({
-    "brief.md", "decision-evidence.md", "decision-evidence.html",
+    "action-brief.html", "brief.md", "decision-evidence.md", "decision-evidence.html",
     "decision-summary.json", "source-version-manifest.json", "watch-baseline.json",
 })
 ARCHIVE_FILES = PAYLOAD_FILES | {"delivery-manifest.json"}

@@ -1,0 +1,43 @@
+name: CaptureBrief no-submit browser egress guard
+on:
+  pull_request:
+    paths:
+      - scripts/no_submit_browser_guard.py
+      - scripts/qa_browser_to_core_intake.py
+      - tests/test_no_submit_browser_guard.py
+      - .github/workflows/capturebrief-no-submit-egress.yml
+  push:
+    branches: [main]
+    paths:
+      - scripts/no_submit_browser_guard.py
+      - scripts/qa_browser_to_core_intake.py
+      - tests/test_no_submit_browser_guard.py
+      - .github/workflows/capturebrief-no-submit-egress.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: capturebrief-no-submit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  no-submit-egress:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    steps:
+      - name: Checkout exact proposed source head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Python 3.11
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Compile no-send integration
+        run: python -m py_compile scripts/no_submit_browser_guard.py scripts/qa_browser_to_core_intake.py
+      - name: Adversarial local-only no-send regression
+        run: python -m unittest tests.test_no_submit_browser_guard -v

@@ -16,9 +16,10 @@ import threading
 from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlsplit
 
 from playwright.sync_api import sync_playwright
+
+from scripts.no_submit_browser_guard import NoSubmitNetworkGuard
 
 from capturebrief_core.intake import IntakeError
 from capturebrief_core.request_draft import (
@@ -208,10 +209,11 @@ def run():
                     context = browser.new_context(
                         viewport={"width": 1280, "height": 900},
                         reduced_motion="reduce",
+                        service_workers="block",
                     )
+                    guard = NoSubmitNetworkGuard(base.rstrip("/"))
+                    guard.attach(context)
                     page = context.new_page()
-                    outbound = []
-                    page.on("request", lambda r: outbound.append((r.method, r.url)))
                     page.on("pageerror", lambda e: errors.append(str(e)))
                     response = page.goto(base + "index.html", wait_until="domcontentloaded")
                     check(response is not None and response.status == 200,
@@ -340,10 +342,7 @@ def run():
                     checks.append(browser_name + ": forged checkout return is unverified")
 
                     check(not errors, "browser JavaScript errors: " + "; ".join(errors))
-                    check(all(method == "GET" and
-                              urlsplit(url).hostname == "127.0.0.1"
-                              for method, url in outbound),
-                          "website attempted an external request or data POST")
+                    guard.assert_clean()
                     checks.append(browser_name + ": no external/post requests")
                     context.close()
                 finally:

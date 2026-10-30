@@ -30,7 +30,11 @@ OFFICIAL_NOTICE = re.compile(r"^/opp/[0-9a-f]{32}/view/?$", re.I)
 
 
 def official_opportunity(value: Any) -> bool:
-    if not isinstance(value, str):
+    # urllib.parse.urlsplit silently removes leading C0/ASCII spaces and
+    # CR/LF/TAB inside a URL. Match the exact submitted first-party source,
+    # not a different normalized string that was never independently reviewed.
+    if (not isinstance(value, str)
+            or any(ord(char) <= 0x20 or ord(char) == 0x7f for char in value)):
         return False
     try:
         u = urlsplit(value)

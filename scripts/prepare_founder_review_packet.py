@@ -13,6 +13,15 @@ import json
 import os
 from pathlib import Path
 import re
+import sys
+
+REPOSITORY = Path(__file__).resolve().parents[1]
+if str(REPOSITORY) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY))
+
+from capturebrief_core.accepted_case_release import (
+    _root as approved_private_root, _reject_private_path_links,
+)
 
 SOURCE_SHA = "557bceeec58e625376d43678260075d1f96a831afe295035941addf77ae214e4"
 SOURCE_BYTES = 290590
@@ -103,6 +112,31 @@ def prepare(original: bytes, proof: dict) -> tuple[dict, str]:
     return packet, "\n".join(lines) + "\n"
 
 
+def _create_private_review_directory(value: str | Path) -> Path:
+    """Only create a fresh 0700 directory under an existing owner-only workspace.
+
+    Reject *any* Git checkout, not just CaptureBrief's public checkout. A
+    different repository's .git folder would make accidentally committed
+    buyer/source material just as unsafe. Refuse links and Windows junctions
+    on every ancestor BEFORE creating any evidence files.
+    """
+    requested = Path(value).expanduser().absolute()
+    _reject_private_path_links(requested)
+    if requested.exists() or requested.is_symlink() or requested.is_relative_to(REPOSITORY):
+        raise ValueError("A fresh private output folder outside every Git checkout is required")
+    # An existing, approved, owner-only parent must be provisioned separately.
+    # Do not create missing world-readable intermediate directories.
+    parent = approved_private_root(requested.parent)
+    target = parent / requested.name
+    target.mkdir(mode=0o700)
+    try:
+        approved_private_root(target)
+    except Exception:
+        target.rmdir()  # Empty folder, no evidence was written.
+        raise
+    return target
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--source-pdf", required=True)
@@ -114,12 +148,7 @@ def main(argv: list[str] | None = None) -> int:
             Path(args.source_pdf).read_bytes(),
             json.loads(Path(args.source_proof).read_text(encoding="utf-8")),
         )
-        root = Path(args.output_dir).expanduser().absolute()
-        repo = Path(__file__).resolve().parents[1]
-        if (root.exists() or root.is_relative_to(repo) or
-                any(component.is_symlink() for component in root.parents)):
-            raise ValueError("A new private output folder outside the repository is required")
-        root.mkdir(mode=0o700, parents=True)
+        root = _create_private_review_directory(args.output_dir)
         for name, content in (
             ("review-packet.json", json.dumps(packet, indent=2, sort_keys=True) + "\n"),
             ("review-preview.md", markdown),

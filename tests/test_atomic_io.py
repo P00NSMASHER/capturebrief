@@ -144,5 +144,57 @@ class AtomicIoTests(unittest.TestCase):
                 ensure_exact_bytes(link,b"abc")
 
 
+    def test_snapshot_rejects_symlinked_original(self):
+        # A private source original must not be redirected to another file.
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            actual = root / "private-original.csv"
+            actual.write_bytes(b"fictional-original")
+            alias = root / "unverified-original.csv"
+            try:
+                alias.symlink_to(actual)
+            except (OSError, NotImplementedError):
+                self.skipTest("source symlinks not available")
+            destination = root / "verified" / "retained.csv"
+            with self.assertRaises(ValueError):
+                ensure_exact_file(alias, destination)
+            self.assertFalse(destination.exists())
+
+    def test_snapshot_rejects_symlinked_source_directory(self):
+        # The last component can be regular while its parent is a link.
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            actual_folder = root / "private"
+            actual_folder.mkdir()
+            (actual_folder / "original.csv").write_bytes(b"fictional-original")
+            alias_folder = root / "alias"
+            try:
+                alias_folder.symlink_to(actual_folder, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                self.skipTest("directory symlinks not available")
+            destination = root / "verified" / "retained.csv"
+            with self.assertRaises(ValueError):
+                ensure_exact_file(alias_folder / "original.csv", destination)
+            self.assertFalse(destination.exists())
+
+    def test_snapshot_rejects_symlinked_target_directory(self):
+        # Content-addressed originals must never be written through a linked
+        # private-snapshot directory into an unapproved local destination.
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            source = root / "fictional.csv"
+            source.write_bytes(b"fictional-original")
+            outside = root / "outside-workspace"
+            outside.mkdir()
+            alias = root / "private-snapshots"
+            try:
+                alias.symlink_to(outside, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                self.skipTest("directory symlinks not available")
+            with self.assertRaises(ValueError):
+                ensure_exact_file(source, alias / "retained.csv")
+            self.assertFalse((outside / "retained.csv").exists())
+
+
 if __name__=="__main__":
     unittest.main()
