@@ -5,12 +5,14 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/abvm-school-pack.yml'
+      - 'scripts/validate_abvm_school_pack.py'
+      - 'tests/test_abvm_school_pack_workflow.py'
   schedule:
     - cron: '17 */4 * * *'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: abvm-school-pack-pages
@@ -18,74 +20,88 @@ concurrency:
 
 jobs:
   refresh:
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
+      - name: Check out trusted validator
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          path: .trusted
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact current main before write
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote_main="$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)"
+          test -n "$remote_main"
+          test "$remote_main" = "$GITHUB_SHA"
+
       - name: Check out published Pages branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: gh-pages
+          path: .published
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Fetch and validate current ABVM source pack
+      - name: Fetch candidate ABVM source pack
         shell: bash
         run: |
           set -euo pipefail
-          tmp="$(mktemp)"
-          curl --fail --silent --show-error --location             --retry 3 --retry-delay 5             -H 'accept: application/json'             -H 'cache-control: no-cache'             'https://api-v2.appdeploy.ai/app/abvm-source-bridge-gkj08k/api/study-pack'             -o "$tmp"
-          python - "$tmp" <<'PY'
-          import json
-          import pathlib
-          import sys
+          curl --fail --silent --show-error --location \
+            --retry 3 --retry-delay 5 \
+            -H 'accept: application/json' \
+            -H 'cache-control: no-cache' \
+            'https://api-v2.appdeploy.ai/app/abvm-source-bridge-gkj08k/api/study-pack' \
+            -o "$RUNNER_TEMP/abvm-study-pack.json"
 
-          src = pathlib.Path(sys.argv[1])
-          data = json.loads(src.read_text())
-          pack = data.get("pack") or {}
-
-          if pack.get("sourceSufficient") is not True:
-              raise SystemExit("Refusing incomplete ABVM school pack")
-
-          questions = pack.get("questions")
-          if not isinstance(questions, list) or not any(
-              isinstance(q, dict) and q.get("prompt") and q.get("answer")
-              for q in questions
-          ):
-              raise SystemExit("Refusing ABVM pack without usable practice questions")
-
-          target = pathlib.Path("abvm/data/study-pack.json")
-          target.parent.mkdir(parents=True, exist_ok=True)
-          target.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
-          PY
-
-      - name: Publish only when verified school data changed
+      - name: Validate freshness and source-bound content
         shell: bash
         run: |
           set -euo pipefail
-          if git diff --quiet -- abvm/data/study-pack.json; then
-            echo "No ABVM school-pack changes."
+          python .trusted/scripts/validate_abvm_school_pack.py \
+            --input "$RUNNER_TEMP/abvm-study-pack.json" \
+            --existing .published/abvm/data/study-pack.json \
+            --output .published/abvm/data/study-pack.json
+
+      - name: Publish only when verified school content changed
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if git -C .published diff --quiet -- abvm/data/study-pack.json; then
+            echo "No authoritative ABVM school-pack change."
             exit 0
           fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add abvm/data/study-pack.json
-          git commit -m "Refresh verified ABVM school pack"
-          git push origin HEAD:gh-pages
+          git -C .published config user.name "github-actions[bot]"
+          git -C .published config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C .published add abvm/data/study-pack.json
+          git -C .published commit -m "Refresh verified ABVM school pack"
+          basic="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git -C .published \
+            -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $basic" \
+            push origin HEAD:gh-pages
 
-      # The GITHUB_TOKEN push above deploys Cloudflare but cannot trigger
-      # another GitHub push workflow. Verify inside this same refresh run.
+      # Preserve the current post-publication CaptureBrief Cloudflare
+      # verification after updating gh-pages; do not drop this release gate.
       - name: Prepare pinned tools for CaptureBrief production verification
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22.23.4'
-
       - name: Verify exact CaptureBrief Cloudflare release after ABVM refresh
+        working-directory: .published
         shell: bash
         env:
           PYTHONDONTWRITEBYTECODE: '1'
         run: |
           set -euo pipefail
-          # GitHub's event SHA belongs to main, not the checked-out gh-pages
-          # branch. Pin the verifier to the exact committed production source.
           export GITHUB_SHA="$(git rev-parse HEAD)"
           node build-standalone-site.test.js
           python -m py_compile .github/cloudflare_light_smoke.py
