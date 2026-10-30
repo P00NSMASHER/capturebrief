@@ -18,6 +18,12 @@ from scripts import qa_live_capturebrief_state_secret as qa
 from scripts import github_private_custody as custody
 from tests.test_github_private_custody import FakePrivateGitHub
 
+try:
+    import cryptography  # noqa: F401
+    CRYPTO_AVAILABLE = True
+except ImportError:
+    CRYPTO_AVAILABLE = False
+
 
 class LivePrivateStateSmokeOfflineTests(unittest.TestCase):
     TOKEN = "FICTIONAL_GITHUB_TEST_TOKEN_NO_ACCESS"
@@ -42,6 +48,7 @@ class LivePrivateStateSmokeOfflineTests(unittest.TestCase):
         ):
             return callback()
 
+    @unittest.skipUnless(CRYPTO_AVAILABLE, "Pinned cryptography required for encrypted test")
     def test_actual_AES_GCM_fake_uploaded_retrieved_restored_and_rehashed(self):
         fake = FakePrivateGitHub()
         def exercise():
@@ -65,6 +72,7 @@ class LivePrivateStateSmokeOfflineTests(unittest.TestCase):
             self.assertEqual(fake.writes, 1)
         self.run_offline(fake, exercise)
 
+    @unittest.skipUnless(CRYPTO_AVAILABLE, "Pinned cryptography required for encrypted test")
     def test_missing_secret_or_invalid_private_destination_cannot_upload(self):
         with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):
             qa.preflight()
@@ -76,6 +84,7 @@ class LivePrivateStateSmokeOfflineTests(unittest.TestCase):
         self.run_offline(fake, blocked)
         self.assertEqual(fake.writes, 0)
 
+    @unittest.skipUnless(CRYPTO_AVAILABLE, "Pinned cryptography required for encrypted test")
     def test_tampered_remote_ciphertext_blocks_independent_restore(self):
         fake = FakePrivateGitHub()
         def exercise():
