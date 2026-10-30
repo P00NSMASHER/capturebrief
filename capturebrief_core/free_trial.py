@@ -130,6 +130,29 @@ def _scope_digest(case: dict[str, Any]) -> str:
     }))
 
 
+def _reservation_timestamp_valid(
+    reserved_at: Any, case: dict[str, Any], checked_at: datetime | None
+) -> bool:
+    """Reject unusable reservation chronology from a stale or mutated registry.
+
+    This does not authenticate the identity-review evidence or grant delivery.
+    """
+    intake = case.get("intake")
+    imported_at = intake.get("submitted_at") if isinstance(intake, dict) else None
+    if not isinstance(reserved_at, str) or not isinstance(imported_at, str):
+        return False
+    try:
+        reserved = datetime.fromisoformat(reserved_at.replace("Z", "+00:00"))
+        imported = datetime.fromisoformat(imported_at.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    observed = checked_at if checked_at is not None else datetime.now(timezone.utc)
+    if (not isinstance(observed, datetime) or observed.utcoffset() is None
+            or reserved.utcoffset() is None or imported.utcoffset() is None):
+        return False
+    return imported <= reserved <= observed.astimezone(timezone.utc)
+
+
 def reserve_free_check(
     database_path: str | Path, *, case: dict[str, Any], receipt: dict[str, Any],
     reviewed_business_key: str, identity_review_sha256: str,
@@ -233,6 +256,7 @@ def inspect_free_check(
                     "SELECT * FROM free_check_reservations WHERE scope_sha256 = ?", (scope_sha,),
                 ).fetchone()
                 reserved = bool(row and row["trial_state"] == "RESERVED_REVIEW_REQUIRED"
+                    and _reservation_timestamp_valid(row["reserved_at"], case, now)
                     and all(row[key] == 0 for key in (
                         "amount_due_cents", "automatic_upgrade_authorized",
                         "customer_release_authorized", "external_send_authorized",
