@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>CaptureBrief 3.0 — Know what your bid decision rests on</title>
-  <meta name="description" content="CaptureBrief 3.0: an action-first bid-risk brief with source-linked findings, exact reviewed evidence, clear next steps, and a 14-day targeted watch for one public federal pursuit.">
+  <title>CaptureBrief 4.0 — Know what your bid decision rests on</title>
+  <meta name="description" content="CaptureBrief 4.0: an action-first bid-risk brief with source-linked findings, exact reviewed evidence, clear next steps, and a 14-day targeted watch for one public federal pursuit.">
   <meta name="robots" content="index,follow">
-  <meta name="capturebrief-product-version" content="3.0">
+  <meta name="capturebrief-product-version" content="4.0">
 <meta name="theme-color" content="#071f22">
   <meta name="color-scheme" content="light">
   <meta name="site-release" content="2026-09-23-enterprise-1">
@@ -48,6 +48,8 @@
   <script src="assets/enterprise.js?v=jp1" defer></script>
   <script src="assets/capturebrief.js?v=3-decision-desk" defer></script>
   <script src="assets/v3-intake.js?v=1" defer></script>
+  <script src="assets/v4-preflight.js?v=1" defer></script>
+  <link rel="stylesheet" href="assets/v4-preflight.css?v=1">
   <link rel="stylesheet" href="assets/v3-intake.css?v=1">
 <link rel="stylesheet" href="assets/brand/approved-brand-20261022.css?v=4">
 </head>
@@ -86,12 +88,13 @@
       <div class="wrap capture-hero-grid">
         <div class="hero-copy">
           <div class="approved-brand-hero native-hero"><img class="approved-brand-image native-hero-emblem" src="assets/brand/capturebrief-emblem.webp" width="703" height="693" alt="CaptureBrief by RETALLY" decoding="async"></div>
-          <p class="eyebrow">Public-source pursuit intelligence</p>
+          <p class="eyebrow">CaptureBrief 4.0 · Public-source pursuit intelligence</p>
           <h1>Know what your bid <em>decision</em> rests on.</h1>
           <p class="lead">Test up to five assumptions behind one public opportunity. Get a clear, source-linked brief before proposal work accelerates.</p>
           <div class="actions">
             <a class="button review-request-link" href="#request" data-request-type="SCOPE_FIRST">Request a $149 review <span aria-hidden="true">↓</span></a>
             <a class="text-link" href="#request" data-request-type="FREE_CHECK">Request a free check <span aria-hidden="true">→</span></a>
+            <a class="text-link" href="#v4-preflight">Check source readiness <span aria-hidden="true">↗</span></a>
           </div>
           <div class="hero-assurance" aria-label="Service assurances"><span>No subscription</span><span>No sensitive uploads</span><span>Human reviewed</span></div>
         </div>
@@ -301,6 +304,53 @@
           <details><summary>Will you tell us to bid?</summary><p>No. CaptureBrief tests the assumptions behind your posture. Your team owns the GO, HOLD, or PASS decision.</p></details>
           <details><summary>Is this legal or procurement advice?</summary><p>No. It is an independent evidence review, not legal advice, a compliance certification, or an award guarantee.</p></details>
         </div>
+      </div>
+    </section>
+
+
+    <section class="section v4-preflight-section" id="v4-preflight">
+      <div class="wrap v4-preflight-grid">
+        <div class="v4-preflight-copy">
+          <p class="eyebrow">CaptureBrief 4.0 · Decision evidence preflight</p>
+          <h2>Find the weak link before the proposal starts.</h2>
+          <p>Five source checks make it easier to prepare a question for an independent reviewer. This worksheet does not open government websites or verify anything for you.</p>
+          <p>Mark only what you personally located. Your answers stay in this browser tab and disappear when you leave. No submissions, uploads, billing, or bid recommendations.</p>
+          <a class="text-link review-request-link" href="#request" data-request-type="SCOPE_FIRST">Ask for an independent review <span aria-hidden="true">→</span></a>
+          <p class="v4-disclaimer">Public information only. Never paste CUI, private contract documents, proposal strategy, pricing, or credentials. The tool cannot confirm which amendment or rule version controls.</p>
+        </div>
+        <div class="v4-preflight-panel" data-v4-preflight hidden>
+          <p class="v4-kicker">Public-source preparation · Your observations</p>
+          <label for="v4-notice-url">Public SAM.gov notice URL (optional)</label>
+          <input type="url" inputmode="url" id="v4-notice-url" placeholder="https://sam.gov/opp/…/view" autocomplete="off" maxlength="2048">
+          <p class="v4-field-help">Only a canonical public SAM.gov opportunity link is accepted. We do not open or fetch it.</p>
+          <fieldset class="v4-gates">
+            <legend>Mark what you personally found</legend>
+            <label>Notice identity
+              <select data-v4-gate="notice"><option value="unchecked">Not checked</option><option value="found">Located a public reference</option><option value="conflict">Conflicting versions</option><option value="unavailable">Not publicly available</option></select>
+            </label>
+            <label>Amendment history
+              <select data-v4-gate="amendments"><option value="unchecked">Not checked</option><option value="found">Located a public reference</option><option value="conflict">Conflicting versions</option><option value="unavailable">Not publicly available</option></select>
+            </label>
+            <label>Competition and eligibility
+              <select data-v4-gate="eligibility"><option value="unchecked">Not checked</option><option value="found">Located a public reference</option><option value="conflict">Conflicting versions</option><option value="unavailable">Not publicly available</option></select>
+            </label>
+            <label>Submission instructions
+              <select data-v4-gate="submission"><option value="unchecked">Not checked</option><option value="found">Located a public reference</option><option value="conflict">Conflicting versions</option><option value="unavailable">Not publicly available</option></select>
+            </label>
+            <label>Applicable rule edition
+              <select data-v4-gate="rules"><option value="unchecked">Not checked</option><option value="found">Located a public reference</option><option value="conflict">Conflicting versions</option><option value="unavailable">Not publicly available</option></select>
+            </label>
+          </fieldset>
+          <div class="v4-readiness" role="status" aria-live="polite">
+            <strong data-v4-status>Still needs an independent review</strong>
+            <p data-v4-details>Mark what you personally located. Nothing is considered verified by this website.</p>
+          </div>
+          <button type="button" class="button" data-v4-copy>Copy my unverified checklist</button>
+          <p data-v4-copy-status role="status" aria-live="polite"></p>
+          <div data-v4-fallback hidden class="v4-fallback"><label for="v4-copy-text">Select and copy this worksheet manually</label><textarea id="v4-copy-text" readonly rows="10"></textarea></div>
+          <p class="v4-disclaimer">A reference located by a buyer is not a source-verified finding, a bid recommendation, or an approved CaptureBrief engagement.</p>
+        </div>
+        <noscript><p class="v4-nojs">JavaScript is off. You can still <a href="#request">request a review by email</a>. No data is submitted automatically.</p></noscript>
       </div>
     </section>
 

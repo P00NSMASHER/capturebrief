@@ -2,7 +2,7 @@ name: Website quality
 on:
   push:
     branches: [gh-pages, site-clarity-20260921, 'pages-buyer-evidence-*']
-    paths: ['**/*.html', 'index.html', 'decision-evidence.html', 'examples/**', 'permitplate/**', 'freightrecovery/**', 'assets/**', '.github/site_qa.py', '.github/brand_qa.py', '.github/buyer_journey_qa.py', '.github/clipboard_qa.py', '.github/clipboard_unit.cjs', '.github/request_draft_unit.cjs', '.github/cloudflare_company_live_qa.py', '.github/cloudflare_edge_integrity.py', '.github/test_cloudflare_edge_integrity.py', '.github/cloudflare_byte_diagnostic.py', 'build-standalone-site.js', 'build-standalone-site.test.js', '.github/v3_question_desk_unit.cjs', '.github/workflows/site-quality.yml']
+    paths: ['**/*.html', 'index.html', 'decision-evidence.html', 'examples/**', 'permitplate/**', 'freightrecovery/**', 'assets/**', '.github/site_qa.py', '.github/brand_qa.py', '.github/buyer_journey_qa.py', '.github/clipboard_qa.py', '.github/clipboard_unit.cjs', '.github/request_draft_unit.cjs', '.github/cloudflare_company_live_qa.py', '.github/cloudflare_edge_integrity.py', '.github/test_cloudflare_edge_integrity.py', '.github/cloudflare_byte_diagnostic.py', 'build-standalone-site.js', 'build-standalone-site.test.js', '.github/v3_question_desk_unit.cjs', '.github/v4_preflight_unit.cjs', '.github/workflows/site-quality.yml']
   pull_request:
     branches: [gh-pages]
 permissions:
@@ -155,6 +155,8 @@ jobs:
         run: node .github/request_draft_unit.cjs
       - name: Verify CaptureBrief 3.0 decision desk without sending
         run: node .github/v3_question_desk_unit.cjs
+      - name: Verify CaptureBrief 4.0 evidence preflight without sending
+        run: node .github/v4_preflight_unit.cjs
       - name: Verify clipboard failure recovery in the built website
         run: python .github/clipboard_qa.py
         env:
@@ -168,7 +170,7 @@ jobs:
           import hashlib, json, os, time, urllib.error, urllib.request
           from pathlib import Path
           base = 'https://p00nsmasher.github.io/capturebrief/'
-          paths = ['index.html','permitplate/index.html','assets/clarity.css','decision-evidence.html','assets/evidence.css','assets/enterprise.css','assets/enterprise.js','assets/capturebrief.css','assets/capturebrief.js','assets/v3-intake.css','assets/v3-intake.js','assets/og-capturebrief.png','assets/visuals/hero-council.webp','assets/visuals/evidence-layers.webp','assets/visuals/reviewer-desk.webp','assets/visuals/change-watch.webp','assets/visuals/architecture-grid.webp','assets/visuals/capturebrief-social.jpg','assets/fonts/newsreader-latin-wght-normal.woff2','assets/fonts/newsreader-latin-wght-italic.woff2','assets/fonts/familjen-grotesk-latin-wght-normal.woff2','assets/fonts/azeret-mono-latin-wght-normal.woff2','favicon.svg','examples/manifest.json']
+          paths = ['index.html','permitplate/index.html','assets/clarity.css','decision-evidence.html','assets/evidence.css','assets/enterprise.css','assets/enterprise.js','assets/capturebrief.css','assets/capturebrief.js','assets/v3-intake.css','assets/v3-intake.js','assets/v4-preflight.css','assets/v4-preflight.js','assets/og-capturebrief.png','assets/visuals/hero-council.webp','assets/visuals/evidence-layers.webp','assets/visuals/reviewer-desk.webp','assets/visuals/change-watch.webp','assets/visuals/architecture-grid.webp','assets/visuals/capturebrief-social.jpg','assets/fonts/newsreader-latin-wght-normal.woff2','assets/fonts/newsreader-latin-wght-italic.woff2','assets/fonts/familjen-grotesk-latin-wght-normal.woff2','assets/fonts/azeret-mono-latin-wght-normal.woff2','favicon.svg','examples/manifest.json']
           paths += [x['path'] for x in json.loads(Path('examples/manifest.json').read_text())['files']]
           import sys
           sys.path.insert(0, str(Path('.github').resolve()))

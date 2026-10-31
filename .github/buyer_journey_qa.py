@@ -100,6 +100,15 @@ try:
                     page.locator('[data-assumption-template="rule"]').click()
                     check(len(page.locator("#assumptions").input_value().splitlines()) == 1, "Free-check template replaces rather than appends")
                     check("1 of 1 question" in page.locator("#v3-question-meter").inner_text(), "V3 free check counter matches limit")
+                    check(page.locator('[data-v4-preflight]').is_visible(), "V4 source checklist is available with JavaScript")
+                    check(page.locator('[data-v4-status]').inner_text() == 'EVIDENCE GAPS TO CHECK', "Unreviewed sources never claim readiness")
+                    page.locator('[data-v4-gate="notice"]').select_option('found')
+                    page.locator('[data-v4-gate="amendments"]').select_option('conflict')
+                    check('HOLD' in page.locator('[data-v4-status]').inner_text(), "Conflicting source never claims verified readiness")
+                    page.locator('#v4-notice-url').fill('https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view')
+                    page.locator('[data-v4-copy]').click()
+                    check(page.locator('[data-v4-copy-status]').inner_text() or page.locator('[data-v4-fallback]').is_visible(), "V4 checklist copy provides acknowledgement")
+                    check('No sources were fetched' in page.locator('#v4-copy-text').input_value() or page.locator('[data-v4-copy-status]').inner_text().lower().find('copied')>=0, "V4 output remains unverified")
                     page.locator('.nav-button').click()
                     check(page.locator('#purchase-status').input_value() == 'SCOPE_FIRST', "Review CTA selects the scope-first request type")
                     requests_before = []
@@ -156,6 +165,7 @@ try:
                 else:
                     check(not page.locator("#request-builder").is_visible(), "No-JS builder is hidden")
                     check(not page.locator("#v3-question-desk").is_visible(), "V3 button desk is hidden without JS")
+                    check(not page.locator("[data-v4-preflight]").is_visible(), "V4 checklist is hidden without JavaScript")
                     check(page.locator(".noscript-note").is_visible(), "No-JS fallback is visible")
 
                 page.locator("#full-evidence-link").click()
