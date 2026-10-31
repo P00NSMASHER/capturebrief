@@ -122,6 +122,9 @@
     if (trialTerms) trialTerms.hidden = !free;
     assumptions.setCustomValidity('');
     purchaseStatus.setCustomValidity('');
+    // A free-check-only URL error must not strand a buyer who switches to
+    // scope-first or already-purchased intake without editing the public link.
+    opportunity.setCustomValidity('');
     resetManualCopy();
   };
 
