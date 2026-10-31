@@ -162,7 +162,11 @@
       return fail(company, 'Enter your company name on one line, up to 200 characters.');
     }
     const emailText = email.value.trim();
-    if (emailText.length > 254 || !/^[^@\s]{1,64}@[^@\s]{1,189}\.[^@\s]{2,63}$/.test(emailText)) {
+    // Unquoted mailbox local-parts cannot start/end with a dot or contain
+    // doubled dots. Browsers may accept these despite type="email".
+    const localPart = emailText.slice(0, emailText.indexOf('@'));
+    if (emailText.length > 254 || !/^[^@\s]{1,64}@[^@\s]{1,189}\.[^@\s]{2,63}$/.test(emailText) ||
+        localPart.startsWith('.') || localPart.endsWith('.') || localPart.includes('..')) {
       return fail(email, 'Enter a valid work email address.');
     }
     if (!['GO', 'HOLD', 'PASS', 'UNSURE'].includes(posture.value)) {
