@@ -320,9 +320,9 @@
         </div>
         <div class="v4-preflight-panel" data-v4-preflight hidden>
           <p class="v4-kicker">Public-source preparation · Your observations</p>
-          <label for="v4-notice-url">Public SAM.gov notice URL (optional)</label>
-          <input type="url" inputmode="url" id="v4-notice-url" placeholder="https://sam.gov/opp/…/view" autocomplete="off" maxlength="2048">
-          <p class="v4-field-help">Only a canonical public SAM.gov opportunity link is accepted. We do not open or fetch it.</p>
+          <label for="v4-notice-url">Public SAM.gov notice URL (needed for readiness)</label>
+          <input type="url" inputmode="url" id="v4-notice-url" placeholder="https://sam.gov/opp/…/view" autocomplete="off" maxlength="2048" aria-describedby="v4-notice-help">
+          <p class="v4-field-help" id="v4-notice-help">You can still check gaps without a link. Only a canonical public SAM.gov opportunity link is accepted. We do not open or fetch it.</p>
           <fieldset class="v4-gates">
             <legend>Mark what you personally found</legend>
             <label>Notice identity
