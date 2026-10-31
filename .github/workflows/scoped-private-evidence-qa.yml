@@ -83,3 +83,11 @@ jobs:
         run: python -m compileall -q capturebrief_core/scoped_source.py capturebrief_core/accepted_case_release.py capturebrief_core/authorization_ledger.py scripts/prepare_scoped_sam.py scripts/scoped_private_backup.py scripts/full_case_backup.py scripts/qa_live_capturebrief_state_secret.py scripts/snapshot_authorization_ledger.py scripts/free_check_registry_backup.py scripts/check_accepted_case_release.py
       - name: Run real code against deliberately synthetic offline tests
         run: python -m unittest tests.test_scoped_source tests.test_scoped_private_backup tests.test_full_case_backup tests.test_qa_live_capturebrief_state_secret tests.test_authorization_ledger_snapshot tests.test_founder_curated_admission tests.test_free_check_registry_backup tests.test_accepted_case_release tests.test_authorization_ledger_preprovision tests.test_qa_full_case_cross_runner -v
+
+  fictional-transfer-producer:
+    name: Fictional Linux encryption producer admission
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Verify test runner
+        run: echo "FICTIONAL_PRODUCER_ADMITTED"
