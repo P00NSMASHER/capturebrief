@@ -211,6 +211,17 @@ try:
                     check("no charge, no automatic upgrade, and no included change watch" in free_draft, "Free request preserves billing and watch boundaries")
                     check(page.locator("#trial-terms").is_visible(), "Free-check limits are visible before sending")
                     check(len(requests_before) == loaded_requests, "Free request copying makes no network request")
+                    check("Discovery source" not in free_draft, "No attribution inferred without buyer choice")
+                    page.locator("#discovery-channel").select_option("SEARCH")
+                    page.locator("#preview-request").click()
+                    check("Discovery source (buyer-reported, unverified): Web search" in page.locator("#request-plaintext").input_value(),
+                          "Voluntary source is included in local draft without claiming verified attribution")
+                    check(len(requests_before) == loaded_requests, "Source selection adds no tracking or network call")
+                    page.locator("#discovery-channel").select_option("")
+                    check(not page.locator("#request-manual-copy").is_visible(), "Changing attribution clears stale preview")
+                    page.locator("#preview-request").click()
+                    check("Discovery source" not in page.locator("#request-plaintext").input_value(),
+                          "Opting out removes attribution from draft")
 
                     navigate(page, "index.html?checkout=complete#request")
                     check(page.locator("#purchase-status").input_value() == "FREE_CHECK",
