@@ -105,7 +105,13 @@ try{
   site.checkLocalReferences(out);
   assert(read('404.html').includes('href="/assets/enterprise.css?v=2"'),'Nested 404 must load styles from root');
   assert(read('index.html').includes('$149'));
-  assert(read('index.html').includes('name="capturebrief-product-version" content="3.0"'));
+  assert(read('index.html').includes('name="capturebrief-product-version" content="4.0"'));
+  assert(read('index.html').includes('data-v4-preflight hidden'));
+  assert(read('index.html').includes('src="/assets/v4-preflight.js?v=1"'));
+  assert(read('index.html').includes('href="/assets/v4-preflight.css?v=1"'));
+  assert(site.PUBLIC_FILES.includes('assets/v4-preflight.js'));
+  assert(site.PUBLIC_FILES.includes('assets/v4-preflight.css'));
+  assert(read('index.html').includes('src="/assets/v3-intake.js?v=1"'), 'V4 retains the validated V3 request composer');
   assert(read('index.html').includes('id="v3-question-desk" hidden'));
   assert(read('index.html').includes('id="preview-request"'));
   assert(read('index.html').includes('src="/assets/v3-intake.js?v=1"'));

@@ -1,0 +1,29 @@
+/* CaptureBrief 4.0 local evidence preflight. No remote assets. */
+.v4-preflight-section{padding:92px 0;background:linear-gradient(155deg,#e8efe7,#f4f6ed);color:#173c35}
+.v4-preflight-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr);align-items:start;gap:clamp(28px,5vw,75px)}
+.v4-preflight-copy .eyebrow{color:#385f51}
+.v4-preflight-copy h2{max-width:15ch;line-height:1.08;font-size:clamp(34px,4.5vw,60px);color:#0c3430}
+.v4-preflight-copy p{max-width:59ch;line-height:1.66;color:#35544b}
+.v4-preflight-copy .text-link{display:inline-block;margin:14px 0 22px;color:#17513e;font-weight:750}
+.v4-disclaimer{font-size:.78rem;line-height:1.55}
+.v4-preflight-panel{background:#fffdf7;border:1px solid #b9d0c0;border-radius:22px;padding:28px;box-shadow:0 26px 60px #1f473119}
+.v4-preflight-panel[hidden],.v4-fallback[hidden]{display:none!important}
+.v4-kicker{margin:0 0 18px;color:#306651;font:700 .72rem/1.5 var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase}
+.v4-preflight-panel label{display:block;color:#183e34;font-size:.85rem;font-weight:700}
+.v4-preflight-panel input,.v4-preflight-panel select,.v4-preflight-panel textarea{width:100%;min-height:45px;margin-top:7px;padding:11px 12px;border:1px solid #b9c9be;border-radius:10px;background:#fff;color:#173a32;font:inherit;font-size:.84rem}
+.v4-preflight-panel :is(select,input,textarea):focus-visible{outline:3px solid #a0c5b1;outline-offset:2px}
+.v4-field-help{font-size:.74rem;color:#557067;margin:8px 0 17px}
+.v4-gates{border:0;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.v4-gates legend{padding:0 0 14px;font-weight:700;color:#173a32;font-size:1rem}
+.v4-gates label:last-child:nth-child(odd){grid-column:1/-1}
+.v4-readiness{border:1px solid #abcbb9;border-radius:13px;background:#ecf4ec;margin:22px 0 16px;padding:16px}
+.v4-readiness strong{display:block;color:#184839;font-size:.88rem}
+.v4-readiness p{color:#47675c;line-height:1.5;font-size:.79rem;margin:7px 0 0}
+.v4-preflight-panel .button{width:100%;min-height:50px}
+.v4-preflight-panel button[disabled]{cursor:not-allowed;opacity:.52}
+.v4-preflight-panel [data-v4-copy-status]{min-height:1.4em;color:#35664d;font-size:.78rem;margin:10px 0}
+.v4-fallback textarea{min-height:175px;font:500 .74rem/1.4 var(--mono,monospace)}
+.v4-preflight-panel>.v4-disclaimer{color:#617b6d}
+.v4-nojs{padding:16px;color:#173a32;background:#fff8e5;border:1px solid #b9c6ac}
+@media(max-width:900px){.v4-preflight-grid{grid-template-columns:1fr}.v4-preflight-copy h2{max-width:19ch}}
+@media(max-width:520px){.v4-preflight-section{padding:54px 0}.v4-preflight-panel{padding:19px 15px}.v4-gates{grid-template-columns:1fr}}

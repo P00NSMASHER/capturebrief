@@ -39,6 +39,8 @@ const PUBLIC_FILES=Object.freeze([
   "assets/capturebrief.js",
   "assets/v3-intake.css",
   "assets/v3-intake.js",
+  "assets/v4-preflight.css",
+  "assets/v4-preflight.js",
   "assets/enterprise.css",
   "assets/enterprise.js",
   "assets/evidence.css",
