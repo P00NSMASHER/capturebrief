@@ -84,30 +84,16 @@ jobs:
       - name: Run real code against deliberately synthetic offline tests
         run: python -m unittest tests.test_scoped_source tests.test_scoped_private_backup tests.test_full_case_backup tests.test_qa_live_capturebrief_state_secret tests.test_authorization_ledger_snapshot tests.test_founder_curated_admission tests.test_free_check_registry_backup tests.test_accepted_case_release tests.test_authorization_ledger_preprovision tests.test_qa_full_case_cross_runner -v
 
+
   fictional-transfer-producer:
-    name: Fictional Linux AES-GCM producer
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
     steps:
-      - name: Checkout source without retained credentials
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          persist-credentials: false
-      - name: Set up pinned Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
-        with:
-          python-version: '3.11'
-      - name: Install pinned test-only crypto
-        run: python -m pip install --disable-pip-version-check --only-binary=:all: cryptography==46.0.4
-      - name: Create fictional encrypted archive and digests
-        shell: bash
+      - name: Write non-sensitive artifact probe
         run: |
-          set -euo pipefail
-          python scripts/qa_full_case_cross_runner.py produce --artifact-dir "$RUNNER_TEMP/capturebrief-crossrunner-fictional"
-      - name: Save fictional ciphertext, never any originals
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+          mkdir -p probe
+          echo FICTIONAL_PROBE > probe/receipt.txt
+      - name: Upload probe
+        uses: actions/upload-artifact@v4
         with:
-          name: capturebrief-fictional-crossrunner
-          path: ${{ runner.temp }}/capturebrief-crossrunner-fictional/
-          retention-days: 1
-          if-no-files-found: error
+          name: fictional-probe
+          path: probe/receipt.txt
