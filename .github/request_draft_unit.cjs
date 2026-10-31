@@ -119,10 +119,24 @@ async function run() {
   await copying;
   assert.doesNotMatch(race.fields['request-status'].textContent, /Request copied/, 'A stale draft cannot claim successful copy');
   assert.equal(race.fields['request-manual-copy'].hidden, true, 'Old manual copy cannot return after editing');
-  const returnPage = harness('', {}, '?checkout=complete');
-  assert.equal(returnPage.fields['purchase-status'].value, 'PAID');
-  assert.match(returnPage.fields['request-status'].textContent, /verified separately/);
-  const trialPage = harness('', {}, '?trial=free');
+  // A forged ?checkout=complete is not a provider-verified receipt, and must
+  // not silently change the buyer's no-card request into a paid-status claim.
+  for (const hint of ['?checkout=complete', '?checkout=complete&trial=free']) {
+    const returnPage = harness('FREE_CHECK', {}, hint);
+    assert.equal(returnPage.fields['purchase-status'].value, 'FREE_CHECK',
+      'Untrusted checkout hint must not select paid intake: ' + hint);
+    assert.match(returnPage.fields['request-status'].textContent, /does not verify a payment/);
+    const returnDraft = await returnPage.copy();
+    assert.match(returnDraft, /Free assumption check requested/);
+    assert.doesNotMatch(returnDraft, /Already purchased/);
+    // A buyer can still explicitly select paid intake; it remains unverified.
+    returnPage.fields['purchase-status'].value = 'PAID';
+    returnPage.callbacks['purchase-status:change']();
+    const paidDraft = await returnPage.copy();
+    assert.match(paidDraft, /Already purchased/);
+    assert.match(paidDraft, /payment verification needed/);
+  }
+  const trialPage = harness('FREE_CHECK', {}, '?trial=free');
   assert.equal(trialPage.fields['purchase-status'].value, 'FREE_CHECK');
   // One thousand deterministic, FICTIONAL buyer-path combinations. No actual
   // customers, reviews, API calls, payments, email navigation, or pilot reservations.
