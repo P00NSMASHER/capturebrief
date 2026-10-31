@@ -16,6 +16,7 @@ import urllib.request
 
 from cloudflare_company_live_qa import (
     BASE, EXPECTED_SHA, fetch, current_release, assert_private_not_published,
+    PUBLIC_INQUIRY_BOUNDARIES, assert_public_inquiry_boundaries,
 )
 from cloudflare_edge_integrity import verify_public_html_bytes
 
@@ -148,9 +149,7 @@ def inspect_release(info: dict) -> dict:
         else:
             raise AssertionError("Executable or stylesheet drift: "+path)
         if path=="index.html":
-            if (b"at most ten businesses" not in observed or
-                    b"Preparing an email draft does not send an inquiry" not in observed):
-                raise AssertionError("No-card trial intake or no-send boundary is missing")
+            assert_public_inquiry_boundaries(observed)
     for forbidden in ("capturebrief_core/scoped_source.py","scripts/scoped_private_backup.py",
                       "abvm/game/index.html"):
         assert_private_not_published(forbidden)

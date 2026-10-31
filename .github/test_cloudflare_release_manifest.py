@@ -23,7 +23,7 @@ class CloudflareCompleteManifestTests(unittest.TestCase):
         for name in (*smoke.SOURCES, "assets/brand/fictional-extra.webp"):
             path = Path("dist") / name
             path.parent.mkdir(parents=True, exist_ok=True)
-            raw = (b"at most ten businesses\nPreparing an email draft does not send an inquiry\n"
+            raw = (b"\n".join(smoke.PUBLIC_INQUIRY_BOUNDARIES) + b"\n"
                    if name == "index.html" else ("FICTIONAL:" + name).encode())
             path.write_bytes(raw)
             rows.append({"path": name, "sha256": hashlib.sha256(raw).hexdigest(),
@@ -77,6 +77,27 @@ class CloudflareCompleteManifestTests(unittest.TestCase):
                 forged[name] = "f" * 64
                 with self.assertRaises(AssertionError):
                     self.inspect(forged)
+
+    def test_missing_individual_inquiry_safety_boundary_fails_after_exact_manifest_rebuild(self):
+        # Recompute a fully consistent fictional manifest after deleting each
+        # mandatory promise; exact bytes must not excuse absent boundaries.
+        index_path = Path("dist/index.html")
+        baseline = index_path.read_bytes()
+        baseline_manifest = Path("dist/build-info.json").read_text(encoding="utf-8")
+        for phrase in smoke.PUBLIC_INQUIRY_BOUNDARIES:
+            with self.subTest(boundary=phrase.decode()):
+                mutated = baseline.replace(phrase, b"omitted-safety-boundary")
+                self.assertNotEqual(mutated, baseline)
+                index_path.write_bytes(mutated)
+                forged = copy.deepcopy(self.expected)
+                row = next(item for item in forged["files"] if item["path"] == "index.html")
+                row["sha256"] = hashlib.sha256(mutated).hexdigest()
+                row["bytes"] = len(mutated)
+                Path("dist/build-info.json").write_text(json.dumps(forged), encoding="utf-8")
+                with self.assertRaisesRegex(AssertionError, "No-card trial intake"):
+                    self.inspect(forged)
+        index_path.write_bytes(baseline)
+        Path("dist/build-info.json").write_text(baseline_manifest, encoding="utf-8")
 
     def test_build_timestamp_variance_is_allowed(self):
         actual = copy.deepcopy(self.expected)

@@ -23,6 +23,28 @@ EXPECTED_SHA = os.environ["GITHUB_SHA"]
 BROWSER = os.environ.get("QA_BROWSER", "chromium")
 NOTICE = "c20a138049b94add92f0f32a41856585"
 
+# Check actual buyer-facing safety promises, never incidental old copy.
+# A missing free-offer, capacity, no-charge or no-submit promise fails even
+# if every deployed byte is otherwise identical to the git source.
+PUBLIC_INQUIRY_BOUNDARIES = (
+    b'<option value="FREE_CHECK" selected>Request one free assumption check</option>',
+    b"The founder pilot is free for up to ten verified businesses, one check each.",
+    b"No card, charge, or automatic upgrade.",
+    b"This website prepares an email, but does not send it or reserve a spot.",
+    b"No free slot is reserved until we accept the request.",
+    b"Nothing is sent from this page.",
+)
+
+
+def assert_public_inquiry_boundaries(payload: bytes) -> None:
+    for phrase in PUBLIC_INQUIRY_BOUNDARIES:
+        if phrase not in payload:
+            raise AssertionError(
+                "No-card trial intake or no-send boundary is missing: "
+                + phrase.decode("utf-8")
+            )
+
+
 
 def fetch(path: str, *, maximum: int = 5 * 1024 * 1024) -> tuple[bytes, dict]:
     url = BASE + path + ("&" if "?" in path else "?") + "source_check=" + EXPECTED_SHA[:16]
@@ -182,8 +204,7 @@ def main() -> None:
         checked.append(path)
         edge_transforms[path] = mode
         if path == "index.html":
-            assert b"at most ten businesses" in payload
-            assert b"Preparing an email draft does not send an inquiry" in payload
+            assert_public_inquiry_boundaries(payload)
     assert_private_not_published("capturebrief_core/scoped_source.py")
     assert_private_not_published("abvm/game/index.html")
     browser_result = verify_browser()
