@@ -136,6 +136,9 @@ try{
   assert(!v2.includes('https://capturebrief.netlify.app'));
 
   assert(read('index.html').includes('data-purchase-policy="scope-first"'));
+  assert(read('index.html').includes('<option value="FREE_CHECK" selected>Request one free assumption check</option>'), 'First-time visitors must start in the no-card free-check path');
+  assert(read('index.html').includes('press Send in your email app'), 'No-send draft requires an explicit customer action');
+  assert(read('index.html').includes('No free slot is reserved until we accept the request.'), 'Draft must never imply a reserved free slot');
   assert.equal((read('index.html').match(/class="[^"]*review-request-link[^"]*" href="#request" data-request-type="SCOPE_FIRST"/g)||[]).length,4);
   assert(read('index.html').includes('JP Enterprises'));
   assert.equal(groupAffiliations(read('index.html')).length,2,'Homepage should retain its Group signal bar and one footer affiliation');
