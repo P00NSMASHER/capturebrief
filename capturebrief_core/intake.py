@@ -34,12 +34,20 @@ def _public_web_reference(value: Any) -> str:
         field="public opportunity URL",
         maximum=2048,
     )
+    # urlparse silently strips some embedded controls and does not validate a
+    # numeric port until .port is accessed. Neither behavior is acceptable for
+    # a buyer-supplied evidence link that reviewers later open in a browser.
+    if any(char.isspace() or char == "\\" or ord(char) == 127 for char in opportunity):
+        raise IntakeError("public opportunity URL contains unsafe whitespace or separators")
     try:
         parsed = urlparse(opportunity)
+        port = parsed.port
     except ValueError as exc:
-        raise IntakeError("public opportunity must be a complete http:// or https:// URL") from exc
+        raise IntakeError("public opportunity must have a valid http(s) URL and port") from exc
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
         raise IntakeError("public opportunity must be a complete http:// or https:// URL")
+    if port == 0 or parsed.netloc.endswith(":"):
+        raise IntakeError("public opportunity URL must have a valid nonzero port")
     if parsed.username or parsed.password:
         raise IntakeError("public opportunity URL must not contain credentials")
     hostname = parsed.hostname.lower().rstrip(".")
