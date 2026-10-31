@@ -123,7 +123,7 @@ async function run() {
     const type = scenario === 3 ? 'PAID' : scenario === 4 ? 'SCOPE_FIRST' : 'FREE_CHECK';
     const notice = i.toString(16).padStart(32, '0');
     const count = scenario === 2 ? 2 : type === 'FREE_CHECK' ? 1 : 1 + (i % 5);
-    const questions = Array.from({ length: count }, (_, n) => 'Fictional public assumption ' + i + '-' + n + '?').join('\\n');
+    const questions = Array.from({ length: count }, (_, n) => 'Fictional public assumption ' + i + '-' + n + '?').join('\n');
     const page = harness(type, {
       company: 'Fictional Customer ' + i,
       'work-email': 'qa' + i + '@example.com',
@@ -140,7 +140,7 @@ async function run() {
       assert(draft && draft.includes('Company: Fictional Customer ' + i), 'Valid fictional inquiry lost: ' + i);
       assert(draft.includes('Work email: qa' + i + '@example.com'));
       assert(draft.includes('Current posture: ' + ['GO', 'HOLD', 'PASS', 'UNSURE'][i % 4]));
-      assert.match(draft, /^To: jay@retallyrecovery\\.com\\nSubject: CaptureBrief /);
+      assert.match(draft, /^To: jay@retallyrecovery\.com\nSubject: CaptureBrief /);
       if (type === 'FREE_CHECK') assert.match(draft, /no charge, no automatic upgrade/);
       if (type === 'PAID') assert.match(draft, /payment verification needed/);
       validSimulations++;
@@ -149,7 +149,7 @@ async function run() {
   }
   assert.equal(validSimulations, 600);
   assert.equal(refusedSimulations, 400);
-  if (process.argv.includes('--emit-drafts')) process.stdout.write(JSON.stringify(outputs) + '\\n');
+  if (process.argv.includes('--emit-drafts')) process.stdout.write(JSON.stringify(outputs) + '\n');
   else console.log('PASS: canonical paid/scope/free drafts, intake boundaries, one-question trial, and unverified checkout return');
 }
 run().catch(error => { console.error(error); process.exitCode = 1; });
