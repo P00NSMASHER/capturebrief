@@ -39,6 +39,29 @@ function run(){
   free.click('rule');assert.match(free.fields.assumptions.value,/rule edition/);
   assert.equal(free.fields.assumptions.value.split('\n').length,1,'Free must never append a second question');
   assert.match(free.fields['v3-question-meter'].textContent,/1 of 1 question/);
+  // Regression: one template click must not erase an original buyer question.
+  const custom=page('FREE_CHECK','My exact public notice changes our deliverable deadline.');
+  custom.click('deadline');
+  assert.equal(custom.fields.assumptions.value,'My exact public notice changes our deliverable deadline.',
+    'Selecting a template must not erase bespoke buyer context');
+  assert.match(custom.fields['v3-question-meter'].textContent,/Your question was kept/);
+  custom.fields.assumptions.value='';
+  custom.click('deadline');
+  const firstTemplate=custom.fields.assumptions.value;
+  custom.click('rule');
+  assert.notEqual(custom.fields.assumptions.value,firstTemplate,
+    'Replacing one untouched canned suggestion with another remains easy');
+  assert.match(custom.fields.assumptions.value,/rule edition/);
+  const edited=custom.fields.assumptions.value+' — and our contract exception';
+  custom.fields.assumptions.value=edited;
+  custom.click('submission');
+  assert.equal(custom.fields.assumptions.value,edited,
+    'Editing a suggestion makes it buyer-authored again');
+  const overflow=page('FREE_CHECK',['First question','Second question'].join(String.fromCharCode(10)));
+  overflow.click('eligibility');
+  assert.equal(overflow.fields.assumptions.value.split(String.fromCharCode(10)).length,2,
+    'Template click must not erase an over-limit draft');
+  assert.match(overflow.fields['v3-question-meter'].textContent,/Your question was kept/);
   const paid=page('SCOPE_FIRST');
   keys.forEach(key=>paid.click(key));assert.equal(paid.fields.assumptions.value.split('\n').length,5);
   paid.click('deadline');assert.equal(paid.fields.assumptions.value.split('\n').length,5,'Duplicate must not append');
