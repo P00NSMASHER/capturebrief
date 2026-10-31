@@ -124,11 +124,12 @@
     resetManualCopy();
   };
 
-  const checkoutReturn = new URLSearchParams(window.location.search).get('checkout') === 'complete';
-  if (checkoutReturn) {
-    purchaseStatus.value = 'PAID';
-    setStatus('Welcome back from Stripe. Complete this intake. Payment is verified separately before work begins.');
-  } else if (new URLSearchParams(window.location.search).get('trial') === 'free') {
+  // Query parameters are user-editable. A checkout hint is not a payment receipt.
+  // Keep the default no-card request until a buyer deliberately selects paid intake.
+  const query = new URLSearchParams(window.location.search);
+  if (query.get('checkout') === 'complete') {
+    setStatus('This link does not verify a payment. If you already purchased, choose "I already purchased" below. Payment is checked independently before work begins.');
+  } else if (query.get('trial') === 'free') {
     purchaseStatus.value = 'FREE_CHECK';
   }
   updateRequestType();
