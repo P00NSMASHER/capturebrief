@@ -90,6 +90,10 @@ try:
                     form = page.locator("#request-builder")
                     check(form.is_visible(), "Local request builder visible with JavaScript")
                     check(form.get_attribute("action") is None, "Builder has no network action")
+                    check(page.locator("#purchase-status").input_value() == "FREE_CHECK", "New visitors start at the no-card free check")
+                    check(page.locator("#trial-terms").is_visible(), "First visit exposes the free pilot limits")
+                    check("press Send in your email app" in page.locator("#request-steps").inner_text(), "Draft and customer-send are separate steps")
+                    check("No free slot is reserved" in page.locator("#request-steps").inner_text(), "Draft cannot claim enrollment")
                     page.locator('.nav-button').click()
                     check(page.locator('#purchase-status').input_value() == 'SCOPE_FIRST', "Review CTA selects the scope-first request type")
                     requests_before = []
