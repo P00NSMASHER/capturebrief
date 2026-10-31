@@ -3,8 +3,12 @@ on:
   push:
     branches: [main]
     paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','RELEASE-CONSISTENCY.md','DELIVERY-VERIFICATION.md','index.html','sample.html','decision-evidence-sample.html']
+  # Required product checks must run for EVERY PR targeting main.
+  # Do not path-filter this trigger: documentation-only changes must also
+  # produce the two exact required contexts, or branch protection deadlocks.
   pull_request:
-    paths: ['capturebrief_core/**','tests/**','fixtures/**','scripts/**','assets/**','netlify-build.sh','netlify.toml','.github/workflows/product-core.yml','PRODUCT-CORE.md','DECISION-EVIDENCE.md','RULE-SOURCES.md','RULE-SOURCE-CATALOG.json','SOURCE-POLICY.md','ARCHIVE-CATALOG.md','REFERENCE-REVIEW.md','OUTCOME-LEDGER.md','BUSINESS-MODEL-v7.md','CALIBRATION-PROTOCOL.md','OUTBOUND-COMMUNICATIONS.md','PUBLIC-RELEASE.md','RELEASE-CONSISTENCY.md','DELIVERY-VERIFICATION.md','index.html','sample.html','decision-evidence-sample.html']
+    branches: [main]
+
 concurrency:
   group: product-core-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
