@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -40,10 +41,18 @@ def _date(value: str) -> datetime:
 
 
 def _nonnegative_int(value: Any, field: str) -> int:
-    try:
-        parsed = int(value)
-    except (TypeError, ValueError) as exc:
-        raise CurrentApiError(f"SAM Opportunities API {field} is invalid") from exc
+    # Python int() truncates JSON floats and converts booleans (True == 1).
+    # Both can forge a complete pagination proof; reject them rather than
+    # silently changing the provider's counts. Retain decimal-string support.
+    if type(value) is int:
+        parsed = value
+    elif isinstance(value, str) and re.fullmatch(r"[+-]?[0-9]+", value.strip()):
+        try:
+            parsed = int(value.strip())
+        except ValueError as exc:
+            raise CurrentApiError(f"SAM Opportunities API {field} is invalid") from exc
+    else:
+        raise CurrentApiError(f"SAM Opportunities API {field} is invalid")
     if parsed < 0:
         raise CurrentApiError(f"SAM Opportunities API {field} is negative")
     return parsed
