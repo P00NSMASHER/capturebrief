@@ -306,9 +306,9 @@
         <div class="request-copy">
           <p class="eyebrow">Try one assumption free</p>
           <h2>Bring the link. Keep sensitive material out.</h2>
-          <p>Ask whether we can check one assumption about an exact public SAM.gov opportunity. We verify eligibility and source coverage before accepting work. No card, charge, or automatic upgrade.</p>
-          <p class="fine-print">Founding pilot: at most ten businesses, one free check per verified business. Preparing an email draft does not send an inquiry, reserve a spot, or guarantee a report. After receipt, we confirm identity, capacity, source history, private recovery, and a feasible delivery date before accepting work. The $149 full review and 14-day watch are separate.</p>
-          <p>Already paid or checking scope first? Choose that option below. The form opens your email app; this website does not store or send the fields.</p>
+          <p>Start with one public SAM.gov opportunity and the assumption you most want checked. The founder pilot is free for up to ten verified businesses, one check each. No card, charge, or automatic upgrade.</p>
+          <p class="fine-print">This website prepares an email, but does not send it or reserve a spot. After you send it, we verify company identity, capacity, official sources, and timing before accepting work. The separate $149 review includes up to five assumptions and a 14-day watch.</p>
+          <p>Already paid or checking scope first? Change the request type below.</p>
           <div class="request-safety"><strong>Send only</strong><span>A public opportunity link</span><span>Your GO, HOLD, PASS, or UNSURE posture</span><span>One free assumption, up to five for a paid review</span></div>
           <p class="fine-print">CaptureBrief is a RETALLY Group business operated by JP Enterprises. It is not affiliated with SAM.gov or the U.S. government.</p>
         </div>
@@ -316,8 +316,9 @@
         <div class="request-panel">
           <form id="request-builder" hidden novalidate>
             <div class="form-heading"><div><span>Your request</span><strong>Nothing is sent from this page.</strong></div><span class="local-badge">Local draft</span></div>
+            <p id="request-steps"><strong>1.</strong> Add your public link and question. <strong>2.</strong> Open or copy the email draft, then press Send in your email app. <strong>3.</strong> We confirm eligibility, source coverage, and timing by reply. No free slot is reserved until we accept the request.</p>
             <label for="purchase-status">Request type <span aria-hidden="true">*</span></label>
-            <select id="purchase-status" name="purchase-status" required><option value="">Choose one</option><option value="FREE_CHECK">Request one free assumption check</option><option value="PAID">I already purchased</option><option value="SCOPE_FIRST">Check scope before I buy</option></select>
+            <select id="purchase-status" name="purchase-status" required><option value="FREE_CHECK" selected>Request one free assumption check</option><option value="PAID">I already purchased</option><option value="SCOPE_FIRST">Check scope before I buy</option></select>
             <p class="fine-print" id="trial-terms" hidden>Maximum ten verified businesses, one free assumption per business, from an exact public SAM.gov link. Preparing this email draft does not submit or enroll anyone. Acceptance and timing require source and operator review. No automatic upgrade; the paid $149 review is separate.</p>
             <label for="company">Company <span aria-hidden="true">*</span></label>
             <input id="company" name="company" type="text" autocomplete="organization" maxlength="200" required>
