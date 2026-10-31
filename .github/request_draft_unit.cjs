@@ -116,6 +116,33 @@ async function run() {
     assert.equal(await page.copy(), null, 'Invalid request composed: ' + type + ' ' + JSON.stringify(values));
     assert.equal(page.fields['request-status'].dataset.state, 'error');
   }
+  // An unquoted email mailbox cannot begin/end with a dot or contain "..".
+  // HTML type=email is not a sufficient guard; invalid buyer reply addresses
+  // must not enter an otherwise valid, unsent request draft.
+  const badReplyAddresses = [
+    '.buyer@example.com', 'buyer.@example.com',
+    'buyer..team@example.com', 'buyer..team+tag@example.com'
+  ];
+  for (const type of ['FREE_CHECK', 'SCOPE_FIRST', 'PAID']) {
+    for (const bad of badReplyAddresses) {
+      const page = harness(type, { 'work-email': bad });
+      assert.equal(await page.copy(), null, type + ': rejected undeliverable reply address ' + bad);
+      assert.match(page.fields['work-email'].validityMessage, /valid work email/);
+      // The buyer must be able to correct their address without reloading.
+      page.fields['work-email'].value = 'buyer.team+tag@example.com';
+      page.callbacks['work-email:input']();
+      const corrected = await page.copy();
+      assert(corrected && corrected.includes('Work email: buyer.team+tag@example.com'),
+        type + ': corrected address must retain the buyer request');
+    }
+    for (const valid of ['buyer@example.com', 'buyer.team+tag@example.com',
+                         'a'.repeat(64) + '@example.com']) {
+      const page = harness(type, { 'work-email': valid });
+      const draft = await page.copy();
+      assert(draft && draft.includes('Work email: ' + valid),
+        type + ': valid email must not be incorrectly rejected: ' + valid);
+    }
+  }
   const five = harness('PAID', { assumptions: ['A', 'B', 'C', 'D', 'E'].map(c => c.repeat(500)).join('\n') });
   assert(await five.copy(), 'All five maximum-length assumptions must fit');
   five.callbacks['request-builder:submit']({ preventDefault() {} });
