@@ -200,6 +200,19 @@ try:
                     page.locator("#opportunity-url").fill("https://example.org/unrelated-rfp")
                     page.locator("#copy-request").click()
                     check("exact public SAM.gov" in page.locator("#request-status").inner_text(), "Free check refuses non-SAM opportunity links")
+                    # Same URL is acceptable for scope-first review. Avoid a silent
+                    # stuck form due to persistent customValidity from free trial.
+                    page.locator("#assumptions").fill("The deadline has not changed.")
+                    page.locator("#purchase-status").select_option("SCOPE_FIRST")
+                    check(page.locator("#opportunity-url").evaluate("(el) => el.validationMessage") == "",
+                          "Switching to scope-first clears the old free-only URL error")
+                    page.locator("#copy-request").click()
+                    page.wait_for_function("""() => window.__qaCopied?.includes(
+                        'Public opportunity link: https://example.org/unrelated-rfp')""")
+                    check("Scope check before purchase" in page.evaluate("window.__qaCopied"),
+                          "Public non-SAM scope request is not trapped by previous free-only validation")
+                    check(len(requests_before) == loaded_requests, "Request-path switch has no network side effect")
+                    page.locator("#purchase-status").select_option("FREE_CHECK")
                     page.locator("#opportunity-url").fill("https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view")
                     page.locator("#assumptions").fill("The deadline has not changed.\nThe cited edition applies.")
                     page.locator("#copy-request").click()
