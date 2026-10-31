@@ -102,7 +102,15 @@ try:
                     check("1 of 1 question" in page.locator("#v3-question-meter").inner_text(), "V3 free check counter matches limit")
                     check(page.locator('[data-v4-preflight]').is_visible(), "V4 source checklist is available with JavaScript")
                     check(page.locator('[data-v4-status]').inner_text() == 'EVIDENCE GAPS TO CHECK', "Unreviewed sources never claim readiness")
-                    page.locator('[data-v4-gate="notice"]').select_option('found')
+                    for gate in ('notice', 'amendments', 'eligibility', 'submission', 'rules'):
+                        page.locator(f'[data-v4-gate="{gate}"]').select_option('found')
+                    check(page.locator('[data-v4-status]').inner_text() == 'EVIDENCE GAPS TO CHECK',
+                          "Five buyer-marked references without a SAM notice must not appear review-ready")
+                    check('public SAM.gov opportunity link' in page.locator('[data-v4-details]').inner_text(),
+                          "Missing notice must display actionable buyer guidance")
+                    page.locator('#v4-notice-url').fill('https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view')
+                    check(page.locator('[data-v4-status]').inner_text() == 'READY TO REQUEST HUMAN REVIEW',
+                          "A valid notice and five buyer-marked references preserve preflight readiness")
                     page.locator('[data-v4-gate="amendments"]').select_option('conflict')
                     check('HOLD' in page.locator('[data-v4-status]').inner_text(), "Conflicting source never claims verified readiness")
                     page.locator('#v4-notice-url').fill('https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view')
