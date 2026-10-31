@@ -5,10 +5,11 @@ No HTTP calls, API tokens, real cases, storage writes or external sends.
 from __future__ import annotations
 
 import unittest
+from urllib.request import Request
 
 from capturebrief_core.data_services import ACTIVE_DOWNLOAD
 from capturebrief_core.source_policy import (
-    SourcePolicyError, classify_sam_url, require_approved_automation,
+    SourcePolicyError, _OfficialExtractRedirectGuard, classify_sam_url, require_approved_automation,
     require_approved_extract_delivery,
 )
 
@@ -45,6 +46,44 @@ class RawSourceURLPolicyTests(unittest.TestCase):
         self.assertEqual(classify_sam_url(altered), "UNAPPROVED")
         with self.assertRaises(SourcePolicyError):
             require_approved_extract_delivery(altered, altered)
+
+    def test_extract_redirect_rejects_parser_sanitized_raw_url_before_following(self):
+        official = (
+            "https://s3.amazonaws.com/falextracts/Contract%20Opportunities/"
+            "datagov/ContractOpportunitiesFullCSV.csv"
+        )
+        self.assertEqual(
+            require_approved_extract_delivery(ACTIVE_DOWNLOAD, official),
+            "s3.amazonaws.com",
+        )
+        guard = _OfficialExtractRedirectGuard(ACTIVE_DOWNLOAD)
+        request = Request(ACTIVE_DOWNLOAD)
+        self.assertEqual(
+            guard.redirect_request(request, None, 302, "Found", {}, official).full_url,
+            official,
+        )
+
+        # All first six raw inputs normalized to the approved URL under
+        # urllib.parse.urlsplit before this patch. None is a valid raw source.
+        malformed = (
+            "\\x01" + official,
+            " " + official,
+            official + "\\r",
+            official.replace("s3.amazonaws.com", "s3.amazo\\nnaws.com"),
+            official.replace("/datagov", "/data\\tgov"),
+            official.replace("https://", "https://\\ts3.amazonaws.com@"),
+            official + "\\x7f",
+            official + "\\u00a0",
+            official.replace("s3.amazonaws.com", "s3.amazonaws.com\\\\"),
+        )
+        for raw in malformed:
+            with self.subTest(raw=repr(raw)):
+                with self.assertRaisesRegex(
+                    SourcePolicyError, "^unapproved extract redirect destination$"
+                ):
+                    require_approved_extract_delivery(ACTIVE_DOWNLOAD, raw)
+                with self.assertRaises(SourcePolicyError):
+                    guard.redirect_request(request, None, 302, "Found", {}, raw)
 
     def test_url_like_object_cannot_impersonate_an_approved_raw_string(self):
         class MisleadingURL:
