@@ -114,7 +114,42 @@ async function run() {
   assert.match(returnPage.fields['request-status'].textContent, /verified separately/);
   const trialPage = harness('', {}, '?trial=free');
   assert.equal(trialPage.fields['purchase-status'].value, 'FREE_CHECK');
-  if (process.argv.includes('--emit-drafts')) process.stdout.write(JSON.stringify(outputs) + '\n');
+  // One thousand deterministic, FICTIONAL buyer-path combinations. No actual
+  // customers, reviews, API calls, payments, email navigation, or pilot reservations.
+  let validSimulations = 0;
+  let refusedSimulations = 0;
+  for (let i = 0; i < 1000; i++) {
+    const scenario = i % 5;
+    const type = scenario === 3 ? 'PAID' : scenario === 4 ? 'SCOPE_FIRST' : 'FREE_CHECK';
+    const notice = i.toString(16).padStart(32, '0');
+    const count = scenario === 2 ? 2 : type === 'FREE_CHECK' ? 1 : 1 + (i % 5);
+    const questions = Array.from({ length: count }, (_, n) => 'Fictional public assumption ' + i + '-' + n + '?').join('\\n');
+    const page = harness(type, {
+      company: 'Fictional Customer ' + i,
+      'work-email': 'qa' + i + '@example.com',
+      'opportunity-url': 'https://sam.gov/opp/' + notice + '/view' + (scenario === 1 ? '?utm_source=fictional' : ''),
+      'current-posture': ['GO', 'HOLD', 'PASS', 'UNSURE'][i % 4],
+      assumptions: questions
+    });
+    const draft = await page.copy();
+    if (scenario === 1 || scenario === 2) {
+      assert.equal(draft, null, 'Invalid fictional free inquiry escaped: ' + i);
+      assert.equal(page.fields['request-status'].dataset.state, 'error');
+      refusedSimulations++;
+    } else {
+      assert(draft && draft.includes('Company: Fictional Customer ' + i), 'Valid fictional inquiry lost: ' + i);
+      assert(draft.includes('Work email: qa' + i + '@example.com'));
+      assert(draft.includes('Current posture: ' + ['GO', 'HOLD', 'PASS', 'UNSURE'][i % 4]));
+      assert.match(draft, /^To: jay@retallyrecovery\\.com\\nSubject: CaptureBrief /);
+      if (type === 'FREE_CHECK') assert.match(draft, /no charge, no automatic upgrade/);
+      if (type === 'PAID') assert.match(draft, /payment verification needed/);
+      validSimulations++;
+    }
+    assert.equal(page.context.window.location.href, undefined, 'Copy must not open an email or checkout');
+  }
+  assert.equal(validSimulations, 600);
+  assert.equal(refusedSimulations, 400);
+  if (process.argv.includes('--emit-drafts')) process.stdout.write(JSON.stringify(outputs) + '\\n');
   else console.log('PASS: canonical paid/scope/free drafts, intake boundaries, one-question trial, and unverified checkout return');
 }
 run().catch(error => { console.error(error); process.exitCode = 1; });
