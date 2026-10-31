@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>CaptureBrief 2.0 — Know what your bid decision rests on</title>
-  <meta name="description" content="CaptureBrief 2.0: an action-first bid-risk brief with source-linked findings, exact reviewed evidence, clear next steps, and a 14-day targeted watch for one public federal pursuit.">
+  <title>CaptureBrief 3.0 — Know what your bid decision rests on</title>
+  <meta name="description" content="CaptureBrief 3.0: an action-first bid-risk brief with source-linked findings, exact reviewed evidence, clear next steps, and a 14-day targeted watch for one public federal pursuit.">
   <meta name="robots" content="index,follow">
+  <meta name="capturebrief-product-version" content="3.0">
 <meta name="theme-color" content="#071f22">
   <meta name="color-scheme" content="light">
   <meta name="site-release" content="2026-09-23-enterprise-1">
@@ -45,7 +46,9 @@
   }
   </script>
   <script src="assets/enterprise.js?v=jp1" defer></script>
-  <script src="assets/capturebrief.js?v=5-free-assumption-pilot" defer></script>
+  <script src="assets/capturebrief.js?v=3-decision-desk" defer></script>
+  <script src="assets/v3-intake.js?v=1" defer></script>
+  <link rel="stylesheet" href="assets/v3-intake.css?v=1">
 <link rel="stylesheet" href="assets/brand/approved-brand-20261022.css?v=4">
 </head>
 <body class="capture capture-site" data-purchase-policy="scope-first">
@@ -314,6 +317,19 @@
         </div>
 
         <div class="request-panel">
+          <div class="v3-question-desk" id="v3-question-desk" hidden aria-labelledby="v3-question-title">
+            <p class="v3-kicker">CaptureBrief 3.0 · Decision desk</p>
+            <h3 id="v3-question-title">Not sure what to ask? Start here.</h3>
+            <p>Tap a question to add an editable prompt below. These are examples, not researched findings or eligibility advice.</p>
+            <div class="v3-question-choices" role="group" aria-label="Suggested public-source assumptions">
+              <button type="button" data-assumption-template="deadline"><strong>Deadline</strong><span>Did the response deadline change?</span></button>
+              <button type="button" data-assumption-template="amendment"><strong>Amendments</strong><span>Which document version controls?</span></button>
+              <button type="button" data-assumption-template="eligibility"><strong>Eligibility</strong><span>Which public pool requirements apply?</span></button>
+              <button type="button" data-assumption-template="submission"><strong>Submission</strong><span>Did the page limit or instructions change?</span></button>
+              <button type="button" data-assumption-template="rule"><strong>Rules</strong><span>Which public rule edition applies?</span></button>
+            </div>
+            <p class="v3-question-meter" id="v3-question-meter" role="status" aria-live="polite">Choose a question, or enter your own.</p>
+          </div>
           <form id="request-builder" hidden novalidate>
             <div class="form-heading"><div><span>Your request</span><strong>Nothing is sent from this page.</strong></div><span class="local-badge">Local draft</span></div>
             <p id="request-steps"><strong>1.</strong> Add your public link and question. <strong>2.</strong> Open or copy the email draft, then press Send in your email app. <strong>3.</strong> We confirm eligibility, source coverage, and timing by reply. No free slot is reserved until we accept the request.</p>
@@ -331,7 +347,7 @@
             <label for="assumptions">Assumptions to check <span aria-hidden="true">*</span><small id="assumption-hint">One per line, up to five; 500 characters each</small></label>
             <textarea id="assumptions" name="assumptions" rows="6" maxlength="2600" aria-describedby="assumption-hint" placeholder="1. The deadline has not changed." required></textarea>
             <label class="acknowledgment" for="public-only"><input id="public-only" name="public-only" type="checkbox" required><span>I will include only public, non-sensitive information—no restricted files, credentials, pricing, proposal text, or private strategy.</span></label>
-            <div class="form-actions"><button class="button" type="submit">Open email draft</button><button class="button secondary" id="copy-request" type="button">Copy request</button></div>
+            <div class="form-actions"><button class="button" type="submit">Open email draft</button><button class="button secondary" id="preview-request" type="button">Preview draft</button><button class="button secondary" id="copy-request" type="button">Copy request</button></div>
             <p class="form-status" id="request-status" role="status" aria-live="polite"></p>
             <div class="request-manual-copy" id="request-manual-copy" hidden>
               <label for="request-plaintext">Your complete email draft</label>

@@ -83,6 +83,7 @@
   const assumptions = document.getElementById('assumptions');
   const publicOnly = document.getElementById('public-only');
   const copyButton = document.getElementById('copy-request');
+  const previewButton = document.getElementById('preview-request');
   const status = document.getElementById('request-status');
   const hint = document.getElementById('assumption-hint');
   const trialTerms = document.getElementById('trial-terms');
@@ -258,6 +259,13 @@
       delete status.dataset.state;
       resetManualCopy();
     });
+  });
+
+  if (previewButton) previewButton.addEventListener('click', () => {
+    const draft = compose();
+    if (!draft) return;
+    revealManualCopy(draft.plain);
+    setStatus('Preview only. Nothing was sent or saved. Review your complete draft, then open or copy it and press Send in your own email app.');
   });
 
   form.addEventListener('submit', event => {

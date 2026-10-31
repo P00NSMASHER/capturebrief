@@ -1,0 +1,16 @@
+/* CaptureBrief 3.0 public question desk; no fonts, remote assets, or scripts. */
+.v3-question-desk{padding:20px 20px 17px;margin-bottom:24px;border:1px solid #cadbd0;border-radius:18px;background:linear-gradient(135deg,#f6faf4,#e8f2ea);color:#12362f}
+.v3-question-desk[hidden]{display:none}
+.v3-kicker{margin:0 0 7px;color:#356d56;font:700 .68rem/1.4 var(--mono,monospace);letter-spacing:.09em;text-transform:uppercase}
+.v3-question-desk h3{margin:0 0 7px;font:700 clamp(1.14rem,2vw,1.42rem)/1.16 var(--sans,system-ui)}
+.v3-question-desk>p:not(.v3-kicker):not(.v3-question-meter){margin:0 0 14px;color:#4b655b;font-size:.82rem;line-height:1.52}
+.v3-question-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.v3-question-choices button{display:flex;flex-direction:column;gap:4px;min-width:0;min-height:76px;text-align:left;padding:12px;border:1px solid #b4cbbd;border-radius:12px;background:#fff;color:#17392d;font:inherit;cursor:pointer;transition:border-color .15s,background .15s,transform .15s}
+.v3-question-choices button:last-child:nth-child(odd){grid-column:1/-1}
+.v3-question-choices button strong{font-size:.81rem;line-height:1.35}
+.v3-question-choices button span{color:#536f62;font-size:.72rem;line-height:1.4}
+.v3-question-choices button:hover{border-color:#28644c;background:#f8fff9;transform:translateY(-1px)}
+.v3-question-choices button:focus-visible{outline:3px solid #2e7958;outline-offset:2px}
+.v3-question-meter{margin:13px 0 0;color:#2f604c;font-size:.72rem;line-height:1.5}
+@media(max-width:520px){.v3-question-desk{padding:15px 13px}.v3-question-choices{gap:7px}.v3-question-choices button{padding:10px;min-height:88px}.v3-question-choices button span{font-size:.7rem}}
+@media(prefers-reduced-motion:reduce){.v3-question-choices button{transition:none}.v3-question-choices button:hover{transform:none}}

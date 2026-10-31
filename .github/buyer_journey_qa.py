@@ -94,6 +94,12 @@ try:
                     check(page.locator("#trial-terms").is_visible(), "First visit exposes the free pilot limits")
                     check("press Send in your email app" in page.locator("#request-steps").inner_text(), "Draft and customer-send are separate steps")
                     check("No free slot is reserved" in page.locator("#request-steps").inner_text(), "Draft cannot claim enrollment")
+                    check(page.locator("#v3-question-desk").is_visible(), "V3 decision desk is visible with JavaScript")
+                    page.locator('[data-assumption-template="deadline"]').click()
+                    check("response deadline" in page.locator("#assumptions").input_value(), "V3 suggested question is editable")
+                    page.locator('[data-assumption-template="rule"]').click()
+                    check(len(page.locator("#assumptions").input_value().splitlines()) == 1, "Free-check template replaces rather than appends")
+                    check("1 of 1 question" in page.locator("#v3-question-meter").inner_text(), "V3 free check counter matches limit")
                     page.locator('.nav-button').click()
                     check(page.locator('#purchase-status').input_value() == 'SCOPE_FIRST', "Review CTA selects the scope-first request type")
                     requests_before = []
@@ -107,6 +113,11 @@ try:
                     page.locator("#assumptions").fill("The deadline has not changed.\nWe can submit 20 pages.\nThe cited edition applies.")
                     page.locator("#public-only").check()
                     loaded_requests = len(requests_before)
+                    page.locator("#preview-request").click()
+                    check(page.locator("#request-manual-copy").is_visible(), "V3 preview is visible and local only")
+                    check("Company: Example Federal" in page.locator("#request-plaintext").input_value(), "V3 preview retains buyer identity")
+                    check("Nothing was sent or saved" in page.locator("#request-status").inner_text(), "V3 preview makes no submission claim")
+                    check(len(requests_before) == loaded_requests, "V3 preview creates no network request")
                     page.locator("#copy-request").click()
                     page.wait_for_function("() => window.__qaCopied && window.__qaCopied.includes('Current posture: HOLD')")
                     copied = page.evaluate("window.__qaCopied")
@@ -144,6 +155,7 @@ try:
                     check("verified separately" in page.locator("#request-status").inner_text(), "Checkout return avoids an unverified payment claim")
                 else:
                     check(not page.locator("#request-builder").is_visible(), "No-JS builder is hidden")
+                    check(not page.locator("#v3-question-desk").is_visible(), "V3 button desk is hidden without JS")
                     check(page.locator(".noscript-note").is_visible(), "No-JS fallback is visible")
 
                 page.locator("#full-evidence-link").click()

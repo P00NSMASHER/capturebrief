@@ -21,7 +21,7 @@ function harness(type = 'SCOPE_FIRST', overrides = {}, search = '') {
     'public-only': '', ...overrides
   };
   const fields = Object.fromEntries(Object.entries(values).map(([id, value]) => [id, control(id, value)]));
-  for (const id of ['request-builder', 'copy-request', 'request-status', 'assumption-hint', 'trial-terms', 'request-manual-copy', 'request-plaintext']) {
+  for (const id of ['request-builder', 'copy-request', 'request-status', 'assumption-hint', 'trial-terms', 'request-manual-copy', 'request-plaintext', 'preview-request']) {
     fields[id] = control(id);
   }
   fields['request-builder'].reportValidity = () => Object.values(fields).every(field => !field.validityMessage);
@@ -60,6 +60,16 @@ async function run() {
   assert.match(outputs.FREE_CHECK, /Free assumption check requested/);
   assert.match(outputs.FREE_CHECK, /no charge, no automatic upgrade, and no included change watch/);
   assert(!outputs.FREE_CHECK.includes('Already purchased'));
+  const preview = harness('FREE_CHECK');
+  preview.callbacks['preview-request:click']();
+  assert.equal(preview.fields['request-manual-copy'].hidden, false, 'V3 preview displays the complete local draft');
+  assert.match(preview.fields['request-plaintext'].value, /To: jay@retallyrecovery\.com/);
+  assert.match(preview.fields['request-status'].textContent, /Nothing was sent or saved/);
+  assert.equal(preview.context.window.location.href, undefined, 'Preview must not navigate to email');
+  preview.fields.assumptions.value = 'Updated fictional deadline assumption.';
+  preview.callbacks['assumptions:input']();
+  assert.equal(preview.fields['request-plaintext'].value, '', 'Editing must invalidate the old preview');
+  assert.equal(preview.fields['request-manual-copy'].hidden, true);
   const legal = harness('PAID', { assumptions: '52.204-21 applies.\n2027.4 is the correct identifier.\n1. The amendment controls.' });
   const legalDraft = await legal.copy();
   assert.match(legalDraft, /1\. 52\.204-21 applies\./, 'FAR identifier must remain intact');
