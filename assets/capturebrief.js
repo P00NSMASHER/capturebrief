@@ -269,7 +269,7 @@
       setStatus('This request is too long for a reliable email link. Your complete draft is selected below for manual copying. Nothing was sent.', true);
       return;
     }
-    setStatus('Your browser was asked to open an email draft. Review it before sending. Nothing was sent by this page.');
+    setStatus('Your email app was asked to open a draft. Review it and press Send there. This page has not submitted a request or confirmed receipt.');
     window.location.href = draft.href;
   });
 
@@ -284,7 +284,7 @@
       await navigator.clipboard.writeText(draft.plain);
       if (!stillCurrent()) { setStatus(editedMessage, true); return; }
       resetManualCopy();
-      setStatus('Request copied. Paste it into your email service and review it before sending.');
+      setStatus('Request copied. Paste it into your email app, review it, and press Send there. This page cannot confirm receipt.');
     } catch (_) {
       if (!stillCurrent()) { setStatus(editedMessage, true); return; }
       const helper = document.createElement('textarea');
@@ -308,7 +308,7 @@
       }
       if (copied) {
         resetManualCopy();
-        setStatus('Request copied. Paste it into your email service and review it before sending.');
+        setStatus('Request copied. Paste it into your email app, review it, and press Send there. This page cannot confirm receipt.');
       } else {
         revealManualCopy(draft.plain);
         setStatus('Copy was unavailable. Your complete request is selected below for manual copying. Nothing was sent.', true);
