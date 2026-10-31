@@ -105,6 +105,12 @@ try{
   site.checkLocalReferences(out);
   assert(read('404.html').includes('href="/assets/enterprise.css?v=2"'),'Nested 404 must load styles from root');
   assert(read('index.html').includes('$149'));
+  assert(read('index.html').includes('name="capturebrief-product-version" content="3.0"'));
+  assert(read('index.html').includes('id="v3-question-desk" hidden'));
+  assert(read('index.html').includes('id="preview-request"'));
+  assert(read('index.html').includes('src="/assets/v3-intake.js?v=1"'));
+  assert(read('index.html').includes('href="/assets/v3-intake.css?v=1"'));
+  assert(!/fetch\(|XMLHttpRequest|localStorage|sessionStorage|sendBeacon/.test(read('assets/v3-intake.js')),'V3 suggested questions cannot send or persist information');
 
   // CaptureBrief 2.0 must ship a genuine real-public-notice *demonstration*
   // with printable customer-style layout, explicit fictional-assumption labels
