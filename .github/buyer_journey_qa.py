@@ -213,8 +213,10 @@ try:
                     check(len(requests_before) == loaded_requests, "Free request copying makes no network request")
 
                     navigate(page, "index.html?checkout=complete#request")
-                    check(page.locator("#purchase-status").input_value() == "PAID", "Checkout return selects paid intake")
-                    check("verified separately" in page.locator("#request-status").inner_text(), "Checkout return avoids an unverified payment claim")
+                    check(page.locator("#purchase-status").input_value() == "FREE_CHECK",
+                          "Checkout return keeps no-card intake until buyer selects paid")
+                    check("does not verify a payment" in page.locator("#request-status").inner_text(),
+                          "Checkout hint explicitly rejects unverified payment claims")
                 else:
                     check(not page.locator("#request-builder").is_visible(), "No-JS builder is hidden")
                     check(not page.locator("#v3-question-desk").is_visible(), "V3 button desk is hidden without JS")
