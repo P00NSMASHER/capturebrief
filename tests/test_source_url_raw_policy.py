@@ -63,18 +63,18 @@ class RawSourceURLPolicyTests(unittest.TestCase):
             official,
         )
 
-        # All first six raw inputs normalized to the approved URL under
-        # urllib.parse.urlsplit before this patch. None is a valid raw source.
+        # These six raw inputs previously normalized to the approved URL
+        # under urllib.parse.urlsplit. Do not authorize rewritten source bytes.
         malformed = (
-            "\\x01" + official,
+            "\x01" + official,
             " " + official,
-            official + "\\r",
-            official.replace("s3.amazonaws.com", "s3.amazo\\nnaws.com"),
-            official.replace("/datagov", "/data\\tgov"),
-            official.replace("https://", "https://\\ts3.amazonaws.com@"),
-            official + "\\x7f",
-            official + "\\u00a0",
-            official.replace("s3.amazonaws.com", "s3.amazonaws.com\\\\"),
+            official + "\r",
+            official.replace("s3.amazonaws.com", "s3.amazo\nnaws.com"),
+            official.replace("/datagov", "/data\tgov"),
+            official.replace("https://", "https://\t"),
+            official + "\x7f",
+            official + "\u00a0",
+            official.replace("s3.amazonaws.com", "s3.amazonaws.com\\"),
         )
         for raw in malformed:
             with self.subTest(raw=repr(raw)):
