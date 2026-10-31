@@ -25,6 +25,7 @@
 ## Metrics and next bounded experiments
 - Before: 1 of 3 newly written regression tests fails. After: 3 of 3 pass locally. CI/merge must be independently verified on exact PR head.
 - No measured funnel uplift. No revenue increase claim. No platform analytics or Stripe records read or inferred.
+- Stripe aggregate-metrics access check (2026-10-31): two available connected Stripe links each require an interactive account selection in this non-interactive execution. **No Stripe data was retrieved**, and no claim of zero revenue or customer count can be made. Do not substitute synthetic purchases; account selection is the exact remaining read-only metrics blocker.
 - Follow-up: obtain approved aggregate Netlify funnel counts (visits, qualified submissions, no-source rejects) and independently corroborated test-mode checkout/fulfillment receipts, without exporting buyer details. Pre-register 1 conversion metric and a 14-day observation window before design changes.
 - Validate paid willingness to pay using voluntary inbound buyer responses only; do not spam, collect private data unnecessarily or automatically charge anyone.
 - Target next task: verify that `main`'s public build and actual deployed site include the same intake form and report links, after legitimate CI and release authorization. No autonomous production deployment.
