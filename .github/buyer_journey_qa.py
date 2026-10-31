@@ -111,6 +111,28 @@ try:
                     page.locator('#v4-notice-url').fill('https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view')
                     check(page.locator('[data-v4-status]').inner_text() == 'READY TO REQUEST HUMAN REVIEW',
                           "A valid notice and five buyer-marked references preserve preflight readiness")
+                    check('needed for readiness' in page.locator('label[for="v4-notice-url"]').inner_text(),
+                          "The preflight clearly labels when its SAM link is needed")
+                    check(page.locator('#v4-notice-url').get_attribute('aria-describedby') == 'v4-notice-help',
+                          "Canonical notice guidance is announced as accessible input help")
+                    # The buyer should not have to retype the exact same public notice.
+                    valid_notice = 'https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view'
+                    page.locator('.v4-preflight-copy a[href="#request"]').click()
+                    check(page.locator('#opportunity-url').input_value() == valid_notice,
+                          "Explicit preflight review click transfers a valid public notice locally")
+                    check(page.locator('#purchase-status').input_value() == 'SCOPE_FIRST',
+                          "Preflight handoff requests scope confirmation, not payment")
+                    page.locator('#opportunity-url').fill('https://sam.gov/opp/existing')
+                    page.locator('#v4-notice-url').fill('https://sam.gov/opp/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/view')
+                    page.locator('.v4-preflight-copy a[href="#request"]').click()
+                    check(page.locator('#opportunity-url').input_value() == 'https://sam.gov/opp/existing',
+                          "Preflight never overwrites an existing buyer opportunity")
+                    page.locator('#opportunity-url').fill('')
+                    page.locator('#v4-notice-url').fill('https://example.invalid/not-a-notice')
+                    page.locator('.v4-preflight-copy a[href="#request"]').click()
+                    check(page.locator('#opportunity-url').input_value() == '',
+                          "Invalid public link never enters request intake")
+                    page.locator('#v4-notice-url').fill(valid_notice)
                     page.locator('[data-v4-gate="amendments"]').select_option('conflict')
                     check('HOLD' in page.locator('[data-v4-status]').inner_text(), "Conflicting source never claims verified readiness")
                     page.locator('#v4-notice-url').fill('https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view')
