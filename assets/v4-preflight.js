@@ -61,6 +61,16 @@
   const text=root.document.getElementById('v4-copy-text');
   if(!url||!title||!details||!copy||!status||!fallback||!text||select.length!==5)return;
   let revision=0;let current=null;
+  // Explicit, local-only handoff: never replace a buyer's existing intake.
+  const reviewLink=root.document.querySelector('.v4-preflight-copy a[href="#request"]');
+  const opportunityField=root.document.getElementById('opportunity-url');
+  if(reviewLink&&opportunityField){
+    reviewLink.addEventListener('click',()=>{
+      if(!current?.url||opportunityField.value.trim())return;
+      opportunityField.value=current.url;
+      opportunityField.dispatchEvent(new root.Event('input',{bubbles:true}));
+    });
+  }
   function update(){
     revision++;status.textContent='';fallback.hidden=true;text.value='';
     const marks=Object.fromEntries(Array.from(select,field=>[field.dataset.v4Gate,field.value]));
