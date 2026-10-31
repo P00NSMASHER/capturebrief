@@ -17,7 +17,7 @@ function harness(type = 'SCOPE_FIRST', overrides = {}, search = '') {
   const values = {
     'purchase-status': type, company: 'Example Federal', 'work-email': 'buyer@example.com',
     'opportunity-url': 'https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view',
-    'current-posture': 'HOLD', assumptions: 'The deadline has not changed.',
+    'current-posture': 'HOLD', 'discovery-channel': '', assumptions: 'The deadline has not changed.',
     'public-only': '', ...overrides
   };
   const fields = Object.fromEntries(Object.entries(values).map(([id, value]) => [id, control(id, value)]));
@@ -60,12 +60,28 @@ async function run() {
   assert.match(outputs.FREE_CHECK, /Free assumption check requested/);
   assert.match(outputs.FREE_CHECK, /no charge, no automatic upgrade, and no included change watch/);
   assert(!outputs.FREE_CHECK.includes('Already purchased'));
+  // Five voluntary sources, plus opt-out and tamper rejection. No collected customer data.
+  for (const [source, label] of [
+    ['SEARCH', 'Web search'], ['REFERRAL', 'Someone referred me'],
+    ['DIRECT', 'Direct website visit'], ['SOCIAL', 'Social media'], ['OTHER', 'Other / unsure']
+  ]) {
+    const page = harness('SCOPE_FIRST', { 'discovery-channel': source });
+    assert((await page.copy()).includes('Discovery source (buyer-reported, unverified): ' + label));
+  }
+  assert.doesNotMatch(outputs.FREE_CHECK, /Discovery source/);
+  const forgedChannel = harness('FREE_CHECK', { 'discovery-channel': 'PURCHASED' });
+  assert.equal(await forgedChannel.copy(), null, 'Unlisted values cannot appear in buyer attribution');
   const preview = harness('FREE_CHECK');
   preview.callbacks['preview-request:click']();
   assert.equal(preview.fields['request-manual-copy'].hidden, false, 'V3 preview displays the complete local draft');
   assert.match(preview.fields['request-plaintext'].value, /To: jay@retallyrecovery\.com/);
   assert.match(preview.fields['request-status'].textContent, /Nothing was sent or saved/);
   assert.equal(preview.context.window.location.href, undefined, 'Preview must not navigate to email');
+  preview.fields['discovery-channel'].value = 'SEARCH';
+  preview.callbacks['discovery-channel:input']();
+  assert.equal(preview.fields['request-plaintext'].value, '', 'Changing attribution invalidates preview');
+  preview.callbacks['preview-request:click']();
+  assert.match(preview.fields['request-plaintext'].value, /Discovery source \(buyer-reported, unverified\): Web search/);
   preview.fields.assumptions.value = 'Updated fictional deadline assumption.';
   preview.callbacks['assumptions:input']();
   assert.equal(preview.fields['request-plaintext'].value, '', 'Editing must invalidate the old preview');
