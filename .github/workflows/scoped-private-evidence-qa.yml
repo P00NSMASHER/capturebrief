@@ -100,7 +100,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install pinned cryptography
-        run: python -m pip install --disable-pip-version-check --only-binary=:all: cryptography==46.0.4
+        run: 'python -m pip install --disable-pip-version-check --only-binary=:all: cryptography==46.0.4'
       - name: Produce and stage only fictional encrypted bytes
         shell: bash
         run: |
