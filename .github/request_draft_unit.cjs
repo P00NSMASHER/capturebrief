@@ -152,6 +152,22 @@ async function run() {
     assert.match(paidDraft, /Already purchased/);
     assert.match(paidDraft, /payment verification needed/);
   }
+  // A free-only SAM.gov failure must not trap someone who changes request type
+  // and keeps the same otherwise-public URL. No email is sent or payment made.
+  for (const nextType of ['SCOPE_FIRST', 'PAID']) {
+    const switched = harness('FREE_CHECK', { 'opportunity-url': 'https://www.example.org/public-rfp' });
+    assert.equal(await switched.copy(), null, 'Free check rejects non-SAM public URL');
+    assert.match(switched.fields['opportunity-url'].validityMessage, /exact public SAM.gov/);
+    switched.fields['purchase-status'].value = nextType;
+    switched.callbacks['purchase-status:change']();
+    assert.equal(switched.fields['opportunity-url'].validityMessage, '',
+      'Changing request type must clear the old free-only URL validity error');
+    const newDraft = await switched.copy();
+    assert(newDraft && newDraft.includes('Public opportunity link: https://www.example.org/public-rfp'),
+      'Valid public link must compose on the buyer-selected ' + nextType + ' path');
+    assert.doesNotMatch(newDraft, /Free assumption check requested/);
+    assert.equal(switched.context.window.location.href, undefined, 'Copy never opens email or checkout');
+  }
   const trialPage = harness('FREE_CHECK', {}, '?trial=free');
   assert.equal(trialPage.fields['purchase-status'].value, 'FREE_CHECK');
   // One thousand deterministic, FICTIONAL buyer-path combinations. No actual
