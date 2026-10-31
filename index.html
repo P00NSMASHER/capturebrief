@@ -320,9 +320,9 @@
         </div>
         <div class="v4-preflight-panel" data-v4-preflight hidden>
           <p class="v4-kicker">Public-source preparation · Your observations</p>
-          <label for="v4-notice-url">Public SAM.gov notice URL (optional)</label>
-          <input type="url" inputmode="url" id="v4-notice-url" placeholder="https://sam.gov/opp/…/view" autocomplete="off" maxlength="2048">
-          <p class="v4-field-help">Only a canonical public SAM.gov opportunity link is accepted. We do not open or fetch it.</p>
+          <label for="v4-notice-url">Public SAM.gov notice URL (needed for readiness)</label>
+          <input type="url" inputmode="url" id="v4-notice-url" placeholder="https://sam.gov/opp/…/view" autocomplete="off" maxlength="2048" aria-describedby="v4-notice-help">
+          <p class="v4-field-help" id="v4-notice-help">You can still check gaps without a link. Only a canonical public SAM.gov opportunity link is accepted. We do not open or fetch it.</p>
           <fieldset class="v4-gates">
             <legend>Mark what you personally found</legend>
             <label>Notice identity
@@ -396,6 +396,16 @@
             <select id="current-posture" name="posture" required><option value="">Choose one</option><option>GO</option><option>HOLD</option><option>PASS</option><option>UNSURE</option></select>
             <label for="assumptions">Assumptions to check <span aria-hidden="true">*</span><small id="assumption-hint">One per line, up to five; 500 characters each</small></label>
             <textarea id="assumptions" name="assumptions" rows="6" maxlength="2600" aria-describedby="assumption-hint" placeholder="1. The deadline has not changed." required></textarea>
+            <label for="discovery-channel">How did you find CaptureBrief? (optional)</label>
+            <select id="discovery-channel" name="discovery-channel">
+              <option value="">Prefer not to say</option>
+              <option value="SEARCH">Web search</option>
+              <option value="REFERRAL">Someone referred me</option>
+              <option value="DIRECT">Direct website visit</option>
+              <option value="SOCIAL">Social media</option>
+              <option value="OTHER">Other / unsure</option>
+            </select>
+            <p class="fine-print">If selected, this buyer-reported source appears only in your local email draft. No browsing history, tracking, automatic transmission, or verified attribution claim.</p>
             <label class="acknowledgment" for="public-only"><input id="public-only" name="public-only" type="checkbox" required><span>I will include only public, non-sensitive information—no restricted files, credentials, pricing, proposal text, or private strategy.</span></label>
             <div class="form-actions"><button class="button" type="submit">Open email draft</button><button class="button secondary" id="preview-request" type="button">Preview draft</button><button class="button secondary" id="copy-request" type="button">Copy request</button></div>
             <p class="form-status" id="request-status" role="status" aria-live="polite"></p>

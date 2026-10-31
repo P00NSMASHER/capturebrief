@@ -31,8 +31,9 @@
     }
     const url=noticeUrl(rawUrl);
     const label=conflicted?'HOLD FOR SOURCE RECONCILIATION':
-      missing?'EVIDENCE GAPS TO CHECK':'READY TO REQUEST HUMAN REVIEW';
+      (!url||missing)?'EVIDENCE GAPS TO CHECK':'READY TO REQUEST HUMAN REVIEW';
     const detail=conflicted?'At least one public source is conflicting or unavailable. Resolve the basis before relying on it.':
+      !url?'A complete public SAM.gov opportunity link is needed for a source-specific review. None was provided.':
       missing?'At least one source family has not been checked. Your next action is to locate and review it.':
       'You marked five public references as located; none was independently verified here.';
     const report=[
@@ -60,6 +61,16 @@
   const text=root.document.getElementById('v4-copy-text');
   if(!url||!title||!details||!copy||!status||!fallback||!text||select.length!==5)return;
   let revision=0;let current=null;
+  // Explicit, local-only handoff: never replace a buyer's existing intake.
+  const reviewLink=root.document.querySelector('.v4-preflight-copy a[href="#request"]');
+  const opportunityField=root.document.getElementById('opportunity-url');
+  if(reviewLink&&opportunityField){
+    reviewLink.addEventListener('click',()=>{
+      if(!current?.url||opportunityField.value.trim())return;
+      opportunityField.value=current.url;
+      opportunityField.dispatchEvent(new root.Event('input',{bubbles:true}));
+    });
+  }
   function update(){
     revision++;status.textContent='';fallback.hidden=true;text.value='';
     const marks=Object.fromEntries(Array.from(select,field=>[field.dataset.v4Gate,field.value]));

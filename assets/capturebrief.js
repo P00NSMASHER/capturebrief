@@ -80,6 +80,7 @@
   const email = document.getElementById('work-email');
   const opportunity = document.getElementById('opportunity-url');
   const posture = document.getElementById('current-posture');
+  const discoveryChannel = document.getElementById('discovery-channel');
   const assumptions = document.getElementById('assumptions');
   const publicOnly = document.getElementById('public-only');
   const copyButton = document.getElementById('copy-request');
@@ -121,14 +122,18 @@
     if (trialTerms) trialTerms.hidden = !free;
     assumptions.setCustomValidity('');
     purchaseStatus.setCustomValidity('');
+    // A free-check-only URL error must not strand a buyer who switches to
+    // scope-first or already-purchased intake without editing the public link.
+    opportunity.setCustomValidity('');
     resetManualCopy();
   };
 
-  const checkoutReturn = new URLSearchParams(window.location.search).get('checkout') === 'complete';
-  if (checkoutReturn) {
-    purchaseStatus.value = 'PAID';
-    setStatus('Welcome back from Stripe. Complete this intake. Payment is verified separately before work begins.');
-  } else if (new URLSearchParams(window.location.search).get('trial') === 'free') {
+  // Query parameters are user-editable. A checkout hint is not a payment receipt.
+  // Keep the default no-card request until a buyer deliberately selects paid intake.
+  const query = new URLSearchParams(window.location.search);
+  if (query.get('checkout') === 'complete') {
+    setStatus('This link does not verify a payment. If you already purchased, choose "I already purchased" below. Payment is checked independently before work begins.');
+  } else if (query.get('trial') === 'free') {
     purchaseStatus.value = 'FREE_CHECK';
   }
   updateRequestType();
@@ -219,6 +224,18 @@
       return null;
     }
 
+    const channelLabels = {
+      SEARCH: 'Web search',
+      REFERRAL: 'Someone referred me',
+      DIRECT: 'Direct website visit',
+      SOCIAL: 'Social media',
+      OTHER: 'Other / unsure'
+    };
+    const selectedChannel = discoveryChannel.value;
+    if (selectedChannel && !Object.prototype.hasOwnProperty.call(channelLabels, selectedChannel)) {
+      return fail(discoveryChannel, 'Choose a listed discovery source or leave it blank.');
+    }
+
     const paid = purchaseStatus.value === 'PAID';
     const subject = free ? 'CaptureBrief free assumption check request'
       : paid ? 'CaptureBrief checkout-reported intake (payment verification needed)' : 'CaptureBrief scope request';
@@ -228,6 +245,7 @@
       `Purchase status (customer-reported, not verified): ${free ? 'Free assumption check requested' : paid ? 'Already purchased' : 'Scope check before purchase'}`,
       `Company: ${company.value.trim()}`,
       `Work email: ${emailText}`,
+      ...(selectedChannel ? [`Discovery source (buyer-reported, unverified): ${channelLabels[selectedChannel]}`] : []),
       `Public opportunity link: ${opportunity.value.trim()}`,
       `Current posture: ${posture.value}`,
       '',
@@ -251,7 +269,7 @@
     };
   };
 
-  [purchaseStatus, company, email, opportunity, posture, assumptions, publicOnly].forEach(control => {
+  [purchaseStatus, company, email, opportunity, posture, discoveryChannel, assumptions, publicOnly].forEach(control => {
     control.addEventListener('input', () => {
       requestRevision += 1;
       control.setCustomValidity('');

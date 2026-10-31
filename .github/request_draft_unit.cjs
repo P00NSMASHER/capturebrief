@@ -17,7 +17,7 @@ function harness(type = 'SCOPE_FIRST', overrides = {}, search = '') {
   const values = {
     'purchase-status': type, company: 'Example Federal', 'work-email': 'buyer@example.com',
     'opportunity-url': 'https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view',
-    'current-posture': 'HOLD', assumptions: 'The deadline has not changed.',
+    'current-posture': 'HOLD', 'discovery-channel': '', assumptions: 'The deadline has not changed.',
     'public-only': '', ...overrides
   };
   const fields = Object.fromEntries(Object.entries(values).map(([id, value]) => [id, control(id, value)]));
@@ -60,12 +60,28 @@ async function run() {
   assert.match(outputs.FREE_CHECK, /Free assumption check requested/);
   assert.match(outputs.FREE_CHECK, /no charge, no automatic upgrade, and no included change watch/);
   assert(!outputs.FREE_CHECK.includes('Already purchased'));
+  // Five voluntary sources, plus opt-out and tamper rejection. No collected customer data.
+  for (const [source, label] of [
+    ['SEARCH', 'Web search'], ['REFERRAL', 'Someone referred me'],
+    ['DIRECT', 'Direct website visit'], ['SOCIAL', 'Social media'], ['OTHER', 'Other / unsure']
+  ]) {
+    const page = harness('SCOPE_FIRST', { 'discovery-channel': source });
+    assert((await page.copy()).includes('Discovery source (buyer-reported, unverified): ' + label));
+  }
+  assert.doesNotMatch(outputs.FREE_CHECK, /Discovery source/);
+  const forgedChannel = harness('FREE_CHECK', { 'discovery-channel': 'PURCHASED' });
+  assert.equal(await forgedChannel.copy(), null, 'Unlisted values cannot appear in buyer attribution');
   const preview = harness('FREE_CHECK');
   preview.callbacks['preview-request:click']();
   assert.equal(preview.fields['request-manual-copy'].hidden, false, 'V3 preview displays the complete local draft');
   assert.match(preview.fields['request-plaintext'].value, /To: jay@retallyrecovery\.com/);
   assert.match(preview.fields['request-status'].textContent, /Nothing was sent or saved/);
   assert.equal(preview.context.window.location.href, undefined, 'Preview must not navigate to email');
+  preview.fields['discovery-channel'].value = 'SEARCH';
+  preview.callbacks['discovery-channel:input']();
+  assert.equal(preview.fields['request-plaintext'].value, '', 'Changing attribution invalidates preview');
+  preview.callbacks['preview-request:click']();
+  assert.match(preview.fields['request-plaintext'].value, /Discovery source \(buyer-reported, unverified\): Web search/);
   preview.fields.assumptions.value = 'Updated fictional deadline assumption.';
   preview.callbacks['assumptions:input']();
   assert.equal(preview.fields['request-plaintext'].value, '', 'Editing must invalidate the old preview');
@@ -119,10 +135,40 @@ async function run() {
   await copying;
   assert.doesNotMatch(race.fields['request-status'].textContent, /Request copied/, 'A stale draft cannot claim successful copy');
   assert.equal(race.fields['request-manual-copy'].hidden, true, 'Old manual copy cannot return after editing');
-  const returnPage = harness('', {}, '?checkout=complete');
-  assert.equal(returnPage.fields['purchase-status'].value, 'PAID');
-  assert.match(returnPage.fields['request-status'].textContent, /verified separately/);
-  const trialPage = harness('', {}, '?trial=free');
+  // A forged ?checkout=complete is not a provider-verified receipt, and must
+  // not silently change the buyer's no-card request into a paid-status claim.
+  for (const hint of ['?checkout=complete', '?checkout=complete&trial=free']) {
+    const returnPage = harness('FREE_CHECK', {}, hint);
+    assert.equal(returnPage.fields['purchase-status'].value, 'FREE_CHECK',
+      'Untrusted checkout hint must not select paid intake: ' + hint);
+    assert.match(returnPage.fields['request-status'].textContent, /does not verify a payment/);
+    const returnDraft = await returnPage.copy();
+    assert.match(returnDraft, /Free assumption check requested/);
+    assert.doesNotMatch(returnDraft, /Already purchased/);
+    // A buyer can still explicitly select paid intake; it remains unverified.
+    returnPage.fields['purchase-status'].value = 'PAID';
+    returnPage.callbacks['purchase-status:change']();
+    const paidDraft = await returnPage.copy();
+    assert.match(paidDraft, /Already purchased/);
+    assert.match(paidDraft, /payment verification needed/);
+  }
+  // A free-only SAM.gov failure must not trap someone who changes request type
+  // and keeps the same otherwise-public URL. No email is sent or payment made.
+  for (const nextType of ['SCOPE_FIRST', 'PAID']) {
+    const switched = harness('FREE_CHECK', { 'opportunity-url': 'https://www.example.org/public-rfp' });
+    assert.equal(await switched.copy(), null, 'Free check rejects non-SAM public URL');
+    assert.match(switched.fields['opportunity-url'].validityMessage, /exact public SAM.gov/);
+    switched.fields['purchase-status'].value = nextType;
+    switched.callbacks['purchase-status:change']();
+    assert.equal(switched.fields['opportunity-url'].validityMessage, '',
+      'Changing request type must clear the old free-only URL validity error');
+    const newDraft = await switched.copy();
+    assert(newDraft && newDraft.includes('Public opportunity link: https://www.example.org/public-rfp'),
+      'Valid public link must compose on the buyer-selected ' + nextType + ' path');
+    assert.doesNotMatch(newDraft, /Free assumption check requested/);
+    assert.equal(switched.context.window.location.href, undefined, 'Copy never opens email or checkout');
+  }
+  const trialPage = harness('FREE_CHECK', {}, '?trial=free');
   assert.equal(trialPage.fields['purchase-status'].value, 'FREE_CHECK');
   // One thousand deterministic, FICTIONAL buyer-path combinations. No actual
   // customers, reviews, API calls, payments, email navigation, or pilot reservations.
