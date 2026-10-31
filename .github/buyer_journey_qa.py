@@ -87,6 +87,17 @@ try:
                 check(mail_href.scheme == "mailto" and mail_href.path == "jay@retallyrecovery.com", "Fallback email recipient")
 
                 if enabled:
+                    # A buyer-controlled query string is not a Stripe receipt.
+                    return_page = context.new_page()
+                    navigate(return_page, "index.html?checkout=complete")
+                    check(return_page.locator("#purchase-status").input_value() == "FREE_CHECK",
+                          "Forged checkout-return hint does not select already-paid intake")
+                    check("does not verify a payment" in return_page.locator("#request-status").inner_text(),
+                          "Unverified checkout-return wording is explicit")
+                    return_page.locator("#purchase-status").select_option("PAID")
+                    check(return_page.locator("#purchase-status").input_value() == "PAID",
+                          "Real buyers can still explicitly select already-paid intake")
+                    return_page.close()
                     form = page.locator("#request-builder")
                     check(form.is_visible(), "Local request builder visible with JavaScript")
                     check(form.get_attribute("action") is None, "Builder has no network action")
