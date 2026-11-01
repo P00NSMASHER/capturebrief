@@ -29,3 +29,28 @@
 - Follow-up: obtain approved aggregate Netlify funnel counts (visits, qualified submissions, no-source rejects) and independently corroborated test-mode checkout/fulfillment receipts, without exporting buyer details. Pre-register 1 conversion metric and a 14-day observation window before design changes.
 - Validate paid willingness to pay using voluntary inbound buyer responses only; do not spam, collect private data unnecessarily or automatically charge anyone.
 - Target next task: verify that `main`'s public build and actual deployed site include the same intake form and report links, after legitimate CI and release authorization. No autonomous production deployment.
+
+
+## Run 2: browser release gate + independent price-position check (2026-10-31 ET)
+
+### Engineering advancement (PR #170, same branch)
+- Confirmed first-run PR #170 exact-head required `product-contract` and `windows-compatibility` checks passed before the follow-up.
+- **New executable release gate:** `scripts/qa_public_attribution_browser.py` serves the existing real `index.html` and `assets/main.js` on 127.0.0.1, blocks all non-loopback requests, refuses POST, and checks 4 explicit attribution cases at both 375 px and 1280 px. Verifies form action, method, safety confirmation, no script errors, and Escape/mobile navigation; test cases: 8 real-browser flows. The test must pass in GitHub CI before release status can be claimed.
+- `.github/workflows/capturebrief-attribution-browser.yml`: pinned checkout/setup actions, Python 3.11, Node 22.23.4, Playwright 1.57.0, real Chromium; PR-scoped trigger. No production deploy, no billed requests or customer email.
+- New-code dependencies: only pinned test-only Playwright version; no runtime dependency, payment code, domain or production change. Rollback: revert the two additive QA files on this isolated draft PR branch. Existing production is unaffected.
+- Coverage baseline: previously 3/3 offline JS tests; newly added 8 browser checks pending independent exact-head CI. **Do not equate new tests with conversion uplift.**
+
+### Demand, buyer and acquisition-channel evidence
+- https://www.reddit.com/r/govcon/comments/1r0xe6r/how_are_small_govcon_teams_making_real_go_or_nogo/ (2026-02-10): a small contractor describes a half-day manual solicitation review, followed by replies on go/no-go triage. Self-selected discussion, not verified paying demand.
+- https://winningbids.ai/pricing : publicly advertises $19/month entry-level AI bid/no-bid, a materially cheaper adjacent substitute; pricing page does not demonstrate paid adoption.
+- https://abierto.us/pricing (updated 2026-09-23): announces a planned $39/month Scout, $99 Pro and $249 Team, explicitly **not yet charging**. Treat as non-sale-priced planned positioning.
+- https://bidstride.com/pricing : advertises $150/month Radar and $300/month Capture, including bid/no-bid workflows; not proof that CaptureBrief's one-off evidence review sells.
+- https://sam.gov/opportunities : government publishes free searchable notices and optional saved searches; competitors charging purely for access or generic alerts face free official substitutes. A credible differentiator must be documented source-version/assumption verification, not mere discovery.
+- **Prioritized bounded hypothesis:** small federal IT/cyber/cloud contractors that recently found a consequential amendment will choose to submit a public-only *specific assumption* for a free check and accept the clearly disclosed $149 supervised review if its evidence trail catches a real decision-relevant change.
+- **Lowest-cost permitted channel:** a truthful, source-linked worked example and existing landing page exposed to voluntary organic search, not scraped lead lists or unsolicited messages. Track (with approved aggregate privacy-safe counts) organic visits -> legitimate request submits -> in-scope accepted -> *verified* completed paid orders. No conversions can be computed without denominator and Stripe/account evidence.
+
+### Current status
+- Prior PR #167/#168/#169 ownership unchanged; no overlapping files changed.
+- CI results for the latest commit are not yet captured here; confirm exact-head GitHub job conclusions before advancing PR.
+- Current repository is **public** according to authenticated GitHub; user's private-code preference remains unresolved. Do not leak customer records or credentials.
+- Browser test cannot prove live Netlify Form fulfillment, actual user demand, or real checkout; independently require authorized production QA and aggregated funnel evidence before stating readiness/revenue.
