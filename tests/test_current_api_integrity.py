@@ -4,6 +4,10 @@ import hashlib
 import io
 import json
 import unittest
+from unittest.mock import patch
+from urllib.request import Request
+
+import capturebrief_core.current_api as current_api
 
 from capturebrief_core.current_api import (
     SEARCH_URL,
@@ -253,6 +257,47 @@ class CurrentApiIntegrityTests(unittest.TestCase):
                 opener=lambda req,timeout=30: FakeResponse(b"abc",declared=9),
             )
 
+
+    def test_api_redirect_guard_rejects_unapproved_hops_before_network(self):
+        request = Request(SEARCH_URL + "?api_key=synthetic")
+        guard = current_api._ApprovedCurrentApiRedirectGuard()
+        denied = (
+            "https://untrusted.example/search?api_key=synthetic",
+            "http://api.sam.gov/prod/opportunities/v2/search",
+            "https://api.sam.gov:8443/prod/opportunities/v2/search",
+            "https://api.sam.gov/prod/opportunities/v2/search#fragment",
+            " https://api.sam.gov/prod/opportunities/v2/search",
+            "https://api.sam.gov/prod/opportunities/v2/search\\\\@untrusted.example",
+        )
+        for target in denied:
+            with self.subTest(target=target):
+                with self.assertRaisesRegex(CurrentApiError, "redirect target"):
+                    guard.redirect_request(request, None, 302, "Found", {}, target)
+
+        # The documented same-authority endpoint remains backwards compatible.
+        valid = "https://api.sam.gov/opportunities/v2/search?api_key=synthetic"
+        allowed = guard.redirect_request(request, None, 302, "Found", {}, valid)
+        self.assertEqual(allowed.full_url, valid)
+
+    def test_default_api_transport_installs_guard_not_unguarded_urlopen(self):
+        raw = json.dumps(payload()).encode()
+
+        class FakeOpener:
+            def open(self, request, timeout):
+                return FakeResponse(raw)
+
+        with patch.object(current_api, "build_opener", return_value=FakeOpener()) as factory:
+            observation = fetch_latest_active(
+                solicitation_number="SOL-1",
+                posted_from="09/01/2026",
+                posted_to="09/21/2026",
+                api_key="synthetic",
+            )
+        self.assertEqual(observation["pagination"]["total_records"], 1)
+        factory.assert_called_once()
+        self.assertIsInstance(
+            factory.call_args.args[0], current_api._ApprovedCurrentApiRedirectGuard
+        )
 
 if __name__=="__main__":
     unittest.main()
