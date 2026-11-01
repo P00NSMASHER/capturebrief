@@ -135,6 +135,31 @@ class ApprovedReceiptResourceLinkTypesTests(unittest.TestCase):
         self.assertEqual((verdict, action, findings), ("CURRENT_VERIFIED", history[0], []))
 
 
+class ApprovedReceiptProviderActiveStatusTests(unittest.TestCase):
+    def test_rehashed_archived_or_malformed_source_status_never_verifies_active(self):
+        # The producer validates source status; retained proof validation must
+        # independently reject altered evidence even with a matching SHA-256.
+        for active in ("No", "yes", "YES", None, False, True, 1):
+            with self.subTest(active=active):
+                receipt, history = _receipt()
+                receipt["evidence_payload"]["active"] = active
+                receipt["evidence_payload_sha256"] = sha256_hex(
+                    canonical_json(receipt["evidence_payload"])
+                )
+                verdict, action, findings = _check(receipt, history)
+                self.assertEqual((verdict, action), ("CURRENT_UNKNOWN", None))
+                self.assertIn("RECEIPT_APPROVED_API_NOT_ACTIVE",
+                              {finding.code for finding in findings})
+        receipt, history = _receipt()
+        receipt["evidence_payload"].pop("active")
+        receipt["evidence_payload_sha256"] = sha256_hex(
+            canonical_json(receipt["evidence_payload"])
+        )
+        self.assertIn("RECEIPT_APPROVED_API_NOT_ACTIVE",
+                      {finding.code for finding in _check(receipt, history)[2]})
+        self.assertEqual(_check(_receipt()[0], _receipt()[1])[0], "CURRENT_VERIFIED")
+
+
 class ApprovedReceiptModeBoundaryTests(unittest.TestCase):
     def test_automated_api_source_requires_explicit_mode(self):
         # Before this change, dropping APPROVED_API from an otherwise valid
