@@ -135,5 +135,38 @@ class ApprovedReceiptResourceLinkTypesTests(unittest.TestCase):
         self.assertEqual((verdict, action, findings), ("CURRENT_VERIFIED", history[0], []))
 
 
+class ApprovedReceiptModeBoundaryTests(unittest.TestCase):
+    def test_automated_api_source_requires_explicit_mode(self):
+        # Before this change, dropping APPROVED_API from an otherwise valid
+        # receipt skipped all source-contract validation as a manual receipt.
+        for mode in (None, "HUMAN_SUPERVISED"):
+            with self.subTest(mode=mode):
+                receipt, history = _receipt()
+                if mode is None:
+                    receipt.pop("automation_mode")
+                else:
+                    receipt["automation_mode"] = mode
+                verdict, action, findings = _check(receipt, history)
+                self.assertEqual((verdict, action), ("CURRENT_UNKNOWN", None))
+                self.assertIn(
+                    "RECEIPT_APPROVED_API_MODE_REQUIRED",
+                    {finding.code for finding in findings},
+                )
+
+    def test_legacy_manual_web_receipts_still_pass(self):
+        # Maintain the existing generic first-party SAM manual contract.
+        for mode in (None, "HUMAN_SUPERVISED"):
+            with self.subTest(mode=mode):
+                receipt, history = _receipt()
+                receipt["source_url"] = "https://sam.gov/opportunities/example"
+                if mode is None:
+                    receipt.pop("automation_mode")
+                else:
+                    receipt["automation_mode"] = mode
+                verdict, action, findings = _check(receipt, history)
+                self.assertEqual((verdict, action, findings),
+                                 ("CURRENT_VERIFIED", history[0], []))
+
+
 if __name__ == "__main__":
     unittest.main()
