@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from typing import Any, Iterable
 from .model import FAMILY_STATUSES, RECEIPT_SEMANTICS, Finding, canonical_json, first_party_sam, history_set_digest, parse_dt, sha256_hex, valid_sha256
 from .source_policy import classify_sam_url
+from .current_api import CurrentApiError, _nonnegative_int
 
 def _fresh(r:dict[str,Any],now:datetime)->bool:
     observed,expires=parse_dt(r.get("observed_at")),parse_dt(r.get("expires_at"))
@@ -37,12 +38,15 @@ def _approved_api_contract_ok(r:dict[str,Any])->tuple[bool,str|None,str|None]:
     pagination=evidence.get("pagination")
     if not isinstance(pagination,dict) or pagination.get("complete") is not True:
         return False,"RECEIPT_APPROVED_API_PAGINATION_MISSING","Approved API receipt lacks pagination-completeness evidence."
+    # Apply the same strict count contract as SAM API ingestion. int() silently
+    # converts JSON booleans and truncates fractional floats, falsely proving
+    # complete pagination even when the retained receipt's types are invalid.
     try:
-        total=int(pagination.get("total_records"))
-        returned=int(pagination.get("returned_records"))
-        limit=int(pagination.get("limit"))
-        offset=int(pagination.get("offset"))
-    except (TypeError,ValueError):
+        total=_nonnegative_int(pagination.get("total_records"), "pagination.total_records")
+        returned=_nonnegative_int(pagination.get("returned_records"), "pagination.returned_records")
+        limit=_nonnegative_int(pagination.get("limit"), "pagination.limit")
+        offset=_nonnegative_int(pagination.get("offset"), "pagination.offset")
+    except CurrentApiError:
         return False,"RECEIPT_APPROVED_API_PAGINATION_INVALID","Approved API receipt pagination values are malformed."
     if min(total,returned,limit,offset)<0 or offset!=0 or total!=returned or returned>limit:
         return False,"RECEIPT_APPROVED_API_PAGINATION_INCOMPLETE","Approved API receipt does not prove a complete first page/result set."
