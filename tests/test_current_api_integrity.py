@@ -140,6 +140,50 @@ class CurrentApiIntegrityTests(unittest.TestCase):
                 opener=lambda req,timeout=30: FakeResponse(raw),
             )
 
+    def test_source_resource_links_require_json_array_or_optional_null(self):
+        # A JSON object with a first-party resource URL as its KEY previously
+        # became list(dict) and looked like verified provider attachment data.
+        # Falsey malformed types were silently coerced to an empty list.
+        for malformed in (
+            {LINK: "object value must not be accepted as an API array"},
+            {},
+            False,
+            0,
+            "",
+        ):
+            with self.subTest(malformed=malformed):
+                source = payload()
+                source["opportunitiesData"][0]["resourceLinks"] = malformed
+                raw = json.dumps(source).encode()
+                with self.assertRaisesRegex(CurrentApiError, "resourceLinks must be a list"):
+                    fetch_latest_active(
+                        solicitation_number="SOL-1",
+                        posted_from="09/01/2026",
+                        posted_to="09/21/2026",
+                        api_key="test-key",
+                        opener=lambda req,timeout=30: FakeResponse(raw),
+                    )
+
+        # Keep valid empty arrays and legacy absent/null fields compatible.
+        for value in ([], None, "missing"):
+            with self.subTest(valid=value):
+                source = payload()
+                row = source["opportunitiesData"][0]
+                if value == "missing":
+                    row.pop("resourceLinks")
+                else:
+                    row["resourceLinks"] = value
+                raw = json.dumps(source).encode()
+                observation = fetch_latest_active(
+                    solicitation_number="SOL-1",
+                    posted_from="09/01/2026",
+                    posted_to="09/21/2026",
+                    api_key="test-key",
+                    opener=lambda req,timeout=30: FakeResponse(raw),
+                )
+                self.assertEqual(observation["resource_links"], [])
+
+
     def test_resource_capture_refuses_legacy_under_specified_observation(self):
         observation=api_observation()
         observation.pop("pagination")
