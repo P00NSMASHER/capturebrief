@@ -23,8 +23,7 @@ MAX_OBSERVATION_AGE = timedelta(hours=20)
 EXPECTED_PAGES = {"Home", "Homework", "Reading Work", "Weekly Spelling List", "Tests", "Religion"}
 FIELDS = (
     "schemaVersion", "weekLabel", "sourceCapturedAt", "sourceSufficient",
-    "summary", "subjects", "homework", "reminders", "questions",
-    "importantDates", "lunchMenu", "vocabulary", "gaps"
+    "subjects", "homework", "questions", "importantDates", "vocabulary", "gaps"
 )
 
 
@@ -86,6 +85,9 @@ def sanitized_candidate(repo_bytes: bytes, published_bytes: bytes, now: datetime
         raise FallbackError("TEACHER_SOURCE_MISSING")
 
     selected = {key: pack[key] for key in FIELDS if key in pack}
+    # No ambiguous parent reminders, private notices or previous-week lunch
+    # are imported into another public site under a current-week label.
+    selected["summary"] = "Source-reviewed Grade 2 teacher study materials."
     # Keep only explicitly teacher-sourced dates, never uploaded parent notices.
     dates = selected.get("importantDates", [])
     if not isinstance(dates, list):
