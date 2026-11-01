@@ -75,6 +75,33 @@ class ApprovedReceiptPaginationTypesTests(unittest.TestCase):
                     {finding.code for finding in findings},
                 )
 
+    def test_rehashed_zero_result_page_cannot_certify_a_named_notice(self):
+        # The normal producer selects one matching notice; a zero-row API page
+        # could not have contained it, even when both counts agree and the
+        # retained evidence digest is recomputed to match.
+        for limit in (0, 100):
+            with self.subTest(limit=limit):
+                receipt, history = _receipt()
+                pagination = receipt["evidence_payload"]["pagination"]
+                pagination.update(total_records=0, returned_records=0, limit=limit)
+                receipt["evidence_payload_sha256"] = sha256_hex(
+                    canonical_json(receipt["evidence_payload"])
+                )
+                verdict, action, findings = _check(receipt, history)
+                self.assertEqual((verdict, action), ("CURRENT_UNKNOWN", None))
+                self.assertIn(
+                    "RECEIPT_APPROVED_API_PAGINATION_INCOMPLETE",
+                    {finding.code for finding in findings},
+                )
+
+    def test_api_observation_with_zero_rows_cannot_mint_named_receipt(self):
+        observation = api_observation()
+        observation["pagination"].update(total_records=0, returned_records=0)
+        with self.assertRaisesRegex(CurrentApiError, "pagination contract"):
+            make_current_action_receipt(
+                observation, history_action_ids=[observation["record"]["noticeId"]]
+            )
+
     def test_decimal_strings_keep_existing_api_compatibility(self):
         receipt, history = _receipt()
         for field, value in (
