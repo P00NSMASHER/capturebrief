@@ -53,6 +53,13 @@ if (intakeForm) {
   // Public intake currently lives on the home page. Do not copy arbitrary
   // user-controlled URL paths, query strings, or fragments into form data.
   if (page) page.value = window.location.pathname === '/index.html' ? '/index.html' : '/';
-  if (utmSource) utmSource.value = cleanTag(params.get('utm_source'));
-  if (utmCampaign) utmCampaign.value = cleanTag(params.get('utm_campaign'));
+  // URLSearchParams.get() silently takes the first repeated key. A link such
+  // as ?utm_source=paid&utm_source=organic must not be counted as a verified
+  // acquisition channel. Keep distinct or repeated values unattributed.
+  const cleanUniqueTag = (key) => {
+    const values = params.getAll(key);
+    return values.length === 1 ? cleanTag(values[0]) : '';
+  };
+  if (utmSource) utmSource.value = cleanUniqueTag('utm_source');
+  if (utmCampaign) utmCampaign.value = cleanUniqueTag('utm_campaign');
 }
