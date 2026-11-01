@@ -33,6 +33,11 @@ def _approved_api_contract_ok(r:dict[str,Any])->tuple[bool,str|None,str|None]:
         return False,"RECEIPT_AUTOMATION_MODE_INVALID","Receipt automation mode is not recognized."
     if classify_sam_url(str(r.get("source_url","")))!="SAM_PUBLIC_API":
         return False,"RECEIPT_APPROVED_API_SOURCE_INVALID","Approved API receipt does not point to the documented SAM public API."
+    # This API source only attests an active opportunity. Receipt metadata must
+    # not re-label its active evidence as cancelled or archived provenance.
+    if (str(r.get("semantics","")).upper()!="CURRENT_ACTIVE"
+            or str(r.get("observed_family_status","")).upper()!="ACTIVE"):
+        return False,"RECEIPT_APPROVED_API_SEMANTICS_INVALID","Approved API source cannot establish a terminal or non-active family status."
     observed, expires = parse_dt(r.get("observed_at")), parse_dt(r.get("expires_at"))
     if (observed is None or expires is None or expires <= observed
             or expires - observed > MAX_APPROVED_API_RECEIPT_TTL):
