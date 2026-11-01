@@ -1,9 +1,13 @@
 from __future__ import annotations
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable
 from .model import FAMILY_STATUSES, RECEIPT_SEMANTICS, Finding, canonical_json, first_party_sam, history_set_digest, parse_dt, sha256_hex, valid_sha256
 from .source_policy import classify_sam_url
 from .current_api import CurrentApiError, _nonnegative_int
+
+# The current-action API receipt producer defaults to one day; downstream
+# verification must reject longer asserted expiry even with a matching digest.
+MAX_APPROVED_API_RECEIPT_TTL = timedelta(hours=24)
 
 def _fresh(r:dict[str,Any],now:datetime)->bool:
     observed,expires=parse_dt(r.get("observed_at")),parse_dt(r.get("expires_at"))
@@ -29,6 +33,10 @@ def _approved_api_contract_ok(r:dict[str,Any])->tuple[bool,str|None,str|None]:
         return False,"RECEIPT_AUTOMATION_MODE_INVALID","Receipt automation mode is not recognized."
     if classify_sam_url(str(r.get("source_url","")))!="SAM_PUBLIC_API":
         return False,"RECEIPT_APPROVED_API_SOURCE_INVALID","Approved API receipt does not point to the documented SAM public API."
+    observed, expires = parse_dt(r.get("observed_at")), parse_dt(r.get("expires_at"))
+    if (observed is None or expires is None or expires <= observed
+            or expires - observed > MAX_APPROVED_API_RECEIPT_TTL):
+        return False,"RECEIPT_APPROVED_API_TTL_INVALID","Approved API receipt expiry exceeds the one-day source-verification window."
     evidence=r.get("evidence_payload")
     if not isinstance(evidence,dict):
         return False,"RECEIPT_APPROVED_API_EVIDENCE_MISSING","Approved API receipt lacks structured evidence."
