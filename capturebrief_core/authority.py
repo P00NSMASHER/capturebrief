@@ -44,6 +44,10 @@ def _approved_api_contract_ok(r:dict[str,Any])->tuple[bool,str|None,str|None]:
         return False,"RECEIPT_APPROVED_API_CONTRACT_INVALID","Approved API receipt source contract is invalid."
     if str(evidence.get("notice_id",""))!=str(r.get("asserted_action_id","")):
         return False,"RECEIPT_APPROVED_API_NOTICE_MISMATCH","Approved API receipt notice ID does not match the asserted action."
+    # Verify the GSA-defined active state independently of upstream parsing.
+    # A matching evidence digest does not certify an archived notice as active.
+    if evidence.get("active") != "Yes":
+        return False,"RECEIPT_APPROVED_API_NOT_ACTIVE","Approved API receipt does not prove that the provider record is active."
     if not valid_sha256(evidence.get("api_payload_sha256")):
         return False,"RECEIPT_APPROVED_API_PAYLOAD_HASH_INVALID","Approved API receipt lacks a valid API payload SHA-256."
     if not valid_sha256(evidence.get("api_response_sha256")):
