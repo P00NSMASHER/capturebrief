@@ -14,7 +14,8 @@ async function exercise(mode) {
   const controls = {
     'purchase-status': field('SCOPE_FIRST'), 'opportunity-url': field('https://example.org/public-notice'),
     'company': field('Example Federal'), 'work-email': field('buyer@example.com'),
-    'current-posture': field('HOLD'), 'assumptions': field('Confirm the deadline.'),
+    'current-posture': field('HOLD'), 'discovery-channel': field(''),
+    'assumptions': field('Confirm the deadline.'),
     'public-only': field(''), 'request-status': { textContent: '', dataset: {} },
     'request-manual-copy': { hidden: true }, 'request-plaintext': field(''),
     'request-builder': { hidden: true, reportValidity() { return true; }, addEventListener() {} },

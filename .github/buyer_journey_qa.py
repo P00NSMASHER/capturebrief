@@ -87,6 +87,17 @@ try:
                 check(mail_href.scheme == "mailto" and mail_href.path == "jay@retallyrecovery.com", "Fallback email recipient")
 
                 if enabled:
+                    # A buyer-controlled query string is not a Stripe receipt.
+                    return_page = context.new_page()
+                    navigate(return_page, "index.html?checkout=complete")
+                    check(return_page.locator("#purchase-status").input_value() == "FREE_CHECK",
+                          "Forged checkout-return hint does not select already-paid intake")
+                    check("does not verify a payment" in return_page.locator("#request-status").inner_text(),
+                          "Unverified checkout-return wording is explicit")
+                    return_page.locator("#purchase-status").select_option("PAID")
+                    check(return_page.locator("#purchase-status").input_value() == "PAID",
+                          "Real buyers can still explicitly select already-paid intake")
+                    return_page.close()
                     form = page.locator("#request-builder")
                     check(form.is_visible(), "Local request builder visible with JavaScript")
                     check(form.get_attribute("action") is None, "Builder has no network action")
@@ -102,7 +113,37 @@ try:
                     check("1 of 1 question" in page.locator("#v3-question-meter").inner_text(), "V3 free check counter matches limit")
                     check(page.locator('[data-v4-preflight]').is_visible(), "V4 source checklist is available with JavaScript")
                     check(page.locator('[data-v4-status]').inner_text() == 'EVIDENCE GAPS TO CHECK', "Unreviewed sources never claim readiness")
-                    page.locator('[data-v4-gate="notice"]').select_option('found')
+                    for gate in ('notice', 'amendments', 'eligibility', 'submission', 'rules'):
+                        page.locator(f'[data-v4-gate="{gate}"]').select_option('found')
+                    check(page.locator('[data-v4-status]').inner_text() == 'EVIDENCE GAPS TO CHECK',
+                          "Five buyer-marked references without a SAM notice must not appear review-ready")
+                    check('public SAM.gov opportunity link' in page.locator('[data-v4-details]').inner_text(),
+                          "Missing notice must display actionable buyer guidance")
+                    page.locator('#v4-notice-url').fill('https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view')
+                    check(page.locator('[data-v4-status]').inner_text() == 'READY TO REQUEST HUMAN REVIEW',
+                          "A valid notice and five buyer-marked references preserve preflight readiness")
+                    check('needed for readiness' in page.locator('label[for="v4-notice-url"]').inner_text(),
+                          "The preflight clearly labels when its SAM link is needed")
+                    check(page.locator('#v4-notice-url').get_attribute('aria-describedby') == 'v4-notice-help',
+                          "Canonical notice guidance is announced as accessible input help")
+                    # The buyer should not have to retype the exact same public notice.
+                    valid_notice = 'https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view'
+                    page.locator('.v4-preflight-copy a[href="#request"]').click()
+                    check(page.locator('#opportunity-url').input_value() == valid_notice,
+                          "Explicit preflight review click transfers a valid public notice locally")
+                    check(page.locator('#purchase-status').input_value() == 'SCOPE_FIRST',
+                          "Preflight handoff requests scope confirmation, not payment")
+                    page.locator('#opportunity-url').fill('https://sam.gov/opp/existing')
+                    page.locator('#v4-notice-url').fill('https://sam.gov/opp/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/view')
+                    page.locator('.v4-preflight-copy a[href="#request"]').click()
+                    check(page.locator('#opportunity-url').input_value() == 'https://sam.gov/opp/existing',
+                          "Preflight never overwrites an existing buyer opportunity")
+                    page.locator('#opportunity-url').fill('')
+                    page.locator('#v4-notice-url').fill('https://example.invalid/not-a-notice')
+                    page.locator('.v4-preflight-copy a[href="#request"]').click()
+                    check(page.locator('#opportunity-url').input_value() == '',
+                          "Invalid public link never enters request intake")
+                    page.locator('#v4-notice-url').fill(valid_notice)
                     page.locator('[data-v4-gate="amendments"]').select_option('conflict')
                     check('HOLD' in page.locator('[data-v4-status]').inner_text(), "Conflicting source never claims verified readiness")
                     page.locator('#v4-notice-url').fill('https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view')
@@ -159,6 +200,19 @@ try:
                     page.locator("#opportunity-url").fill("https://example.org/unrelated-rfp")
                     page.locator("#copy-request").click()
                     check("exact public SAM.gov" in page.locator("#request-status").inner_text(), "Free check refuses non-SAM opportunity links")
+                    # Same URL is acceptable for scope-first review. Avoid a silent
+                    # stuck form due to persistent customValidity from free trial.
+                    page.locator("#assumptions").fill("The deadline has not changed.")
+                    page.locator("#purchase-status").select_option("SCOPE_FIRST")
+                    check(page.locator("#opportunity-url").evaluate("(el) => el.validationMessage") == "",
+                          "Switching to scope-first clears the old free-only URL error")
+                    page.locator("#copy-request").click()
+                    page.wait_for_function("""() => window.__qaCopied?.includes(
+                        'Public opportunity link: https://example.org/unrelated-rfp')""")
+                    check("Scope check before purchase" in page.evaluate("window.__qaCopied"),
+                          "Public non-SAM scope request is not trapped by previous free-only validation")
+                    check(len(requests_before) == loaded_requests, "Request-path switch has no network side effect")
+                    page.locator("#purchase-status").select_option("FREE_CHECK")
                     page.locator("#opportunity-url").fill("https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view")
                     page.locator("#assumptions").fill("The deadline has not changed.\nThe cited edition applies.")
                     page.locator("#copy-request").click()
@@ -170,10 +224,23 @@ try:
                     check("no charge, no automatic upgrade, and no included change watch" in free_draft, "Free request preserves billing and watch boundaries")
                     check(page.locator("#trial-terms").is_visible(), "Free-check limits are visible before sending")
                     check(len(requests_before) == loaded_requests, "Free request copying makes no network request")
+                    check("Discovery source" not in free_draft, "No attribution inferred without buyer choice")
+                    page.locator("#discovery-channel").select_option("SEARCH")
+                    page.locator("#preview-request").click()
+                    check("Discovery source (buyer-reported, unverified): Web search" in page.locator("#request-plaintext").input_value(),
+                          "Voluntary source is included in local draft without claiming verified attribution")
+                    check(len(requests_before) == loaded_requests, "Source selection adds no tracking or network call")
+                    page.locator("#discovery-channel").select_option("")
+                    check(not page.locator("#request-manual-copy").is_visible(), "Changing attribution clears stale preview")
+                    page.locator("#preview-request").click()
+                    check("Discovery source" not in page.locator("#request-plaintext").input_value(),
+                          "Opting out removes attribution from draft")
 
                     navigate(page, "index.html?checkout=complete#request")
-                    check(page.locator("#purchase-status").input_value() == "PAID", "Checkout return selects paid intake")
-                    check("verified separately" in page.locator("#request-status").inner_text(), "Checkout return avoids an unverified payment claim")
+                    check(page.locator("#purchase-status").input_value() == "FREE_CHECK",
+                          "Checkout return keeps no-card intake until buyer selects paid")
+                    check("does not verify a payment" in page.locator("#request-status").inner_text(),
+                          "Checkout hint explicitly rejects unverified payment claims")
                 else:
                     check(not page.locator("#request-builder").is_visible(), "No-JS builder is hidden")
                     check(not page.locator("#v3-question-desk").is_visible(), "V3 button desk is hidden without JS")

@@ -237,6 +237,20 @@ with sync_playwright() as pw:
 
             page.evaluate("Object.defineProperty(navigator,'clipboard',{value:{writeText:async t=>{window.__qaCopied=t}},configurable:true})")
             if name == "index.html":
+                # Real Chromium/WebKit non-submitting buyer-path regression.
+                page.locator("#purchase-status").select_option("FREE_CHECK")
+                bespoke = "The public amendment changes our delivery deadline."
+                page.locator("#assumptions").fill(bespoke)
+                page.locator('[data-assumption-template="deadline"]').click()
+                check(page.locator("#assumptions").input_value() == bespoke,
+                      "CaptureBrief: free suggestion preserves custom buyer question")
+                check("Your question was kept" in page.locator("#v3-question-meter").inner_text(),
+                      "CaptureBrief: buyer receives preservation guidance")
+                page.locator("#assumptions").fill("")
+                page.locator('[data-assumption-template="deadline"]').click()
+                page.locator('[data-assumption-template="rule"]').click()
+                check("rule edition" in page.locator("#assumptions").input_value(),
+                      "CaptureBrief: untouched free templates remain switchable")
                 page.locator("#purchase-status").select_option("SCOPE_FIRST")
                 page.locator("#company").fill("Example Federal")
                 page.locator("#work-email").fill("buyer@example.com")

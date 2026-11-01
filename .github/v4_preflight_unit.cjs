@@ -11,6 +11,7 @@ for(let i=0;i<1024;i++){
  for(const key of keys){values[key]=states[t%4];t=Math.floor(t/4);}
  const result=util.evaluate(values,'');
  assert.equal(result.found+result.missing+result.conflicted,5);
+ assert.notEqual(result.label,'READY TO REQUEST HUMAN REVIEW', 'A missing notice must never appear review-ready');
  assert.match(result.report,/BUYER-MARKED, UNVERIFIED/);
  assert.match(result.report,/No sources were fetched or verified/);
  assert(!result.report.includes('Approved to bid'));
@@ -18,6 +19,11 @@ for(let i=0;i<1024;i++){
  counted++;
 }
 assert.equal(counted,1024);
+const missingNotice=util.evaluate(Object.fromEntries(keys.map(k=>[k,'found'])),'   ');
+assert.equal(missingNotice.url,'');
+assert.equal(missingNotice.label,'EVIDENCE GAPS TO CHECK');
+assert.match(missingNotice.detail,/public SAM\.gov opportunity link/);
+assert.match(missingNotice.report,/Public notice: Not provided/);
 const all=util.evaluate(Object.fromEntries(keys.map(k=>[k,'found'])),
   'https://sam.gov/opp/c20a138049b94add92f0f32a41856585/view');
 assert.equal(all.found,5);
