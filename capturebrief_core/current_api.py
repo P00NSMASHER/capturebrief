@@ -252,7 +252,17 @@ def fetch_latest_active(
         raise CurrentApiCardinalityError(len(exact))
 
     record = exact[0]
-    links = list(record.get("resourceLinks") or [])
+    raw_links = record.get("resourceLinks")
+    # Missing/null resourceLinks denotes no attachments in legacy SAM rows.
+    # But never iterate a JSON object as though its keys were a valid array:
+    # that would incorrectly turn an attacker-controlled URL key into source
+    # evidence. Falsey malformed values must not silently become [] either.
+    if raw_links is None:
+        links = []
+    elif isinstance(raw_links, list):
+        links = raw_links
+    else:
+        raise CurrentApiError("SAM Opportunities API resourceLinks must be a list or null")
     for link in links:
         try:
             require_approved_automation(str(link), expected="SAM_API_RESOURCE_LINK")
