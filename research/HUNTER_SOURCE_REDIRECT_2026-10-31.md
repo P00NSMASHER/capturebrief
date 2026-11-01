@@ -1,0 +1,23 @@
+# Revenue-product source hunter checkpoint: 2026-10-31 (raw redirect integrity)
+
+## Repo ownership and exact baseline
+- Existing canonical product repo: `P00NSMASHER/capturebrief`, protected `main` at `0aaa462d42078581bba9e3097e569dadc7c39576`. Public `gh-pages` website is separately owned. No website, payment, deployments or production settings touched.
+- Active website/conversion work: [CaptureBrief #167](https://github.com/P00NSMASHER/capturebrief/pull/167), draft and based on `gh-pages`. This branch changes only Python source transport validation, a narrow regression suite, and this report. No overlapping edits.
+- Other product ownership: [x402 source-rate PR #64](https://github.com/P00NSMASHER/x402-product-factory/pull/64) remains draft, and [RecoveryOS freight-money PR #889](https://github.com/P00NSMASHER/github-value-hunt-ledger/pull/889) belongs to a separate existing source team. No conflicting commits or PRs there. Standalone repositories named `retally`, `freightrecovery`, `recoveryos` were not discoverable from this connection, so no assumption of standalone ownership.
+
+## Reproduced defect and bounded fix
+`classify_sam_url` correctly rejects noncanonical raw source URLs. The downstream `require_approved_extract_delivery` previously called Python `urlsplit(delivered_url)` *without checking raw redirect characters first*. Python strips leading C0/space and embedded CR/LF/TAB, so at least six variants of an exact approved S3 extract URL could satisfy the final destination allowlist even when the received URL bytes were not canonical. Demonstrated with local Python 3.13 `urlsplit` (six bypass-shaped synthetic URLs, no real network or credentials). This is a source-integrity/authorization inconsistency, **not evidence of a confirmed malicious redirect or customer incident**.
+
+Fix: reject non-ASCII, C0/DEL, space, and backslash in `delivered_url` *before* parsing; error text never includes attacker-provided URL or presigned query. Preserve exact legitimate first-party and unsigned/presigned official-object bindings. The existing `_OfficialExtractRedirectGuard` invokes the same validator before every redirected hop. New nine-case adversarial unittest plus approved-path/redirect negative control. Existing separate signed-transport tests remain required. No dependency addition or imported source bytes; no lockfile or NOTICE change.
+
+## Public GitHub candidate review (not adopted)
+1. [aio-libs/yarl pinned 28b13348](https://github.com/aio-libs/yarl/tree/28b13348d88eef328be65e34fcb128d0dc08ca2d) uses [Apache-2.0 license](https://github.com/aio-libs/yarl/blob/28b13348d88eef328be65e34fcb128d0dc08ca2d/LICENSE), verified LICENSE Git blob `d645695673349e3947e8e5ae42332d0ac3164cd7`. Commit activity 2026-10-30. A mature parser, but potential URL normalization is undesirable for exact raw publisher authorization, and the dependency chain is too broad for this one guard.
+2. [python-hyper/rfc3986 pinned 3bd3832b](https://github.com/python-hyper/rfc3986/tree/3bd3832b72eb981d080514a8192046e3177263be) uses [Apache-2.0 license](https://github.com/python-hyper/rfc3986/blob/3bd3832b72eb981d080514a8192046e3177263be/LICENSE), verified LICENSE Git blob `72ce24cf02822ef81cd50905c094b5c7ac958df8`. Commit activity 2026-10-05. Useful for broad RFC URI validation; not needed for a strict *raw bytes* check.
+- Both candidates are public, non-archived at inspection. No upstream packages installed, transitive dependencies imported, or upstream code copied. Advisories/transitive licenses would need full review if either becomes a runtime dependency. Minimal standard-library patch preferred.
+
+## Evidence, cost and follow-up
+- Before: six Python URL-parser-sanitized malformed variants satisfied final-host/path allowlist conditions; after: new first-stage raw validation rejects them, plus three additional malformed classes covered by regression tests. These are synthetic input counts, not observed production abuse.
+- Estimated engineer-hours saved: **unmeasured**. The avoided need for third-party parser adoption and future provenance rework is a qualitative opportunity, not a claimed days/weeks savings.
+- Independent GitHub CI and actual protected merge status must be checked at exact PR head; **do not imply green checks before they complete**. Rollback: revert three isolated branch commits; production unchanged until a protected merge is separately authorized.
+- Buyer demand, customers, Stripe settlements and net profit: **not measured or verified** in this run.
+- Next: verify all required Linux/Windows Python tests and any raw-policy workflow on the exact PR SHA; repair real failures, then choose a distinct source-ETL/idempotency defect without colliding with the shared engine lab.

@@ -74,13 +74,29 @@ def reconcile_capturebrief_payment(
           and type(session.get("amount_total")) is int
           and session["amount_total"] == AMOUNT_USD_CENTS, "CHECKOUT_AMOUNT_MISMATCH")
 
-    session_email = _safe_email((session.get("customer_details") or {}).get("email"))
+    # Stripe can expose both buyer-email fields. Treat them as independent
+    # evidence, not alternatives: one matching address cannot excuse a
+    # contradictory second address or a malformed non-null address.
+    details = session.get("customer_details")
+    if details is not None and not isinstance(details, dict):
+        check(False, "PROCESSOR_CUSTOMER_DETAILS_INVALID")
+        details = {}
+    details = details or {}
+    session_email = _safe_email(details.get("email"))
     session_fallback_email = _safe_email(session.get("customer_email"))
     check(session_email is not None or session_fallback_email is not None,
           "PROCESSOR_BUYER_EMAIL_MISSING")
+    check(details.get("email") is None or session_email is not None,
+          "PROCESSOR_BUYER_EMAIL_INVALID")
+    check(session.get("customer_email") is None or session_fallback_email is not None,
+          "PROCESSOR_BUYER_EMAIL_INVALID")
+    if session_email is not None and session_fallback_email is not None:
+        check(session_email == session_fallback_email,
+              "PROCESSOR_BUYER_EMAIL_CONFLICT")
     if expected_email:
-        check(expected_email in (session_email, session_fallback_email),
-              "BUYER_EMAIL_MISMATCH")
+        check(all(email == expected_email
+                  for email in (session_email, session_fallback_email)
+                  if email is not None), "BUYER_EMAIL_MISMATCH")
 
     pi_id = session.get("payment_intent")
     check(_valid_id(pi_id, "pi"), "MISSING_PAYMENT_INTENT")

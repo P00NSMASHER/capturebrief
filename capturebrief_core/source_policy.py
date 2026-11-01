@@ -157,6 +157,16 @@ def require_approved_extract_delivery(entrypoint: str, delivered_url: str) -> st
     automate arbitrary s3.amazonaws.com URLs.
     """
     require_approved_automation(entrypoint, expected="SAM_DATA_SERVICES_EXTRACT")
+    # urlsplit silently discards leading C0/space and embedded CR/LF/TAB.
+    # Redirects must be authorized as *received*, not after parser cleanup.
+    # This applies to unsigned and presigned object URLs alike.
+    if (
+        not isinstance(delivered_url, str)
+        or not delivered_url
+        or not delivered_url.isascii()
+        or any(ord(char) < 0x21 or ord(char) >= 0x7f or char == "\\" for char in delivered_url)
+    ):
+        raise SourcePolicyError("unapproved extract redirect destination")
     try:
         start = urlsplit(entrypoint)
         final = urlsplit(delivered_url)
