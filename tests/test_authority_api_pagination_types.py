@@ -9,7 +9,7 @@ import unittest
 from datetime import timedelta
 
 from capturebrief_core.authority import validate_current_action_receipts
-from capturebrief_core.current_api import make_current_action_receipt
+from capturebrief_core.current_api import CurrentApiError, make_current_action_receipt
 from capturebrief_core.model import canonical_json, parse_dt, sha256_hex
 from tests.test_current_api_integrity import api_observation
 
@@ -166,6 +166,55 @@ class ApprovedReceiptModeBoundaryTests(unittest.TestCase):
                 verdict, action, findings = _check(receipt, history)
                 self.assertEqual((verdict, action, findings),
                                  ("CURRENT_VERIFIED", history[0], []))
+
+
+class ApprovedReceiptFreshnessBoundaryTests(unittest.TestCase):
+    def test_digest_valid_extended_api_receipt_is_not_current(self):
+        # Before the fix a fully hashed 25-hour (or year-long) API receipt
+        # was still accepted one minute after observation.
+        for hours in (25, 24 * 365):
+            with self.subTest(hours=hours):
+                receipt, history = _receipt()
+                observed = parse_dt(receipt["observed_at"])
+                self.assertIsNotNone(observed)
+                receipt["expires_at"] = (observed + timedelta(hours=hours)).isoformat()
+                verdict, action, findings = _check(receipt, history)
+                self.assertEqual((verdict, action), ("CURRENT_UNKNOWN", None))
+                self.assertIn(
+                    "RECEIPT_APPROVED_API_TTL_INVALID",
+                    {finding.code for finding in findings},
+                )
+
+    def test_api_receipt_producer_refuses_invalid_ttl_values(self):
+        observation = api_observation()
+        history = [observation["record"]["noticeId"]]
+        for hours in (None, False, True, 0, -1, 25, 1.5, "24"):
+            with self.subTest(hours=hours):
+                with self.assertRaisesRegex(CurrentApiError, "expiry"):
+                    make_current_action_receipt(
+                        observation, history_action_ids=history, expires_hours=hours
+                    )
+
+    def test_short_lived_api_receipts_are_still_verified(self):
+        observation = api_observation()
+        history = [observation["record"]["noticeId"]]
+        for hours in (1, 24):
+            with self.subTest(hours=hours):
+                receipt = make_current_action_receipt(
+                    observation, history_action_ids=history, expires_hours=hours
+                )
+                self.assertEqual(_check(receipt, history)[:2],
+                                 ("CURRENT_VERIFIED", history[0]))
+
+    def test_legacy_manual_receipt_retains_original_expiry_contract(self):
+        receipt, history = _receipt()
+        receipt["source_url"] = "https://sam.gov/opportunities/example"
+        receipt["automation_mode"] = "HUMAN_SUPERVISED"
+        observed = parse_dt(receipt["observed_at"])
+        self.assertIsNotNone(observed)
+        receipt["expires_at"] = (observed + timedelta(hours=72)).isoformat()
+        self.assertEqual(_check(receipt, history)[:2],
+                         ("CURRENT_VERIFIED", history[0]))
 
 
 if __name__ == "__main__":
