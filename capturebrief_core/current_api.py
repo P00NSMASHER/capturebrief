@@ -156,7 +156,10 @@ def validate_api_observation(api_observation: dict[str, Any]) -> None:
     # GSA Opportunities v2 documents active as the exact string Yes or No.
     # A complete response can contain an archived notice; it must never be
     # promoted to CURRENT_ACTIVE solely because the notice ID matches.
-    if record.get("active") != "Yes":
+    # Legacy retained artifact-capture projections preserve the source hash,
+    # notice and links but omit active. They may still download already verified
+    # bytes; only the current-action producer may certify an active notice.
+    if "active" in record and record.get("active") != "Yes":
         raise CurrentApiError("API observation does not prove an active opportunity")
 
     links = api_observation.get("resource_links")
@@ -257,6 +260,8 @@ def fetch_latest_active(
         raise CurrentApiCardinalityError(len(exact))
 
     record = exact[0]
+    if record.get("active") != "Yes":
+        raise CurrentApiError("SAM Opportunities API record is not an active opportunity")
     raw_links = record.get("resourceLinks")
     # Missing/null resourceLinks denotes no attachments in legacy SAM rows.
     # But never iterate a JSON object as though its keys were a valid array:
@@ -307,6 +312,10 @@ def make_current_action_receipt(
         raise CurrentApiError("SAM current-action receipt expiry must be 1..24 whole hours")
     validate_api_observation(api_observation)
     record = api_observation["record"]
+    # A legacy capture projection omits active, but such a projection must
+    # never be allowed to mint a fresh CURRENT_ACTIVE evidence receipt.
+    if record.get("active") != "Yes":
+        raise CurrentApiError("API observation does not prove an active opportunity")
     action_id = str(record.get("noticeId") or "")
     if action_id not in {str(x) for x in history_action_ids}:
         raise CurrentApiError("latest-active API noticeId is outside the observed Data Services history set")
