@@ -1,453 +1,602 @@
 {
-  "source": "ABVM Grade 2 sanitized study feed",
-  "syncPolicy": {
-    "intervalHours": 4
+  "source": "ABVM verified public teacher pages (repo+Pages byte parity)",
+  "delivery": "verified",
+  "sourceCapturedAt": "2026-10-29T16:54:08.074Z",
+  "sourceProof": {
+    "source": "P00NSMASHER/abvmschoolstarworld/pages/data/study-pack.json",
+    "gitHubAndPublishedPagesIdentical": true,
+    "upstreamTeacherSourceHash": "teacher-pages-7e345f8ef837196ec349",
+    "teacherPages": [
+      "Home",
+      "Homework",
+      "Reading Work",
+      "Religion",
+      "Tests",
+      "Weekly Spelling List"
+    ]
   },
-  "sourceLastSeenAt": "2026-09-18T00:40:20.395Z",
-  "sourceCapturedAt": "2026-09-18T00:37:35.100Z",
-  "freshnessHours": 1028.198463888889,
   "pack": {
-    "weekLabel": "Thursday September 17, 2026",
+    "schemaVersion": 2,
+    "weekLabel": "Week of November 2, 2026",
+    "sourceCapturedAt": "2026-10-29T16:54:08.074Z",
+    "sourceSufficient": true,
     "subjects": [
       {
-        "studyNotes": [
-          "Jesus is God's greatest gift who teaches us how to live.",
-          "Jesus gave us the new life of grace.",
-          "We are made in God's image and likeness with the ability to think, choose, and love.",
-          "The Trinity consists of three persons in one God: Father, Son, and Holy Spirit.",
-          "It is our responsibility to take care of God's gifts of creation."
-        ],
-        "subject": "Religion",
+        "subject": "Reading / ELA",
         "topics": [
-          "God is the Giver of Gifts",
-          "Jesus is God's Best Gift",
-          "The Holy Trinity",
-          "Creation and Stewardship"
+          "Story: Eagles and Eaglets",
+          "Story: Baby Bears",
+          "Sight words: picture, because, know, cold, took, have, off, family, school, friends",
+          "Phonics: long o (o_e) and short o",
+          "Vocabulary: adult, alive, covered, fur, giant, groom. mammal, offspring",
+          "Word structure: -ed, -ing endings (silent e & CVC words)"
+        ],
+        "studyNotes": [
+          "Reading comprehension: Main idea / details; diagrams & labels; text features",
+          "For CVC words, look for a consonant-vowel-consonant pattern such as map or sit.",
+          "Practice building words by adding -ed and -ing to a base word.",
+          "Teacher-style supplemental practice: When a base word ends in silent e, add -d for -ed (bake → baked), but drop the e before -ing (bake → baking).",
+          "Teacher-style supplemental practice: For many one-syllable CVC words with a short vowel, double the final consonant before -ed or -ing (hop → hopped, hopping).",
+          "A caption is a short text feature that explains or describes a picture, photograph, or diagram.",
+          "A diagram is a picture that teaches about something. Labels name its parts, and lines or arrows show which part each word names.",
+          "Read the title, follow each label line to the part it names, and use only information shown in the diagram.",
+          "Teacher-style supplemental practice: these explanations and examples are original ABVM teaching, not teacher-provided questions.",
+          "Short o has the sound heard in hot, hop, and rock.",
+          "In an o_e word, the final silent e helps o say its name, as in hop → hope and not → note.",
+          "Teacher-style mnemonic: “Silent e helps o say O.” Box o_e, then read the whole word.",
+          "Teacher-style supplemental practice: these explanations and original questions support the current Reading Work topic; they were not supplied by the school.",
+          "The main idea tells what the whole passage is mostly about; details explain or support it.",
+          "Practice current high-frequency words in short sentence contexts. Context-cloze performance does not claim spelling or isolated print-recognition mastery.",
+          "Use the current teacher vocabulary words in new, original sentence contexts to practice choosing a word that fits.",
+          "These are not teacher-published definitions. The app does not claim definition mastery without verified meaning evidence.",
+          "Original ABVM teaching explanations (not teacher-provided): these are common Grade 2 meanings and examples, not the exact words of a classroom lesson or story.",
+          "adult: a fully grown person or animal. Original example: An adult rabbit is fully grown. (ABVM teaching supplement, not from the teacher.)",
+          "alive: living, not dead. Original example: A growing tree is alive. (ABVM teaching supplement, not from the teacher.)",
+          "covered: put something over or on top of something else. Original example: We covered the table with a cloth. (ABVM teaching supplement, not from the teacher.)",
+          "fur: the thick, soft hair on some animals. Original example: The rabbit has soft fur. (ABVM teaching supplement, not from the teacher.)",
+          "giant: very large in size. Original example: We saw a giant pumpkin at the fair. (ABVM teaching supplement, not from the teacher.)",
+          "groom: clean and care for an animal’s coat or body. Original example: Cats groom their fur by licking it. (ABVM teaching supplement, not from the teacher.)",
+          "mammal: an animal with hair or fur whose mother feeds her young milk. Original example: A rabbit is a mammal. (ABVM teaching supplement, not from the teacher.)",
+          "offspring: the young of a person, animal, or plant. Original example: The kittens are the cat’s offspring. (ABVM teaching supplement, not from the teacher.)"
         ]
       },
       {
+        "subject": "Spelling / Handwriting",
         "topics": [
-          "Maria Celebrates Brazil",
-          "Big Red Lollipop",
-          "A Look at Families",
-          "Visualizing and Plot",
-          "Understanding Characters",
-          "Captions",
-          "Plural Nouns (-s, -es)"
+          "Friday, Nov. 6 test focus: consonant digraphs"
         ],
-        "subject": "Reading",
         "studyNotes": [
-          "Plot includes the beginning, middle, and end of a story.",
-          "Use -s or -es to make nouns plural.",
-          "Visualizing helps with reading comprehension."
+          "Skill: soft c and g",
+          "Teacher-posted spelling words (page undated): trace, cute, place, fuse, badge, cage, space, ice, out, bulge, saw, range, wash, edge, mice",
+          "A consonant digraph is two consonant letters that work together to make one sound, as in sh, ch, th, and wh.",
+          "In a digraph, the two letters make one sound. In a blend, you can still hear both consonant sounds.",
+          "Teacher-style mnemonic: “Two letters, one sound.” Box the digraph, tap the box once, and say its sound.",
+          "Teacher-style supplemental practice: these explanations and examples are original ABVM teaching, not a school-provided spelling list or question set.",
+          "Soft c usually sounds like /s/ before e, i, or y, as in cent, city, and cycle.",
+          "Soft g often sounds like /j/ before e, i, or y, as in gem, giant, and gym.",
+          "Long o sounds like the letter name in go, home, and boat. These are original examples, not an official spelling list.",
+          "If a teacher test label also says “short” without naming the vowel, do not guess which short-vowel pattern is included."
         ]
       },
       {
-        "subject": "Phonics and Spelling",
+        "subject": "Religion",
         "topics": [
-          "Short vowel sounds: a, i, e, o, u",
-          "Two-letter blends"
+          "Unit 1: God Gives Us Life & Love",
+          "Chapter 4: God Speaks to Us",
+          "our ears, mouths, and hearts are open to God's message at Baptism",
+          "God speaks to us in the Bible, in Church, through others",
+          "The bible is broken into the Old and New Testamant",
+          "The best way God speaks to us is through His son, Jesus",
+          "Chapter 3: Jesus Lives in His Church",
+          "Chapter 2: Jesus is God's Best Gift",
+          "Chapter 1: God is the Giver of Gifts",
+          "Religion Ch. 4"
         ],
         "studyNotes": [
-          "Current spelling focus: short e, o, and u sounds.",
-          "Review words include: went, tell, pet, job, fog, not, tug, hut, tub, bun."
+          "Orignial sin; human tendancy to sin which is the result of Adam & Eve's sin",
+          "Faith: gift from god tht helps us believe",
+          "Sacrament: sacred sign given to the Church by Jesus",
+          "At Baptism, oirginal sin is washed away and we recieve the gift of the Holy Spirit and the gift of faith as well as the new life of grace",
+          "The Rite (steps) of Baptism",
+          "Church members / Christians live as Jesus taught. Church leaders act in Jesus' name and guide the Church.",
+          "Jesus is the head of the Church; Mary is the Mother of the Church; we are the body of the Church",
+          "Pope Leo; Bishop Schlert",
+          "Steps to Baptism: Priest welcomes person; parents / godparents make promises; Bible is read; water is poured; What garment given; candle lit",
+          "Jesus is God's greatest gift to us; he tells us about God and teaches us how to live",
+          "Jesus gave us the new life of grace",
+          "Jesus died for our sins; He is our Savior",
+          "Jesus is like a seed. A seed dies for a new plant to grow — Jesus died so we can have new life (grace)",
+          "We are called to be disciples, friends of Jesus. Mary is Jesus' mother and the mother of the Church so she is our mother too",
+          "The parable of the vine and the branches",
+          "Gifts from God",
+          "We are made in God's image and likeness; we can think, choose, love",
+          "Trinity: 3 persons in one God (Father, Son, Holy Spirit)",
+          "We use our senses to enjoy God's gifts",
+          "It is our responsibility to take care of God's gifts of creation",
+          "We thank God for His gift of creation",
+          "The Tests page lists Religion Ch. 4 for Tuesday, Nov. 3.",
+          "Chapter 4 is “God Speaks to Us.” We listen for God’s Word in the Bible, at church, and at home.",
+          "At Baptism, our ears, mouths, and hearts are open to God’s message.",
+          "The best way God speaks to us is through his Son, Jesus.",
+          "The Old Testament tells about God’s people before Jesus. The New Testament tells about Jesus and the early Church.",
+          "A saint is a person who listened to God, followed Jesus, and helps show others how to live with faith and love.",
+          "Teacher-style supplemental practice: these explanations and original questions are based on the official Christ Our Life Grade 2 Chapter 4 family guide; they were not supplied by the school.",
+          "Remember: the Trinity is three Persons in one God — Father, Son, and Holy Spirit.",
+          "Being made in God's image means people can think, choose, and love.",
+          "Caring for creation is one way to show gratitude for God's gifts.",
+          "Jesus is our Savior; class notes connect his death and Resurrection with new life in grace.",
+          "Original sin is the human tendency to sin connected with Adam and Eve’s sin.",
+          "Faith is a gift from God that helps us believe.",
+          "A sacrament is a sacred sign given to the Church by Jesus.",
+          "At Baptism, original sin is washed away and we receive the Holy Spirit, faith, and new life in grace.",
+          "The current Religion lesson calls disciples friends and followers of Jesus.",
+          "The current Religion lesson identifies Mary as Jesus’ mother and the mother of the Church.",
+          "The current Religion lesson compares a seed dying so a new plant can grow with Jesus dying so we can have new life in grace.",
+          "The current Religion lesson connects our senses with noticing and enjoying God’s gifts of creation.",
+          "The current Religion lesson names Gifts from God and Chapter 1: God is the Giver of Gifts.",
+          "In John 15:4–5, Jesus uses a vine-and-branches picture to teach about staying close to him.",
+          "The public Christ Our Life Grade 2 Chapter 2 sample explains that Jesus is the vine, disciples are branches, and good deeds are pictured as fruit.",
+          "These original examples supplement the teacher-named topic; they do not pretend to be teacher-supplied questions."
         ]
-      }
-    ],
-    "generatedAt": "2026-09-29T05:16:43.278Z",
-    "reminders": [
-      "Parents: complete forms and cover books",
-      "Keep Reading log and Behavior chart in the HW folder",
-      "Return everything in the HW folder",
-      "Stationary money ($17) due Wednesday Sept. 23",
-      "Pretzel money due Friday Sept. 18"
-    ],
-    "questions": [
+      },
       {
-        "prompt": "Who is God's greatest gift to us?",
-        "format": "multiple_choice",
-        "choices": [
-          "Jesus",
-          "The Angels",
-          "The Saints"
+        "subject": "Math",
+        "topics": [
+          "Math (Ch. 2)"
         ],
-        "hint": "He tells us about God and teaches us how to live.",
-        "answer": "Jesus",
-        "id": "q1",
-        "explanation": "The source states that Jesus is God's greatest gift to us.",
-        "subject": "Religion",
-        "difficulty": "easy"
+        "studyNotes": [
+          "The Tests page lists Math (Ch. 2) for Wednesday, Nov. 4.",
+          "The current Homework page assigns Page 35.",
+          "Chapter 2 is Place Value to 100. Use tens and ones to name each digit value.",
+          "Expanded form separates a two-digit number into tens and ones, such as 46 = 40 + 6.",
+          "The preceding teacher test named place value and expanded form; this practice stays within that verified scope.",
+          "Teacher-style supplemental practice: these original questions are aligned to the official Sadlier Grade 2 Chapter 2 text; they were not supplied by the school."
+        ]
       },
       {
-        "choices": [
-          "One",
-          "Two",
-          "Three"
+        "subject": "Specials",
+        "topics": [
+          "Monday: Computer",
+          "Tuesday: Music, Art, Guidance",
+          "Wednesday: Mass",
+          "Thursday: Gym",
+          "Friday: Library"
         ],
-        "format": "multiple_choice",
-        "subject": "Religion",
-        "answer": "Three",
-        "difficulty": "easy",
-        "id": "q2",
-        "hint": "Think of the Father, Son, and Holy Spirit.",
-        "explanation": "The Trinity is defined as 3 persons in one God.",
-        "prompt": "How many persons are in the Trinity?"
+        "studyNotes": []
       },
       {
-        "answer": "true",
-        "subject": "Religion",
-        "format": "true_false",
-        "explanation": "The source notes that we are made in God's image and likeness.",
-        "choices": [],
-        "id": "q3",
-        "difficulty": "easy",
-        "prompt": "We are made in God's image and likeness.",
-        "hint": "This means we can think, choose, and love."
-      },
-      {
-        "difficulty": "medium",
-        "answer": "Grace",
-        "id": "q4",
-        "hint": "It is a special gift of new life.",
-        "choices": [
-          "Grace",
-          "Money",
-          "Toys"
+        "subject": "Reading Routine",
+        "topics": [
+          "Read or be read to for 20 minutes every night, including Friday.",
+          "Record nightly reading on the monthly Reading Log."
         ],
-        "explanation": "Jesus gave us the new life of grace.",
-        "prompt": "What did Jesus give us to have a new life?",
-        "subject": "Religion",
-        "format": "multiple_choice"
-      },
-      {
-        "subject": "Religion",
-        "answer": "true",
-        "hint": "We must look after the world God made.",
-        "format": "true_false",
-        "id": "q5",
-        "explanation": "The source states it is our responsibility to take care of creation.",
-        "prompt": "It is our responsibility to take care of God's gifts of creation.",
-        "choices": [],
-        "difficulty": "easy"
-      },
-      {
-        "explanation": "Reading comprehension includes understanding the plot as beginning, middle, and end.",
-        "choices": [
-          "Beginning, middle, end",
-          "Title, author, page",
-          "Words, pictures, cover"
-        ],
-        "id": "q6",
-        "hint": "It describes the order of events in a story.",
-        "subject": "Reading",
-        "prompt": "What are the three parts of a plot?",
-        "answer": "Beginning, middle, end",
-        "difficulty": "easy",
-        "format": "multiple_choice"
-      },
-      {
-        "explanation": "Word structure lessons cover using -s and -es to make plural nouns.",
-        "answer": "-s or -es",
-        "choices": [
-          "-s or -es",
-          "-ing",
-          "-ed"
-        ],
-        "hint": "Think about how you change 'cat' to 'cats'.",
-        "format": "multiple_choice",
-        "subject": "Reading",
-        "prompt": "Which ending is added to make a noun plural?",
-        "id": "q7",
-        "difficulty": "medium"
-      },
-      {
-        "hint": "h-u-t",
-        "choices": [],
-        "subject": "Spelling",
-        "format": "word_build",
-        "prompt": "Build the word that means a small house or shelter.",
-        "explanation": "Hut is a basic spelling word for the short 'u' sound.",
-        "difficulty": "easy",
-        "id": "q8",
-        "answer": "hut"
-      },
-      {
-        "prompt": "Build the word for a task or work you do.",
-        "choices": [],
-        "id": "q9",
-        "format": "word_build",
-        "answer": "job",
-        "difficulty": "easy",
-        "hint": "j-o-b",
-        "explanation": "Job is a basic spelling word for the short 'o' sound.",
-        "subject": "Spelling"
-      },
-      {
-        "subject": "Spelling",
-        "format": "word_build",
-        "prompt": "Build the word that means to move something toward you.",
-        "explanation": "Tug is a basic spelling word for the short 'u' sound.",
-        "difficulty": "easy",
-        "id": "q10",
-        "choices": [],
-        "answer": "tug",
-        "hint": "t-u-g"
-      },
-      {
-        "format": "short_answer",
-        "difficulty": "medium",
-        "subject": "Reading",
-        "explanation": "Scurries is defined in the vocabulary list.",
-        "prompt": "What word means to move hurriedly with short quick steps?",
-        "answer": "scurries",
-        "hint": "It starts with 's'.",
-        "choices": [],
-        "id": "q11"
-      },
-      {
-        "subject": "Reading",
-        "choices": [
-          "plead",
-          "share",
-          "aside"
-        ],
-        "id": "q12",
-        "format": "multiple_choice",
-        "hint": "It is one of your vocabulary words.",
-        "difficulty": "medium",
-        "prompt": "Which word means to beg or make an emotional appeal?",
-        "answer": "plead",
-        "explanation": "Plead is defined as making an emotional appeal."
-      },
-      {
-        "hint": "Maria celebrates this in one of our stories.",
-        "format": "multiple_choice",
-        "choices": [
-          "culture",
-          "language",
-          "fair"
-        ],
-        "answer": "culture",
-        "id": "q13",
-        "prompt": "Which word describes the customs and arts of a group of people?",
-        "subject": "Reading",
-        "explanation": "Culture refers to the customs and arts of a group.",
-        "difficulty": "medium"
-      },
-      {
-        "explanation": "The Trinity consists of the Father, Son, and Holy Spirit.",
-        "choices": [
-          "Moses",
-          "Father",
-          "Holy Spirit"
-        ],
-        "difficulty": "medium",
-        "prompt": "Which of these is NOT one of the three persons in the Trinity?",
-        "format": "multiple_choice",
-        "id": "q14",
-        "answer": "Moses",
-        "subject": "Religion",
-        "hint": "The Trinity is Father, Son, and Holy Spirit."
-      },
-      {
-        "choices": [],
-        "prompt": "Captions are a part of reading comprehension.",
-        "hint": "They are the words under pictures.",
-        "difficulty": "easy",
-        "answer": "true",
-        "id": "q15",
-        "explanation": "Captions are listed under the Reading Work section.",
-        "format": "true_false",
-        "subject": "Reading"
-      },
-      {
-        "id": "q16",
-        "format": "word_build",
-        "subject": "Spelling",
-        "prompt": "Build the word that means the number 1.",
-        "difficulty": "easy",
-        "explanation": "One is a high frequency word on the spelling list.",
-        "hint": "o-n-e",
-        "choices": [],
-        "answer": "one"
-      },
-      {
-        "hint": "f-o-g",
-        "subject": "Spelling",
-        "id": "q17",
-        "explanation": "Fog is a basic spelling word for the short 'o' sound.",
-        "format": "word_build",
-        "answer": "fog",
-        "difficulty": "easy",
-        "choices": [],
-        "prompt": "Build the word for a thick mist that makes it hard to see."
-      },
-      {
-        "prompt": "Build the word that is the past tense of 'go'.",
-        "answer": "went",
-        "subject": "Spelling",
-        "id": "q18",
-        "format": "word_build",
-        "choices": [],
-        "difficulty": "easy",
-        "hint": "w-e-n-t",
-        "explanation": "Went is a basic spelling word for the short 'e' sound."
-      },
-      {
-        "subject": "Reading",
-        "hint": "It is the color of the sky.",
-        "difficulty": "easy",
-        "prompt": "Which sight word is a color?",
-        "format": "multiple_choice",
-        "explanation": "Blue is listed as a sight word.",
-        "choices": [
-          "blue",
-          "why",
-          "both"
-        ],
-        "answer": "blue",
-        "id": "q19"
-      },
-      {
-        "id": "q20",
-        "hint": "It is the color of the sun.",
-        "choices": [
-          "yellow",
-          "put",
-          "help"
-        ],
-        "subject": "Reading",
-        "difficulty": "easy",
-        "explanation": "Yellow is listed as a sight word.",
-        "format": "multiple_choice",
-        "prompt": "Which sight word is another color?",
-        "answer": "yellow"
-      }
-    ],
-    "sourceSufficient": true,
-    "gaps": [],
-    "vocabulary": [
-      {
-        "term": "language",
-        "meaning": "A system of communication used by a particular country or community",
-        "subject": "Reading"
-      },
-      {
-        "term": "culture",
-        "meaning": "The customs, arts, and social institutions of a particular group",
-        "subject": "Reading"
-      },
-      {
-        "subject": "Reading",
-        "meaning": "To one side; out of the way",
-        "term": "aside"
-      },
-      {
-        "term": "invited",
-        "meaning": "Asked to go somewhere or to do something",
-        "subject": "Reading"
-      },
-      {
-        "subject": "Reading",
-        "term": "share",
-        "meaning": "To give a portion of something to others"
-      },
-      {
-        "subject": "Reading",
-        "term": "fair",
-        "meaning": "Treating people equally or right"
-      },
-      {
-        "term": "plead",
-        "meaning": "To make an emotional appeal or beg",
-        "subject": "Reading"
-      },
-      {
-        "subject": "Reading",
-        "meaning": "Moves hurriedly with short quick steps",
-        "term": "scurries"
+        "studyNotes": [
+          "This is the standing Grade 2 homework policy."
+        ]
       }
     ],
     "homework": [
       {
-        "due": "Unspecified",
-        "subject": "Math",
-        "task": "Complete page 9",
-        "day": "Unspecified"
-      },
-      {
-        "due": "Unspecified",
-        "task": "Complete Spelling Choice Board activity",
+        "day": "Current Homework posting",
         "subject": "Spelling",
-        "day": "Unspecified"
+        "task": "Spelling Choice Board activity",
+        "due": "Current posting"
       },
       {
-        "due": "Unspecified",
-        "day": "Unspecified",
+        "day": "Current Homework posting",
+        "subject": "Math",
+        "task": "Page 35",
+        "due": "Current posting"
+      },
+      {
+        "day": "Current Homework posting",
         "subject": "Reading",
-        "task": "Read and update Reading log"
+        "task": "Read",
+        "due": "Current posting"
+      },
+      {
+        "day": "Current Homework posting",
+        "subject": "Reading",
+        "task": "Keep Reading Log and Behavior Chart in the HW folder",
+        "due": "Ongoing"
+      },
+      {
+        "day": "Current Homework posting",
+        "subject": "Homework Folder",
+        "task": "Return everything in the HW folder",
+        "due": "Next school day"
       }
     ],
-    "sourceHash": "2812470a598cab26e44d6b45c2497dd758f3539a55f45e14ab470d18b6bc6aa1",
-    "importantDates": [
+    "questions": [
       {
-        "kind": "deadline",
-        "date": "Thursday Sept. 17",
-        "label": "Scholastic orders due"
+        "id": "week-2026-09-22-reading-1",
+        "subject": "Reading / ELA",
+        "format": "multiple_choice",
+        "prompt": "Which story is on the current Reading Work page?",
+        "choices": [
+          "Little Flap Learns to Fly",
+          "The Very Hungry Caterpillar",
+          "Charlotte's Web"
+        ],
+        "answer": "Little Flap Learns to Fly",
+        "hint": "Look for the story about learning to fly.",
+        "explanation": "The current Reading Work page lists “Little Flap Learns to Fly.”",
+        "difficulty": "easy"
       },
       {
-        "date": "Thursday Sept. 17",
-        "label": "Math STAR test",
+        "id": "week-2026-09-22-reading-2",
+        "subject": "Reading / ELA",
+        "format": "multiple_choice",
+        "prompt": "Which word is a current sight word?",
+        "choices": [
+          "she",
+          "went",
+          "tug"
+        ],
+        "answer": "she",
+        "hint": "The other two were on an older spelling list.",
+        "explanation": "“she” is on the current Reading Work sight-word list.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "week-2026-09-22-reading-3",
+        "subject": "Reading / ELA",
+        "format": "multiple_choice",
+        "prompt": "Which word is on the current vocabulary list?",
+        "choices": [
+          "rescue",
+          "culture",
+          "triangle"
+        ],
+        "answer": "rescue",
+        "hint": "It is something you do to help someone in danger.",
+        "explanation": "“rescue” is on the current Reading Work vocabulary list.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "week-2026-09-22-phonics-1",
+        "subject": "Spelling / Handwriting",
+        "format": "multiple_choice",
+        "prompt": "What phonics skill is being practiced this week?",
+        "choices": [
+          "2-letter consonant blends",
+          "silent e only",
+          "vowel teams only"
+        ],
+        "answer": "2-letter consonant blends",
+        "hint": "The Sept. 25 spelling test uses this skill.",
+        "explanation": "The Reading Work page lists 2-letter consonant blends, and the Sept. 25 spelling test is labeled 2-letter blends.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "week-2026-09-22-religion-1",
+        "subject": "Religion",
+        "format": "true_false",
+        "prompt": "Jesus died for our sins and is our Savior.",
+        "choices": [],
+        "answer": "True",
+        "hint": "This is listed under Chapter 2.",
+        "explanation": "The current Religion page says Jesus died for our sins and is our Savior.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "week-2026-09-22-religion-2",
+        "subject": "Religion",
+        "format": "multiple_choice",
+        "prompt": "What are friends of Jesus called?",
+        "choices": [
+          "disciples",
+          "captions",
+          "blends"
+        ],
+        "answer": "disciples",
+        "hint": "The word begins with d.",
+        "explanation": "The Religion page says we are called to be disciples, friends of Jesus.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "week-2026-09-22-school-1",
+        "subject": "School Week",
+        "format": "multiple_choice",
+        "prompt": "Which special is on Thursday?",
+        "choices": [
+          "Gym",
+          "Library",
+          "Computer"
+        ],
+        "answer": "Gym",
+        "hint": "Look at the specials schedule.",
+        "explanation": "Thursday's special is Gym.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "week-2026-09-22-school-2",
+        "subject": "School Week",
+        "format": "multiple_choice",
+        "prompt": "What happens on Thursday, Sept. 24?",
+        "choices": [
+          "Pretzel delivery",
+          "Picture Day",
+          "No School"
+        ],
+        "answer": "Pretzel delivery",
+        "hint": "It happens after lunch.",
+        "explanation": "Pretzel delivery is scheduled for Thursday, Sept. 24 after lunch.",
+        "difficulty": "easy"
+      }
+    ],
+    "importantDates": [
+      {
+        "date": "Friday, Oct. 2",
+        "label": "Spelling (short a / long a) / Handwriting",
         "kind": "test"
       },
       {
-        "date": "Friday Sept. 18",
+        "date": "Wednesday, Oct. 7",
+        "label": "Reading",
+        "kind": "test"
+      },
+      {
+        "date": "Friday, Oct. 9",
+        "label": "Grammar (subject & predicate)",
+        "kind": "test"
+      },
+      {
+        "date": "Friday, Oct. 9",
+        "label": "Spelling (short i / long i) / Handwriting",
+        "kind": "test"
+      },
+      {
+        "date": "Tuesday, Oct. 13",
+        "label": "Charity DDD (KofC Thanksgiving meals)",
+        "kind": "school event"
+      },
+      {
+        "date": "Thursday, Oct. 15",
+        "label": "Scholastic book orders due (online code: GZJYN)",
+        "kind": "deadline"
+      },
+      {
+        "date": "Thursday, Oct. 15",
+        "label": "Start of winter dress code",
+        "kind": "school event"
+      },
+      {
+        "date": "Thursday, Oct. 15",
+        "label": "Math (subtraction)",
+        "kind": "test"
+      },
+      {
+        "date": "Thursday, Oct. 15",
+        "label": "Religion Ch. 3",
+        "kind": "test"
+      },
+      {
+        "date": "Friday, Oct. 16",
+        "label": "Spelling (long o / Short ) / Handwriting",
+        "kind": "test"
+      },
+      {
+        "date": "Friday, Oct. 16",
+        "label": "Phonics (short vowels)",
+        "kind": "test"
+      },
+      {
+        "date": "Monday–Tuesday, Oct. 19–20",
+        "label": "Parent / Teacher conferences (K-4 Tues. 10/20)",
+        "kind": "conference"
+      },
+      {
+        "date": "Wednesday, Oct. 21",
+        "label": "Reading (Unit 1 Text Set 3)",
+        "kind": "test"
+      },
+      {
+        "date": "Wednesday, Oct. 21",
+        "label": "Religion projects due",
+        "kind": "deadline"
+      },
+      {
+        "date": "Friday, Oct. 23",
+        "label": "Spelling (long / short u) / Handwriting",
+        "kind": "test"
+      },
+      {
+        "date": "Tuesday, Oct. 27",
+        "label": "Math (place value, expanded form)",
+        "kind": "test"
+      },
+      {
+        "date": "Thursday, Oct. 29",
+        "label": "Grammar (common & proper nouns)",
+        "kind": "test"
+      },
+      {
+        "date": "Friday, Oct. 30",
+        "label": "Nut Roll orders due",
+        "kind": "deadline"
+      },
+      {
+        "date": "Friday, Oct. 30",
+        "label": "Spelling (soft c and g) / Handwriting",
+        "kind": "test"
+      },
+      {
+        "date": "Tuesday, Nov. 3",
+        "label": "Religion Ch. 4",
+        "kind": "test"
+      },
+      {
+        "date": "Wednesday, Nov. 4",
+        "label": "Math (Ch. 2)",
+        "kind": "test"
+      },
+      {
+        "date": "Thursday, Nov. 5",
+        "label": "HSA Meeting",
+        "kind": "meeting"
+      },
+      {
+        "date": "Friday, Nov. 6",
+        "label": "Spelling (consonant digraphs) / Handwriting",
+        "kind": "test"
+      },
+      {
+        "date": "Tuesday, Nov. 10",
+        "label": "DDD for Wounded Warriors",
+        "kind": "school event"
+      },
+      {
+        "date": "Wednesday, Nov. 11",
+        "label": "Prayer Service at 9:00",
+        "kind": "school event"
+      },
+      {
+        "date": "Wednesday, Nov. 11",
+        "label": "Reading",
+        "kind": "test"
+      },
+      {
+        "date": "Friday, Nov. 13",
         "label": "Pretzel money due",
         "kind": "deadline"
       },
       {
-        "date": "Friday Sept. 18",
-        "label": "Spelling (short e, o, u) and Handwriting Test",
-        "kind": "test"
+        "date": "Tuesday, Nov. 17",
+        "label": "Nut Roll pick up",
+        "kind": "school event"
       },
       {
-        "kind": "test",
-        "label": "Reading Test",
-        "date": "Friday Sept. 18"
-      },
-      {
-        "label": "Chapter 1A (addition) Test",
-        "kind": "test",
-        "date": "Tuesday Sept. 22"
-      },
-      {
-        "label": "Stationary money due ($17)",
-        "date": "Wednesday Sept. 23",
+        "date": "Thursday, Nov. 19",
+        "label": "Trimester 1 Book Project due",
         "kind": "deadline"
       },
       {
-        "label": "STAR reading test",
-        "kind": "test",
-        "date": "Wednesday Sept. 23"
+        "date": "Thursday, Nov. 19",
+        "label": "Pretzel day",
+        "kind": "school event"
       },
       {
-        "kind": "event",
-        "label": "Pretzel delivery",
-        "date": "Thursday Sept. 24"
+        "date": "Friday, Nov. 20",
+        "label": "End of Trimester 1",
+        "kind": "school event"
       },
       {
-        "kind": "event",
-        "label": "Lego Club",
-        "date": "Friday Sept. 25"
+        "date": "Monday, Nov. 23",
+        "label": "Start of Trimester 2",
+        "kind": "school event"
       },
       {
-        "label": "Spelling (2 letter blends) and Handwriting Test",
-        "date": "Friday Sept. 25",
-        "kind": "test"
+        "date": "Tuesday, Nov. 24",
+        "label": "DDD for SPCA",
+        "kind": "school event"
+      },
+      {
+        "date": "Wednesday, Nov. 25",
+        "label": "12:00 Dismissal",
+        "kind": "schedule change"
+      },
+      {
+        "date": "Wednesday, Nov. 25",
+        "label": "Report Cards",
+        "kind": "school event"
+      },
+      {
+        "date": "Tuesday, Dec. 1",
+        "label": "School resumes",
+        "kind": "school event"
+      },
+      {
+        "date": "Tuesday, Dec. 1",
+        "label": "Cash raffle tickets / money due",
+        "kind": "deadline"
+      },
+      {
+        "date": "Thursday, Dec. 3",
+        "label": "HSA meeting",
+        "kind": "meeting"
+      },
+      {
+        "date": "Thursday, Jan. 7",
+        "label": "HSA meeting",
+        "kind": "meeting"
+      },
+      {
+        "date": "Friday, Jan. 29",
+        "label": "Lego Club (for those who are signed up)",
+        "kind": "club"
+      },
+      {
+        "date": "Thursday, Feb. 4",
+        "label": "HSA meeting",
+        "kind": "meeting"
+      },
+      {
+        "date": "Friday, Mar. 19",
+        "label": "Lego Club (for those who are signed up)",
+        "kind": "club"
+      },
+      {
+        "date": "Thursday, Apr. 1",
+        "label": "HSA meeting",
+        "kind": "meeting"
+      },
+      {
+        "date": "Thursday, May 6",
+        "label": "HSA meeting",
+        "kind": "meeting"
       }
     ],
-    "schemaVersion": 2,
-    "summary": "This week, students are exploring the gifts of God in Religion, focusing on Jesus as God's best gift and the Holy Trinity. In Reading, the class is studying stories about families and culture while practicing short vowel sounds and plural noun structures. Students are also preparing for assessments in Religion, Math, and Spelling.",
-    "sourceCapturedAt": "2026-09-18T00:37:35.100Z"
+    "vocabulary": [
+      {
+        "subject": "Reading / ELA",
+        "term": "adult",
+        "meaning": "Current Reading Work vocabulary word; the teacher page does not provide a definition."
+      },
+      {
+        "subject": "Reading / ELA",
+        "term": "alive",
+        "meaning": "Current Reading Work vocabulary word; the teacher page does not provide a definition."
+      },
+      {
+        "subject": "Reading / ELA",
+        "term": "covered",
+        "meaning": "Current Reading Work vocabulary word; the teacher page does not provide a definition."
+      },
+      {
+        "subject": "Reading / ELA",
+        "term": "fur",
+        "meaning": "Current Reading Work vocabulary word; the teacher page does not provide a definition."
+      },
+      {
+        "subject": "Reading / ELA",
+        "term": "giant",
+        "meaning": "Current Reading Work vocabulary word; the teacher page does not provide a definition."
+      },
+      {
+        "subject": "Reading / ELA",
+        "term": "groom",
+        "sourceTerm": "groom. mammal",
+        "teachingInterpretation": "ABVM punctuation interpretation: two vocabulary words; original teacher text retained.",
+        "meaning": "Current Reading Work vocabulary word; the teacher page does not provide a definition."
+      },
+      {
+        "subject": "Reading / ELA",
+        "term": "mammal",
+        "sourceTerm": "groom. mammal",
+        "teachingInterpretation": "ABVM punctuation interpretation: two vocabulary words; original teacher text retained.",
+        "meaning": "Current Reading Work vocabulary word; the teacher page does not provide a definition."
+      },
+      {
+        "subject": "Reading / ELA",
+        "term": "offspring",
+        "meaning": "Current Reading Work vocabulary word; the teacher page does not provide a definition."
+      }
+    ],
+    "gaps": [
+      "The public teacher Homework page does not show a date, so assignments are labeled as the current posting and refreshed daily."
+    ],
+    "summary": "Source-reviewed Grade 2 teacher study materials.",
+    "sourceHash": "2e89c06049573f34037b1ef42b65427cbb9b225bced700a9cda85b4ff1a23813"
   }
 }
