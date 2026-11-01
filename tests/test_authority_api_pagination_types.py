@@ -259,5 +259,31 @@ class ApprovedReceiptFreshnessBoundaryTests(unittest.TestCase):
                          ("CURRENT_VERIFIED", history[0]))
 
 
+class ApprovedReceiptSemanticsBoundaryTests(unittest.TestCase):
+    def test_active_api_provenance_cannot_be_relabelled_terminal(self):
+        # Before the guard, metadata alone could turn a genuine active API
+        # receipt into TERMINAL_*_VERIFIED without changing its payload hash.
+        for semantics, status in (("TERMINAL_ARCHIVED", "ARCHIVED"),
+                                  ("TERMINAL_CANCELLED", "CANCELLED")):
+            with self.subTest(semantics=semantics):
+                receipt, history = _receipt()
+                receipt["semantics"] = semantics
+                receipt["observed_family_status"] = status
+                observed = parse_dt(receipt["observed_at"])
+                self.assertIsNotNone(observed)
+                verdict, action, findings = validate_current_action_receipts(
+                    history, status, [receipt], now=observed + timedelta(minutes=1)
+                )
+                self.assertEqual((verdict, action), ("CURRENT_UNKNOWN", None))
+                self.assertIn(
+                    "RECEIPT_APPROVED_API_SEMANTICS_INVALID",
+                    {finding.code for finding in findings},
+                )
+
+    def test_current_active_api_provenance_remains_valid(self):
+        receipt, history = _receipt()
+        self.assertEqual(_check(receipt, history), ("CURRENT_VERIFIED", history[0], []))
+
+
 if __name__ == "__main__":
     unittest.main()
