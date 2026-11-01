@@ -145,7 +145,9 @@ def validate_api_observation(api_observation: dict[str, Any]) -> None:
     returned = _nonnegative_int(pagination.get("returned_records"), "pagination.returned_records")
     limit = _nonnegative_int(pagination.get("limit"), "pagination.limit")
     offset = _nonnegative_int(pagination.get("offset"), "pagination.offset")
-    if offset != 0 or total != returned or returned > limit:
+    # A named selected record cannot come from a complete zero-row page.
+    # The upstream fetcher selects exactly one match before producing this receipt.
+    if offset != 0 or returned < 1 or total != returned or returned > limit:
         raise CurrentApiError("API observation pagination contract is inconsistent")
 
     record = api_observation.get("record")
