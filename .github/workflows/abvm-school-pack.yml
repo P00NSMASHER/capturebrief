@@ -65,10 +65,41 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python .trusted/scripts/validate_abvm_school_pack.py \
+          # The primary bridge wins when it has genuinely recent, source-bound schoolwork.
+          if python .trusted/scripts/validate_abvm_school_pack.py \
             --input "$RUNNER_TEMP/abvm-study-pack.json" \
             --existing .published/abvm/data/study-pack.json \
-            --output .published/abvm/data/study-pack.json
+            --output .published/abvm/data/study-pack.json \
+            > "$RUNNER_TEMP/abvm-bridge-result.txt" \
+            2> "$RUNNER_TEMP/abvm-bridge-error.txt"; then
+            cat "$RUNNER_TEMP/abvm-bridge-result.txt"
+          else
+            # Only an expired bridge source allows the exact-publication fallback.
+            # Malformed identity, hash, clocks, authority or live content fails closed.
+            if ! grep -Eq '^ABVM_PACK_REJECTED:STALE_SOURCE:age_hours=' \
+              "$RUNNER_TEMP/abvm-bridge-error.txt"; then
+              cat "$RUNNER_TEMP/abvm-bridge-error.txt" >&2
+              exit 1
+            fi
+            echo 'Bridge source stale; cross-checking current public ABVM source and Pages.'
+            curl --fail --silent --show-error --location --retry 2 --max-time 30 \
+              -H 'accept: application/json' -H 'cache-control: no-cache' \
+              'https://raw.githubusercontent.com/P00NSMASHER/abvmschoolstarworld/main/pages/data/study-pack.json' \
+              -o "$RUNNER_TEMP/abvm-canonical.json"
+            curl --fail --silent --show-error --location --retry 2 --max-time 30 \
+              -H 'accept: application/json' -H 'cache-control: no-cache' \
+              'https://p00nsmasher.github.io/abvmschoolstarworld/data/study-pack.json' \
+              -o "$RUNNER_TEMP/abvm-published.json"
+            python .trusted/scripts/prepare_abvm_canonical_fallback.py \
+              --canonical "$RUNNER_TEMP/abvm-canonical.json" \
+              --published "$RUNNER_TEMP/abvm-published.json" \
+              --output "$RUNNER_TEMP/abvm-canonical-candidate.json"
+            # Existing same-source, age, date and publication checks still apply.
+            python .trusted/scripts/validate_abvm_school_pack.py \
+              --input "$RUNNER_TEMP/abvm-canonical-candidate.json" \
+              --existing .published/abvm/data/study-pack.json \
+              --output .published/abvm/data/study-pack.json
+          fi
 
       - name: Publish only when verified school content changed
         shell: bash

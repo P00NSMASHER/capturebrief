@@ -49,6 +49,24 @@ class AbvmSchoolPackWorkflowPolicyTests(unittest.TestCase):
         self.assertNotIn("target.write_text(json.dumps(data", text)
 
 
+    def test_only_stale_primary_bridge_invokes_exact_publication_fallback(self):
+        workflow = WORKFLOW.read_text()
+        self.assertIn("ABVM_PACK_REJECTED:STALE_SOURCE:age_hours=", workflow)
+        self.assertIn("prepare_abvm_canonical_fallback.py", workflow)
+        self.assertIn(
+            "raw.githubusercontent.com/P00NSMASHER/abvmschoolstarworld/main/pages/data/study-pack.json",
+            workflow,
+        )
+        self.assertIn(
+            "p00nsmasher.github.io/abvmschoolstarworld/data/study-pack.json",
+            workflow,
+        )
+        self.assertEqual(
+            workflow.count("python .trusted/scripts/validate_abvm_school_pack.py"), 2
+        )
+        self.assertNotIn("continue-on-error: true", workflow)
+
+
 class AbvmSchoolPackValidationTests(unittest.TestCase):
     NOW = datetime(2026, 10, 16, 2, 0, tzinfo=timezone.utc)
 
