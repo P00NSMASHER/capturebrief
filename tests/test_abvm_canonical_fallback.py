@@ -137,6 +137,19 @@ class CanonicalFallbackTests(unittest.TestCase):
         with self.assertRaisesRegex(FallbackError, "CANONICAL_SOURCE_TIME_CONFLICT"):
             prepare(record=source)
 
+    def test_observation_only_repo_refresh_does_not_churn_publication(self):
+        source = example()
+        later = copy.deepcopy(source)
+        later["sourceLastCheckedAt"] = "2026-11-01T05:30:00Z"
+        later["sourceLastSeenAt"] = later["sourceLastCheckedAt"]
+        for page in later["sourcePages"]:
+            page["checkedAt"] = later["sourceLastCheckedAt"]
+        original = prepare(record=source)
+        current = prepare(record=later)
+        self.assertEqual(original["pack"]["sourceHash"], current["pack"]["sourceHash"])
+        self.assertEqual(original["sourceProof"], current["sourceProof"])
+        self.assertNotEqual(original["sourceLastSeenAt"], current["sourceLastSeenAt"])
+
     def test_no_false_freshness_from_generated_timestamp(self):
         source = example()
         source["pack"]["generatedAt"] = "2026-11-01T05:55:00Z"
