@@ -299,5 +299,56 @@ class CurrentApiIntegrityTests(unittest.TestCase):
             factory.call_args.args[0], current_api._ApprovedCurrentApiRedirectGuard
         )
 
+
+    def test_resource_redirect_guard_denies_insecure_hops_before_network(self):
+        request = Request(LINK)
+        guard = current_api._ApprovedResourceRedirectGuard()
+        insecure = "http://objects.example/download?token=synthetic"
+        # Native urllib would follow this HTTPS-to-HTTP redirect before the
+        # existing post-download geturl() check could reject it.
+        self.assertEqual(
+            current_api.HTTPRedirectHandler().redirect_request(
+                request, None, 302, "Found", {}, insecure
+            ).full_url,
+            insecure,
+        )
+        denied = (
+            insecure,
+            "https://user:secret@objects.example/file",
+            "https://objects.example:8443/file",
+            "https://objects.example:bad/file",
+            "https://objects.example/file#fragment",
+            " https://objects.example/file",
+            "https://objects.example/file\\\\@untrusted.example",
+        )
+        for target in denied:
+            with self.subTest(target=target):
+                with self.assertRaises(CurrentApiError):
+                    guard.redirect_request(request, None, 302, "Found", {}, target)
+
+        # Preserve documented HTTPS signed object-storage redirects; never
+        # inspect, log or retain their token-bearing query beyond its hash.
+        approved = "https://objects.example/file?X-Amz-Signature=synthetic"
+        redirected = guard.redirect_request(request, None, 302, "Found", {}, approved)
+        self.assertEqual(redirected.full_url, approved)
+
+    def test_default_resource_transport_uses_pre_request_redirect_guard(self):
+        observation = api_observation()
+        signed = "https://objects.example/file?X-Amz-Signature=synthetic"
+
+        class FakeOpener:
+            def open(self, request, timeout):
+                return FakeResponse(b"resource bytes", final_url=signed)
+
+        with patch.object(current_api, "build_opener", return_value=FakeOpener()) as factory:
+            receipt, content = download_resource_from_api_observation(observation, LINK)
+        self.assertEqual(content, b"resource bytes")
+        self.assertEqual(receipt["final_delivery_host"], "objects.example")
+        self.assertNotIn("synthetic", json.dumps(receipt))
+        factory.assert_called_once()
+        self.assertIsInstance(
+            factory.call_args.args[0], current_api._ApprovedResourceRedirectGuard
+        )
+
 if __name__=="__main__":
     unittest.main()
