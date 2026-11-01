@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from .model import canonical_json, history_set_digest, parse_dt, sha256_hex, valid_sha256
 from .source_policy import require_approved_automation
@@ -59,6 +59,11 @@ def _nonnegative_int(value: Any, field: str) -> int:
 
 
 def _approved_search_final_url(value: str) -> bool:
+    # urlsplit strips leading whitespace and some controls. Compare the actual
+    # received URL, not an unsafe normalized representation.
+    if (not isinstance(value, str) or not value or not value.isascii()
+            or any(ord(ch) < 0x21 or ord(ch) >= 0x7f or ch == "\\" for ch in value)):
+        return False
     try:
         parsed = urlsplit(value)
     except (TypeError, ValueError):
@@ -69,13 +74,33 @@ def _approved_search_final_url(value: str) -> bool:
         and parsed.path in {"/opportunities/v2/search", "/prod/opportunities/v2/search"}
         and parsed.username is None
         and parsed.password is None
+        and parsed.port in (None, 443)
         and not parsed.fragment
     )
 
 
+class _ApprovedCurrentApiRedirectGuard(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # urllib follows redirects before the caller can inspect geturl().
+        # A query-keyed SAM API request must never reach an unapproved hop.
+        if not _approved_search_final_url(newurl):
+            raise CurrentApiError("SAM Opportunities API redirect target is not approved")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _open_approved_current_api(request, *, timeout: float):
+    return build_opener(_ApprovedCurrentApiRedirectGuard()).open(request, timeout=timeout)
+
+
 def _safe_https_delivery_url(value: str) -> tuple[str, str]:
+    # urlsplit can normalize leading controls/whitespace. Validate the exact
+    # redirect target before urllib can issue a second request to that URL.
+    if (not isinstance(value, str) or not value or not value.isascii()
+            or any(ord(ch) < 0x21 or ord(ch) >= 0x7f or ch == "\\" for ch in value)):
+        raise CurrentApiError("SAM resource redirect target is invalid")
     try:
         parsed = urlsplit(value)
+        port = parsed.port
     except (TypeError, ValueError) as exc:
         raise CurrentApiError("SAM resource final delivery URL is invalid") from exc
     host = (parsed.hostname or "").lower()
@@ -84,10 +109,24 @@ def _safe_https_delivery_url(value: str) -> tuple[str, str]:
         or not host
         or parsed.username is not None
         or parsed.password is not None
+        or port not in (None, 443)
         or parsed.fragment
     ):
         raise CurrentApiError("SAM resource redirect must terminate on a safe HTTPS delivery URL")
     return host, sha256_hex(value)
+
+
+class _ApprovedResourceRedirectGuard(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # Resources may legitimately redirect to signed external HTTPS storage.
+        # Unlike a post-download geturl() check, this blocks insecure/invalid
+        # redirect hops *before* urllib opens them.
+        _safe_https_delivery_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _open_approved_resource(request, *, timeout: float):
+    return build_opener(_ApprovedResourceRedirectGuard()).open(request, timeout=timeout)
 
 
 def _response_bytes(response: Any, *, max_bytes: int, label: str) -> bytes:
@@ -145,7 +184,9 @@ def validate_api_observation(api_observation: dict[str, Any]) -> None:
     returned = _nonnegative_int(pagination.get("returned_records"), "pagination.returned_records")
     limit = _nonnegative_int(pagination.get("limit"), "pagination.limit")
     offset = _nonnegative_int(pagination.get("offset"), "pagination.offset")
-    if offset != 0 or total != returned or returned > limit:
+    # A named selected record cannot come from a complete zero-row page.
+    # The upstream fetcher selects exactly one match before producing this receipt.
+    if offset != 0 or returned < 1 or total != returned or returned > limit:
         raise CurrentApiError("API observation pagination contract is inconsistent")
 
     record = api_observation.get("record")
@@ -153,6 +194,14 @@ def validate_api_observation(api_observation: dict[str, Any]) -> None:
         raise CurrentApiError("API observation lacks a noticeId")
     if not str(record.get("solicitationNumber") or "").strip():
         raise CurrentApiError("API observation lacks solicitationNumber")
+    # GSA Opportunities v2 documents active as the exact string Yes or No.
+    # A complete response can contain an archived notice; it must never be
+    # promoted to CURRENT_ACTIVE solely because the notice ID matches.
+    # Legacy retained artifact-capture projections preserve the source hash,
+    # notice and links but omit active. They may still download already verified
+    # bytes; only the current-action producer may certify an active notice.
+    if "active" in record and record.get("active") != "Yes":
+        raise CurrentApiError("API observation does not prove an active opportunity")
 
     links = api_observation.get("resource_links")
     if not isinstance(links, list):
@@ -173,7 +222,7 @@ def fetch_latest_active(
     organization_code: str | None = None,
     timeout: float = 30.0,
     max_response_bytes: int = MAX_API_RESPONSE_BYTES,
-    opener=urlopen,
+    opener=_open_approved_current_api,
 ) -> dict[str, Any]:
     """Use the documented Opportunities v2 API for explicit latest-active semantics."""
     if not api_key:
@@ -252,7 +301,19 @@ def fetch_latest_active(
         raise CurrentApiCardinalityError(len(exact))
 
     record = exact[0]
-    links = list(record.get("resourceLinks") or [])
+    if record.get("active") != "Yes":
+        raise CurrentApiError("SAM Opportunities API record is not an active opportunity")
+    raw_links = record.get("resourceLinks")
+    # Missing/null resourceLinks denotes no attachments in legacy SAM rows.
+    # But never iterate a JSON object as though its keys were a valid array:
+    # that would incorrectly turn an attacker-controlled URL key into source
+    # evidence. Falsey malformed values must not silently become [] either.
+    if raw_links is None:
+        links = []
+    elif isinstance(raw_links, list):
+        links = raw_links
+    else:
+        raise CurrentApiError("SAM Opportunities API resourceLinks must be a list or null")
     for link in links:
         try:
             require_approved_automation(str(link), expected="SAM_API_RESOURCE_LINK")
@@ -286,8 +347,16 @@ def make_current_action_receipt(
     history_action_ids: list[str],
     expires_hours: int = 24,
 ) -> dict[str, Any]:
+    # Only short-lived, explicitly bounded API receipts may assert a current
+    # federal opportunity. Reject bools/floats/strings (int(True) == 1).
+    if type(expires_hours) is not int or not 1 <= expires_hours <= 24:
+        raise CurrentApiError("SAM current-action receipt expiry must be 1..24 whole hours")
     validate_api_observation(api_observation)
     record = api_observation["record"]
+    # A legacy capture projection omits active, but such a projection must
+    # never be allowed to mint a fresh CURRENT_ACTIVE evidence receipt.
+    if record.get("active") != "Yes":
+        raise CurrentApiError("API observation does not prove an active opportunity")
     action_id = str(record.get("noticeId") or "")
     if action_id not in {str(x) for x in history_action_ids}:
         raise CurrentApiError("latest-active API noticeId is outside the observed Data Services history set")
@@ -327,7 +396,7 @@ def download_resource_from_api_observation(
     *,
     max_bytes: int = 50 * 1024 * 1024,
     timeout: float = 30.0,
-    opener=urlopen,
+    opener=_open_approved_resource,
 ) -> tuple[dict[str, Any], bytes]:
     """Download only a resource URL descended from a complete documented API observation."""
     validate_api_observation(api_observation)

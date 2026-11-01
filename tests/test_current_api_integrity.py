@@ -4,6 +4,10 @@ import hashlib
 import io
 import json
 import unittest
+from unittest.mock import patch
+from urllib.request import Request
+
+import capturebrief_core.current_api as current_api
 
 from capturebrief_core.current_api import (
     SEARCH_URL,
@@ -81,6 +85,31 @@ class CurrentApiIntegrityTests(unittest.TestCase):
         self.assertEqual(observation["response_sha256"],hashlib.sha256(raw).hexdigest())
         self.assertNotEqual(observation["response_sha256"],"")
 
+    def test_nonactive_or_malformed_status_is_not_promoted_to_current(self):
+        # Official SAM Opportunities v2: active is the string "Yes" or "No".
+        # A single matching notice can still be archived or malformed.
+        for active in ("No", "yes", "YES", None, False, True, 1):
+            with self.subTest(active=active):
+                p=payload()
+                p["opportunitiesData"][0]["active"]=active
+                raw=json.dumps(p).encode()
+                with self.assertRaisesRegex(CurrentApiError,"active opportunity"):
+                    fetch_latest_active(
+                        solicitation_number="SOL-1",posted_from="09/01/2026",
+                        posted_to="09/21/2026",api_key="test-key",
+                        opener=lambda req,timeout=30: FakeResponse(raw),
+                    )
+        p=payload()
+        del p["opportunitiesData"][0]["active"]
+        raw=json.dumps(p).encode()
+        with self.assertRaisesRegex(CurrentApiError,"active opportunity"):
+            fetch_latest_active(
+                solicitation_number="SOL-1",posted_from="09/01/2026",
+                posted_to="09/21/2026",api_key="test-key",
+                opener=lambda req,timeout=30: FakeResponse(raw),
+            )
+        self.assertEqual(api_observation()["record"]["active"],"Yes")
+
     def test_incomplete_first_page_is_rejected(self):
         raw=json.dumps(payload(total=2)).encode()
         with self.assertRaises(CurrentApiIncompletePageError):
@@ -140,6 +169,50 @@ class CurrentApiIntegrityTests(unittest.TestCase):
                 opener=lambda req,timeout=30: FakeResponse(raw),
             )
 
+    def test_source_resource_links_require_json_array_or_optional_null(self):
+        # A JSON object with a first-party resource URL as its KEY previously
+        # became list(dict) and looked like verified provider attachment data.
+        # Falsey malformed types were silently coerced to an empty list.
+        for malformed in (
+            {LINK: "object value must not be accepted as an API array"},
+            {},
+            False,
+            0,
+            "",
+        ):
+            with self.subTest(malformed=malformed):
+                source = payload()
+                source["opportunitiesData"][0]["resourceLinks"] = malformed
+                raw = json.dumps(source).encode()
+                with self.assertRaisesRegex(CurrentApiError, "resourceLinks must be a list"):
+                    fetch_latest_active(
+                        solicitation_number="SOL-1",
+                        posted_from="09/01/2026",
+                        posted_to="09/21/2026",
+                        api_key="test-key",
+                        opener=lambda req,timeout=30: FakeResponse(raw),
+                    )
+
+        # Keep valid empty arrays and legacy absent/null fields compatible.
+        for value in ([], None, "missing"):
+            with self.subTest(valid=value):
+                source = payload()
+                row = source["opportunitiesData"][0]
+                if value == "missing":
+                    row.pop("resourceLinks")
+                else:
+                    row["resourceLinks"] = value
+                raw = json.dumps(source).encode()
+                observation = fetch_latest_active(
+                    solicitation_number="SOL-1",
+                    posted_from="09/01/2026",
+                    posted_to="09/21/2026",
+                    api_key="test-key",
+                    opener=lambda req,timeout=30: FakeResponse(raw),
+                )
+                self.assertEqual(observation["resource_links"], [])
+
+
     def test_resource_capture_refuses_legacy_under_specified_observation(self):
         observation=api_observation()
         observation.pop("pagination")
@@ -184,6 +257,98 @@ class CurrentApiIntegrityTests(unittest.TestCase):
                 opener=lambda req,timeout=30: FakeResponse(b"abc",declared=9),
             )
 
+
+    def test_api_redirect_guard_rejects_unapproved_hops_before_network(self):
+        request = Request(SEARCH_URL + "?api_key=synthetic")
+        guard = current_api._ApprovedCurrentApiRedirectGuard()
+        denied = (
+            "https://untrusted.example/search?api_key=synthetic",
+            "http://api.sam.gov/prod/opportunities/v2/search",
+            "https://api.sam.gov:8443/prod/opportunities/v2/search",
+            "https://api.sam.gov/prod/opportunities/v2/search#fragment",
+            " https://api.sam.gov/prod/opportunities/v2/search",
+            "https://api.sam.gov/prod/opportunities/v2/search\\\\@untrusted.example",
+        )
+        for target in denied:
+            with self.subTest(target=target):
+                with self.assertRaisesRegex(CurrentApiError, "redirect target"):
+                    guard.redirect_request(request, None, 302, "Found", {}, target)
+
+        # The documented same-authority endpoint remains backwards compatible.
+        valid = "https://api.sam.gov/opportunities/v2/search?api_key=synthetic"
+        allowed = guard.redirect_request(request, None, 302, "Found", {}, valid)
+        self.assertEqual(allowed.full_url, valid)
+
+    def test_default_api_transport_installs_guard_not_unguarded_urlopen(self):
+        raw = json.dumps(payload()).encode()
+
+        class FakeOpener:
+            def open(self, request, timeout):
+                return FakeResponse(raw)
+
+        with patch.object(current_api, "build_opener", return_value=FakeOpener()) as factory:
+            observation = fetch_latest_active(
+                solicitation_number="SOL-1",
+                posted_from="09/01/2026",
+                posted_to="09/21/2026",
+                api_key="synthetic",
+            )
+        self.assertEqual(observation["pagination"]["total_records"], 1)
+        factory.assert_called_once()
+        self.assertIsInstance(
+            factory.call_args.args[0], current_api._ApprovedCurrentApiRedirectGuard
+        )
+
+
+    def test_resource_redirect_guard_denies_insecure_hops_before_network(self):
+        request = Request(LINK)
+        guard = current_api._ApprovedResourceRedirectGuard()
+        insecure = "http://objects.example/download?token=synthetic"
+        # Native urllib would follow this HTTPS-to-HTTP redirect before the
+        # existing post-download geturl() check could reject it.
+        self.assertEqual(
+            current_api.HTTPRedirectHandler().redirect_request(
+                request, None, 302, "Found", {}, insecure
+            ).full_url,
+            insecure,
+        )
+        denied = (
+            insecure,
+            "https://user:secret@objects.example/file",
+            "https://objects.example:8443/file",
+            "https://objects.example:bad/file",
+            "https://objects.example/file#fragment",
+            " https://objects.example/file",
+            "https://objects.example/file\\\\@untrusted.example",
+        )
+        for target in denied:
+            with self.subTest(target=target):
+                with self.assertRaises(CurrentApiError):
+                    guard.redirect_request(request, None, 302, "Found", {}, target)
+
+        # Preserve documented HTTPS signed object-storage redirects; never
+        # inspect, log or retain their token-bearing query beyond its hash.
+        approved = "https://objects.example/file?X-Amz-Signature=synthetic"
+        redirected = guard.redirect_request(request, None, 302, "Found", {}, approved)
+        self.assertEqual(redirected.full_url, approved)
+
+    def test_default_resource_transport_uses_pre_request_redirect_guard(self):
+        observation = api_observation()
+        signed = "https://objects.example/file?X-Amz-Signature=synthetic"
+
+        class FakeOpener:
+            def open(self, request, timeout):
+                return FakeResponse(b"resource bytes", final_url=signed)
+
+        with patch.object(current_api, "build_opener", return_value=FakeOpener()) as factory:
+            receipt, content = download_resource_from_api_observation(observation, LINK)
+        self.assertEqual(content, b"resource bytes")
+        self.assertEqual(receipt["final_delivery_host"], "objects.example")
+        self.assertNotIn("synthetic", json.dumps(receipt))
+        factory.assert_called_once()
+        self.assertIsInstance(
+            factory.call_args.args[0], current_api._ApprovedResourceRedirectGuard
+        )
 
 if __name__=="__main__":
     unittest.main()
