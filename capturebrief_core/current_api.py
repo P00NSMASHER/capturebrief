@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
-from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from .model import canonical_json, history_set_digest, parse_dt, sha256_hex, valid_sha256
 from .source_policy import require_approved_automation
@@ -93,8 +93,14 @@ def _open_approved_current_api(request, *, timeout: float):
 
 
 def _safe_https_delivery_url(value: str) -> tuple[str, str]:
+    # urlsplit can normalize leading controls/whitespace. Validate the exact
+    # redirect target before urllib can issue a second request to that URL.
+    if (not isinstance(value, str) or not value or not value.isascii()
+            or any(ord(ch) < 0x21 or ord(ch) >= 0x7f or ch == "\\" for ch in value)):
+        raise CurrentApiError("SAM resource redirect target is invalid")
     try:
         parsed = urlsplit(value)
+        port = parsed.port
     except (TypeError, ValueError) as exc:
         raise CurrentApiError("SAM resource final delivery URL is invalid") from exc
     host = (parsed.hostname or "").lower()
@@ -103,10 +109,24 @@ def _safe_https_delivery_url(value: str) -> tuple[str, str]:
         or not host
         or parsed.username is not None
         or parsed.password is not None
+        or port not in (None, 443)
         or parsed.fragment
     ):
         raise CurrentApiError("SAM resource redirect must terminate on a safe HTTPS delivery URL")
     return host, sha256_hex(value)
+
+
+class _ApprovedResourceRedirectGuard(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # Resources may legitimately redirect to signed external HTTPS storage.
+        # Unlike a post-download geturl() check, this blocks insecure/invalid
+        # redirect hops *before* urllib opens them.
+        _safe_https_delivery_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _open_approved_resource(request, *, timeout: float):
+    return build_opener(_ApprovedResourceRedirectGuard()).open(request, timeout=timeout)
 
 
 def _response_bytes(response: Any, *, max_bytes: int, label: str) -> bytes:
@@ -376,7 +396,7 @@ def download_resource_from_api_observation(
     *,
     max_bytes: int = 50 * 1024 * 1024,
     timeout: float = 30.0,
-    opener=urlopen,
+    opener=_open_approved_resource,
 ) -> tuple[dict[str, Any], bytes]:
     """Download only a resource URL descended from a complete documented API observation."""
     validate_api_observation(api_observation)
