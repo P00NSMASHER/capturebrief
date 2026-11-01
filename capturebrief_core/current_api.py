@@ -153,6 +153,11 @@ def validate_api_observation(api_observation: dict[str, Any]) -> None:
         raise CurrentApiError("API observation lacks a noticeId")
     if not str(record.get("solicitationNumber") or "").strip():
         raise CurrentApiError("API observation lacks solicitationNumber")
+    # GSA Opportunities v2 documents active as the exact string Yes or No.
+    # A complete response can contain an archived notice; it must never be
+    # promoted to CURRENT_ACTIVE solely because the notice ID matches.
+    if record.get("active") != "Yes":
+        raise CurrentApiError("API observation does not prove an active opportunity")
 
     links = api_observation.get("resource_links")
     if not isinstance(links, list):
