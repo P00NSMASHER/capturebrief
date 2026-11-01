@@ -90,5 +90,50 @@ class ApprovedReceiptPaginationTypesTests(unittest.TestCase):
         self.assertEqual(findings, [])
 
 
+
+class ApprovedReceiptResourceLinkTypesTests(unittest.TestCase):
+    def test_non_list_resource_collections_fail_even_with_valid_hash(self):
+        # Before the fix, 'or []' silently converted every falsey value
+        # below into a legitimate empty resource-link list.
+        invalid = (None, False, 0, "", {}, "[]", {"url": "https://example.invalid"})
+        for value in invalid:
+            with self.subTest(value=value):
+                receipt, history = _receipt()
+                receipt["evidence_payload"]["resource_links"] = value
+                receipt["evidence_payload_sha256"] = sha256_hex(
+                    canonical_json(receipt["evidence_payload"])
+                )
+                verdict, action, findings = _check(receipt, history)
+                self.assertEqual(verdict, "CURRENT_UNKNOWN")
+                self.assertIsNone(action)
+                self.assertIn(
+                    "RECEIPT_APPROVED_API_RESOURCE_LINKS_INVALID",
+                    {finding.code for finding in findings},
+                )
+
+    def test_missing_resource_collection_fails_closed(self):
+        receipt, history = _receipt()
+        receipt["evidence_payload"].pop("resource_links", None)
+        receipt["evidence_payload_sha256"] = sha256_hex(
+            canonical_json(receipt["evidence_payload"])
+        )
+        verdict, action, findings = _check(receipt, history)
+        self.assertEqual(verdict, "CURRENT_UNKNOWN")
+        self.assertIsNone(action)
+        self.assertIn(
+            "RECEIPT_APPROVED_API_RESOURCE_LINKS_INVALID",
+            {finding.code for finding in findings},
+        )
+
+    def test_real_empty_resource_list_remains_valid(self):
+        receipt, history = _receipt()
+        receipt["evidence_payload"]["resource_links"] = []
+        receipt["evidence_payload_sha256"] = sha256_hex(
+            canonical_json(receipt["evidence_payload"])
+        )
+        verdict, action, findings = _check(receipt, history)
+        self.assertEqual((verdict, action, findings), ("CURRENT_VERIFIED", history[0], []))
+
+
 if __name__ == "__main__":
     unittest.main()
