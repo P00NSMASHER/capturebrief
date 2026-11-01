@@ -35,7 +35,9 @@ def example():
             "sourceCapturedAt": CAPTURED,
             "sourceSufficient": True,
             "weekLabel": "Week of November 2, 2026",
-            "summary": "Public Grade 2 study guidance.",
+            "summary": "PRIVATE-FAMILY-NOTE",
+            "reminders": ["PRIVATE-FAMILY-NOTE"],
+            "lunchMenu": [{"date": "2026-10-26", "items": ["PRIVATE-FAMILY-NOTE"]}],
             "questions": [{"id": "q1", "prompt": "2 + 2?", "answer": "4"}],
             "homework": [{"day": "Monday", "subject": "Math", "task": "Review facts"}],
             "importantDates": [
@@ -67,6 +69,8 @@ class CanonicalFallbackTests(unittest.TestCase):
         self.assertEqual(len(result["pack"]["importantDates"]), 1)
         self.assertNotIn("PRIVATE-FAMILY-NOTE", json.dumps(result))
         self.assertNotIn("parentNotices", result["pack"])
+        self.assertNotIn("reminders", result["pack"])
+        self.assertNotIn("lunchMenu", result["pack"])
         self.assertNotIn("uploadedNotices", result)
         self.assertTrue(result["pack"]["sourceSufficient"])
 
