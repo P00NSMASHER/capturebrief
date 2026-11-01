@@ -101,7 +101,6 @@ def sanitized_candidate(repo_bytes: bytes, published_bytes: bytes, now: datetime
     proof = {
         "source": "P00NSMASHER/abvmschoolstarworld/pages/data/study-pack.json",
         "gitHubAndPublishedPagesIdentical": True,
-        "artifactSha256": hashlib.sha256(repo_bytes).hexdigest(),
         "upstreamTeacherSourceHash": teacher_hash,
         "teacherPages": sorted(observed_titles),
     }
