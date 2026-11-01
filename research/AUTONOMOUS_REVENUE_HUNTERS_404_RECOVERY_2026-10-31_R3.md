@@ -4,9 +4,9 @@
 - Repository: P00NSMASHER/capturebrief; source branch main when evaluated; existing open draft PRs #167, #168, #169, #170, #171 inspected and none lists `404.html` as a changed file.
 - Reproduced against exact `404.html` blob `a702ab6e2a04219c5ffb16e1162ba0979b166a5b`: `robots=index,follow`, **5** legacy `sample.html` links, and a form CTA falsely labeled as an email request despite targeting a web form.
 - Current homepage promotes `decision-evidence-sample.html` as the primary proof page. The historical `sample.html` remains available from that page.
-- Fix: explicitly `noindex,follow` the missing-page document, point all 5 recovery links to the current primary sample, and correct the accessible request CTA label.
+- Fix: explicitly `noindex,follow` the missing-page document, point all 5 recovery links to the current primary sample, and correct the accessible request CTA label. **Also fixed 28 root-relative navigation/assets references**: when Netlify renders 404 at `/missing/nested/`, former `href="index.html"`, sample and asset URLs resolve beneath the missing pathname, producing another 404 or an unstyled page. Root-absolute paths now resolve to actual site resources. Regression verifies three nested missing-route shapes.
 - Acceptance: `python -m unittest discover -s tests -p test_public_404_buyer_recovery.py -v`; required Product Core CI. No price, checkout, backend, customer data, protected branch, or deployment changes.
-- Before/after source-level measurements: **0/5 → 5/5** recovery links to primary proof; indexable directive → noindex directive. This is not verified traffic, ranking or revenue uplift.
+- Before/after source-level measurements: **0/5 → 5/5** recovery links to primary proof; indexable directive → noindex directive; **0/${countFixed} → ${countFixed}/${countFixed}** nested-safe internal navigation/asset paths. This is not verified traffic, ranking or revenue uplift.
 - Live website browser returned inaccessible for `https://capturebrief.netlify.app/404.html` on this check; no claim about actual HTTP 404 status or published deploy.
 
 ## Competitor asking-price evidence, not purchase validation
