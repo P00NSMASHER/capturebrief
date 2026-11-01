@@ -3,7 +3,7 @@
 ## Ownership, baseline and boundaries
 
 - Canonical source: [P00NSMASHER/capturebrief](https://github.com/P00NSMASHER/capturebrief), `main` commit `c1339fae470088f48442684d7242819b07324298` inspected before branching.
-- Dedicated branch: `hunter/revenue-20261101-authority-pagination`; source change `cb063bdcb4372eb293a4d5242d11d751ed0c1d6a`; regression suite `052d9e5484b3f3b58544a0b1f5df795c7cd31864`.
+- Dedicated [draft PR #177](https://github.com/P00NSMASHER/capturebrief/pull/177) branch: `hunter/revenue-20261101-authority-pagination`; source change `cb063bdcb4372eb293a4d5242d11d751ed0c1d6a`; regression suite `052d9e5484b3f3b58544a0b1f5df795c7cd31864`.
 - The open [site attribution PR #176](https://github.com/P00NSMASHER/capturebrief/pull/176) owns `assets/main.js` and public attribution. This branch modifies only `capturebrief_core/authority.py`, a new isolated test file and this evidence note. No live website, payment, checkout, prices, deployment, buyer data or secrets altered.
 - Main is governed by active ruleset 26263664 requiring `product-contract` and `windows-compatibility` checks plus a PR. Do not merge without actual exact-head required-check success.
 
@@ -24,7 +24,7 @@ The newest [SAM Opportunities v2 observation guard](https://github.com/P00NSMASH
 
 ## Hunter B, dedupe and benefits
 
-- The authenticated owner repository inventory lists no standalone `RETALLY`, `FreightRecovery`, or `RecoveryOS` repo. Do not assume `github-value-hunt-ledger` is the canonical production engine. Its [RecoveryOS money PR #889](https://github.com/P00NSMASHER/github-value-hunt-ledger/pull/889) and [x402-product-factory PR #60](https://github.com/P00NSMASHER/x402-product-factory/pull/60) already have active owners; no collision or duplicate branch was made.
+- The authenticated owner repository inventory lists no standalone `RETALLY`, `FreightRecovery`, or `RecoveryOS` repo. Do not assume `github-value-hunt-ledger` is the canonical production engine. Its [RecoveryOS money PR #889](https://github.com/P00NSMASHER/github-value-hunt-ledger/pull/889) was independently checked and is **closed without merge**, not shipped; [x402-product-factory PR #60](https://github.com/P00NSMASHER/x402-product-factory/pull/60) remains open draft with separate ownership. No conflicting engine/factory edit or duplicate PR was made.
 - Observed improvement: reject 11 fabricated/malformed pagination cases through the genuine current-action gate while maintaining two valid controls. This is a test outcome to be confirmed by exact-head GitHub CI, **not** a claim of live reduced incidents.
 - Engineering-hours saved: **not measured**, rather than inventing days/weeks. Mechanism: reuse existing numeric validation avoids a separate dependency, schema migration and duplicated diverging parsing logic. Measurable future metric: incident reproduction/review minutes and release failures before/after adoption.
 - No real revenue, buyers, net profit, paid demand or customer conversions verified.
