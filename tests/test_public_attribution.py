@@ -67,6 +67,26 @@ class PublicAttributionTests(unittest.TestCase):
         for got in self.execute(*cases):
             self.assertEqual(got, {'source_page':'/','utm_source':'','utm_campaign':''})
 
+    def test_duplicate_utm_keys_fail_closed_without_discarding_valid_siblings(self):
+        # URLSearchParams.get previously selected the first conflicting tag,
+        # which could misattribute a prospect to a channel they did not choose.
+        got = self.execute(
+            {'path': '/', 'search': '?utm_source=paid&utm_source=organic&utm_campaign=November'},
+            {'path': '/', 'search': '?utm_source=paid&utm_source=paid&utm_campaign=Q4'},
+            {'path': '/', 'search': '?utm_source=organic&utm_campaign=Q4&utm_campaign=Q5'},
+            {'path': '/', 'search': '?utm_source=direct&%75tm_source=affiliate&utm_campaign=case'},
+            {'path': '/', 'search': '?utm_source=&utm_source=paid&utm_campaign='},
+            {'path': '/index.html', 'search': '?utm_source=Referral&utm_campaign=November'},
+        )
+        self.assertEqual(got, [
+            {'source_page': '/', 'utm_source': '', 'utm_campaign': 'November'},
+            {'source_page': '/', 'utm_source': '', 'utm_campaign': 'Q4'},
+            {'source_page': '/', 'utm_source': 'organic', 'utm_campaign': ''},
+            {'source_page': '/', 'utm_source': '', 'utm_campaign': 'case'},
+            {'source_page': '/', 'utm_source': '', 'utm_campaign': ''},
+            {'source_page': '/index.html', 'utm_source': 'Referral', 'utm_campaign': 'November'},
+        ])
+
     def test_no_form_and_empty_fields_do_not_trigger_side_effects(self):
         got = self.execute(
             {'path':'/', 'search':'?utm_source=', 'form':False},
