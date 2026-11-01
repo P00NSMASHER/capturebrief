@@ -296,6 +296,10 @@ def make_current_action_receipt(
     history_action_ids: list[str],
     expires_hours: int = 24,
 ) -> dict[str, Any]:
+    # Only short-lived, explicitly bounded API receipts may assert a current
+    # federal opportunity. Reject bools/floats/strings (int(True) == 1).
+    if type(expires_hours) is not int or not 1 <= expires_hours <= 24:
+        raise CurrentApiError("SAM current-action receipt expiry must be 1..24 whole hours")
     validate_api_observation(api_observation)
     record = api_observation["record"]
     action_id = str(record.get("noticeId") or "")
