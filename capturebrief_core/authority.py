@@ -19,6 +19,11 @@ def _payload_verified(r:dict[str,Any])->bool:
 def _approved_api_contract_ok(r:dict[str,Any])->tuple[bool,str|None,str|None]:
     mode=r.get("automation_mode")
     if mode is None or mode=="HUMAN_SUPERVISED":
+        # A receipt citing the automated SAM API cannot silently downgrade to
+        # human-supervised provenance by deleting or changing its mode field.
+        # Preserve legacy manual receipts from ordinary sam.gov web pages.
+        if classify_sam_url(str(r.get("source_url","")))=="SAM_PUBLIC_API":
+            return False,"RECEIPT_APPROVED_API_MODE_REQUIRED","An automated API source requires explicit APPROVED_API receipt mode."
         return True,None,None
     if mode!="APPROVED_API":
         return False,"RECEIPT_AUTOMATION_MODE_INVALID","Receipt automation mode is not recognized."
