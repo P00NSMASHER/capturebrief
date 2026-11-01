@@ -70,7 +70,9 @@ def _approved_api_contract_ok(r:dict[str,Any])->tuple[bool,str|None,str|None]:
         offset=_nonnegative_int(pagination.get("offset"), "pagination.offset")
     except CurrentApiError:
         return False,"RECEIPT_APPROVED_API_PAGINATION_INVALID","Approved API receipt pagination values are malformed."
-    if min(total,returned,limit,offset)<0 or offset!=0 or total!=returned or returned>limit:
+    # The source fetcher cannot select a concrete notice from zero returned rows.
+    # A digest-valid retained receipt must independently enforce that invariant.
+    if min(total,returned,limit,offset)<0 or offset!=0 or returned<1 or total!=returned or returned>limit:
         return False,"RECEIPT_APPROVED_API_PAGINATION_INCOMPLETE","Approved API receipt does not prove a complete first page/result set."
     # Do not convert missing or falsey malformed JSON values to a valid empty
     # resource-link list. The upstream API observation requires a real list.
