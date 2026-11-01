@@ -157,7 +157,24 @@ class ApprovedReceiptProviderActiveStatusTests(unittest.TestCase):
         )
         self.assertIn("RECEIPT_APPROVED_API_NOT_ACTIVE",
                       {finding.code for finding in _check(receipt, history)[2]})
-        self.assertEqual(_check(_receipt()[0], _receipt()[1])[0], "CURRENT_VERIFIED")
+        valid_receipt, valid_history = _receipt()
+        self.assertEqual(_check(valid_receipt, valid_history)[0], "CURRENT_VERIFIED")
+
+
+class ApprovedReceiptProducerStatusTests(unittest.TestCase):
+    def test_missing_or_archived_status_cannot_mint_current_active_receipt(self):
+        for active in (None, "No", "yes", True):
+            with self.subTest(active=active):
+                observation = api_observation()
+                if active is None:
+                    observation["record"].pop("active")
+                else:
+                    observation["record"]["active"] = active
+                with self.assertRaisesRegex(CurrentApiError, "active opportunity"):
+                    make_current_action_receipt(
+                        observation,
+                        history_action_ids=[observation["record"]["noticeId"]],
+                    )
 
 
 class ApprovedReceiptModeBoundaryTests(unittest.TestCase):
