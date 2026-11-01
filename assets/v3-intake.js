@@ -7,6 +7,8 @@
   const assumptions = document.getElementById('assumptions');
   const meter = document.getElementById('v3-question-meter');
   if (!desk || !form || !type || !assumptions || !meter || form.hidden) return;
+  // Preserve manually edited buyer wording when free-check templates are clicked.
+  let lastFreeTemplate = null;
 
   const templates = Object.freeze({
     deadline: 'The response deadline has not changed in the latest public notice or amendment.',
@@ -31,7 +33,13 @@
       if (!suggested) return;
       const before = entries();
       if (type.value === 'FREE_CHECK') {
+        const current = assumptions.value.trim();
+        if (current && current !== lastFreeTemplate) {
+          meter.textContent = 'Your question was kept. Clear it before choosing a suggested question.';
+          return;
+        }
         assumptions.value = suggested;
+        lastFreeTemplate = suggested;
       } else if (before.some(line => fingerprint(line) === fingerprint(suggested))) {
         meter.textContent = 'This question is already in your draft; edit it below if needed.';
         return;
