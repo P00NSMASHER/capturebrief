@@ -81,6 +81,31 @@ class CurrentApiIntegrityTests(unittest.TestCase):
         self.assertEqual(observation["response_sha256"],hashlib.sha256(raw).hexdigest())
         self.assertNotEqual(observation["response_sha256"],"")
 
+    def test_nonactive_or_malformed_status_is_not_promoted_to_current(self):
+        # Official SAM Opportunities v2: active is the string "Yes" or "No".
+        # A single matching notice can still be archived or malformed.
+        for active in ("No", "yes", "YES", None, False, True, 1):
+            with self.subTest(active=active):
+                p=payload()
+                p["opportunitiesData"][0]["active"]=active
+                raw=json.dumps(p).encode()
+                with self.assertRaisesRegex(CurrentApiError,"active opportunity"):
+                    fetch_latest_active(
+                        solicitation_number="SOL-1",posted_from="09/01/2026",
+                        posted_to="09/21/2026",api_key="test-key",
+                        opener=lambda req,timeout=30: FakeResponse(raw),
+                    )
+        p=payload()
+        del p["opportunitiesData"][0]["active"]
+        raw=json.dumps(p).encode()
+        with self.assertRaisesRegex(CurrentApiError,"active opportunity"):
+            fetch_latest_active(
+                solicitation_number="SOL-1",posted_from="09/01/2026",
+                posted_to="09/21/2026",api_key="test-key",
+                opener=lambda req,timeout=30: FakeResponse(raw),
+            )
+        self.assertEqual(api_observation()["record"]["active"],"Yes")
+
     def test_incomplete_first_page_is_rejected(self):
         raw=json.dumps(payload(total=2)).encode()
         with self.assertRaises(CurrentApiIncompletePageError):
