@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 from .model import canonical_json, history_set_digest, parse_dt, sha256_hex, valid_sha256
 from .source_policy import require_approved_automation
@@ -59,6 +59,11 @@ def _nonnegative_int(value: Any, field: str) -> int:
 
 
 def _approved_search_final_url(value: str) -> bool:
+    # urlsplit strips leading whitespace and some controls. Compare the actual
+    # received URL, not an unsafe normalized representation.
+    if (not isinstance(value, str) or not value or not value.isascii()
+            or any(ord(ch) < 0x21 or ord(ch) >= 0x7f or ch == "\\" for ch in value)):
+        return False
     try:
         parsed = urlsplit(value)
     except (TypeError, ValueError):
@@ -69,8 +74,22 @@ def _approved_search_final_url(value: str) -> bool:
         and parsed.path in {"/opportunities/v2/search", "/prod/opportunities/v2/search"}
         and parsed.username is None
         and parsed.password is None
+        and parsed.port in (None, 443)
         and not parsed.fragment
     )
+
+
+class _ApprovedCurrentApiRedirectGuard(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # urllib follows redirects before the caller can inspect geturl().
+        # A query-keyed SAM API request must never reach an unapproved hop.
+        if not _approved_search_final_url(newurl):
+            raise CurrentApiError("SAM Opportunities API redirect target is not approved")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _open_approved_current_api(request, *, timeout: float):
+    return build_opener(_ApprovedCurrentApiRedirectGuard()).open(request, timeout=timeout)
 
 
 def _safe_https_delivery_url(value: str) -> tuple[str, str]:
@@ -183,7 +202,7 @@ def fetch_latest_active(
     organization_code: str | None = None,
     timeout: float = 30.0,
     max_response_bytes: int = MAX_API_RESPONSE_BYTES,
-    opener=urlopen,
+    opener=_open_approved_current_api,
 ) -> dict[str, Any]:
     """Use the documented Opportunities v2 API for explicit latest-active semantics."""
     if not api_key:
