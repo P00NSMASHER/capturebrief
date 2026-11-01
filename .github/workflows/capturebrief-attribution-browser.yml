@@ -1,0 +1,40 @@
+name: CaptureBrief public intake attribution browser QA
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - assets/main.js
+      - index.html
+      - tests/test_public_attribution.py
+      - scripts/qa_public_attribution_browser.py
+      - .github/workflows/capturebrief-attribution-browser.yml
+
+permissions:
+  contents: read
+
+jobs:
+  chromium-attribution:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact PR commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Set up Node for actual shipped-JS VM tests
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22.23.4"
+      - name: Verify malicious campaign strings are rejected
+        run: python -m unittest tests.test_public_attribution -v
+      - name: Install pinned browser QA runtime
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+      - name: Exercise real HTML and JS in Chromium at mobile and desktop widths
+        run: python scripts/qa_public_attribution_browser.py

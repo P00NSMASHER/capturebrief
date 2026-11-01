@@ -55,6 +55,61 @@ class StripeReconciliationTests(unittest.TestCase):
         self.assertNotIn("buyer@example.com", json.dumps(r))
         self.assertNotIn("card", json.dumps(r).lower())
 
+    def test_conflicting_stripe_buyer_emails_cannot_pass_on_one_matching_field(self):
+        # Baseline main accepted a conflicting secondary Stripe email because
+        # matching EITHER address was treated as sufficient.
+        for details_email, fallback_email in (
+            ("buyer@example.com", "other@example.com"),
+            ("other@example.com", "buyer@example.com"),
+        ):
+            a, b, c = fixtures()
+            a["customer_details"]["email"] = details_email
+            a["customer_email"] = fallback_email
+            out = reconcile_capturebrief_payment(
+                a, b, c, account_id=ACCOUNT_ID, buyer_email="buyer@example.com"
+            )
+            with self.subTest(details=details_email, fallback=fallback_email):
+                self.assertFalse(out["payment_verified_by_matching_records"])
+                self.assertIn("PROCESSOR_BUYER_EMAIL_CONFLICT", out["error_codes"])
+                self.assertIn("BUYER_EMAIL_MISMATCH", out["error_codes"])
+                self.assertFalse(out["external_send_authorized"])
+
+    def test_malformed_secondary_stripe_email_fails_closed(self):
+        cases = (
+            {"customer_email": "bad@@example.com"},
+            {"customer_details": {"email": "bad@@example.com"},
+             "customer_email": "buyer@example.com"},
+            {"customer_details": [], "customer_email": "buyer@example.com"},
+        )
+        for patch in cases:
+            a, b, c = fixtures()
+            a.update(patch)
+            out = reconcile_capturebrief_payment(
+                a, b, c, account_id=ACCOUNT_ID, buyer_email="buyer@example.com"
+            )
+            with self.subTest(patch=patch):
+                self.assertFalse(out["payment_verified_by_matching_records"])
+                self.assertTrue(any(code in out["error_codes"] for code in (
+                    "PROCESSOR_BUYER_EMAIL_INVALID",
+                    "PROCESSOR_CUSTOMER_DETAILS_INVALID",
+                )))
+                self.assertFalse(out["case_release_authorized"])
+
+    def test_consistent_dual_stripe_emails_and_valid_fallback_remain_supported(self):
+        a, b, c = fixtures()
+        a["customer_email"] = "BUYER@example.com"
+        out = reconcile_capturebrief_payment(
+            a, b, c, account_id=ACCOUNT_ID, buyer_email="buyer@example.com"
+        )
+        self.assertTrue(out["payment_verified_by_matching_records"])
+        self.assertFalse(out["external_send_authorized"])
+
+        a["customer_details"] = {"email": None}
+        out = reconcile_capturebrief_payment(
+            a, b, c, account_id=ACCOUNT_ID, buyer_email="buyer@example.com"
+        )
+        self.assertTrue(out["payment_verified_by_matching_records"])
+
     def test_test_mode_cannot_confirm_live_customer_even_if_paid(self):
         a, b, c = fixtures()
         a["id"] = "cs_test_testonlyone"
