@@ -76,7 +76,7 @@ class NetlifyPublicBoundaryTests(unittest.TestCase):
         """The browser must not clip assumptions below the core's 500-char limit."""
         import re
         index = (DIST / "index.html").read_text(encoding="utf-8")
-        inputs = re.findall(r'<input\b[^>]*\bname="assumption_([1-5])"[^>]*>', index)
+        inputs = [(m.group(1), m.group(0)) for m in re.finditer(r'<input\b[^>]*\bname="assumption_([1-5])"[^>]*>', index)]
         self.assertEqual({number for number, _tag in inputs}, set("12345"))
         self.assertEqual(len(inputs), 5)
         for number, tag in inputs:
