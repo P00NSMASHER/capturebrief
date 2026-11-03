@@ -72,6 +72,17 @@ class NetlifyPublicBoundaryTests(unittest.TestCase):
         self.assertIn("Know what your bid decision",index)
         self.assertIn("Four separate evidence planes",sample)
 
+    def test_published_intake_preserves_full_assumption_contract(self):
+        """The browser must not clip assumptions below the core's 500-char limit."""
+        import re
+        index = (DIST / "index.html").read_text(encoding="utf-8")
+        inputs = [(m.group(1), m.group(0)) for m in re.finditer(r'<input\b[^>]*\bname="assumption_([1-5])"[^>]*>', index)]
+        self.assertEqual({number for number, _tag in inputs}, set("12345"))
+        self.assertEqual(len(inputs), 5)
+        for number, tag in inputs:
+            with self.subTest(assumption=number):
+                self.assertIn('maxlength="500"', tag)
+
     def test_public_assets_are_present(self):
         assets=DIST/"assets"
         self.assertTrue((assets/"styles.css").is_file())

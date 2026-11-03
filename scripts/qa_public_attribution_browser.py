@@ -81,6 +81,18 @@ def run() -> None:
                         assert form.get_attribute("action") == "/thanks.html"
                         assert form.locator('input[name="public_only_confirmation"]').count() == 1
                         checked += 1
+                    # Exercise the real browser limit for all five assumption
+                    # fields. Product intake accepts 500 characters; the
+                    # public form must neither clip character 241 nor 501.
+                    form = page.locator('form[name="pursuit-qa-intake"]')
+                    for number in range(1, 6):
+                        field = form.locator(f'input[name="assumption_{number}"]')
+                        full = chr(64 + number) * 500
+                        field.fill(full)
+                        assert field.input_value() == full, f"Assumption {number} clipped before 500"
+                        field.press("End")
+                        field.press("Z")
+                        assert field.input_value() == full, f"Assumption {number} exceeded 500"
                     if width == 375:
                         toggle = page.locator(".menu-toggle")
                         toggle.click()
