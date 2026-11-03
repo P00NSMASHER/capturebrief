@@ -1,7 +1,7 @@
 {
   "source": "ABVM verified public teacher pages (repo+Pages byte parity)",
   "delivery": "verified",
-  "sourceCapturedAt": "2026-10-29T16:54:08.074Z",
+  "sourceCapturedAt": "2026-11-03T15:00:00.000Z",
   "sourceProof": {
     "source": "P00NSMASHER/abvmschoolstarworld/pages/data/study-pack.json",
     "gitHubAndPublishedPagesIdentical": true,
@@ -18,7 +18,7 @@
   "pack": {
     "schemaVersion": 2,
     "weekLabel": "Week of November 2, 2026",
-    "sourceCapturedAt": "2026-10-29T16:54:08.074Z",
+    "sourceCapturedAt": "2026-11-03T15:00:00.000Z",
     "sourceSufficient": true,
     "subjects": [
       {
@@ -432,11 +432,6 @@
         "kind": "test"
       },
       {
-        "date": "Thursday, Nov. 5",
-        "label": "HSA Meeting",
-        "kind": "meeting"
-      },
-      {
         "date": "Friday, Nov. 6",
         "label": "Spelling (consonant digraphs) / Handwriting",
         "kind": "test"
@@ -448,18 +443,8 @@
       },
       {
         "date": "Wednesday, Nov. 11",
-        "label": "Prayer Service at 9:00",
-        "kind": "school event"
-      },
-      {
-        "date": "Wednesday, Nov. 11",
         "label": "Reading",
         "kind": "test"
-      },
-      {
-        "date": "Friday, Nov. 13",
-        "label": "Pretzel money due",
-        "kind": "deadline"
       },
       {
         "date": "Tuesday, Nov. 17",
@@ -472,16 +457,6 @@
         "kind": "deadline"
       },
       {
-        "date": "Thursday, Nov. 19",
-        "label": "Pretzel day",
-        "kind": "school event"
-      },
-      {
-        "date": "Friday, Nov. 20",
-        "label": "End of Trimester 1",
-        "kind": "school event"
-      },
-      {
         "date": "Monday, Nov. 23",
         "label": "Start of Trimester 2",
         "kind": "school event"
@@ -490,11 +465,6 @@
         "date": "Tuesday, Nov. 24",
         "label": "DDD for SPCA",
         "kind": "school event"
-      },
-      {
-        "date": "Wednesday, Nov. 25",
-        "label": "12:00 Dismissal",
-        "kind": "schedule change"
       },
       {
         "date": "Wednesday, Nov. 25",
@@ -597,6 +567,6 @@
       "The public teacher Homework page does not show a date, so assignments are labeled as the current posting and refreshed daily."
     ],
     "summary": "Source-reviewed Grade 2 teacher study materials.",
-    "sourceHash": "2e89c06049573f34037b1ef42b65427cbb9b225bced700a9cda85b4ff1a23813"
+    "sourceHash": "d486ca6ed453012b3067eaaf81a48af0b913d1e68955a8de47f67011ddfbca2a"
   }
 }
