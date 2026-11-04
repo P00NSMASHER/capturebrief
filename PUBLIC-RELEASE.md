@@ -3,7 +3,7 @@
 CaptureBrief's company website is https://capturebrief.retallyrecovery.com/,
 served by the existing Cloudflare Pages standalone build from `gh-pages`.
 The shared https://p00nsmasher.github.io/capturebrief/ site is a separate legacy
-surface. See `DEPLOYMENT-TARGET.md` and `STANDALONE_SITE.md` on `gh-pages`.
+surface. See the [deployment target on main](DEPLOYMENT-TARGET.md) and the [standalone build guide on gh-pages](https://github.com/P00NSMASHER/capturebrief/blob/gh-pages/STANDALONE_SITE.md).
 
 The Netlify-named build and ZIP below are legacy packaging tools. They do not
 select the current hosting provider or authorize a website deployment. Product
