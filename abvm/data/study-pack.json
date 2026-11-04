@@ -46,6 +46,10 @@
           "In an o_e word, the final silent e helps o say its name, as in hop → hope and not → note.",
           "Teacher-style mnemonic: “Silent e helps o say O.” Box o_e, then read the whole word.",
           "Teacher-style supplemental practice: these explanations and original questions support the current Reading Work topic; they were not supplied by the school.",
+          "A singular noun names one person, place, animal, or thing. A plural noun names more than one.",
+          "Most nouns add -s to become plural; nouns ending in sounds such as s, x, and ch often add -es.",
+          "For a consonant followed by y, many plural nouns change y to -ies, as in baby → babies.",
+          "These explanations and practice questions are original Grade 2 teaching, not teacher-provided test questions.",
           "The main idea tells what the whole passage is mostly about; details explain or support it.",
           "Practice current high-frequency words in short sentence contexts. Context-cloze performance does not claim spelling or isolated print-recognition mastery.",
           "Use the current teacher vocabulary words in new, original sentence contexts to practice choosing a word that fits.",
@@ -74,6 +78,10 @@
           "In a digraph, the two letters make one sound. In a blend, you can still hear both consonant sounds.",
           "Teacher-style mnemonic: “Two letters, one sound.” Box the digraph, tap the box once, and say its sound.",
           "Teacher-style supplemental practice: these explanations and examples are original ABVM teaching, not a school-provided spelling list or question set.",
+          "Some words start with three consonants whose individual sounds can still be heard, such as str in street, spl in splash, and spr in spring.",
+          "A blend keeps the consonant sounds together. A digraph, such as sh in ship, makes one new sound instead.",
+          "Tap the first three consonant sounds separately, then blend them smoothly into the whole word.",
+          "These examples and practice questions are original Grade 2 teaching, not a teacher spelling list or copied test.",
           "Long o sounds like the letter name in go, home, and boat. These are original examples, not an official spelling list.",
           "If a teacher test label also says “short” without naming the vowel, do not guess which short-vowel pattern is included."
         ]
@@ -577,6 +585,6 @@
       "The public teacher Homework page does not show a date, so assignments are labeled as the current posting and refreshed daily."
     ],
     "summary": "Source-reviewed Grade 2 teacher study materials.",
-    "sourceHash": "d8c8502eef31f91fc38ac9b61a92ddb9876c0e2aeaecc53400cd6d14f6d140d6"
+    "sourceHash": "d2f075ac9fef9cdc1409048f6a3f428e403678c25dd7d4f116dade52639b26e2"
   }
 }
