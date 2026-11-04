@@ -1,11 +1,11 @@
 {
   "source": "ABVM verified public teacher pages (repo+Pages byte parity)",
   "delivery": "verified",
-  "sourceCapturedAt": "2026-11-03T15:00:00.000Z",
+  "sourceCapturedAt": "2026-11-03T23:28:31.865Z",
   "sourceProof": {
     "source": "P00NSMASHER/abvmschoolstarworld/pages/data/study-pack.json",
     "gitHubAndPublishedPagesIdentical": true,
-    "upstreamTeacherSourceHash": "teacher-pages-7e345f8ef837196ec349",
+    "upstreamTeacherSourceHash": "teacher-pages-3b597ffd2c51c46235bc",
     "teacherPages": [
       "Home",
       "Homework",
@@ -18,7 +18,7 @@
   "pack": {
     "schemaVersion": 2,
     "weekLabel": "Week of November 2, 2026",
-    "sourceCapturedAt": "2026-11-03T15:00:00.000Z",
+    "sourceCapturedAt": "2026-11-03T23:28:31.865Z",
     "sourceSufficient": true,
     "subjects": [
       {
@@ -26,10 +26,11 @@
         "topics": [
           "Story: Eagles and Eaglets",
           "Story: Baby Bears",
-          "Sight words: picture, because, know, cold, took, have, off, family, school, friends",
+          "Sight words: picture, because, know, cold, took, have, off, family, school, friends should, open, won, cheer, fall, yes, their, change, five, look",
           "Phonics: long o (o_e) and short o",
           "Vocabulary: adult, alive, covered, fur, giant, groom. mammal, offspring",
-          "Word structure: -ed, -ing endings (silent e & CVC words)"
+          "Word structure: -ed, -ing endings (silent e & CVC words)",
+          "Grammar: singular & plural nouns (test Thursday, Nov. 12)"
         ],
         "studyNotes": [
           "Reading comprehension: Main idea / details; diagrams & labels; text features",
@@ -63,17 +64,16 @@
       {
         "subject": "Spelling / Handwriting",
         "topics": [
-          "Friday, Nov. 6 test focus: consonant digraphs"
+          "Friday, Nov. 6 test focus: consonant digraphs",
+          "Friday, Nov. 13 test focus: 3 letter blends"
         ],
         "studyNotes": [
-          "Skill: soft c and g",
-          "Teacher-posted spelling words (page undated): trace, cute, place, fuse, badge, cage, space, ice, out, bulge, saw, range, wash, edge, mice",
+          "Skill: consonant digraphs",
+          "Teacher-posted spelling words (page undated): chop, place, catch, badge, shape, trash, phone, seven, that, isn't, sting, early, thin, bring, while",
           "A consonant digraph is two consonant letters that work together to make one sound, as in sh, ch, th, and wh.",
           "In a digraph, the two letters make one sound. In a blend, you can still hear both consonant sounds.",
           "Teacher-style mnemonic: “Two letters, one sound.” Box the digraph, tap the box once, and say its sound.",
           "Teacher-style supplemental practice: these explanations and examples are original ABVM teaching, not a school-provided spelling list or question set.",
-          "Soft c usually sounds like /s/ before e, i, or y, as in cent, city, and cycle.",
-          "Soft g often sounds like /j/ before e, i, or y, as in gem, giant, and gym.",
           "Long o sounds like the letter name in go, home, and boat. These are original examples, not an official spelling list.",
           "If a teacher test label also says “short” without naming the vowel, do not guess which short-vowel pattern is included."
         ]
@@ -146,7 +146,7 @@
         ],
         "studyNotes": [
           "The Tests page lists Math (Ch. 2) for Wednesday, Nov. 4.",
-          "The current Homework page assigns Page 35.",
+          "The current Homework page assigns Math paper (2 sides).",
           "Chapter 2 is Place Value to 100. Use tens and ones to name each digit value.",
           "Expanded form separates a two-digit number into tens and ones, such as 46 = 40 + 6.",
           "The preceding teacher test named place value and expanded form; this practice stays within that verified scope.",
@@ -185,7 +185,7 @@
       {
         "day": "Current Homework posting",
         "subject": "Math",
-        "task": "Page 35",
+        "task": "Math paper (2 sides)",
         "due": "Current posting"
       },
       {
@@ -447,6 +447,16 @@
         "kind": "test"
       },
       {
+        "date": "Thursday, Nov. 12",
+        "label": "Grammar (singular & plural nouns)",
+        "kind": "test"
+      },
+      {
+        "date": "Friday, Nov. 13",
+        "label": "Spelling (3 letter blends) / Handwriting",
+        "kind": "test"
+      },
+      {
         "date": "Tuesday, Nov. 17",
         "label": "Nut Roll pick up",
         "kind": "school event"
@@ -567,6 +577,6 @@
       "The public teacher Homework page does not show a date, so assignments are labeled as the current posting and refreshed daily."
     ],
     "summary": "Source-reviewed Grade 2 teacher study materials.",
-    "sourceHash": "d486ca6ed453012b3067eaaf81a48af0b913d1e68955a8de47f67011ddfbca2a"
+    "sourceHash": "d8c8502eef31f91fc38ac9b61a92ddb9876c0e2aeaecc53400cd6d14f6d140d6"
   }
 }
