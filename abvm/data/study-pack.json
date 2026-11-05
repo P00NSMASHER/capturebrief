@@ -1,11 +1,11 @@
 {
   "source": "ABVM verified public teacher pages (repo+Pages byte parity)",
   "delivery": "verified",
-  "sourceCapturedAt": "2026-11-03T23:28:31.865Z",
+  "sourceCapturedAt": "2026-11-04T19:29:59.263Z",
   "sourceProof": {
     "source": "P00NSMASHER/abvmschoolstarworld/pages/data/study-pack.json",
     "gitHubAndPublishedPagesIdentical": true,
-    "upstreamTeacherSourceHash": "teacher-pages-3b597ffd2c51c46235bc",
+    "upstreamTeacherSourceHash": "teacher-pages-fe206bbf57669282f055",
     "teacherPages": [
       "Home",
       "Homework",
@@ -18,7 +18,7 @@
   "pack": {
     "schemaVersion": 2,
     "weekLabel": "Week of November 2, 2026",
-    "sourceCapturedAt": "2026-11-03T23:28:31.865Z",
+    "sourceCapturedAt": "2026-11-04T19:29:59.263Z",
     "sourceSufficient": true,
     "subjects": [
       {
@@ -27,9 +27,9 @@
           "Story: Eagles and Eaglets",
           "Story: Baby Bears",
           "Sight words: picture, because, know, cold, took, have, off, family, school, friends should, open, won, cheer, fall, yes, their, change, five, look",
-          "Phonics: long o (o_e) and short o",
+          "Phonics: long o (o_e) and short o; long u (u_e); short u",
           "Vocabulary: adult, alive, covered, fur, giant, groom. mammal, offspring",
-          "Word structure: -ed, -ing endings (silent e & CVC words)",
+          "Word structure: -ed, -ing endings (silent e & CVC words); CVCe words",
           "Grammar: singular & plural nouns (test Thursday, Nov. 12)"
         ],
         "studyNotes": [
@@ -97,8 +97,7 @@
           "The best way God speaks to us is through His son, Jesus",
           "Chapter 3: Jesus Lives in His Church",
           "Chapter 2: Jesus is God's Best Gift",
-          "Chapter 1: God is the Giver of Gifts",
-          "Religion Ch. 4"
+          "Chapter 1: God is the Giver of Gifts"
         ],
         "studyNotes": [
           "Orignial sin; human tendancy to sin which is the result of Adam & Eve's sin",
@@ -122,7 +121,6 @@
           "We use our senses to enjoy God's gifts",
           "It is our responsibility to take care of God's gifts of creation",
           "We thank God for His gift of creation",
-          "The Tests page lists Religion Ch. 4 for Tuesday, Nov. 3.",
           "Chapter 4 is “God Speaks to Us.” We listen for God’s Word in the Bible, at church, and at home.",
           "At Baptism, our ears, mouths, and hearts are open to God’s message.",
           "The best way God speaks to us is through his Son, Jesus.",
@@ -154,7 +152,6 @@
         ],
         "studyNotes": [
           "The Tests page lists Math (Ch. 2) for Wednesday, Nov. 4.",
-          "The current Homework page assigns Math paper (2 sides).",
           "Chapter 2 is Place Value to 100. Use tens and ones to name each digit value.",
           "Expanded form separates a two-digit number into tens and ones, such as 46 = 40 + 6.",
           "The preceding teacher test named place value and expanded form; this practice stays within that verified scope.",
@@ -188,12 +185,6 @@
         "day": "Current Homework posting",
         "subject": "Spelling",
         "task": "Spelling Choice Board activity",
-        "due": "Current posting"
-      },
-      {
-        "day": "Current Homework posting",
-        "subject": "Math",
-        "task": "Math paper (2 sides)",
         "due": "Current posting"
       },
       {
@@ -440,6 +431,11 @@
         "kind": "test"
       },
       {
+        "date": "Thursday, Nov. 5",
+        "label": "Pizza party",
+        "kind": "school event"
+      },
+      {
         "date": "Friday, Nov. 6",
         "label": "Spelling (consonant digraphs) / Handwriting",
         "kind": "test"
@@ -585,6 +581,6 @@
       "The public teacher Homework page does not show a date, so assignments are labeled as the current posting and refreshed daily."
     ],
     "summary": "Source-reviewed Grade 2 teacher study materials.",
-    "sourceHash": "d2f075ac9fef9cdc1409048f6a3f428e403678c25dd7d4f116dade52639b26e2"
+    "sourceHash": "0f589680ae94547f17f60c8e540b6233134b0eb1398ef15b6701b69bd3be12e7"
   }
 }
