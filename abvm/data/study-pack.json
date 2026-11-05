@@ -1,11 +1,11 @@
 {
   "source": "ABVM verified public teacher pages (repo+Pages byte parity)",
   "delivery": "verified",
-  "sourceCapturedAt": "2026-11-04T19:29:59.263Z",
+  "sourceCapturedAt": "2026-11-05T21:14:54.116Z",
   "sourceProof": {
     "source": "P00NSMASHER/abvmschoolstarworld/pages/data/study-pack.json",
     "gitHubAndPublishedPagesIdentical": true,
-    "upstreamTeacherSourceHash": "teacher-pages-fe206bbf57669282f055",
+    "upstreamTeacherSourceHash": "teacher-pages-b263fd9898127932f2cf",
     "teacherPages": [
       "Home",
       "Homework",
@@ -18,7 +18,7 @@
   "pack": {
     "schemaVersion": 2,
     "weekLabel": "Week of November 2, 2026",
-    "sourceCapturedAt": "2026-11-04T19:29:59.263Z",
+    "sourceCapturedAt": "2026-11-05T21:14:54.116Z",
     "sourceSufficient": true,
     "subjects": [
       {
@@ -147,15 +147,9 @@
       },
       {
         "subject": "Math",
-        "topics": [
-          "Math (Ch. 2)"
-        ],
+        "topics": [],
         "studyNotes": [
-          "The Tests page lists Math (Ch. 2) for Wednesday, Nov. 4.",
-          "Chapter 2 is Place Value to 100. Use tens and ones to name each digit value.",
-          "Expanded form separates a two-digit number into tens and ones, such as 46 = 40 + 6.",
-          "The preceding teacher test named place value and expanded form; this practice stays within that verified scope.",
-          "Teacher-style supplemental practice: these original questions are aligned to the official Sadlier Grade 2 Chapter 2 text; they were not supplied by the school."
+          "The current Homework page assigns Page 55."
         ]
       },
       {
@@ -185,6 +179,12 @@
         "day": "Current Homework posting",
         "subject": "Spelling",
         "task": "Spelling Choice Board activity",
+        "due": "Current posting"
+      },
+      {
+        "day": "Current Homework posting",
+        "subject": "Math",
+        "task": "Page 55",
         "due": "Current posting"
       },
       {
@@ -447,6 +447,11 @@
       },
       {
         "date": "Wednesday, Nov. 11",
+        "label": "Prayer Service at 9:00 at St. John the Baptist",
+        "kind": "school event"
+      },
+      {
+        "date": "Wednesday, Nov. 11",
         "label": "Reading",
         "kind": "test"
       },
@@ -581,6 +586,6 @@
       "The public teacher Homework page does not show a date, so assignments are labeled as the current posting and refreshed daily."
     ],
     "summary": "Source-reviewed Grade 2 teacher study materials.",
-    "sourceHash": "0f589680ae94547f17f60c8e540b6233134b0eb1398ef15b6701b69bd3be12e7"
+    "sourceHash": "78d265f8a1f2e6b2275aeda74ff5c163cb9403bc7fa3f0e558fa236ca72b289b"
   }
 }
