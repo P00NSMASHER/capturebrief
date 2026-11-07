@@ -1,11 +1,11 @@
 {
   "source": "ABVM verified public teacher pages (repo+Pages byte parity)",
   "delivery": "verified",
-  "sourceCapturedAt": "2026-11-05T21:14:54.116Z",
+  "sourceCapturedAt": "2026-11-06T15:51:22.271Z",
   "sourceProof": {
     "source": "P00NSMASHER/abvmschoolstarworld/pages/data/study-pack.json",
     "gitHubAndPublishedPagesIdentical": true,
-    "upstreamTeacherSourceHash": "teacher-pages-b263fd9898127932f2cf",
+    "upstreamTeacherSourceHash": "teacher-pages-6f6a955c718a966bbe9c",
     "teacherPages": [
       "Home",
       "Homework",
@@ -18,7 +18,7 @@
   "pack": {
     "schemaVersion": 2,
     "weekLabel": "Week of November 2, 2026",
-    "sourceCapturedAt": "2026-11-05T21:14:54.116Z",
+    "sourceCapturedAt": "2026-11-06T15:51:22.271Z",
     "sourceSufficient": true,
     "subjects": [
       {
@@ -26,6 +26,7 @@
         "topics": [
           "Story: Eagles and Eaglets",
           "Story: Baby Bears",
+          "Story: From Caterpillar to Butterfly",
           "Sight words: picture, because, know, cold, took, have, off, family, school, friends should, open, won, cheer, fall, yes, their, change, five, look",
           "Phonics: long o (o_e) and short o; long u (u_e); short u",
           "Vocabulary: adult, alive, covered, fur, giant, groom. mammal, offspring",
@@ -68,7 +69,6 @@
       {
         "subject": "Spelling / Handwriting",
         "topics": [
-          "Friday, Nov. 6 test focus: consonant digraphs",
           "Friday, Nov. 13 test focus: 3 letter blends"
         ],
         "studyNotes": [
@@ -148,9 +148,7 @@
       {
         "subject": "Math",
         "topics": [],
-        "studyNotes": [
-          "The current Homework page assigns Page 55."
-        ]
+        "studyNotes": []
       },
       {
         "subject": "Specials",
@@ -174,38 +172,7 @@
         ]
       }
     ],
-    "homework": [
-      {
-        "day": "Current Homework posting",
-        "subject": "Spelling",
-        "task": "Spelling Choice Board activity",
-        "due": "Current posting"
-      },
-      {
-        "day": "Current Homework posting",
-        "subject": "Math",
-        "task": "Page 55",
-        "due": "Current posting"
-      },
-      {
-        "day": "Current Homework posting",
-        "subject": "Reading",
-        "task": "Read",
-        "due": "Current posting"
-      },
-      {
-        "day": "Current Homework posting",
-        "subject": "Reading",
-        "task": "Keep Reading Log and Behavior Chart in the HW folder",
-        "due": "Ongoing"
-      },
-      {
-        "day": "Current Homework posting",
-        "subject": "Homework Folder",
-        "task": "Return everything in the HW folder",
-        "due": "Next school day"
-      }
-    ],
+    "homework": [],
     "questions": [
       {
         "id": "week-2026-09-22-reading-1",
@@ -586,6 +553,6 @@
       "The public teacher Homework page does not show a date, so assignments are labeled as the current posting and refreshed daily."
     ],
     "summary": "Source-reviewed Grade 2 teacher study materials.",
-    "sourceHash": "78d265f8a1f2e6b2275aeda74ff5c163cb9403bc7fa3f0e558fa236ca72b289b"
+    "sourceHash": "828b43bc60b641e4ffb2d7b16487b2313750cc3f0821ffa1df2224940a1b47fb"
   }
 }
