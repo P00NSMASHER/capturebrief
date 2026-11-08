@@ -152,7 +152,7 @@ class AbvmSchoolPackValidationTests(unittest.TestCase):
         )
         incoming = copy.deepcopy(fresh_payload())
         incoming["sourceLastSeenAt"] = "2026-10-16T01:55:00Z"
-        incoming["freshnessHours"] = 13.9167
+        incoming["freshnessHours"] = 5 / 60  # last source check was five minutes ago
         incoming["pack"]["generatedAt"] = "2026-10-16T01:55:00Z"
         normalized, changed = module.prepare_school_pack(
             incoming, existing=existing, now=self.NOW
