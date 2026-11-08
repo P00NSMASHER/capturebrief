@@ -48,7 +48,7 @@ jobs:
             }
             if [ -z "$path" ]; then
               grep -Fq 'Brock Hard' /tmp/fantasy-render.html
-              grep -Fq 'Archived snapshot' /tmp/fantasy-render.html
+              grep -Fq 'Flaim Fantasy' /tmp/fantasy-render.html
             else
               grep -Fq 'Waiver' /tmp/fantasy-render.html
               grep -Fq 'Overview' /tmp/fantasy-render.html
