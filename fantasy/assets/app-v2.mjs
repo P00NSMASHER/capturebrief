@@ -95,7 +95,7 @@ function playerRow(p){const injury=p.injury?badge(p.injury,'bad'):'';
     injury+'<span class="proj">'+(typeof p.projection==='number'&&teamProjectionSupported()?num(p.projection)+'<small>PROJ</small>':'—')+'</span></div>';}
 function teamProjectionSupported(){const t=current?.teams[selected()];return t?.projectionCoverage==='complete'}
 function lineupView(team){const buckets=rosterBuckets(team.roster);
-  const optimizer=team.projectionCoverage==='complete'?optimizeLineup(team.roster,team.lineupSlots||slotsFromRoster(team.roster)):
+  const optimizer=freshness().actionable&&team.projectionCoverage==='complete'?optimizeLineup(team.roster,team.lineupSlots||slotsFromRoster(team.roster)):
     {available:false,reason:'No complete, current, player-level projection set is present'};
   let opt='';
   if(optimizer.available){
@@ -108,7 +108,7 @@ function lineupView(team){const buckets=rosterBuckets(team.roster);
     section('Starting roster','CURRENT SNAPSHOT',buckets.starters.length?'<div class="list">'+buckets.starters.map(playerRow).join('')+'</div>':empty('No starters found','Import a full roster snapshot.'))+
     section('Bench','DEPTH',buckets.bench.length?'<div class="list">'+buckets.bench.map(playerRow).join('')+'</div>':empty('No bench entries','No bench data was saved.'))+
     section('Reserve / IR','INJURY LIST',buckets.reserve.length?'<div class="list">'+buckets.reserve.map(playerRow).join('')+'</div>':empty('No reserve entries','No reserve players are present in the saved snapshot.'));}
-function waiverView(team){const rated=rankWaiverTargets(team), old=!freshness().actionable;
+function waiverView(team){const old=!freshness().actionable, rated=old?{available:false,reason:'Archived snapshot: cannot rank waivers safely'}:rankWaiverTargets(team);
   let dynamic=rated.available?(rated.recommendations.length?
     '<div class="list">'+rated.recommendations.map(r=>'<div class="waiverrow"><div><strong>'+$esc(r.add)+'</strong><small>Drop '+$esc(r.drop)+' · '+$esc(r.status)+'</small></div>'+badge('+'+num(r.improvement,2)+' pts','good')+'</div>').join('')+'</div>':
     empty('No positive projected upgrade found','Among the imported candidates and droppable bench players.')):
