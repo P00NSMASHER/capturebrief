@@ -110,7 +110,7 @@ function lineupView(team){const buckets=rosterBuckets(team.roster);
     section('Reserve / IR','INJURY LIST',buckets.reserve.length?'<div class="list">'+buckets.reserve.map(playerRow).join('')+'</div>':empty('No reserve entries','No reserve players are present in the saved snapshot.'));}
 function waiverView(team){const rated=rankWaiverTargets(team), old=!freshness().actionable;
   let dynamic=rated.available?(rated.recommendations.length?
-    '<div class="list">'+rated.recommendations.map(r=>'<div class="waiverrow"><div><strong>'+$esc(r.add)+'</strong><small>Drop '+$esc(r.drop)+' · '+$esc(r.status)+'</small></div>'+badge('+'+num(r.improvement,2)+' pts','good')+'</div>').join('')+'</div>'+
+    '<div class="list">'+rated.recommendations.map(r=>'<div class="waiverrow"><div><strong>'+$esc(r.add)+'</strong><small>Drop '+$esc(r.drop)+' · '+$esc(r.status)+'</small></div>'+badge('+'+num(r.improvement,2)+' pts','good')+'</div>').join('')+'</div>':
     empty('No positive projected upgrade found','Among the imported candidates and droppable bench players.')):
     empty('No verified waiver ranking',rated.reason);
   const oldCards=(team.waivers||[]).map(w=>'<div class="waiverrow"><div><strong>'+$esc(w.name||'Unknown')+'</strong><small>'+$esc(w.pos||'')+'</small><p>'+$esc(w.why||'')+'</p></div>'+badge(w.tag||'ARCHIVE',old?'bad':'muted')+'</div>').join('');
