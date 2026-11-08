@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {getFreshness,normalizeSnapshot,rosterBuckets,optimizeLineup,estimateWinChance,rankWaiverTargets,simulatePlayoffs,isSafeUrl,slotsFromRoster} from '../engine.mjs';
+import {getFreshness,normalizeSnapshot,rosterBuckets,optimizeLineup,estimateWinChance,rankWaiverTargets,simulatePlayoffs,isSafeUrl,slotsFromRoster} from '../assets/engine.mjs';
 
 const at=Date.parse('2026-11-08T20:00:00Z');
 test('archive threshold and future timestamps never imply freshness of old data',()=>{
