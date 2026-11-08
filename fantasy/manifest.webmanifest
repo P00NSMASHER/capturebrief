@@ -1,0 +1,19 @@
+{
+  "name": "Fantasy Football HQ",
+  "short_name": "Fantasy HQ",
+  "description": "Multi-league fantasy football analytics",
+  "id": "/capturebrief/fantasy/",
+  "start_url": "/capturebrief/fantasy/",
+  "scope": "/capturebrief/fantasy/",
+  "display": "standalone",
+  "background_color": "#071019",
+  "theme_color": "#071019",
+  "icons": [
+    {
+      "src": "/capturebrief/fantasy/assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
