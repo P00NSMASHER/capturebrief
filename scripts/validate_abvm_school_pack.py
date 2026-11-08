@@ -107,18 +107,24 @@ def prepare_school_pack(
         )
 
     last_seen = payload.get("sourceLastSeenAt")
+    # The bridge reports freshness from its most recent source observation,
+    # not the earlier capture that produced the unchanged study content.
+    # Keep the independent seven-day CAPTURE age gate above: a recent recheck
+    # must never make old homework or week labels current.
+    freshness_anchor = root_captured
     if last_seen is not None:
         observed = _parse_timestamp(last_seen, "sourceLastSeenAt")
         if observed + MAX_CLOCK_SKEW < root_captured:
             raise PackValidationError("OBSERVATION_PRECEDES_CAPTURE")
         if observed > now + MAX_CLOCK_SKEW:
             raise PackValidationError("OBSERVATION_FROM_FUTURE")
+        freshness_anchor = observed
 
     freshness = payload.get("freshnessHours")
     if freshness is not None:
         if not isinstance(freshness, (int, float)) or freshness < 0:
             raise PackValidationError("INVALID_FRESHNESS_HOURS")
-        computed = age.total_seconds() / 3600
+        computed = (now - freshness_anchor).total_seconds() / 3600
         if abs(float(freshness) - computed) > 1.0:
             raise PackValidationError("FRESHNESS_TIMESTAMP_MISMATCH")
 
