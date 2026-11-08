@@ -1,0 +1,28 @@
+name: Fantasy HQ v2 CI
+on:
+  push:
+    branches:
+      - feature/fantasy-hq-v2-*
+    paths:
+      - 'fantasy/**'
+      - '.github/workflows/fantasy-hq-v2.yml'
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'fantasy/**'
+      - '.github/workflows/fantasy-hq-v2.yml'
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify source syntax
+        run: |
+          node --version
+          node --check fantasy/assets/engine.mjs
+          node --check fantasy/assets/app-v2.mjs
+      - name: Run fail-closed data and UI regression tests
+        run: node --test fantasy/tests/*.test.mjs

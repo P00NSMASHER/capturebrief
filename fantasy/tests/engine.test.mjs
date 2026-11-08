@@ -7,6 +7,7 @@ test('archive threshold and future timestamps never imply freshness of old data'
   assert.equal(getFreshness('2026-09-30T14:10:03Z',at).state,'stale');
   assert.equal(getFreshness('2026-11-08T18:00:00Z',at).state,'fresh');
   assert.equal(getFreshness('not a date',at).actionable,false);
+  assert.equal(getFreshness('2026-11-09T20:00:00Z',at).state,'unknown');
 });
 test('preserves exactly the three requested teams from a legacy snapshot',()=>{
   const raw={syncedAtIso:'2026-09-30T14:10:03Z',week:4,teams:{

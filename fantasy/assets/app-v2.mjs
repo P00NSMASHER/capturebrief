@@ -119,7 +119,7 @@ function waiverView(team){const rated=rankWaiverTargets(team), old=!freshness().
       oldCards?'<div class="list">'+oldCards+'</div>':empty('No waiver notes','Import an updated waiver inventory for this league.'))+
     '<div class="footnote">Yahoo waiver order, acquisition state, limits, deadlines and player eligibility must be checked directly before submitting any transaction.</div>';}
 function labView(team){const m=team.matchupModel||null;
-  const chance=m?estimateWinChance(m.myProjected,m.oppProjected,m.mySigma,m.oppSigma):null;
+  const chance=m&&freshness().actionable?estimateWinChance(m.myProjected,m.oppProjected,m.mySigma,m.oppSigma):null;
   return section('Matchup forecast','PROBABILITY MODEL',
     chance===null?empty('Win probability not rated','A valid current projection and uncertainty estimate for both teams is required.'):
       '<div class="winprob">'+num(chance,1)+'<small>% ESTIMATED WIN CHANCE</small></div>'+

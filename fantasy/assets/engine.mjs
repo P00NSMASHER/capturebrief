@@ -15,6 +15,7 @@ export const normalizePosition = pos => {
 export function getFreshness(value, now=Date.now()) {
   const ms=Date.parse(value||'');
   if (!Number.isFinite(ms)) return {state:'unknown',ageHours:null,label:'Unknown data age',actionable:false};
+  if(ms>now+300_000)return {state:'unknown',ageHours:null,label:'Future timestamp invalid',actionable:false};
   const hours=Math.max(0,(now-ms)/3_600_000);
   if (hours>24) return {state:'stale',ageHours:round(hours),label:'Archived snapshot',actionable:false};
   if (hours>6) return {state:'aging',ageHours:round(hours),label:'Check before acting',actionable:false};
@@ -59,7 +60,7 @@ function fromVersion3(id,t) {
     alerts:Array.isArray(t.alerts)?t.alerts:[],
     waivers:Array.isArray(t.waivers)?t.waivers:[],
     transactions:Array.isArray(t.transactions)?t.transactions:[],
-    strategy:t.strategy||null,matchup:t.matchup||null,
+    strategy:t.strategy||null,matchup:t.matchup||null,matchupModel:t.matchupModel||null,
     roster:(Array.isArray(t.roster)?t.roster:[]).map((p,i)=>({
       id:String(p.id||p.name||i),name:String(p.name||'Unknown'),
       position:normalizePosition(p.position),slot:normalizePosition(p.slot),
