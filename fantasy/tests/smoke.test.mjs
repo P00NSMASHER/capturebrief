@@ -15,11 +15,13 @@ test('all existing public page URLs remain backed by executable v2 shells',()=>{
    if(id)assert.match(html,new RegExp('data-team="'+id+'"'));
  }
 });
-test('checked-in legacy snapshot remains readable without inventing projections',()=>{
+test('checked-in Flaim or legacy snapshot remains coherent without inventing projections',()=>{
  const raw=JSON.parse(file('fantasy/data.json'));
  const snap=normalizeSnapshot(raw);
  assert.deepEqual(Object.keys(snap.teams),TEAM_IDS);
- assert.equal(getFreshness(snap.syncedAtIso).actionable,false);
+ assert.ok(!Number.isNaN(Date.parse(snap.syncedAtIso)));
+ assert.ok(snap.schemaVersion===1||snap.schemaVersion===3);
+ assert.equal(getFreshness('2026-09-30T14:10:03Z').actionable,false);
  for(const t of Object.values(snap.teams)){
    assert.equal(t.projectionCoverage,'none');
    assert.ok(t.roster.length>0);

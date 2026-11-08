@@ -31,7 +31,7 @@ function masthead(team){const f=freshness();
 function riskRibbon(){const f=freshness();const old=f.state==='stale'||f.state==='unknown';
   const line=old?'Recommendations, waivers, injuries and player status below reflect an archived snapshot. They are NOT verified for today.':
     source==='private'?'Local data was imported on this device. Verify the source timestamp before making roster moves.':
-    'This is the latest published snapshot, not a direct live Yahoo connection.';
+    'Flaim Fantasy can supply the league data through ChatGPT. This page shows the last saved snapshot, not a continuously connected Yahoo feed.';
   return '<div class="riskbar '+(old?'archived':'')+'"><span class="riskicon">'+(old?'!':'i')+'</span><div><strong>'+(old?'Outdated fantasy data':'Data source notice')+'</strong><p>'+$esc(line)+'</p></div></div>'}
 function messageBox(){return message?'<div class="toast" role="status">'+$esc(message)+'</div>':''}
 function scoreFor(team){const m=team.matchup;if(!m)return null;
@@ -47,13 +47,14 @@ function matchupCard(team){const side=scoreFor(team);
   if(!side)return section('This week','MATCHUP',empty('Scoreboard unavailable','A valid matchup for this team is not present in the saved snapshot.'));
   const mine=side.mine,opp=side.opp;
   return section('Matchup snapshot','WEEK '+txt(current.week,'—'),
-    '<div class="matchup"><div><div class="matchlabel">YOUR TEAM</div><div class="matchname">'+$esc(team.short)+'</div><div class="matchscore">'+num(mine.points)+'</div><div class="matchproj">Projected '+num(mine.liveProjectedPoints??mine.projectedPoints)+'</div></div><span class="vs">VS</span>'+
-    '<div class="against"><div class="matchlabel">OPPONENT</div><div class="matchname">'+$esc(opp.teamName||opp.name||'Opponent')+'</div><div class="matchscore">'+num(opp.points)+'</div><div class="matchproj">Projected '+num(opp.liveProjectedPoints??opp.projectedPoints)+'</div></div></div>'+
-    '<div class="subnote">Scores and projections are from the snapshot timestamp, not the live scoreboard.</div>');}
+    '<div class="matchup"><div><div class="matchlabel">YOUR TEAM</div><div class="matchname">'+$esc(team.short)+'</div><div class="matchscore">'+num(mine.points)+'</div><div class="matchproj">Pregame projection '+num(mine.liveProjectedPoints??mine.projectedPoints)+'</div></div><span class="vs">VS</span>'+
+    '<div class="against"><div class="matchlabel">OPPONENT</div><div class="matchname">'+$esc(opp.teamName||opp.name||'Opponent')+'</div><div class="matchscore">'+num(opp.points)+'</div><div class="matchproj">Pregame projection '+num(opp.liveProjectedPoints??opp.projectedPoints)+'</div></div></div>'+
+    (typeof mine.winProbability==='number'?'<div class="subnote">Yahoo win probability at capture: '+num(mine.winProbability*100,0)+'%.</div>':'')+
+    '<div class="subnote">Yahoo pregame projections may be lower than points already scored. Data does not update continuously.</div>');}
 function teamCard(id,t){const f=freshness(),warn=f.state==='stale'||f.state==='unknown';
   return '<a class="teamcard '+$esc(t.accent)+'" href="'+teamPath(id)+'"><div class="teamrow"><span class="teamlogo">'+(id==='brock'?'BH':id==='quick'?'QS':'HR')+'</span>'+
     '<div><div class="teamtitle">'+$esc(t.name)+'</div><div class="teamid">'+$esc(t.provider.toUpperCase())+' · '+$esc(txt(t.record))+' · '+$esc(txt(t.rank))+'</div></div><span class="chevron">↗</span></div>'+
-    '<div class="teamdivider"></div><div class="teamlabel">'+(warn?'ARCHIVED RECOMMENDATION':'SNAPSHOT RECOMMENDATION')+'</div>'+
+    '<div class="teamdivider"></div><div class="teamlabel">'+(warn?'ARCHIVED SOURCE NOTE':'FLAIM FANTASY SNAPSHOT')+'</div>'+
     '<div class="teamdecision">'+$esc(txt(t.nextMove,'No recommendation saved'))+'</div>'+
     '<div class="teamfoot"><span>Waiver '+$esc(t.waiver)+'</span><span>View team →</span></div></a>'}
 function homeView(){const ts=Object.entries(current.teams);
@@ -71,12 +72,12 @@ function controls(){return '<p class="controlcopy">Recheck the published JSON or
   '<div class="controlrow"><button class="primarybutton" data-action="refresh">↻ Recheck published data</button><button class="minorbtn button" data-action="import">Import private JSON</button>'+
   (source==='private'?'<button class="minorbtn button" data-action="clear">Remove private import</button>':'')+'</div>'+
   '<input id="importFile" type="file" accept=".json,application/json" hidden>'+
-  '<div class="subnote">The private import is stored on this device. Refreshing the page does not upload it to GitHub.</div>'}
+  '<div class="subnote">Flaim retrieval happens inside ChatGPT, not from this website. Recheck only loads the saved published JSON; private imports stay on this device.</div>'}
 function stats(team){const flagCount=team.roster.filter(p=>p.injury).length;
   const val=(a,b)=>'<div class="metric"><div class="metriclabel">'+a+'</div><div class="metricvalue">'+$esc(b)+'</div></div>';
   return '<div class="metrics">'+val('RECORD',txt(team.record))+val('LEAGUE RANK',txt(team.rank))+
     val('WAIVER PRIORITY',txt(team.waiver))+val('ROSTER FLAGS',String(flagCount))+'</div>'}
-function decision(team){const old=!freshness().actionable;return section(old?'Historical recommendation':'Snapshot recommendation','PRIORITY INTELLIGENCE',
+function decision(team){const old=!freshness().actionable;return section(old?'Archived source note':'Flaim data status','LEAGUE DATA',
   '<div class="decisionbox"><div class="decisionflag">'+(old?'ARCHIVED · DO NOT ACT ON WITHOUT RECHECKING':'SNAPSHOT ASSESSMENT')+'</div>'+
   '<h3>'+$esc(txt(team.nextMove,'No saved recommendation'))+'</h3><p>'+$esc(team.nextDetail||'')+'</p>'+
   '<div class="decisionbottom">'+badge('Evidence: '+(old?'outdated':'snapshot'),old?'bad':'muted')+
@@ -91,8 +92,11 @@ function strategy(team){const s=team.strategy;if(!s)return '';
     '<div class="strategygrid">'+(s.bullets||[]).map(b=>'<div><span>'+$esc(b.label||'')+'</span><p>'+$esc(b.text||'')+'</p></div>').join('')+'</div>');}
 function summaryView(team){return stats(team)+matchupCard(team)+decision(team)+alertList(team)+strategy(team);}
 function playerRow(p){const injury=p.injury?badge(p.injury,'bad'):'';
-  return '<div class="playerrow"><span class="slot">'+$esc(txt(p.slot,'—'))+'</span><div class="playername"><strong>'+$esc(p.name)+'</strong><small>'+$esc([p.nflTeam,p.position].filter(Boolean).join(' · '))+'</small></div>'+
-    injury+'<span class="proj">'+(typeof p.projection==='number'&&teamProjectionSupported()?num(p.projection)+'<small>PROJ</small>':'—')+'</span></div>';}
+  const projected=typeof p.projection==='number'&&teamProjectionSupported();
+  const scored=typeof p.actualPoints==='number'&&Number.isFinite(p.actualPoints);
+  const points=projected?num(p.projection,2)+'<small>PROJECTION</small>':scored?num(p.actualPoints,2)+'<small>REPORTED PTS</small>':'—';
+  return '<div class="playerrow"><span class="slot">'+$esc(txt(p.slot,'—'))+'</span><div class="playername"><strong>'+$esc(p.name)+'</strong><small>'+$esc([p.nflTeam,p.position].filter(Boolean).join(' · '))+'</small></div>'+injury+'<span class="proj">'+points+'</span></div>';
+}
 function teamProjectionSupported(){const t=current?.teams[selected()];return t?.projectionCoverage==='complete'}
 function lineupView(team){const buckets=rosterBuckets(team.roster);
   const optimizer=freshness().actionable&&team.projectionCoverage==='complete'?optimizeLineup(team.roster,team.lineupSlots||slotsFromRoster(team.roster)):
@@ -114,21 +118,32 @@ function waiverView(team){const old=!freshness().actionable, rated=old?{availabl
     empty('No positive projected upgrade found','Among the imported candidates and droppable bench players.')):
     empty('No verified waiver ranking',rated.reason);
   const oldCards=(team.waivers||[]).map(w=>'<div class="waiverrow"><div><strong>'+$esc(w.name||'Unknown')+'</strong><small>'+$esc(w.pos||'')+'</small><p>'+$esc(w.why||'')+'</p></div>'+badge(w.tag||'ARCHIVE',old?'bad':'muted')+'</div>').join('');
-  return section('Projected add/drop impact','DECISION ENGINE',dynamic)+
+  const available=Array.isArray(team.availablePlayers)?team.availablePlayers:[];
+  const availableRows=available.map(p=>{
+    const status=p.acquisitionState==='free_agent'?'FREE AGENT':p.acquisitionState==='waivers'?'ON WAIVERS':'AVAILABLE';
+    const when=p.waiverDate?' · waiver date '+$esc(p.waiverDate):'';
+    const owned=Number.isFinite(p.percentOwned)?$esc(p.percentOwned+'% Yahoo-wide rostered'):'Yahoo market rate unavailable';
+    return '<div class="waiverrow"><div><strong>'+$esc(p.name||'Unknown player')+'</strong><small>'+$esc([p.position,p.team].filter(Boolean).join(' · '))+' · '+owned+when+'</small></div>'+badge(status,'muted')+'</div>';
+  }).join('');
+  return section(old?'Archived available players':'Available in this league at capture','FLAIM FANTASY · YAHOO',availableRows?'<div class="list">'+availableRows+'</div><div class="subnote">This is league-specific availability as of the snapshot, not proof an immediate add is legal. Yahoo-wide rates are not ownership within this league.</div>':empty('No inventory captured','Available-player data was not included.'))+
+    section('Projected add/drop impact','DECISION ENGINE',dynamic)+
     section(old?'Archived waiver notes':'Waiver watchlist','SNAPSHOT · NOT LIVE',
       oldCards?'<div class="list">'+oldCards+'</div>':empty('No waiver notes','Import an updated waiver inventory for this league.'))+
     '<div class="footnote">Yahoo waiver order, acquisition state, limits, deadlines and player eligibility must be checked directly before submitting any transaction.</div>';}
 function labView(team){const m=team.matchupModel||null;
   const chance=m&&freshness().actionable?estimateWinChance(m.myProjected,m.oppProjected,m.mySigma,m.oppSigma):null;
-  return section('Matchup forecast','PROBABILITY MODEL',
-    chance===null?empty('Win probability not rated','A valid current projection and uncertainty estimate for both teams is required.'):
+  const side=scoreFor(team);
+  const providerChance=freshness().actionable&&typeof side?.mine?.winProbability==='number'?side.mine.winProbability*100:null;
+  return section('Matchup forecast','PROVIDER EVIDENCE',
+    providerChance!==null?'<div class="winprob">'+num(providerChance,1)+'<small>% YAHOO-REPORTED WIN ESTIMATE</small></div><div class="subnote">This estimate can change during games and is not our custom model.</div>':
+    chance===null?empty('Win probability not rated','A verified provider probability or a complete projection and uncertainty estimate for both teams is required.'):
       '<div class="winprob">'+num(chance,1)+'<small>% ESTIMATED WIN CHANCE</small></div>'+
       '<div class="subnote">Normal-distribution approximation; estimates are not guaranteed outcomes.</div>')+
     section('Playoff outlook','MONTE CARLO',
       empty('Full-season simulation not rated','Provide current standings, remaining schedule, playoff rules and matchup probabilities. This snapshot does not include complete evidence.'))+
     section('Trade evaluation','ROSTER VALUE',
       empty('Opponent roster valuation unavailable','Import current projections for both sides and roster requirements before comparing trades.'))+
-    section('Recent league activity','HISTORY',
+    section('Recent league activity',team.transactionsCoverage?.limited?'HISTORY · BOUNDED':'HISTORY',
       team.transactions.length?'<div class="list">'+team.transactions.slice(0,20).map(tr=>
         '<div class="transaction"><span>'+$esc(txt(tr.date,''))+'</span><strong>'+$esc(tr.move||tr.type||'League transaction')+'</strong><small>'+$esc(tr.team||'')+'</small></div>').join('')+'</div>':
         empty('No stored transactions','Historical activity is not verified as complete.'))}

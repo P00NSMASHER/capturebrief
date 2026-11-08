@@ -11,11 +11,14 @@ A read-only, mobile-first fantasy football command center in the original \`/cap
 - A clear archived notice for snapshots older than 24h; no stale waiver action is presented as current.
 - Recheck the published snapshot with no-store fetching and fallback to last successful public snapshot; local JSON import never uploads private data.
 
+## Flaim Fantasy data source
+The latest checked-in snapshot may be generated from connected Flaim Fantasy tools, retrieving team standings, Yahoo matchup scores and win probabilities, current rosters, league-specific available players and recent league moves. It is an **on-demand snapshot**, not an API reachable by the static website. The timestamp is when the data was retrieved. Flaim's player `points` are reported scoring, **not** future projections: the lineup optimizer remains disabled unless independently verified player projections exist. Yahoo pregame matchup projections are not in-progress final estimates, and can be smaller than the current score. Available-player percentOwned is a Yahoo-wide market rate, not league ownership, and waiverDate is a calendar date only. Recent transaction history can be truncated. Access denied on an additional connected league is treated as unavailable, not synthesized.
+
 ## Important limits
-**No Yahoo OAuth/session tokens are embedded or sent to GitHub.** On GitHub Pages, "Check snapshot" re-reads an existing JSON file and **is not a live Yahoo API sync**. True automatic Yahoo sync needs a separately hosted, authenticated adapter with owner-controlled Yahoo OAuth and server-side refresh token storage. No lineup moves, waiver claims, or trades are executed. No private personal league data is committed by this change. ESPN/Sleeper adapters are future integration points, not shipped integrations.
+**No Yahoo OAuth/session tokens are embedded or sent to GitHub.** On GitHub Pages, "Check snapshot" re-reads an existing JSON file and **is not a live Yahoo API sync**. True automatic Yahoo sync needs a separately hosted, authenticated adapter with owner-controlled Yahoo OAuth and server-side refresh token storage. No lineup moves, waiver claims, or trades are executed. Flaim-derived JSON snapshots contain fantasy-roster and matchup data. This repository is public, so review what becomes public before merging. ESPN/Sleeper adapters are future integration points, not shipped integrations.
 
 ## Data contract
-The app loads existing /fantasy/data.json (\`schemaVersion=1\`) without modifying it. A user may explicitly import a private JSON object with \`schemaVersion: 3\`; the importer rejects >2MB and only retains the three known teams. \`fantasy/tests/fixtures/private-v3.sample.json\` is **fully fictional test data**.
+The app loads /fantasy/data.json (legacy schema 1 or source-backed schema 3). A user may explicitly import a private JSON object with \`schemaVersion: 3\`; the importer rejects >2MB and only retains the three known teams. \`fantasy/tests/fixtures/private-v3.sample.json\` is **fully fictional test data**.
 
 Use fields:
 - top level: \`schemaVersion: 3\`, \`syncedAtIso\` (ISO UTC), \`season\`, \`week\`, \`teams\`.

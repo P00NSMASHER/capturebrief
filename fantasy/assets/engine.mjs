@@ -67,11 +67,14 @@ function fromVersion3(id,t) {
       eligiblePositions:(Array.isArray(p.eligiblePositions)&&p.eligiblePositions.length?p.eligiblePositions:[p.position]).map(normalizePosition),
       nflTeam:String(p.nflTeam||p.team||''),injury:p.injury||null,
       projection:finite(p.projection)&&p.projection>=0?p.projection:null,
-      locked:!!p.locked
+      actualPoints:finite(p.actualPoints)&&p.actualPoints>=0?p.actualPoints:null,
+      locked:!!p.locked,cantCut:p.cantCut===true,editable:p.editable===true
     })),
     availablePlayers:Array.isArray(t.availablePlayers)?t.availablePlayers:[],
     lineupSlots:t.lineupSlots&&typeof t.lineupSlots==='object'?t.lineupSlots:null,
-    projectionCoverage:t.projectionCoverage||'unknown',rawLegacy:false
+    projectionCoverage:t.projectionCoverage||'unknown',
+    standings:t.standings||null,transactionsCoverage:t.transactionsCoverage||null,
+    source:String(t.source||'Unspecified'),rawLegacy:false
   };
 }
 export function normalizeSnapshot(raw) {

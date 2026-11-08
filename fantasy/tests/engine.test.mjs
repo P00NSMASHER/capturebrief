@@ -37,6 +37,13 @@ test('does not invent projections, overrule locks, or use IR players',()=>{
   assert.equal(optimizeLineup([{...base[0],projection:22,locked:true}],{QB:1}).available,false);
   assert.equal(optimizeLineup([{...base[0],projection:22,injury:'OUT'}],{QB:1}).available,false);
 });
+test('Flaim v3 preserves actual points, zero probability and roster flags without fabricating projections',()=>{
+ const x=normalizeSnapshot({schemaVersion:3,source:'Flaim Fantasy',syncedAtIso:'2026-11-08T23:34:00Z',teams:{brock:{name:'Fictional',roster:[{id:'1',name:'Test RB',position:'RB',slot:'RB',actualPoints:0,projection:null,editable:false,cantCut:true}],projectionCoverage:'none',matchup:{home:{teamId:'2',winProbability:0},away:{teamId:'3',winProbability:1}}}}});
+ assert.equal(x.teams.brock.roster[0].actualPoints,0);
+ assert.equal(x.teams.brock.roster[0].projection,null);
+ assert.equal(x.teams.brock.roster[0].cantCut,true);
+ assert.equal(x.teams.brock.matchup.home.winProbability,0);
+});
 test('waivers fail closed without complete league projections',()=>{
   assert.equal(rankWaiverTargets({projectionCoverage:'none',availablePlayers:[]}).available,false);
 });
