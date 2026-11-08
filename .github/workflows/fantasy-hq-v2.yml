@@ -69,3 +69,8 @@ jobs:
           name: fantasy-hq-v2-mobile-preview
           path: fantasy/screenshots/*.png
           retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fantasy-hq-v2-site-files
+          path: fantasy/
+          retention-days: 7
