@@ -26,3 +26,32 @@ jobs:
           node --check fantasy/assets/app-v2.mjs
       - name: Run fail-closed data and UI regression tests
         run: node --test fantasy/tests/*.test.mjs
+      - name: Render home and all deep links with headless Chrome
+        run: |
+          set -eu
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -z "$CHROME" ]; then
+            echo "::error::No browser executable available to verify the page"
+            exit 1
+          fi
+          ln -s . capturebrief
+          python3 -m http.server 8797 >/tmp/fantasy-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          for path in "" brock/ quick/ highlight/; do
+            "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=14000 --window-size=390,844 --dump-dom "http://127.0.0.1:8797/capturebrief/fantasy/$path" > /tmp/fantasy-render.html 2>/tmp/chrome-stderr.log || {
+              cat /tmp/chrome-stderr.log; exit 1;
+            }
+            grep -Fq 'PUBLISHED SNAPSHOT' /tmp/fantasy-render.html || {
+              echo "::error::App failed to load snapshot at $path"; tail -c 1500 /tmp/fantasy-render.html; exit 1;
+            }
+            if [ -z "$path" ]; then
+              grep -Fq 'Brock Hard' /tmp/fantasy-render.html
+              grep -Fq 'Archived snapshot' /tmp/fantasy-render.html
+            else
+              grep -Fq 'Waiver' /tmp/fantasy-render.html
+              grep -Fq 'Overview' /tmp/fantasy-render.html
+            fi
+            echo "Browser smoke passed: /fantasy/$path"
+          done
