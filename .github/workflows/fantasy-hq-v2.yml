@@ -59,3 +59,13 @@ jobs:
           grep -Fq 'MAXIMIZED PROJECTED POINTS' /tmp/fantasy-fixture.html || { echo '::error::Projected lineup failed to render'; tail -c 1800 /tmp/fantasy-fixture.html; exit 1; }
           grep -Fq 'Fictional WR Bench' /tmp/fantasy-fixture.html || { echo '::error::Bench slot optimizer failed to render'; exit 1; }
           echo 'Browser smoke passed: synthetic projections and optimizer'
+          mkdir -p fantasy/screenshots
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot=fantasy/screenshots/home.png "http://127.0.0.1:8797/capturebrief/fantasy/" >/dev/null 2>/tmp/chrome-stderr.log
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot=fantasy/screenshots/brock.png "http://127.0.0.1:8797/capturebrief/fantasy/brock/" >/dev/null 2>/tmp/chrome-stderr.log
+          test -s fantasy/screenshots/home.png
+          test -s fantasy/screenshots/brock.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fantasy-hq-v2-mobile-preview
+          path: fantasy/screenshots/*.png
+          retention-days: 7
