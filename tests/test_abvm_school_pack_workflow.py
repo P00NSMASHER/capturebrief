@@ -88,6 +88,51 @@ class AbvmSchoolPackValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(module.PackValidationError, "STALE_SOURCE"):
             module.prepare_school_pack(payload, existing=None, now=self.NOW)
 
+    def test_bridge_freshness_uses_last_seen_not_original_content_capture(self):
+        module = load_validator()
+        payload = fresh_payload()
+        payload["sourceCapturedAt"] = "2026-10-12T12:00:00Z"
+        payload["pack"]["sourceCapturedAt"] = payload["sourceCapturedAt"]
+        payload["pack"]["weekLabel"] = "Monday October 12, 2026"
+        payload["sourceLastSeenAt"] = "2026-10-16T01:55:00Z"
+        payload["freshnessHours"] = 5 / 60
+        normalized, changed = module.prepare_school_pack(
+            payload, existing=None, now=self.NOW
+        )
+        self.assertTrue(changed)
+        self.assertEqual(normalized["sourceCapturedAt"], payload["sourceCapturedAt"])
+        self.assertNotIn("sourceLastSeenAt", normalized)
+
+    def test_a_recent_recheck_does_not_resurrect_content_over_seven_days_old(self):
+        module = load_validator()
+        payload = fresh_payload()
+        payload["sourceCapturedAt"] = "2026-10-08T00:00:00Z"
+        payload["pack"]["sourceCapturedAt"] = payload["sourceCapturedAt"]
+        payload["pack"]["weekLabel"] = "Thursday October 8, 2026"
+        payload["sourceLastSeenAt"] = "2026-10-16T01:55:00Z"
+        payload["freshnessHours"] = 5 / 60
+        with self.assertRaisesRegex(module.PackValidationError, "STALE_SOURCE"):
+            module.prepare_school_pack(payload, existing=None, now=self.NOW)
+
+    def test_bridge_freshness_cannot_disagree_with_last_source_check(self):
+        module = load_validator()
+        payload = fresh_payload()
+        payload["sourceLastSeenAt"] = "2026-10-16T01:55:00Z"
+        payload["freshnessHours"] = 14.0  # capture age, not the five-minute check age
+        with self.assertRaisesRegex(module.PackValidationError, "FRESHNESS_TIMESTAMP_MISMATCH"):
+            module.prepare_school_pack(payload, existing=None, now=self.NOW)
+
+    def test_freshness_without_optional_last_seen_uses_capture_age(self):
+        module = load_validator()
+        payload = fresh_payload()
+        payload.pop("sourceLastSeenAt")
+        payload["freshnessHours"] = 14.0
+        normalized, changed = module.prepare_school_pack(
+            payload, existing=None, now=self.NOW
+        )
+        self.assertTrue(changed)
+        self.assertEqual(normalized["pack"]["sourceHash"], payload["pack"]["sourceHash"])
+
     def test_same_source_hash_cannot_change_semantic_content(self):
         module = load_validator()
         existing, _ = module.prepare_school_pack(
@@ -107,7 +152,7 @@ class AbvmSchoolPackValidationTests(unittest.TestCase):
         )
         incoming = copy.deepcopy(fresh_payload())
         incoming["sourceLastSeenAt"] = "2026-10-16T01:55:00Z"
-        incoming["freshnessHours"] = 13.9167
+        incoming["freshnessHours"] = 5 / 60  # last source check was five minutes ago
         incoming["pack"]["generatedAt"] = "2026-10-16T01:55:00Z"
         normalized, changed = module.prepare_school_pack(
             incoming, existing=existing, now=self.NOW
