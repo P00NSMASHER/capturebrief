@@ -106,6 +106,13 @@ jobs:
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot=fantasy/screenshots/brock.png "http://127.0.0.1:8797/capturebrief/fantasy/brock/" >/dev/null 2>/tmp/chrome-stderr.log
           test -s fantasy/screenshots/home.png
           test -s fantasy/screenshots/brock.png
+          for tab in lineup waivers lab; do
+            "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot="fantasy/screenshots/$tab.png" "http://127.0.0.1:8797/capturebrief/fantasy/#$tab" >/dev/null 2>/tmp/chrome-stderr.log
+            test -s "fantasy/screenshots/$tab.png"
+          done
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=1280,800 --screenshot=fantasy/screenshots/home-desktop.png "http://127.0.0.1:8797/capturebrief/fantasy/" >/dev/null 2>/tmp/chrome-stderr.log
+          test -s fantasy/screenshots/home-desktop.png
+
       - uses: actions/upload-artifact@v4
         with:
           name: fantasy-hq-v2-mobile-preview
