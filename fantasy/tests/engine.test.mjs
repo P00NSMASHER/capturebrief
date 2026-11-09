@@ -104,6 +104,6 @@ test('scouting sorts only verified Yahoo-wide roster rates, not fabricated uplif
   {id:'c',name:'C',percentOwned:null,acquisitionState:'waivers'},
   {id:'x',name:'X',percentOwned:100,acquisitionState:null}];
  assert.deepEqual(marketWatchlist(rows).map(x=>x.name),['B','A']);
- assert.deepEqual(positionDepth([{position:'WR',slot:'WR',injury:'Q'},{position:'WR',slot:'IR',injury:'O'}]),[
+ assert.deepEqual(positionDepth([{id:'a',name:'Receiver A',position:'WR',slot:'WR',injury:'Q'},{id:'b',name:'Receiver B',position:'WR',slot:'IR',injury:'O'}]),[
    {position:'WR',total:2,active:1,flagged:2}]);
 });
