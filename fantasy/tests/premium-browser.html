@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3">
-<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=1">
 <title>Premium Fantasy HQ UI Acceptance</title></head>
 <body><div id="root">Checking premium league interface…</div>
 <script type="module">
@@ -10,7 +10,7 @@ try{
  if(raw.schemaVersion!==3||Object.keys(raw.teams||{}).join(',')!=='brock')throw Error('Brock-only fixture invalid');
  raw.syncedAtIso=new Date().toISOString();
  localStorage.setItem('fantasy-hq-private-v3',JSON.stringify(raw));
- await import('/capturebrief/fantasy/assets/app-v2.mjs?v=5');
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=6');
  const until=async(fn)=>{
   for(let i=0;i<100;i++){if(fn())return true;await new Promise(r=>setTimeout(r,30))}
   return false
@@ -18,7 +18,7 @@ try{
  if(!await until(()=>document.querySelector('.matchup-panel')))throw Error('Home matchup missing');
  if(!document.querySelector('.teamhero svg.club-emblem'))throw Error('Brock crest did not render');
  if(!document.querySelector('.statusrow'))throw Error('Source timestamp missing');
- if(document.querySelectorAll('.bottomnav button').length!==4)throw Error('Navigation does not contain 4 options');
+ if(document.querySelectorAll('.bottomnav button').length!==5)throw Error('Navigation does not contain 4 options');
  if(!document.querySelector('.matchup-panel .match-team.against svg.club-emblem'))throw Error('Opponent crest missing');
  document.querySelector('[data-tab="lab"]').click();
  if(!await until(()=>document.querySelectorAll('.club-tile').length===8))throw Error('8 club logos missing');
@@ -37,6 +37,23 @@ try{
  document.querySelector('[data-tab="lineup"]').click();
  if(!await until(()=>document.querySelector('.playerrow')))throw Error('Lineup not rendered');
  if(!document.getElementById('root').textContent.includes('Highest-scoring lineup so far'))throw Error('Scored-point evidence missing');
+
+ document.querySelector('[data-tab="coach"]').click();
+ if(!await until(()=>document.querySelector('.coach-hero')))throw Error('Coach hero missing');
+ if(document.querySelectorAll('.coach-section').length!==5)throw Error('Five Coach insight sections missing');
+ if(!document.getElementById('root').textContent.includes('Trade strategy')||
+    !document.getElementById('root').textContent.includes('Waiver targets')||
+    !document.getElementById('root').textContent.includes('Playoff preparation'))
+   throw Error('Coach insights did not render all categories');
+ if(document.querySelector('.teamhero'))throw Error('Large Home hero must not repeat in Coach');
+ if(!document.querySelector('[data-tab="coach"][aria-selected="true"]'))throw Error('Coach nav state missing');
+ const coachOverflow=document.documentElement.scrollWidth-window.innerWidth;
+ if(coachOverflow>2)throw Error('Coach mobile overflow '+coachOverflow+'px');
+ const qbLink=document.querySelector('[data-coach-filter="QB"]');
+ if(!qbLink)throw Error('Coach actionable QB link missing');
+ qbLink.click();
+ if(!await until(()=>document.querySelector('.filterbar')))throw Error('Coach to waiver navigation failed');
+ if(!document.querySelector('[data-filter="QB"][aria-pressed="true"]'))throw Error('Coach QB filter not applied');
  document.querySelector('[data-tab="overview"]').click();
  if(!await until(()=>document.querySelector('.matchup-panel')))throw Error('Home navigation did not work');
  const overflow=document.documentElement.scrollWidth-window.innerWidth;
@@ -45,7 +62,7 @@ try{
  if(!css.backgroundImage.includes('gradient'))throw Error('Premium theme stylesheet not applied');
  if(document.getElementById('root').textContent.includes('Quick Snap Jamison')||document.getElementById('root').textContent.includes('Highlight Reel Jamison'))throw Error('Other owned team leaked');
  const mark=document.createElement('strong');mark.id='premium-qa';
- mark.textContent='PREMIUM_BROWSER_PASS · '+all+' players · '+wr+' WR · 8 crests · mobile viewport';
+ mark.textContent='PREMIUM_BROWSER_PASS · '+all+' players · '+wr+' WR · 8 crests · Coach decisions · mobile viewport';
  document.body.appendChild(mark);
 }catch(e){
  const mark=document.createElement('strong');mark.id='premium-qa';
