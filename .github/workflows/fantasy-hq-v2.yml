@@ -45,14 +45,20 @@ jobs:
             "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=14000 --window-size=390,844 --dump-dom "http://127.0.0.1:8797/capturebrief/fantasy/$path" > /tmp/fantasy-render.html 2>/tmp/chrome-stderr.log || {
               cat /tmp/chrome-stderr.log; exit 1;
             }
-            grep -Fq 'PUBLISHED SNAPSHOT' /tmp/fantasy-render.html || {
+            grep -Eq 'PUBLISHED AUTO CAPTURE|PUBLISHED SNAPSHOT' /tmp/fantasy-render.html || {
               echo "::error::App failed to load snapshot at $path"; tail -c 1500 /tmp/fantasy-render.html; exit 1;
             }
             if [ -z "$path" ]; then
               grep -Fq 'Brock Hard' /tmp/fantasy-render.html
-              grep -Fq 'Update your Yahoo data' /tmp/fantasy-render.html
-              grep -Fq 'Import updated Yahoo snapshot' /tmp/fantasy-render.html
-              if grep -Eq 'Season 2026 .* Week 4|5th of 8|1–2' /tmp/fantasy-render.html; then echo '::error::Historic Week 4 stats incorrectly displayed as current'; exit 1; fi
+              if grep -Fq 'Update your Yahoo data' /tmp/fantasy-render.html; then
+                grep -Fq 'Import updated Yahoo snapshot' /tmp/fantasy-render.html
+                if grep -Eq 'Season 2026 .* Week 4|5th of 8|1–2' /tmp/fantasy-render.html; then
+                  echo '::error::Archived Week 4 data was displayed as current'; exit 1;
+                fi
+              else
+                grep -Fq 'class="teamhero' /tmp/fantasy-render.html || { echo '::error::No current team hero or archived explanation'; exit 1; }
+                grep -Fq 'BROCK HARD' /tmp/fantasy-render.html
+              fi
               if grep -Fq 'class="tabs"' /tmp/fantasy-render.html; then echo '::error::Duplicate top tabs'; exit 1; fi
               if grep -Eq 'Quick Snap Jamison|Highlight Reel Jamison|THREE LEAGUES|All teams' /tmp/fantasy-render.html; then
                 echo "::error::Other personal team leaked into Brock-only dashboard"; exit 1;

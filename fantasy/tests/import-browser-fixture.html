@@ -13,10 +13,10 @@ try {
  let input=null;
  for(let i=0;i<120;i++){
   input=document.getElementById('importFile');
-  if(input&&document.querySelector('.archived-fallback'))break;
+  if(input&&(document.querySelector('.archived-fallback')||document.querySelector('.teamhero')))break;
   await new Promise(r=>setTimeout(r,35));
  }
- if(!input||!document.querySelector('.archived-fallback'))throw Error('Archived page or file control missing');
+ if(!input||!document.querySelector('.archived-fallback')&&!document.querySelector('.teamhero'))throw Error('Page or file control missing');
  if(document.querySelector('.tabs'))throw Error('Duplicate top navigation');
  const data=new DataTransfer();
  data.items.add(new File([JSON.stringify(raw)],'brock-fixture.json',{type:'application/json'}));
