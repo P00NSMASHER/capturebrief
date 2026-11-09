@@ -1,0 +1,119 @@
+/* Brock Hard Coach · original polished decision view, 2026. Static and read-only. */
+.bottomnav{grid-template-columns:repeat(5,minmax(0,1fr))}
+.coach-intro{margin-bottom:12px}
+.coach-intro h1{margin-bottom:9px}
+.coach-hero{
+ position:relative;isolation:isolate;overflow:hidden;margin:10px 0 16px;
+ padding:clamp(22px,3.2vw,34px);border-radius:27px;
+ border:1px solid #80e9db75;
+ background:
+ radial-gradient(circle at 100% -30%,#4afde653,transparent 55%),
+ radial-gradient(circle at -5% 105%,#2c78c85a,transparent 54%),
+ linear-gradient(135deg,#113d42,#122a41 68%,#0c2538);
+ box-shadow:inset 0 1px #e4fff73a,0 19px 60px #0008,0 0 34px #17cb9b18
+}
+.coach-hero:after{
+ content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:linear-gradient(110deg,transparent 20%,#eefff809 40%,transparent 57%);transform:skew(-10deg)
+}
+.coach-hero-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.coach-orb{display:grid;place-items:center;width:45px;height:45px;border-radius:15px;
+ color:#d9ffed;border:1px solid #c9ffdb68;background:linear-gradient(145deg,#328f79,#195b68);
+ box-shadow:inset 0 1px #ebfff870,0 6px 20px #031f294a
+}
+.coach-orb .ui-icon{width:25px;height:25px}
+.coach-source{display:inline-flex;max-width:185px;color:#c6f9ea;font-weight:790;
+ font-size:9px;letter-spacing:.09em;text-align:right}
+.coach-hero-kicker{color:#90f8d3;font-size:10px;letter-spacing:.15em;font-weight:850;margin-top:22px}
+.coach-hero h2{max-width:660px;margin:9px 0 11px;font-size:clamp(25px,4.3vw,38px);
+ font-weight:870;letter-spacing:-.055em;line-height:1.1}
+.coach-hero>p{max-width:610px;color:#bcdbde;font-size:12px;line-height:1.6;margin:0 0 13px}
+.coach-hero-action{display:flex;justify-content:flex-start;margin:14px 0 20px}
+.coach-hero-action .coach-action{background:linear-gradient(130deg,#72ffd1,#42d9bd);
+ border:1px solid #d5ffeb;color:#062c28;box-shadow:inset 0 1px #ffffff6b,0 7px 22px #35dfaa44;
+ font-weight:840}
+.coach-hero-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;
+ border-top:1px solid #a2ffdf37;padding-top:17px;margin-top:14px}
+.coach-metric{min-width:0}
+.coach-metric span{display:block;font-size:9px;color:#8bd3ca;font-weight:810;letter-spacing:.085em}
+.coach-metric strong{display:block;font-size:clamp(19px,2.8vw,27px);margin-top:6px;
+ color:#e6fff6;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.coach-next{margin-top:14px}
+.coach-steps{display:grid;gap:8px}
+.coach-step{display:flex;align-items:center;gap:12px;background:linear-gradient(130deg,#142a3d,#0d2032);
+ border:1px solid #9bc3da24;border-radius:16px;padding:13px 14px;min-width:0}
+.coach-step-number{display:grid;place-items:center;flex:none;width:29px;height:29px;
+ border:1px solid #6af2cf66;border-radius:9px;background:#52ddbd20;color:#8ffbd9;
+ font-size:13px;font-weight:900}
+.coach-step>div{flex:1;min-width:0}
+.coach-step strong{display:block;font-size:12px;line-height:1.32;color:#edfaff}
+.coach-step p{color:#8aabb9;font-size:10px;margin:4px 0 0;line-height:1.35}
+.coach-section-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.coach-section-grid>.panel{margin:0;min-width:0}
+.coach-section-grid>.panel:last-child{grid-column:1/-1}
+.coach-section .panelhead{align-items:center}
+.coach-section .panelhead h2{font-size:21px}
+.coach-insights{display:grid;gap:10px}
+.coach-insight{
+ padding:16px;border:1px solid #88b2cc38;border-radius:17px;
+ background:linear-gradient(143deg,#122a3c,#0d1e30);
+ box-shadow:inset 0 1px #ffffff0b
+}
+.coach-insight--priority{border-color:#4cf1bf52;background:linear-gradient(143deg,#17423e,#0d2934)}
+.coach-insight--attention{border-color:#e6bf674e;background:linear-gradient(143deg,#36352e,#142632)}
+.coach-insight-head{display:flex;justify-content:flex-start}
+.coach-signal{display:inline-flex;padding:4px 7px;border-radius:7px;font-size:9px;
+ font-weight:850;letter-spacing:.08em;color:#a1bed0;background:#abc9df14}
+.coach-signal--priority{color:#91f7d0;background:#60d9ab20}
+.coach-signal--attention{color:#fcd69c;background:#d7a25225}
+.coach-insight h3{margin:10px 0 8px;font-size:17px;letter-spacing:-.03em;line-height:1.2}
+.coach-insight p{font-size:12px;line-height:1.6;color:#b9cfdb;margin:0 0 13px}
+.coach-evidence{display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+ border-top:1px solid #8aaec026;padding-top:10px}
+.coach-evidence>span{display:inline-flex;align-items:flex-start;gap:5px;
+ color:#83a6b8;line-height:1.45;font-size:10px;min-width:0;flex:1}
+.coach-evidence .ui-icon{width:13px;height:13px;flex:none;margin-top:1px}
+.coach-action{
+ display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none;
+ min-height:42px;padding:8px 12px;border-radius:11px;border:1px solid #62dcb252;
+ background:#163e3b;color:#a9fbd9;cursor:pointer;font-family:inherit;
+ font-size:11px;font-weight:790;transition:transform .16s,border-color .16s
+}
+.coach-action:hover{transform:translateY(-1px);border-color:#a6ffdc}
+.coach-action .ui-icon{height:14px;width:14px}
+.coach-step .coach-action{font-size:10px;padding:7px 9px;max-width:150px}
+.coach-footer{font-size:11px;color:#8cabb9;line-height:1.65;text-align:center;
+ margin:18px 0 4px;padding:0 14px;overflow-wrap:anywhere}
+.coach-unverified{padding:24px;text-align:center}
+.coach-unverified p{font-size:13px;color:#bed2df}
+@media(min-width:860px){
+ .bottomnav{grid-template-columns:repeat(5,minmax(0,1fr));width:min(575px,50vw);max-width:575px}
+}
+@media(max-width:790px){
+ .coach-section-grid{grid-template-columns:1fr;gap:0}
+ .coach-section-grid>.panel{margin:8px 0}
+ .coach-section-grid>.panel:last-child{grid-column:auto}
+}
+@media(max-width:480px){
+ .bottomnav{grid-template-columns:repeat(5,minmax(0,1fr));padding-left:8px;padding-right:8px}
+ .bottomnav button{font-size:9px;gap:4px;padding:3px 2px;min-height:56px;min-width:0}
+ .bottomnav button .ui-icon{width:20px;height:20px}
+ .coach-hero{padding:19px;border-radius:24px}
+ .coach-hero h2{font-size:25px}
+ .coach-hero-kicker{margin-top:16px}
+ .coach-hero-metrics{gap:5px}
+ .coach-metric span{font-size:8px}
+ .coach-metric strong{font-size:19px}
+ .coach-step{flex-wrap:wrap;gap:9px}
+ .coach-step .coach-action{margin-left:40px}
+ .coach-insight{padding:14px}
+ .coach-evidence .coach-action{margin-left:0}
+}
+@media(max-width:355px){
+ .coach-step .coach-action{max-width:100%;margin-left:38px}
+ .coach-metric span{font-size:7px}
+ .bottomnav button{font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){
+ .coach-action{transition:none!important}
+}
