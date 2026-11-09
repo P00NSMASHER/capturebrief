@@ -42,6 +42,7 @@ export function uiIcon(kind){
  lineup:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 9h8M8 14h5"/>',
  waivers:'<path d="M4 19h16M4 13h11M4 7h6"/><path d="m16 4 4 3-4 3"/>',
  league:'<path d="M8 21h8M12 17v4M7 3h10v6a5 5 0 0 1-10 0Z"/><path d="M7 6H4a3 3 0 0 0 3 5m10-5h3a3 3 0 0 1-3 5"/>',
+ coach:'<path d="M12 3 14.6 8.4 20.5 9.2 16.2 13.3 17.2 19.2 12 16.5 6.8 19.2 7.8 13.3 3.5 9.2 9.4 8.4Z"/><path d="m18.8 2 .6 2.1L21.5 5l-2.1.8L18.8 8l-.7-2.2-2.1-.8 2.1-.9Z"/>',
  refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M5 10a7 7 0 0 1 12-3l3 5M4 12l3 5a7 7 0 0 0 12-3"/>',
  chevron:'<path d="m9 18 6-6-6-6"/>',
  arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
