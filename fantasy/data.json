@@ -3,7 +3,7 @@
   "season": 2026,
   "provider": "Yahoo",
   "week": 9,
-  "syncedAtIso": "2026-11-09T17:30:21.368Z",
+  "syncedAtIso": "2026-11-09T23:27:56.499Z",
   "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
   "captureType": "scheduled-provider-read",
   "teams": {
@@ -552,17 +552,6 @@
           "projection": null
         },
         {
-          "id": "41097",
-          "name": "Devaughn Vele",
-          "position": "WR",
-          "team": "NO",
-          "nflTeam": "NO",
-          "acquisitionState": "waivers",
-          "waiverDate": "2026-11-11",
-          "percentOwned": 51,
-          "projection": null
-        },
-        {
           "id": "33998",
           "name": "Wan'Dale Robinson",
           "position": "WR",
@@ -579,6 +568,17 @@
           "position": "WR",
           "team": "NYJ",
           "nflTeam": "NYJ",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 50,
+          "projection": null
+        },
+        {
+          "id": "41097",
+          "name": "Devaughn Vele",
+          "position": "WR",
+          "team": "NO",
+          "nflTeam": "NO",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 50,
@@ -625,7 +625,7 @@
           "teamId": "2",
           "teamName": "Brock Hard & Tee Baggin",
           "points": 148.58,
-          "projectedPoints": 155.57,
+          "projectedPoints": 155.63,
           "liveProjectedPoints": null,
           "winProbability": 0.99
         },
@@ -756,23 +756,23 @@
         {
           "week": 10,
           "opponent": "Josh ❤️creampies",
-          "myProjected": 147.06,
-          "opponentProjected": 126.92
+          "myProjected": 147.4,
+          "opponentProjected": 127.68
         },
         {
           "week": 11,
           "opponent": "BEEFS GAY",
-          "myProjected": 134.96,
+          "myProjected": 135.11,
           "opponentProjected": 110.2
         },
         {
           "week": 12,
           "opponent": "Jersey junkyard",
-          "myProjected": 149.36,
-          "opponentProjected": 141.46
+          "myProjected": 149.61,
+          "opponentProjected": 141.09
         }
       ],
-      "analysisAsOfIso": "2026-11-09T17:30:21.368Z"
+      "analysisAsOfIso": "2026-11-09T23:27:56.499Z"
     }
   }
 }
