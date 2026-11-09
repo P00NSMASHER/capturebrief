@@ -273,7 +273,9 @@ function coachInsight(item){
  return '<article class="coach-insight coach-insight--'+tone+'">'+
  '<div class="coach-insight-head"><span class="coach-signal coach-signal--'+tone+'">'+
  (tone==='priority'?'PRIORITY':tone==='attention'?'WATCH':'SOURCE-BACKED')+'</span></div>'+
- '<h3>'+$esc(item.title)+'</h3><p>'+$esc(item.detail)+'</p>'+
+ '<h3>'+$esc(item.title)+'</h3>'+
+ '<ul class="coach-points">'+(Array.isArray(item.bullets)?item.bullets:[]).map(line=>
+ '<li>'+$esc(line)+'</li>').join('')+'</ul>'+
  '<div class="coach-evidence"><span>'+uiIcon('info')+$esc(item.evidence)+'</span>'+coachAction(item)+'</div></article>';
 }
 function coachView(team){
@@ -308,8 +310,16 @@ function coachView(team){
  '<section class="panel coach-next"><div class="panelhead"><div><div class="label">PRIORITIZED FOR BROCK HARD</div>'+
  '<h2>Your next three checks</h2></div></div><div class="coach-steps">'+next+'</div></section>'+
  '<div class="coach-section-grid">'+areas+'</div>'+
- '<p class="coach-footer">Capture: '+$esc(String(plan.captureAt))+
- '. Roster/waiver status may have changed. No player transactions, trade proposals, or Yahoo lineup edits are made by Coach.</p>';
+ '<section class="panel coach-assessment" aria-labelledby="coach-assessment-title">'+
+ '<div class="panelhead"><div><div class="label">THE BIG PICTURE · MANAGER’S DESK</div>'+
+ '<h2 id="coach-assessment-title">Coach’s final assessment</h2></div>'+
+ '<span class="mini-pill">3-PARAGRAPH RECAP</span></div>'+
+ '<div class="coach-recap">'+(Array.isArray(plan.summary)?plan.summary:[]).map((paragraph,i)=>
+ '<p class="coach-recap-paragraph" data-recap-index="'+(i+1)+'">'+$esc(paragraph)+'</p>').join('')+'</div>'+
+ '<div class="coach-recap-source">'+uiIcon('info')+
+ '<span>Based on the saved Week '+$esc(String(current.week))+' Yahoo capture · '+$esc(String(plan.captureAt))+
+ '. Recheck Yahoo before acting; this is not live analysis.</span></div></section>'+
+ '<p class="coach-footer">Snapshot-based advice only. No player transactions, trade proposals, or Yahoo lineup edits are made by Coach.</p>';
 }
 function teamView(team){
  const view=activeTab==='coach'?coachView(team):activeTab==='lineup'?lineupView(team):activeTab==='waivers'?waiverView(team):activeTab==='lab'?labView(team):summaryView(team);
