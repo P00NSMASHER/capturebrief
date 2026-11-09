@@ -34,7 +34,7 @@ test('multi-team private import and prior browser storage are sanitized to Brock
  assert.deepEqual(Object.keys(normalizeSnapshot(mixed).teams),['brock']);
  assert.equal(normalizeSnapshot(mixed).teams.brock.projectionCoverage,'complete');
  const app=file('fantasy/assets/app-v2.mjs');
- assert.match(app,/const brockOnly=onlyBrockRaw\(raw\)/);
+ assert.match(app,/const brockOnly=preparePrivateImport\(raw/);
  assert.match(app,/localStorage\.setItem\(PRIVATE_KEY,JSON\.stringify\(brockOnly\)\)/);
  assert.match(app,/const safe=onlyBrockRaw\(JSON\.parse\(stored\)\)/);
 });

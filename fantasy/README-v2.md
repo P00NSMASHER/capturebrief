@@ -29,3 +29,15 @@ For **automatic** Yahoo refresh, obtain API application approval first, then sep
 Run node --check for fantasy/assets/engine.mjs, fantasy/assets/app-v2.mjs and fantasy/adapter/flaim-private-v3.mjs. Then run node --test fantasy/tests/*.test.mjs.
 
 The fantasy CI also exercises Chrome rendering on /fantasy/ and /fantasy/brock/ and the fictional optimization fixture. The owner approved and completed publication of the Brock-only static site; future releases and live Yahoo OAuth/backend require separate approval.
+
+## Automatic publisher (November 9, 2026)
+
+The owner authorized publication of Brock Hard roster and matchup data on public GitHub Pages. This does not authorize exposing Yahoo credentials, authorization tokens, account emails, or other personal fantasy teams.
+
+An enabled hourly ChatGPT task named Brock Hard | Auto Yahoo Data is configured to read only Brock's Yahoo league through the existing Flaim Fantasy connection and update only fantasy/data.json on gh-pages. Before writing it must validate league and team identity, current roster, week, scoring slots, standings, matchup, availability, timestamps and a safe schema-v3 output. Any failure must preserve the last verified capture. The initial Week 9 snapshot was manually verified and published November 9; unattended scheduled execution remains unverified until an actual run is observed.
+
+The public site does not itself authenticate with Yahoo. On open, every five minutes while visible, and on Safari foreground return, the app checks the latest published JSON. It compares verified timestamps and automatically supersedes an older local private import. Header Refresh rechecks the published snapshot, not the Yahoo API. A failed, stale, wrong-team or incomplete snapshot cannot replace a newer verified capture.
+
+Expect up to an hour between scheduled captures plus GitHub Pages build/caching delay; this is not continuous live scoring. The UI displays capture age. Missing future player projections stay null and projected lineup and waiver optimizers remain disabled.
+
+Private JSON import remains an optional fallback. Never store passwords, Yahoo OAuth tokens, cookies, or private Flaim source envelopes in the repository.

@@ -19,7 +19,7 @@ export function getFreshness(value, now=Date.now()) {
   const hours=Math.max(0,(now-ms)/3_600_000);
   if (hours>24) return {state:'stale',ageHours:round(hours),label:'Archived snapshot',actionable:false};
   if (hours>6) return {state:'aging',ageHours:round(hours),label:'Check before acting',actionable:false};
-  return {state:'fresh',ageHours:round(hours),label:'Recently synced',actionable:true};
+  return {state:'fresh',ageHours:round(hours),label:'Recent capture',actionable:true};
 }
 function fromLegacy(id,t) {
   const s=t.snapshot||{};

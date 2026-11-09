@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Auto refresh browser QA</title><link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3"></head>
+<body data-team="brock"><div id="root">Testing automatic capture update…</div>
+<script type="module">
+try{
+ const raw=await (await fetch('/capturebrief/fantasy/tests/fixtures/private-v3.sample.json',{cache:'no-store'})).json();
+ raw.teams.brock.leagueId='470.l.290846';raw.teams.brock.teamId='2';
+ raw.teams.brock.projectionCoverage='none';
+ const old=structuredClone(raw);old.syncedAtIso=new Date(Date.now()-60*60*1000).toISOString();
+ const latest=structuredClone(raw);latest.syncedAtIso=new Date().toISOString();
+ latest.teams.brock.name='Fictional Brock AUTO Updated';
+ latest.teams.brock.record='6-2';
+ localStorage.setItem('fantasy-hq-private-v3',JSON.stringify(old));
+ const realFetch=window.fetch.bind(window);
+ window.fetch=(u,opts)=>String(u).includes('/fantasy/data.json?')?
+  Promise.resolve(new Response(JSON.stringify(latest),{status:200,headers:{'Content-Type':'application/json'}})):
+  realFetch(u,opts);
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=3');
+ for(let i=0;i<120;i++){
+  if(document.querySelector('.teamhero')?.textContent.includes('Fictional Brock AUTO Updated'))break;
+  await new Promise(r=>setTimeout(r,35));
+ }
+ const text=document.getElementById('root').textContent;
+ if(!text.includes('Fictional Brock AUTO Updated')||!text.includes('6-2'))throw Error('Newer public capture did not replace old private');
+ if(localStorage.getItem('fantasy-hq-private-v3'))throw Error('Older private capture still blocks future automatic updates');
+ if(document.querySelectorAll('[role="tablist"]').length!==1)throw Error('Multiple navigation bars');
+ if(text.includes('Quick Snap Jamison')||text.includes('Highlight Reel Jamison'))throw Error('Other owned teams leaked');
+ const v=document.createElement('div');v.textContent='AUTO_REFRESH_PASS';document.body.appendChild(v);
+}catch(e){
+ const v=document.createElement('div');v.textContent='AUTO_REFRESH_FAIL: '+e.message;document.body.appendChild(v);
+}
+</script></body></html>

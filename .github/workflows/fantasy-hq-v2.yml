@@ -24,6 +24,7 @@ jobs:
           node --version
           node --check fantasy/assets/engine.mjs
           node --check fantasy/assets/app-v2.mjs
+          node --check fantasy/assets/snapshot-import.mjs
           node --check fantasy/adapter/flaim-private-v3.mjs
       - name: Run fail-closed data and UI regression tests
         run: node --test fantasy/tests/*.test.mjs
@@ -44,11 +45,21 @@ jobs:
             "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=14000 --window-size=390,844 --dump-dom "http://127.0.0.1:8797/capturebrief/fantasy/$path" > /tmp/fantasy-render.html 2>/tmp/chrome-stderr.log || {
               cat /tmp/chrome-stderr.log; exit 1;
             }
-            grep -Fq 'PUBLISHED SNAPSHOT' /tmp/fantasy-render.html || {
+            grep -Eq 'PUBLISHED AUTO CAPTURE|PUBLISHED SNAPSHOT' /tmp/fantasy-render.html || {
               echo "::error::App failed to load snapshot at $path"; tail -c 1500 /tmp/fantasy-render.html; exit 1;
             }
             if [ -z "$path" ]; then
               grep -Fq 'Brock Hard' /tmp/fantasy-render.html
+              if grep -Fq 'Update your Yahoo data' /tmp/fantasy-render.html; then
+                grep -Fq 'Import updated Yahoo snapshot' /tmp/fantasy-render.html
+                if grep -Eq 'Season 2026 .* Week 4|5th of 8|1–2' /tmp/fantasy-render.html; then
+                  echo '::error::Archived Week 4 data was displayed as current'; exit 1;
+                fi
+              else
+                grep -Fq 'class="teamhero' /tmp/fantasy-render.html || { echo '::error::No current team hero or archived explanation'; exit 1; }
+                grep -Fq 'BROCK HARD' /tmp/fantasy-render.html
+              fi
+              if grep -Fq 'class="tabs"' /tmp/fantasy-render.html; then echo '::error::Duplicate top tabs'; exit 1; fi
               if grep -Eq 'Quick Snap Jamison|Highlight Reel Jamison|THREE LEAGUES|All teams' /tmp/fantasy-render.html; then
                 echo "::error::Other personal team leaked into Brock-only dashboard"; exit 1;
               fi
@@ -68,6 +79,20 @@ jobs:
           grep -Fq 'MAXIMIZED PROJECTED POINTS' /tmp/fantasy-fixture.html || { echo '::error::Projected lineup failed to render'; tail -c 1800 /tmp/fantasy-fixture.html; exit 1; }
           grep -Fq 'Fictional WR Bench' /tmp/fantasy-fixture.html || { echo '::error::Bench slot optimizer failed to render'; exit 1; }
           echo 'Browser smoke passed: synthetic projections and optimizer'
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=20000 --window-size=390,844 --dump-dom "http://127.0.0.1:8797/capturebrief/fantasy/tests/import-browser-fixture.html" > /tmp/fantasy-import-qa.html 2>/tmp/chrome-stderr.log
+          if ! grep -Fq 'BROWSER_IMPORT_PASS' /tmp/fantasy-import-qa.html; then
+            echo "::error::Brock private JSON browser import failed"
+            grep -o 'BROWSER_IMPORT_FAIL[^<]*' /tmp/fantasy-import-qa.html || true
+            exit 1
+          fi
+          echo 'Browser smoke passed: archived to Brock-private import'
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=20000 --window-size=390,844 --dump-dom "http://127.0.0.1:8797/capturebrief/fantasy/tests/auto-refresh-browser.html" > /tmp/auto-browser.html 2>/tmp/chrome-stderr.log
+          if ! grep -Fq 'AUTO_REFRESH_PASS' /tmp/auto-browser.html; then
+            echo "::error::Automatic published snapshot supersession failed"
+            grep -o 'AUTO_REFRESH_FAIL[^<]*' /tmp/auto-browser.html || true
+            exit 1
+          fi
+          echo 'Browser smoke passed: automatically prefer newer published capture'
           mkdir -p fantasy/screenshots
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot=fantasy/screenshots/home.png "http://127.0.0.1:8797/capturebrief/fantasy/" >/dev/null 2>/tmp/chrome-stderr.log
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot=fantasy/screenshots/brock.png "http://127.0.0.1:8797/capturebrief/fantasy/brock/" >/dev/null 2>/tmp/chrome-stderr.log
