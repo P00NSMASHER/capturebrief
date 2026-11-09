@@ -69,8 +69,19 @@ test('source remains read-only, browser tab duplication removed, and archive is 
  assert.match(app,/function archivedView\(/);
  assert.match(app,/source==='published'&&!freshness\(\)\.actionable\?archivedView\(\)/);
  assert.match(app,/data-action="import"/);
- assert.doesNotMatch(app,/data-action="refresh" '+/);
+ assert.match(app,/data-action="refresh"/);
  assert.doesNotMatch(app,/tabbar\(\)\+'<div id="tabPanel"/);
  assert.match(app,/preparePrivateImport\(raw/);
  assert.match(app,/localStorage\.setItem\(PRIVATE_KEY,JSON\.stringify\(brockOnly\)\)/);
+});
+
+test('automatic refresh checks while open and after iPhone return without exposing Yahoo tokens',()=>{
+ const code=readFileSync('fantasy/assets/app-v2.mjs','utf8');
+ assert.match(code,/setInterval\(check,5\*60\*1000\)/);
+ assert.match(code,/addEventListener\('visibilitychange',check\)/);
+ assert.match(code,/addEventListener\('focus',check\)/);
+ assert.match(code,/acceptNewer\(await getPublic\(\)\)/);
+ assert.match(code,/captureMs\(latest\.syncedAtIso\)<=captureMs\(current\.syncedAtIso\)/);
+ assert.match(code,/localStorage\.removeItem\(PRIVATE_KEY\)/);
+ assert.doesNotMatch(code,/Yahoo OAuth token|client_secret=/);
 });

@@ -26,14 +26,14 @@ function nav(){
 function masthead(team){const f=freshness();
   const currentTeam='<div class="context">BROCK HARD & TEE BAGGIN · YAHOO FOOTBALL</div>';
   return '<header class="masthead"><div class="masttop"><a href="'+BASE+'" class="brand"><span class="brandmark">F<span>.</span></span><span>FANTASY <b>HQ</b><small>COMMAND CENTER</small></span></a>'+
-    '<button type="button" class="refreshbtn" data-action="import" aria-label="Import updated private Yahoo snapshot">↥ Update data</button></div>'+
+    '<button type="button" class="refreshbtn" data-action="refresh" '+(loading?'disabled':'')+' aria-label="Check latest published Yahoo capture">'+(loading?'Checking…':'↻ Refresh')+'</button></div>'+
     currentTeam+'<div class="statusrow"><span class="statusdot '+f.state+'"></span>'+
     '<span class="statusline">'+$esc(f.label)+'</span><span class="statussep">/</span><span>'+$esc(ageText(f))+'</span>'+
-    '<span class="sourcelabel">'+(source==='private'?'PRIVATE CAPTURE · NOT LIVE':'PUBLISHED SNAPSHOT · ARCHIVED')+'</span></div></header>'}
+    '<span class="sourcelabel">'+(source==='private'?'PRIVATE CAPTURE · NOT LIVE':'PUBLISHED AUTO CAPTURE · NOT LIVE')+'</span></div></header>'}
 function riskRibbon(){const f=freshness();const old=f.state==='stale'||f.state==='unknown';
   const line=old?'Recommendations, waivers, injuries and player status below reflect an archived snapshot. They are NOT verified for today.':
     source==='private'?'Local data was imported on this device. Verify the source timestamp before making roster moves.':
-    'Flaim Fantasy can supply the league data through ChatGPT. This page shows the last saved snapshot, not a continuously connected Yahoo feed.';
+    'This page checks for newer Brock Hard captures automatically. The scheduled publisher can update hourly; this is not continuous Yahoo streaming.';
   return '<div class="riskbar '+(old?'archived':'')+'"><span class="riskicon">'+(old?'!':'i')+'</span><div><strong>'+(old?'Outdated fantasy data':'Data source notice')+'</strong><p>'+$esc(line)+'</p></div></div>'}
 function messageBox(){return message?'<div class="toast" role="status">'+$esc(message)+'</div>':''}
 function scoreFor(team){const m=team.matchup;if(!m)return null;
@@ -173,20 +173,47 @@ function onlyBrockRaw(raw){
  clean.teams={brock:raw.teams.brock};
  return clean;
 }
-async function getPublic() {
+function captureMs(s){const n=Date.parse(s||'');return Number.isFinite(n)?n:-Infinity}
+function validatePublished(raw){
+ const cleaned=onlyBrockRaw(raw);
+ const snapshot=normalizeSnapshot(cleaned);
+ if(snapshot.schemaVersion===3 &&
+    (snapshot.teams.brock.leagueId!=='470.l.290846'||snapshot.teams.brock.teamId!=='2'))
+    throw new Error('Published source is not the authorized Brock Hard team');
+ if(captureMs(snapshot.syncedAtIso)===-Infinity||captureMs(snapshot.syncedAtIso)>Date.now()+300000)
+    throw new Error('Published capture time is missing or invalid');
+ return {raw:cleaned,snapshot};
+}
+async function getPublic(){
  const r=await fetch(BASE+'data.json?cachebust='+Date.now(),{cache:'no-store',headers:{Accept:'application/json'}});
  if(!r.ok)throw new Error('Published snapshot request returned HTTP '+r.status);
- const raw=onlyBrockRaw(await r.json()),normalized=normalizeSnapshot(raw);
- try{localStorage.setItem(CACHE_KEY,JSON.stringify(raw))}catch{}
- return normalized;
+ const result=validatePublished(await r.json());
+ try{
+  const stored=localStorage.getItem(CACHE_KEY);
+  const existing=stored?validatePublished(JSON.parse(stored)).snapshot:null;
+  if(!existing||captureMs(result.snapshot.syncedAtIso)>captureMs(existing.syncedAtIso))
+    localStorage.setItem(CACHE_KEY,JSON.stringify(result.raw));
+ }catch{}
+ return result.snapshot;
 }
-async function refresh(){if(loading)return;loading=true;message='Checking the published snapshot. This does not authenticate with Yahoo.';render();
- try {
-   const latest=await getPublic();
-   if(source==='private')message='Published snapshot checked; the private import remains active. Remove it to view the public data.';
-   else {current=latest;message='Published snapshot loaded. Data timestamp: '+(latest.syncedAtIso||'unknown')+'.';}
- }catch(err){message='Update failed: '+err.message+'. The previous snapshot remains visible.'}
- finally{loading=false;render()}}
+function acceptNewer(latest){
+ if(!latest?.teams?.brock||!Number.isFinite(captureMs(latest.syncedAtIso)))return false;
+ if(current&&captureMs(latest.syncedAtIso)<=captureMs(current.syncedAtIso))return false;
+ current=latest;source='published';
+ try{localStorage.removeItem(PRIVATE_KEY)}catch{}
+ return true;
+}
+async function refresh(silent=false){
+ if(loading)return;
+ loading=true;
+ if(!silent){message='Checking the newest published Brock Hard capture. Yahoo is not contacted by this page.';render();}
+ try{
+  const latest=await getPublic(),changed=acceptNewer(latest);
+  if(changed)message='Verified newer provider capture loaded: '+latest.syncedAtIso+'. This is a saved snapshot, not continuous live sync.';
+  else if(!silent)message='Already showing the newest verified capture available. Captured at '+(current?.syncedAtIso||'unknown')+'.';
+ }catch(err){if(!silent)message='Update unavailable: '+err.message+'. Previous verified capture retained.'}
+ finally{loading=false;render()}
+}
 async function handleImport(file){if(!file)return;
  if(file.size>2_000_000){message='Import rejected: limit is 2 MB.';render();return;}
  try{
@@ -202,7 +229,7 @@ document.addEventListener('click',event=>{
  const tab=event.target.closest('button[data-tab]');
  if(tab){activeTab=tab.dataset.tab;render();return}
  const control=event.target.closest('[data-action]');if(!control)return;
- if(control.dataset.action==='refresh')refresh();
+ if(control.dataset.action==='refresh')refresh(false);
  if(control.dataset.action==='import')document.getElementById('importFile')?.click();
  if(control.dataset.action==='clear'){
   localStorage.removeItem(PRIVATE_KEY);source='published';message='Private import cleared from this browser.';
@@ -217,14 +244,30 @@ document.addEventListener('change',event=>{
  const hash=location.hash.replace('#','');
  if(['overview','lineup','waivers','lab'].includes(hash))activeTab=hash;
  try{
-   const stored=localStorage.getItem(PRIVATE_KEY);
-   if(stored){const safe=onlyBrockRaw(JSON.parse(stored));current=normalizeSnapshot(safe);localStorage.setItem(PRIVATE_KEY,JSON.stringify(safe));source='private';render();return;}
+  const stored=localStorage.getItem(PRIVATE_KEY);
+  if(stored){
+   const safe=onlyBrockRaw(JSON.parse(stored)),snap=normalizeSnapshot(safe);
+   if(snap.schemaVersion===3&&captureMs(snap.syncedAtIso)!==-Infinity){
+    current=snap;source='private';
+    localStorage.setItem(PRIVATE_KEY,JSON.stringify(safe));
+   }
+  }
  }catch{try{localStorage.removeItem(PRIVATE_KEY)}catch{}}
- try{current=await getPublic();}
- catch(e){
-  try{const cached=localStorage.getItem(CACHE_KEY);if(cached){const safe=onlyBrockRaw(JSON.parse(cached));current=normalizeSnapshot(safe);localStorage.setItem(CACHE_KEY,JSON.stringify(safe));message='Network error. Showing the last successfully cached public snapshot.'}}
-  catch{}
-  if(!current){root.innerHTML='<div class="loader"><strong>Fantasy HQ could not load.</strong><p>'+$esc(e.message)+'</p><button class="primarybutton" data-action="refresh">Retry</button></div>';return;}
+ if(current)render();
+ try{acceptNewer(await getPublic())}
+ catch(error){
+  if(!current){
+   try{
+    const cached=localStorage.getItem(CACHE_KEY);
+    if(cached){const old=validatePublished(JSON.parse(cached));current=old.snapshot;source='published';message='Network error. Showing previously verified published capture.'}
+   }catch{}
+  }
+  if(!current){root.innerHTML='<div class="loader"><strong>Fantasy HQ could not load.</strong><p>'+$esc(error.message)+'</p><button class="primarybutton" data-action="refresh">Retry</button></div>'}
  }
- render();
+ if(current)render();
+ // iPhone background tabs may suspend timers. A visibility check catches the next foreground visit.
+ const check=()=>{if(document.visibilityState==='visible')refresh(true)};
+ setInterval(check,5*60*1000);
+ document.addEventListener('visibilitychange',check);
+ window.addEventListener('focus',check);
 })();
