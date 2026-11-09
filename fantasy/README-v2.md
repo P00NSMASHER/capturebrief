@@ -1,12 +1,12 @@
 # Fantasy HQ v2 — Brock Hard only
 
-Read-only, iPhone-friendly Yahoo football dashboard for **Brock Hard & Tee Baggin**. The existing PR #183 targets gh-pages and remains a **draft**. No public deployment is authorized.
+Read-only, iPhone-friendly Yahoo football dashboard for **Brock Hard & Tee Baggin**. Owner-merged [PR #183](https://github.com/P00NSMASHER/capturebrief/pull/183) is published on `gh-pages` at commit `36f0c75379078c1c28d39227774b8fe53cca0a93` (November 9, 2026 UTC). GitHub Pages deployment and the exact-source smoke checks completed successfully. This is a **released static dashboard**, not a live Yahoo connection.
 
 ## UI and privacy
 
 - /capturebrief/fantasy/ and /capturebrief/fantasy/brock/ both open the Brock Hard dashboard directly.
 - There are no other personal team cards or a league switcher. The bottom navigation switches **Overview, Lineup, Waivers, and Analysis** for Brock Hard only.
-- Existing /quick/ and /highlight/ deep links redirect to /brock/ without rendering any other personal team. Only Brock is present in the draft branch's fantasy/data.json archive.
+- Existing /quick/ and /highlight/ deep links redirect to /brock/ without rendering any other personal team. Only Brock is present in the released `fantasy/data.json` archive.
 - Historical legacy or private snapshots containing multiple teams are filtered to teams.brock before normalization, browser storage, and display. Old cached copies are filtered on next load. Never commit private Yahoo data to the public repository.
 - Original browser import remains schemaVersion 3 and 2 MB maximum. No file upload occurs. Refresh checks published static JSON and **does not contact Yahoo**. Fallback preserves previously verified Brock data.
 
@@ -28,4 +28,4 @@ For **automatic** Yahoo refresh, obtain API application approval first, then sep
 
 Run node --check for fantasy/assets/engine.mjs, fantasy/assets/app-v2.mjs and fantasy/adapter/flaim-private-v3.mjs. Then run node --test fantasy/tests/*.test.mjs.
 
-The fantasy CI also exercises Chrome rendering on /fantasy/ and /fantasy/brock/ and the fictional optimization fixture. Do not merge or publish without explicit owner approval.
+The fantasy CI also exercises Chrome rendering on /fantasy/ and /fantasy/brock/ and the fictional optimization fixture. The owner approved and completed publication of the Brock-only static site; future releases and live Yahoo OAuth/backend require separate approval.
