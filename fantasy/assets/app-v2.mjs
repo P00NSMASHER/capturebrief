@@ -1,6 +1,7 @@
 import {TEAM_IDS,normalizeSnapshot,getFreshness,rosterBuckets,slotsFromRoster,optimizeLineup,rankWaiverTargets,estimateWinChance,isSafeUrl,round,teamPath,rosterStatusAlerts,compareScoredLineup,marketWatchlist,positionDepth} from './engine.mjs';
 import {preparePrivateImport} from './snapshot-import.mjs';
 import {LEAGUE_TEAMS,resolveTeam,teamLogo,uiIcon,leagueGallery,upcomingCards,teamStrip} from './league-branding.mjs';
+import {buildCoachPlan} from './coach-engine.mjs';
 
 const BASE='/capturebrief/fantasy/';
 const root=document.getElementById('root');
@@ -20,7 +21,7 @@ const empty=(title,detail)=>'<div class="empty"><div class="emptymark">◇</div>
 function ageText(f){if(f.ageHours===null)return 'Timestamp unavailable';return f.ageHours<1?'Captured less than an hour ago':f.ageHours<24?'Captured '+num(f.ageHours,1)+'h ago':'Captured '+Math.floor(f.ageHours/24)+' days ago'}
 function safeLeagueLink(team){return isSafeUrl(team.leagueUrl)?'<a class="minorbtn" href="'+$esc(team.leagueUrl)+'" target="_blank" rel="noopener noreferrer">Open Yahoo <span aria-hidden="true">↗</span></a>':''}
 function nav(){
- const choices=[['overview','Home','home'],['lineup','Lineup','lineup'],['waivers','Players','waivers'],['lab','League','league']];
+ const choices=[['overview','Home','home'],['lineup','Lineup','lineup'],['waivers','Players','waivers'],['lab','League','league'],['coach','Coach','coach']];
  return '<nav class="bottomnav" role="tablist" aria-label="Brock Hard sections">'+choices.map(([id,label,glyph])=>
  '<button type="button" role="tab" aria-label="'+(id==='overview'?'Overview':id==='waivers'?'Waivers':label)+'" aria-selected="'+(activeTab===id)+'" data-tab="'+id+'" class="'+(activeTab===id?'active':'')+'">'+
  uiIcon(glyph)+'<span>'+label+'</span></button>').join('')+'</nav>';
@@ -260,8 +261,58 @@ function labView(team){
 function tabbar(){return '<div class="tabs" role="tablist" aria-label="Team dashboard views">'+[
   ['overview','Overview'],['lineup','Lineup'],['waivers','Waivers'],['lab','Analysis']].map(([id,label])=>
    '<button type="button" role="tab" aria-selected="'+(id===activeTab)+'" class="'+(id===activeTab?'active':'')+'" data-tab="'+id+'">'+label+'</button>').join('')+'</div>';}
+
+function coachAction(item){
+ if(!item?.actionTab||!['overview','lineup','waivers','lab'].includes(item.actionTab))return '';
+ return '<button type="button" class="coach-action" data-tab="'+item.actionTab+'"'+
+ (item.filter==='QB'&&item.actionTab==='waivers'?' data-coach-filter="QB"':'')+'>'+
+ $esc(item.actionLabel||'Review')+uiIcon('arrow')+'</button>';
+}
+function coachInsight(item){
+ const tone=['priority','attention'].includes(item.tone)?item.tone:'neutral';
+ return '<article class="coach-insight coach-insight--'+tone+'">'+
+ '<div class="coach-insight-head"><span class="coach-signal coach-signal--'+tone+'">'+
+ (tone==='priority'?'PRIORITY':tone==='attention'?'WATCH':'SOURCE-BACKED')+'</span></div>'+
+ '<h3>'+$esc(item.title)+'</h3><p>'+$esc(item.detail)+'</p>'+
+ '<div class="coach-evidence"><span>'+uiIcon('info')+$esc(item.evidence)+'</span>'+coachAction(item)+'</div></article>';
+}
+function coachView(team){
+ const plan=buildCoachPlan(current,{now:Date.now()});
+ if(!plan.ready)return '<div class="tab-intro"><span class="eyebrow">FANTASY HQ · COACH</span><h1>Coach needs a fresh capture.</h1></div>'+
+ '<section class="panel coach-unverified"><p>'+$esc(plan.subtitle)+'</p>'+
+ '<button class="primarybutton" type="button" data-action="refresh">'+uiIcon('refresh')+' Check published snapshot</button></section>';
+ const priority=plan.priorities||[];
+ const metrics=plan.metrics.map(m=>'<div class="coach-metric"><span>'+$esc(m.label)+'</span><strong>'+$esc(m.value)+'</strong></div>').join('');
+ const next=priority.map((c,i)=>'<article class="coach-step"><span class="coach-step-number">'+String(i+1)+'</span>'+
+ '<div><strong>'+$esc(c.title)+'</strong><p>'+$esc(c.evidence)+'</p></div>'+coachAction(c)+'</article>').join('');
+ const categories=[
+  ['lineup','Lineup decisions','YOUR STARTERS'],
+  ['waivers','Waiver targets','LEAGUE-AVAILABLE PLAYERS'],
+  ['trades','Trade strategy','VALUE BEFORE VOLUME'],
+  ['playoffs','Playoff preparation','ROAD AHEAD'],
+  ['league','League insights','THE STANDINGS']
+ ];
+ const areas=categories.map(([id,label,kicker])=>{
+  const cards=Array.isArray(plan.sections[id])?plan.sections[id]:[];
+  return '<section class="panel coach-section" id="coach-'+id+'"><div class="panelhead"><div><div class="label">'+kicker+'</div>'+
+   '<h2>'+label+'</h2></div><span class="mini-pill">'+cards.length+' CHECK'+(cards.length===1?'':'S')+'</span></div>'+
+   '<div class="coach-insights">'+cards.map(coachInsight).join('')+'</div></section>';
+ }).join('');
+ return '<div class="tab-intro coach-intro"><span class="eyebrow">BROCK HARD · FANTASY COACH</span>'+
+ '<h1>Your game plan.</h1><p>Manager-style insights from your saved Yahoo data. Clear next steps, no invented player projections.</p></div>'+
+ '<section class="coach-hero"><div class="coach-hero-top"><span class="coach-orb">'+uiIcon('coach')+'</span>'+
+ '<span class="coach-source">YAHOO SNAPSHOT · READ-ONLY</span></div><div class="coach-hero-kicker">COACH’S TOP CALL</div>'+
+ '<h2>'+$esc(plan.headline)+'</h2><p>'+$esc(plan.subtitle)+'</p>'+
+ '<div class="coach-hero-action">'+coachAction(priority[0])+'</div>'+
+ '<div class="coach-hero-metrics">'+metrics+'</div></section>'+
+ '<section class="panel coach-next"><div class="panelhead"><div><div class="label">PRIORITIZED FOR BROCK HARD</div>'+
+ '<h2>Your next three checks</h2></div></div><div class="coach-steps">'+next+'</div></section>'+
+ '<div class="coach-section-grid">'+areas+'</div>'+
+ '<p class="coach-footer">Capture: '+$esc(String(plan.captureAt))+
+ '. Roster/waiver status may have changed. No player transactions, trade proposals, or Yahoo lineup edits are made by Coach.</p>';
+}
 function teamView(team){
- const view=activeTab==='lineup'?lineupView(team):activeTab==='waivers'?waiverView(team):activeTab==='lab'?labView(team):summaryView(team);
+ const view=activeTab==='coach'?coachView(team):activeTab==='lineup'?lineupView(team):activeTab==='waivers'?waiverView(team):activeTab==='lab'?labView(team):summaryView(team);
  const home=activeTab==='overview';
  const lead=home?
  '<div class="teamhero '+$esc(team.accent)+'"><div class="hero-copy"><span class="eyebrow">BROCK HARD · YAHOO FOOTBALL</span>'+
@@ -376,7 +427,7 @@ async function handleImport(file){if(!file)return;
 }
 document.addEventListener('click',event=>{
  const tab=event.target.closest('button[data-tab]');
- if(tab){activeTab=tab.dataset.tab;location.hash=activeTab;waiverFilter='ALL';render();window.scrollTo({top:0,behavior:'instant'});return}
+ if(tab){activeTab=tab.dataset.tab;location.hash=activeTab;waiverFilter=tab.dataset.coachFilter==='QB'&&activeTab==='waivers'?'QB':'ALL';render();window.scrollTo({top:0,behavior:'instant'});return}
  const chip=event.target.closest('button[data-filter]');
  if(chip){waiverFilter=chip.dataset.filter;render();return}
  const control=event.target.closest('[data-action]');if(!control)return;
@@ -393,7 +444,7 @@ document.addEventListener('change',event=>{
 });
 (async()=>{
  const hash=location.hash.replace('#','');
- if(['overview','lineup','waivers','lab'].includes(hash))activeTab=hash;
+ if(['overview','lineup','waivers','lab','coach'].includes(hash))activeTab=hash;
  try{
   const stored=localStorage.getItem(PRIVATE_KEY);
   if(stored){

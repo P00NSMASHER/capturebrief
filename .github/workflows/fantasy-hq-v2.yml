@@ -24,6 +24,8 @@ jobs:
           node --version
           node --check fantasy/assets/engine.mjs
           node --check fantasy/assets/app-v2.mjs
+          node --check fantasy/assets/coach-engine.mjs
+          node --check fantasy/assets/league-branding.mjs
           node --check fantasy/assets/snapshot-import.mjs
           node --check fantasy/adapter/flaim-private-v3.mjs
       - name: Run fail-closed data and UI regression tests
@@ -106,7 +108,7 @@ jobs:
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot=fantasy/screenshots/brock.png "http://127.0.0.1:8797/capturebrief/fantasy/brock/" >/dev/null 2>/tmp/chrome-stderr.log
           test -s fantasy/screenshots/home.png
           test -s fantasy/screenshots/brock.png
-          for tab in lineup waivers lab; do
+          for tab in lineup waivers lab coach; do
             "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot="fantasy/screenshots/$tab.png" "http://127.0.0.1:8797/capturebrief/fantasy/#$tab" >/dev/null 2>/tmp/chrome-stderr.log
             test -s "fantasy/screenshots/$tab.png"
           done
