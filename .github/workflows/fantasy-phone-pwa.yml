@@ -49,16 +49,24 @@ jobs:
           pid=$!
           trap 'kill "$pid" || true' EXIT
           sleep 2
+          curl --fail --silent --show-error http://127.0.0.1:8878/capturebrief/fantasy/phone/ >/tmp/phone-root.html || { cat /tmp/fantasy-phone-http.log; exit 1; }
+          echo "HTTP home entry served"
           BASE="http://127.0.0.1:8878/capturebrief/fantasy/phone/"
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --virtual-time-budget=16000 --window-size=390,844 --dump-dom "$BASE" >/tmp/locked.html 2>/tmp/chrome.err
-          grep -Fq 'Unlock your' /tmp/locked.html
+          echo "Initial locked HTML markers:"
+          grep -Eo 'Unlock your|Could not unlock|Unlocking private league|private-gate' /tmp/locked.html | head -10 || true
+          grep -Fq 'Unlock your' /tmp/locked.html || { tail -c 1400 /tmp/locked.html; cat /tmp/chrome.err | tail -30; exit 1; }
           ! grep -Fq 'Fictional Runner' /tmp/locked.html
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --virtual-time-budget=16000 --window-size=390,844 --dump-dom "$BASE#unlock=BBBBBBBBBBBBBBBBBBBBBB" >/tmp/wrong.html 2>/tmp/chrome.err
-          grep -Fq 'Could not unlock' /tmp/wrong.html
+          echo "Wrong-key HTML markers:"
+          grep -Eo 'Unlock your|Could not unlock|Unlocking private league' /tmp/wrong.html | head -10 || true
+          grep -Fq 'Could not unlock' /tmp/wrong.html || { tail -c 1600 /tmp/wrong.html; cat /tmp/chrome.err | tail -30; exit 1; }
           ! grep -Fq 'Fictional Runner' /tmp/wrong.html
           for route in "" "brock/" "quick/" "highlight/"; do
             "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --virtual-time-budget=16000 --window-size=390,844 --dump-dom "$BASE$route#unlock=AAAAAAAAAAAAAAAAAAAAAA" >/tmp/unlocked.html 2>/tmp/chrome.err
-            grep -Fq 'Fictional ' /tmp/unlocked.html
+            echo "Unlocked route $route DOM markers:"
+            grep -Eo 'Fictional |Could not unlock|Unlocking private league' /tmp/unlocked.html | head -10 || true
+            grep -Fq 'Fictional ' /tmp/unlocked.html || { tail -c 1800 /tmp/unlocked.html; cat /tmp/chrome.err | tail -30; exit 1; }
             ! grep -Fq 'Could not unlock' /tmp/unlocked.html
             if [ -z "$route" ]; then
               grep -Fq 'Fictional brock' /tmp/unlocked.html
