@@ -102,6 +102,14 @@ jobs:
             exit 1
           fi
           echo 'Browser smoke passed: eight club crests, mobile navigation, waiver filters, lineup and privacy'
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=20000 --window-size=390,844 --dump-dom "http://127.0.0.1:8797/capturebrief/fantasy/tests/coach-archive-browser.html" > /tmp/coach-archive-browser.html 2>/tmp/chrome-stderr.log
+          if ! grep -Fq 'COACH_ARCHIVE_PASS' /tmp/coach-archive-browser.html; then
+            echo "::error::Archived Yahoo Coach recap was unavailable or displayed stale actions"
+            grep -o 'COACH_ARCHIVE_FAIL[^<]*' /tmp/coach-archive-browser.html || true
+            exit 1
+          fi
+          echo 'Browser smoke passed: archived Coach 3-paragraph recap without actionable advice'
+
 
           mkdir -p fantasy/screenshots
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot=fantasy/screenshots/home.png "http://127.0.0.1:8797/capturebrief/fantasy/" >/dev/null 2>/tmp/chrome-stderr.log

@@ -78,7 +78,7 @@ test('iPhone-sized CSS includes safe-area navigation, reduced motion, good touch
  for(const path of ['fantasy/index.html','fantasy/brock/index.html']){
   const h=readFileSync(path,'utf8');
   assert.match(h,/premium-v3\.css\?v=1/);
-  assert.match(h,/coach-v1\.css\?v=1/);
-  assert.match(h,/app-v2\.mjs\?v=6/);
+  assert.match(h,/coach-v1\.css\?v=2/);
+  assert.match(h,/app-v2\.mjs\?v=7/);
  }
 });

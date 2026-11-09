@@ -1,7 +1,7 @@
 import {TEAM_IDS,normalizeSnapshot,getFreshness,rosterBuckets,slotsFromRoster,optimizeLineup,rankWaiverTargets,estimateWinChance,isSafeUrl,round,teamPath,rosterStatusAlerts,compareScoredLineup,marketWatchlist,positionDepth} from './engine.mjs';
 import {preparePrivateImport} from './snapshot-import.mjs';
 import {LEAGUE_TEAMS,resolveTeam,teamLogo,uiIcon,leagueGallery,upcomingCards,teamStrip} from './league-branding.mjs';
-import {buildCoachPlan} from './coach-engine.mjs';
+import {buildCoachPlan,buildArchivedCoachReview} from './coach-engine.mjs';
 
 const BASE='/capturebrief/fantasy/';
 const root=document.getElementById('root');
@@ -273,14 +273,37 @@ function coachInsight(item){
  return '<article class="coach-insight coach-insight--'+tone+'">'+
  '<div class="coach-insight-head"><span class="coach-signal coach-signal--'+tone+'">'+
  (tone==='priority'?'PRIORITY':tone==='attention'?'WATCH':'SOURCE-BACKED')+'</span></div>'+
- '<h3>'+$esc(item.title)+'</h3><p>'+$esc(item.detail)+'</p>'+
+ '<h3>'+$esc(item.title)+'</h3>'+
+ '<ul class="coach-points">'+(Array.isArray(item.bullets)?item.bullets:[]).map(line=>
+ '<li>'+$esc(line)+'</li>').join('')+'</ul>'+
  '<div class="coach-evidence"><span>'+uiIcon('info')+$esc(item.evidence)+'</span>'+coachAction(item)+'</div></article>';
 }
+function coachAssessment(summary,capture,archived=false){
+ if(!Array.isArray(summary)||summary.length!==3)return '';
+ return '<section class="panel coach-assessment'+(archived?' coach-assessment--archived':'')+'" aria-labelledby="coach-assessment-title">'+
+ '<div class="panelhead"><div><div class="label">'+
+ (archived?'LAST VERIFIED CAPTURE · ARCHIVED REVIEW':'THE BIG PICTURE · MANAGER’S DESK')+'</div>'+
+ '<h2 id="coach-assessment-title">'+(archived?'Coach’s saved assessment':'Coach’s final assessment')+'</h2></div>'+
+ '<span class="mini-pill">3-PARAGRAPH RECAP</span></div>'+
+ '<div class="coach-recap">'+summary.map((paragraph,i)=>
+ '<p class="coach-recap-paragraph" data-recap-index="'+(i+1)+'">'+$esc(paragraph)+'</p>').join('')+'</div>'+
+ '<div class="coach-recap-source">'+uiIcon('info')+
+ '<span>Based on the saved Week '+$esc(String(current.week))+' Yahoo capture · '+$esc(String(capture))+
+ (archived?'. Historical review only: old availability and player statuses are NOT current and no moves are recommended.':
+ '. Recheck Yahoo before acting; this is not live analysis.')+'</span></div></section>';
+}
+
 function coachView(team){
  const plan=buildCoachPlan(current,{now:Date.now()});
- if(!plan.ready)return '<div class="tab-intro"><span class="eyebrow">FANTASY HQ · COACH</span><h1>Coach needs a fresh capture.</h1></div>'+
- '<section class="panel coach-unverified"><p>'+$esc(plan.subtitle)+'</p>'+
- '<button class="primarybutton" type="button" data-action="refresh">'+uiIcon('refresh')+' Check published snapshot</button></section>';
+ if(!plan.ready){
+  const saved=plan.status==='archived'?buildArchivedCoachReview(current):null;
+  return '<div class="tab-intro"><span class="eyebrow">FANTASY HQ · COACH</span>'+
+  '<h1>Coach needs a fresh capture.</h1></div>'+
+  '<section class="panel coach-unverified"><p>'+$esc(plan.subtitle)+'</p>'+
+  '<button class="primarybutton" type="button" data-action="refresh">'+uiIcon('refresh')+
+  ' Check published snapshot</button></section>'+
+  (saved?coachAssessment(saved.summary,saved.captureAt,true):'');
+ }
  const priority=plan.priorities||[];
  const metrics=plan.metrics.map(m=>'<div class="coach-metric"><span>'+$esc(m.label)+'</span><strong>'+$esc(m.value)+'</strong></div>').join('');
  const next=priority.map((c,i)=>'<article class="coach-step"><span class="coach-step-number">'+String(i+1)+'</span>'+
@@ -308,8 +331,8 @@ function coachView(team){
  '<section class="panel coach-next"><div class="panelhead"><div><div class="label">PRIORITIZED FOR BROCK HARD</div>'+
  '<h2>Your next three checks</h2></div></div><div class="coach-steps">'+next+'</div></section>'+
  '<div class="coach-section-grid">'+areas+'</div>'+
- '<p class="coach-footer">Capture: '+$esc(String(plan.captureAt))+
- '. Roster/waiver status may have changed. No player transactions, trade proposals, or Yahoo lineup edits are made by Coach.</p>';
+ coachAssessment(plan.summary,plan.captureAt)+
+ '<p class="coach-footer">Snapshot-based advice only. No player transactions, trade proposals, or Yahoo lineup edits are made by Coach.</p>';
 }
 function teamView(team){
  const view=activeTab==='coach'?coachView(team):activeTab==='lineup'?lineupView(team):activeTab==='waivers'?waiverView(team):activeTab==='lab'?labView(team):summaryView(team);
@@ -335,6 +358,7 @@ function archivedView(){
  const date=Number.isFinite(Date.parse(current?.syncedAtIso))?
  new Date(current.syncedAtIso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'unknown date';
  const t=current?.teams?.brock;
+ const savedReport=activeTab==='coach'?buildArchivedCoachReview(current):null;
  return '<div class="container">'+masthead(t)+messageBox()+
  '<section class="archived-fallback panel"><div class="archive-logo">'+teamLogo('2','display')+'</div>'+
  '<div class="label">BROCK HARD · NO CURRENT CAPTURE</div><h1>Update your Yahoo data</h1>'+
@@ -344,7 +368,8 @@ function archivedView(){
  '<details class="small-disclosure"><summary>Import a saved capture '+uiIcon('chevron')+'</summary>'+
  '<button type="button" class="minorbtn" data-action="import">↥ Import updated Yahoo snapshot</button></details>'+
  '<input id="importFile" type="file" accept=".json,application/json" hidden>'+
- '</section><p class="footnote">No Yahoo credentials or live provider access are used by this page.</p></div>'+nav();
+ '</section>'+(savedReport?coachAssessment(savedReport.summary,savedReport.captureAt,true):'')+
+ '<p class="footnote">No Yahoo credentials or live provider access are used by this page.</p></div>'+nav();
 }
 function render(){
  if(!root)return;

@@ -117,3 +117,75 @@
 @media(prefers-reduced-motion:reduce){
  .coach-action{transition:none!important}
 }
+
+
+/* Coach v1.1 · compact checklist-first insights + an editorial recap at the bottom. */
+.coach-insight{padding:15px 17px}
+.coach-insight h3{margin:9px 0 10px}
+.coach-points{
+ display:grid;gap:9px;list-style:none;padding:0;margin:0 0 14px;
+}
+.coach-points li{
+ position:relative;padding:0 0 0 19px;
+ font-size:12px;line-height:1.48;color:#c8dce5;
+ text-wrap:pretty;
+}
+.coach-points li:before{
+ content:"";display:block;position:absolute;left:1px;top:.49em;
+ width:7px;height:7px;border-radius:50%;
+ background:#59d9c6;box-shadow:0 0 0 3px #4ce4c218;
+}
+.coach-insight--attention .coach-points li:before{
+ background:#f7c774;box-shadow:0 0 0 3px #f7c77418;
+}
+.coach-section .panelhead{margin-bottom:12px}
+.coach-section .coach-insights{gap:8px}
+.coach-evidence{padding-top:9px}
+.coach-assessment{
+ margin:20px 0 12px;
+ padding:clamp(22px,3vw,32px);
+ border:1px solid #72f0d05d;border-radius:26px;
+ background:
+ radial-gradient(ellipse at 93% -17%,#44baab28,transparent 58%),
+ linear-gradient(145deg,#172c40,#0d2130 76%);
+ box-shadow:inset 0 1px #e6fff72c,0 18px 58px #02111d7a;
+}
+.coach-assessment .panelhead{margin-bottom:21px}
+.coach-assessment .panelhead h2{font-size:clamp(23px,3vw,29px);letter-spacing:-.05em}
+.coach-recap{display:grid;gap:18px;max-width:860px}
+.coach-recap-paragraph{
+ margin:0;padding:0 0 0 17px;position:relative;
+ border-left:2px solid #58d9bd75;
+ font-size:clamp(13px,1.7vw,15px);
+ line-height:1.75;letter-spacing:-.01em;
+ color:#d9e8ee;text-wrap:pretty;
+}
+.coach-recap-paragraph:nth-child(2){border-left-color:#8bbcf18b}
+.coach-recap-paragraph:nth-child(3){border-left-color:#b7a7f488}
+.coach-recap-source{
+ display:flex;align-items:flex-start;gap:9px;
+ margin-top:24px;padding-top:13px;
+ border-top:1px solid #aed1d936;
+ color:#8da9b9;font-size:10px;line-height:1.5;
+}
+.coach-recap-source .ui-icon{width:15px;height:15px;flex:none;margin-top:1px}
+.coach-assessment .mini-pill{font-size:9px}
+@media(max-width:480px){
+ .coach-insight{padding:14px}
+ .coach-points{gap:8px}
+ .coach-points li{font-size:12px;padding-left:17px;line-height:1.5}
+ .coach-assessment{padding:19px 17px;border-radius:21px}
+ .coach-assessment .panelhead{align-items:flex-start;gap:8px}
+ .coach-assessment .mini-pill{font-size:8px;white-space:normal;max-width:110px;text-align:center}
+ .coach-recap{gap:17px}
+ .coach-recap-paragraph{font-size:13px;padding-left:13px;line-height:1.68}
+}
+
+/* An archived Coach recap is readable, but never styled like fresh advice. */
+.coach-assessment--archived{
+ border-color:#e5b87a68;
+ background:radial-gradient(ellipse at 92% -10%,#b18a4d22,transparent 65%),linear-gradient(145deg,#302a2b,#182532);
+}
+.coach-assessment--archived .label{color:#f5ce92}
+.coach-assessment--archived .coach-recap-paragraph{border-left-color:#deb77b82}
+.coach-assessment--archived .coach-recap-source{color:#e5bf93}
