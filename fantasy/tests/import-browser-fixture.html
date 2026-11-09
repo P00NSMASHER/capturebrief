@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Brock Private Import QA</title><link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3"></head>
+<body data-team="brock"><div id="root">Loading archive for private import QA…</div>
+<script type="module">
+try {
+ localStorage.removeItem('fantasy-hq-private-v3');
+ const raw=await (await fetch('/capturebrief/fantasy/tests/fixtures/private-v3.sample.json',{cache:'no-store'})).json();
+ raw.teams.brock.leagueId='470.l.290846';
+ raw.teams.brock.teamId='2';
+ raw.teams.brock.projectionCoverage='none';
+ raw.syncedAtIso=new Date().toISOString();
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=3');
+ let input=null;
+ for(let i=0;i<120;i++){
+  input=document.getElementById('importFile');
+  if(input&&document.querySelector('.archived-fallback'))break;
+  await new Promise(r=>setTimeout(r,35));
+ }
+ if(!input||!document.querySelector('.archived-fallback'))throw Error('Archived page or file control missing');
+ if(document.querySelector('.tabs'))throw Error('Duplicate top navigation');
+ const data=new DataTransfer();
+ data.items.add(new File([JSON.stringify(raw)],'brock-fixture.json',{type:'application/json'}));
+ input.files=data.files;
+ input.dispatchEvent(new Event('change',{bubbles:true}));
+ for(let i=0;i<120;i++){
+  if(document.querySelector('.teamhero')&&document.querySelector('.sourcelabel')?.textContent.includes('PRIVATE CAPTURE'))break;
+  await new Promise(r=>setTimeout(r,35));
+ }
+ const text=document.getElementById('root').textContent;
+ if(!document.querySelector('.teamhero'))throw Error('Current private capture did not render');
+ if(!text.includes('Fictional Brock Test Team'))throw Error('Imported Brock data not visible');
+ if(!text.includes('Week 9'))throw Error('Imported capture week incorrect');
+ if(text.includes('Quick Snap Jamison')||text.includes('Highlight Reel Jamison'))
+  throw Error('Other personal league leaked into browser');
+ if(document.querySelectorAll('[role="tablist"]').length!==1)throw Error('More than one tablist');
+ const saved=JSON.parse(localStorage.getItem('fantasy-hq-private-v3'));
+ if(Object.keys(saved.teams).join(',')!=='brock'||saved.teams.brock.projectionCoverage!=='none')
+  throw Error('Local-only import isolation failed');
+ const result=document.createElement('div');
+ result.id='browser-import-qa';result.textContent='BROWSER_IMPORT_PASS';
+ document.body.appendChild(result);
+}catch(e){
+ const result=document.createElement('div');result.id='browser-import-qa';
+ result.textContent='BROWSER_IMPORT_FAIL: '+e.message;
+ document.body.appendChild(result);
+}
+</script></body></html>
