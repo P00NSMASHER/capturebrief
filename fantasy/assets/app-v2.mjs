@@ -262,18 +262,24 @@ function tabbar(){return '<div class="tabs" role="tablist" aria-label="Team dash
    '<button type="button" role="tab" aria-selected="'+(id===activeTab)+'" class="'+(id===activeTab?'active':'')+'" data-tab="'+id+'">'+label+'</button>').join('')+'</div>';}
 function teamView(team){
  const view=activeTab==='lineup'?lineupView(team):activeTab==='waivers'?waiverView(team):activeTab==='lab'?labView(team):summaryView(team);
- return '<div class="container">'+masthead(team)+messageBox()+
+ const home=activeTab==='overview';
+ const lead=home?
  '<div class="teamhero '+$esc(team.accent)+'"><div class="hero-copy"><span class="eyebrow">BROCK HARD · YAHOO FOOTBALL</span>'+
  '<h1>'+$esc(team.name)+'</h1><div class="herosub"><span class="record-pill">'+$esc(txt(team.record))+'</span>'+
  '<span>Season '+current.season+' · Week '+txt(current.week)+'</span></div></div>'+
  '<div class="hero-crest">'+teamLogo('2','display')+'</div></div>'+
  riskRibbon()+
- '<div class="heroactions">'+teamStrip(team,current.week)+safeLeagueLink(team)+'</div>'+
+ '<div class="heroactions">'+teamStrip(team,current.week)+safeLeagueLink(team)+'</div>':
+ '<div class="subpage-context">'+teamLogo('2','sm')+
+ '<div><strong>Brock Hard</strong><span>Week '+$esc(txt(current.week))+' · '+$esc(txt(team.record))+' · Read-only Yahoo snapshot</span></div>'+
+ safeLeagueLink(team)+'</div>';
+ return '<div class="container">'+masthead(team)+messageBox()+lead+
  '<main id="tabPanel" role="tabpanel" aria-label="'+$esc(activeTab)+'">'+view+'</main>'+
  '<details class="settings-panel"><summary>'+uiIcon('info')+' Data & snapshot settings '+uiIcon('chevron')+'</summary>'+
  section('Data controls','PRESERVE YOUR SNAPSHOT',controls())+'</details>'+
  '<div class="footnote legal-footer">Fantasy HQ is read-only. No lineup submissions, transactions or claims happen here.</div></div>'+nav();
 }
+
 function archivedView(){
  const date=Number.isFinite(Date.parse(current?.syncedAtIso))?
  new Date(current.syncedAtIso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'unknown date';
