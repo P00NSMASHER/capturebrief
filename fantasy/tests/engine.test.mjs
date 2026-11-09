@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {getFreshness,normalizeSnapshot,rosterBuckets,optimizeLineup,estimateWinChance,rankWaiverTargets,simulatePlayoffs,isSafeUrl,slotsFromRoster} from '../assets/engine.mjs';
+import {getFreshness,normalizeSnapshot,rosterBuckets,optimizeLineup,estimateWinChance,rankWaiverTargets,simulatePlayoffs,isSafeUrl,slotsFromRoster,rosterStatusAlerts,compareScoredLineup,marketWatchlist,positionDepth} from '../assets/engine.mjs';
 
 const at=Date.parse('2026-11-08T20:00:00Z');
 test('archive threshold and future timestamps never imply freshness of old data',()=>{
@@ -69,4 +69,41 @@ test('bench and reserve classification is explicit',()=>{
   assert.equal(rosterBuckets(r).bench.length,1);
   assert.equal(rosterBuckets(r).reserve.length,1);
   assert.deepEqual(slotsFromRoster(r),{QB:1});
+});
+
+test('roster health badges are derived from Yahoo flags, not absent manual alerts',()=>{
+ const alerts=rosterStatusAlerts([{id:'1',name:'A',injury:'Q',slot:'W/R/T'},{id:'2',name:'B',injury:'O',slot:'IR'},
+   {id:'3',name:'C',injury:'NA',slot:'IR'},{id:'4',name:'D',injury:null,slot:'WR'}]);
+ assert.equal(alerts.length,3);
+ assert.equal(alerts[0].status,'Q');
+ assert.equal(alerts[1].level,'urgent');
+ assert.ok(alerts[2].text.includes('NA'));
+});
+test('week-to-date best lineup is scored-point hindsight, never forecast or advice',()=>{
+ const roster=[
+  {id:'1',name:'Quarterback',position:'QB',slot:'QB',eligiblePositions:['QB'],actualPoints:10,locked:true},
+  {id:'2',name:'Starter',position:'WR',slot:'WR',eligiblePositions:['WR'],actualPoints:0},
+  {id:'3',name:'Bench',position:'WR',slot:'BN',eligiblePositions:['WR'],actualPoints:7},
+  {id:'4',name:'Kicker',position:'K',slot:'K',eligiblePositions:['K'],actualPoints:3},
+  {id:'5',name:'Reserve',position:'WR',slot:'IR',eligiblePositions:['WR','IR'],actualPoints:100}
+ ];
+ const r=compareScoredLineup(roster,{QB:1,WR:1,K:1});
+ assert.equal(r.available,true);
+ assert.equal(r.current,13);
+ assert.equal(r.best,20);
+ assert.equal(r.gap,7);
+ assert.deepEqual(r.in,['Bench']);
+ assert.deepEqual(r.out,['Starter']);
+ assert.match(r.note,/not a lineup recommendation/i);
+ assert.equal(compareScoredLineup(roster.map(p=>p.id==='3'?{...p,actualPoints:null}:p),{QB:1,WR:1,K:1}).available,false);
+ assert.equal(compareScoredLineup([...roster,{...roster[0]}],{QB:1,WR:1,K:1}).available,false);
+});
+test('scouting sorts only verified Yahoo-wide roster rates, not fabricated uplift',()=>{
+ const rows=[{id:'a',name:'A',percentOwned:61,acquisitionState:'waivers'},
+  {id:'b',name:'B',percentOwned:90,acquisitionState:'free_agent'},
+  {id:'c',name:'C',percentOwned:null,acquisitionState:'waivers'},
+  {id:'x',name:'X',percentOwned:100,acquisitionState:null}];
+ assert.deepEqual(marketWatchlist(rows).map(x=>x.name),['B','A']);
+ assert.deepEqual(positionDepth([{position:'WR',slot:'WR',injury:'Q'},{position:'WR',slot:'IR',injury:'O'}]),[
+   {position:'WR',total:2,active:1,flagged:2}]);
 });
