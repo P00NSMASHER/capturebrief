@@ -1,0 +1,910 @@
+{
+  "schemaVersion": 1,
+  "kind": "brock-hard-prediction-inputs",
+  "season": 2026,
+  "leagueId": "470.l.290846",
+  "teamId": "2",
+  "week": 10,
+  "yahooWeek": 9,
+  "yahooCapturedAtIso": "2026-11-09T23:27:56.499Z",
+  "observedAtIso": "2026-11-09T23:47:23.697Z",
+  "scoring": "ppr",
+  "projectionSource": "FantasyBot position projected rankings / Week 10 / PPR, cross-checked against Yahoo 2026 Brock roster",
+  "sourceNotes": [
+    "FantasyBot projected points may differ from this Yahoo league's bonus scoring; they are NOT official Yahoo projections.",
+    "Yahoo league availability is only verified at the linked Yahoo capture time.",
+    "Upcoming opponent team projections come from Yahoo, not FantasyBot player estimates.",
+    "Full roster optimization is withheld if required projections are missing.",
+    "No automated claims, lineup moves, trades or messages."
+  ],
+  "rosterProjections": [
+    {
+      "id": "33389",
+      "name": "Trevor Lawrence",
+      "position": "QB",
+      "team": "Jax",
+      "slot": "QB",
+      "projection": 21.37,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 4,
+      "ppg": 21.37,
+      "trend": {
+        "last3Avg": 20.4,
+        "last5Avg": 21,
+        "direction": "stable"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 13.6
+        },
+        {
+          "week": 8,
+          "points": 19.4
+        },
+        {
+          "week": 6,
+          "points": 28.3
+        },
+        {
+          "week": 5,
+          "points": 22.7
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": "TEN",
+      "matchupGrade": "A"
+    },
+    {
+      "id": "33423",
+      "name": "Javonte Williams",
+      "position": "RB",
+      "team": "Dal",
+      "slot": "RB",
+      "projection": 15.45,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 12,
+      "ppg": 15.45,
+      "trend": {
+        "last3Avg": 16.9,
+        "last5Avg": 15.6,
+        "direction": "up"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 22.4
+        },
+        {
+          "week": 8,
+          "points": 6.7
+        },
+        {
+          "week": 7,
+          "points": 21.5
+        },
+        {
+          "week": 6,
+          "points": 13
+        },
+        {
+          "week": 5,
+          "points": 14.2
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": "SF",
+      "matchupGrade": "D"
+    },
+    {
+      "id": "42730",
+      "name": "Jonah Coleman",
+      "position": "RB",
+      "team": "Den",
+      "slot": "RB",
+      "projection": null,
+      "projectedSource": null,
+      "rank": null,
+      "ppg": 12.6,
+      "trend": {
+        "last3Avg": 16,
+        "last5Avg": 16,
+        "direction": "stable"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 18.8
+        },
+        {
+          "week": 8,
+          "points": 20.4
+        },
+        {
+          "week": 7,
+          "points": 8.9
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": null,
+      "matchupGrade": null
+    },
+    {
+      "id": "33393",
+      "name": "Ja'Marr Chase",
+      "position": "WR",
+      "team": "Cin",
+      "slot": "WR",
+      "projection": 19.06,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 4,
+      "ppg": 19.06,
+      "trend": {
+        "last3Avg": 26.6,
+        "last5Avg": 24.9,
+        "direction": "up"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 31.5
+        },
+        {
+          "week": 8,
+          "points": 31.1
+        },
+        {
+          "week": 7,
+          "points": 17.2
+        },
+        {
+          "week": 5,
+          "points": 19.7
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": "PIT",
+      "matchupGrade": "D"
+    },
+    {
+      "id": "32692",
+      "name": "Justin Jefferson",
+      "position": "WR",
+      "team": "Min",
+      "slot": "WR",
+      "projection": 16.65,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 9,
+      "ppg": 16.65,
+      "trend": {
+        "last3Avg": 13.8,
+        "last5Avg": 13.8,
+        "direction": "stable"
+      },
+      "history": [
+        {
+          "week": 8,
+          "points": 14.3
+        },
+        {
+          "week": 7,
+          "points": 8.4
+        },
+        {
+          "week": 5,
+          "points": 18.8
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": "BUF",
+      "matchupGrade": "A"
+    },
+    {
+      "id": "40878",
+      "name": "Brock Bowers",
+      "position": "TE",
+      "team": "LV",
+      "slot": "TE",
+      "projection": 16.75,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 2,
+      "ppg": 16.75,
+      "trend": {
+        "last3Avg": 21.3,
+        "last5Avg": 19.6,
+        "direction": "up"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 22.3
+        },
+        {
+          "week": 8,
+          "points": 28.2
+        },
+        {
+          "week": 7,
+          "points": 13.3
+        },
+        {
+          "week": 6,
+          "points": 11
+        },
+        {
+          "week": 5,
+          "points": 23
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": "SEA",
+      "matchupGrade": "C"
+    },
+    {
+      "id": "32703",
+      "name": "Tee Higgins",
+      "position": "WR",
+      "team": "Cin",
+      "slot": "W/R/T",
+      "projection": 15.98,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 13,
+      "ppg": 15.98,
+      "trend": {
+        "last3Avg": 28.2,
+        "last5Avg": 22.2,
+        "direction": "up"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 20.2
+        },
+        {
+          "week": 8,
+          "points": 37.5
+        },
+        {
+          "week": 7,
+          "points": 26.8
+        },
+        {
+          "week": 5,
+          "points": 4.2
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": "PIT",
+      "matchupGrade": "D"
+    },
+    {
+      "id": "33508",
+      "name": "Rhamondre Stevenson",
+      "position": "RB",
+      "team": "NE",
+      "slot": "W/R/T",
+      "projection": 12.55,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 17,
+      "ppg": 12.55,
+      "trend": {
+        "last3Avg": 16.4,
+        "last5Avg": 14.1,
+        "direction": "up"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 14.8
+        },
+        {
+          "week": 8,
+          "points": 12
+        },
+        {
+          "week": 7,
+          "points": 22.5
+        },
+        {
+          "week": 6,
+          "points": 3.6
+        },
+        {
+          "week": 5,
+          "points": 17.5
+        }
+      ],
+      "modelInjury": "Q",
+      "modelOpponent": "DET",
+      "matchupGrade": "F"
+    },
+    {
+      "id": "40039",
+      "name": "Zay Flowers",
+      "position": "WR",
+      "team": "Bal",
+      "slot": "BN",
+      "projection": 16.72,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 8,
+      "ppg": 16.72,
+      "trend": {
+        "last3Avg": 15.2,
+        "last5Avg": 15.1,
+        "direction": "stable"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 5.3
+        },
+        {
+          "week": 7,
+          "points": 27.7
+        },
+        {
+          "week": 6,
+          "points": 12.7
+        },
+        {
+          "week": 5,
+          "points": 14.6
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": "LAC",
+      "matchupGrade": "B"
+    },
+    {
+      "id": "41902",
+      "name": "Woody Marks",
+      "position": "RB",
+      "team": "Hou",
+      "slot": "BN",
+      "projection": 9.16,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 33,
+      "ppg": 9.16,
+      "trend": {
+        "last3Avg": 9.2,
+        "last5Avg": 10,
+        "direction": "down"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 8.4
+        },
+        {
+          "week": 7,
+          "points": 9.1
+        },
+        {
+          "week": 6,
+          "points": 10.1
+        },
+        {
+          "week": 5,
+          "points": 12.5
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": "CLE",
+      "matchupGrade": "A"
+    },
+    {
+      "id": "40877",
+      "name": "Xavier Worthy",
+      "position": "WR",
+      "team": "KC",
+      "slot": "BN",
+      "projection": 10.39,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 36,
+      "ppg": 10.39,
+      "trend": {
+        "last3Avg": 6.4,
+        "last5Avg": 8.4,
+        "direction": "down"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 10.8
+        },
+        {
+          "week": 8,
+          "points": 4.3
+        },
+        {
+          "week": 7,
+          "points": 4.1
+        },
+        {
+          "week": 6,
+          "points": 14.3
+        }
+      ],
+      "modelInjury": "Q",
+      "modelOpponent": "ATL",
+      "matchupGrade": "B"
+    },
+    {
+      "id": "31056",
+      "name": "Mark Andrews",
+      "position": "TE",
+      "team": "Bal",
+      "slot": "BN",
+      "projection": 8.07,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 22,
+      "ppg": 8.07,
+      "trend": {
+        "last3Avg": 4.5,
+        "last5Avg": 4,
+        "direction": "up"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 3.9
+        },
+        {
+          "week": 8,
+          "points": 4.4
+        },
+        {
+          "week": 7,
+          "points": 5.3
+        },
+        {
+          "week": 6,
+          "points": 1.4
+        },
+        {
+          "week": 5,
+          "points": 4.8
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": "LAC",
+      "matchupGrade": "D"
+    },
+    {
+      "id": "33991",
+      "name": "Breece Hall",
+      "position": "RB",
+      "team": "NYJ",
+      "slot": "BN",
+      "projection": 9.33,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 32,
+      "ppg": 9.33,
+      "trend": {
+        "last3Avg": 11.7,
+        "last5Avg": 11.7,
+        "direction": "stable"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 11.7
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": "BUF",
+      "matchupGrade": "B"
+    },
+    {
+      "id": "42630",
+      "name": "Jordyn Tyson",
+      "position": "WR",
+      "team": "NO",
+      "slot": "BN",
+      "projection": 9.87,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 42,
+      "ppg": 9.87,
+      "trend": {
+        "last3Avg": 5,
+        "last5Avg": 5,
+        "direction": "stable"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 5
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": "CAR",
+      "matchupGrade": "C"
+    },
+    {
+      "id": "42626",
+      "name": "Carnell Tate",
+      "position": "WR",
+      "team": "Ten",
+      "slot": "IR",
+      "projection": 13.6,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 23,
+      "ppg": 13.6,
+      "trend": {
+        "last3Avg": 10.2,
+        "last5Avg": 10.2,
+        "direction": "stable"
+      },
+      "history": [
+        {
+          "week": 7,
+          "points": 9.9
+        },
+        {
+          "week": 6,
+          "points": 19
+        },
+        {
+          "week": 5,
+          "points": 1.6
+        }
+      ],
+      "modelInjury": "Q",
+      "modelOpponent": null,
+      "matchupGrade": null
+    },
+    {
+      "id": "34063",
+      "name": "Dameon Pierce",
+      "position": "RB",
+      "team": "Phi",
+      "slot": "IR",
+      "projection": null,
+      "projectedSource": null,
+      "rank": null,
+      "ppg": 10,
+      "trend": {
+        "last3Avg": 10,
+        "last5Avg": 10,
+        "direction": "stable"
+      },
+      "history": [
+        {
+          "week": 7,
+          "points": 11.8
+        },
+        {
+          "week": 6,
+          "points": 15
+        },
+        {
+          "week": 5,
+          "points": 3.2
+        }
+      ],
+      "modelInjury": "Q",
+      "modelOpponent": null,
+      "matchupGrade": null
+    },
+    {
+      "id": "41093",
+      "name": "Will Reichard",
+      "position": "K",
+      "team": "Min",
+      "slot": "K",
+      "projection": 8.6,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 9,
+      "ppg": 8.6,
+      "trend": {
+        "last3Avg": 14,
+        "last5Avg": 14,
+        "direction": "stable"
+      },
+      "history": [
+        {
+          "week": 7,
+          "points": 12
+        },
+        {
+          "week": 5,
+          "points": 16
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": "BUF",
+      "matchupGrade": null
+    },
+    {
+      "id": "100018",
+      "name": "Saints",
+      "position": "DEF",
+      "team": "NO",
+      "slot": "DEF",
+      "projection": 6.15,
+      "projectedSource": "FantasyBot Week 10 PPR projected rankings",
+      "rank": 17,
+      "ppg": 6.15,
+      "trend": {
+        "last3Avg": 7.3,
+        "last5Avg": 9.3,
+        "direction": "down"
+      },
+      "history": [
+        {
+          "week": 9,
+          "points": 5
+        },
+        {
+          "week": 7,
+          "points": 4
+        },
+        {
+          "week": 6,
+          "points": 13
+        },
+        {
+          "week": 5,
+          "points": 15
+        }
+      ],
+      "modelInjury": null,
+      "modelOpponent": "CAR",
+      "matchupGrade": null
+    }
+  ],
+  "availableProjections": [
+    {
+      "id": "40126",
+      "name": "Josh Downs",
+      "position": "WR",
+      "team": "Ind",
+      "projection": 10.38,
+      "rank": 37,
+      "ppg": 10.38,
+      "availability": "waivers",
+      "marketPercent": 82,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "42661",
+      "name": "Denzel Boston",
+      "position": "WR",
+      "team": "Cle",
+      "projection": 10.14,
+      "rank": 38,
+      "ppg": 10.14,
+      "availability": "waivers",
+      "marketPercent": 76,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "41825",
+      "name": "Tyler Shough",
+      "position": "QB",
+      "team": "NO",
+      "projection": 16.34,
+      "rank": 16,
+      "ppg": 16.34,
+      "availability": "waivers",
+      "marketPercent": 75,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "40042",
+      "name": "Jordan Addison",
+      "position": "WR",
+      "team": "Min",
+      "projection": 8.03,
+      "rank": 47,
+      "ppg": 8.03,
+      "availability": "free_agent",
+      "marketPercent": 73,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "31868",
+      "name": "Deebo Samuel Sr.",
+      "position": "WR",
+      "team": "SF",
+      "projection": 10.95,
+      "rank": 31,
+      "ppg": 10.95,
+      "availability": "waivers",
+      "marketPercent": 70,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "33100",
+      "name": "Rico Dowdle",
+      "position": "RB",
+      "team": "Pit",
+      "projection": 9.6,
+      "rank": 28,
+      "ppg": 9.6,
+      "availability": "free_agent",
+      "marketPercent": 70,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "30180",
+      "name": "Alvin Kamara",
+      "position": "RB",
+      "team": "NO",
+      "projection": 6.91,
+      "rank": 39,
+      "ppg": 6.91,
+      "availability": "waivers",
+      "marketPercent": 65,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "40029",
+      "name": "Bryce Young",
+      "position": "QB",
+      "team": "Car",
+      "projection": 19.36,
+      "rank": 8,
+      "ppg": 19.36,
+      "availability": "waivers",
+      "marketPercent": 65,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "41823",
+      "name": "TreVeyon Henderson",
+      "position": "RB",
+      "team": "NE",
+      "projection": 6.13,
+      "rank": 43,
+      "ppg": 6.13,
+      "availability": "waivers",
+      "marketPercent": 61,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "41058",
+      "name": "Malik Washington",
+      "position": "WR",
+      "team": "Mia",
+      "projection": 10.44,
+      "rank": 33,
+      "ppg": 10.44,
+      "availability": "waivers",
+      "marketPercent": 56,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "33998",
+      "name": "Wan'Dale Robinson",
+      "position": "WR",
+      "team": "Ten",
+      "projection": 11.14,
+      "rank": 30,
+      "ppg": 11.14,
+      "availability": "free_agent",
+      "marketPercent": 51,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "40915",
+      "name": "Adonai Mitchell",
+      "position": "WR",
+      "team": "NYJ",
+      "projection": 8.12,
+      "rank": 45,
+      "ppg": 8.12,
+      "availability": "waivers",
+      "marketPercent": 50,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "41097",
+      "name": "Devaughn Vele",
+      "position": "WR",
+      "team": "NO",
+      "projection": 4.84,
+      "rank": 66,
+      "ppg": 4.84,
+      "availability": "waivers",
+      "marketPercent": 50,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "32231",
+      "name": "Jakobi Meyers",
+      "position": "WR",
+      "team": "Jax",
+      "projection": 10.41,
+      "rank": 35,
+      "ppg": 10.41,
+      "availability": "waivers",
+      "marketPercent": 45,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "30973",
+      "name": "Sam Darnold",
+      "position": "QB",
+      "team": "Sea",
+      "projection": 16.86,
+      "rank": 15,
+      "ppg": 16.86,
+      "availability": "waivers",
+      "marketPercent": 38,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    },
+    {
+      "id": "42693",
+      "name": "Antonio Williams",
+      "position": "WR",
+      "team": "Was",
+      "projection": 7.51,
+      "rank": 50,
+      "ppg": 7.51,
+      "availability": "waivers",
+      "marketPercent": 31,
+      "source": "FantasyBot Week 10 PPR projected rankings / Yahoo league availability"
+    }
+  ],
+  "leaguePower": [
+    {
+      "teamName": "Brock Hard & Tee Baggin",
+      "rank": 1,
+      "rating": 100
+    },
+    {
+      "teamName": "Hazleton Coal Mine",
+      "rank": 2,
+      "rating": 96
+    },
+    {
+      "teamName": "Jersey junkyard",
+      "rank": 3,
+      "rating": 94
+    },
+    {
+      "teamName": "Chasing Greatness",
+      "rank": 4,
+      "rating": 93
+    },
+    {
+      "teamName": "BEEFS GAY",
+      "rank": 5,
+      "rating": 90
+    },
+    {
+      "teamName": "Frenchville HornHog",
+      "rank": 6,
+      "rating": 89
+    },
+    {
+      "teamName": "Josh ❤️creampies",
+      "rank": 7,
+      "rating": 89
+    },
+    {
+      "teamName": "Elmira Express",
+      "rank": 8,
+      "rating": 87
+    }
+  ],
+  "coverage": {
+    "roster": 16,
+    "rosterTotal": 18,
+    "starters": 9,
+    "startersTotal": 10,
+    "available": 16,
+    "availableTotal": 25
+  },
+  "sources": [
+    {
+      "label": "FantasyBot weekly 2026 NFL PPR projections",
+      "date": "2026-11-09T23:47:23.697Z"
+    },
+    {
+      "label": "Flaim Fantasy / Yahoo Brock-only snapshot",
+      "date": "2026-11-09T23:27:56.499Z"
+    }
+  ]
+}
