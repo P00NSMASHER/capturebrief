@@ -1,4 +1,4 @@
-import {TEAM_IDS,normalizeSnapshot,getFreshness,rosterBuckets,slotsFromRoster,optimizeLineup,rankWaiverTargets,estimateWinChance,isSafeUrl,round,teamPath} from './engine.mjs';
+import {TEAM_IDS,normalizeSnapshot,getFreshness,rosterBuckets,slotsFromRoster,optimizeLineup,rankWaiverTargets,estimateWinChance,isSafeUrl,round,teamPath,rosterStatusAlerts,compareScoredLineup,marketWatchlist,positionDepth} from './engine.mjs';
 import {preparePrivateImport} from './snapshot-import.mjs';
 
 const BASE='/capturebrief/fantasy/';
@@ -67,10 +67,13 @@ function decision(team){const old=!freshness().actionable;return section(old?'Ar
   '<h3>'+$esc(txt(team.nextMove,'No saved recommendation'))+'</h3><p>'+$esc(team.nextDetail||'')+'</p>'+
   '<div class="decisionbottom">'+badge('Evidence: '+(old?'outdated':'snapshot'),old?'bad':'muted')+
   (team.confidence?badge('At capture: '+team.confidence):'')+'</div></div>');}
-function alertList(team){const alerts=team.alerts||[];
-  return section('Roster alerts','HEALTH & AVAILABILITY',alerts.length?
-    '<div class="list">'+alerts.map(a=>'<div class="alertrow"><span class="alertdot '+$esc(a.level||'watch')+'"></span><div><strong>'+$esc(a.title||'Roster alert')+'</strong><p>'+$esc(a.text||'')+'</p></div></div>').join('')+'</div>':
-    empty('No saved alerts','This does not prove that the live roster has no injuries.'))}
+function alertList(team){
+  const derived=rosterStatusAlerts(team.roster), manual=Array.isArray(team.alerts)?team.alerts:[];
+  const alerts=[...derived,...manual];
+  return section('Roster status alerts','YAHOO STATUS AT CAPTURE',alerts.length?
+    '<div class="list">'+alerts.map(a=>'<div class="alertrow"><span class="alertdot '+$esc(a.level||'watch')+'"></span><div><strong>'+$esc(a.title||'Roster status')+'</strong><p>'+$esc(a.text||'')+'</p></div></div>').join('')+'</div>'+
+    '<div class="subnote">'+derived.length+' Yahoo status flags at capture. Verify current health and lineup eligibility in Yahoo before moving players.</div>':
+    '<div class="subnote">No provider status flags were included in this capture. This is not proof that the live roster is healthy.</div>');}
 function strategy(team){const s=team.strategy;if(!s)return '';
   return section('Saved analysis','EXPLANATION',
     '<p class="bodycopy">'+$esc(s.summary||'')+'</p>'+
@@ -83,55 +86,93 @@ function playerRow(p){const injury=p.injury?badge(p.injury,'bad'):'';
   return '<div class="playerrow"><span class="slot">'+$esc(txt(p.slot,'—'))+'</span><div class="playername"><strong>'+$esc(p.name)+'</strong><small>'+$esc([p.nflTeam,p.position].filter(Boolean).join(' · '))+'</small></div>'+injury+'<span class="proj">'+points+'</span></div>';
 }
 function teamProjectionSupported(){const t=current?.teams[selected()];return t?.projectionCoverage==='complete'}
-function lineupView(team){const buckets=rosterBuckets(team.roster);
-  const optimizer=freshness().actionable&&team.projectionCoverage==='complete'?optimizeLineup(team.roster,team.lineupSlots||slotsFromRoster(team.roster)):
-    {available:false,reason:'No complete, current, player-level projection set is present'};
-  let opt='';
+function lineupView(team){
+  const buckets=rosterBuckets(team.roster);
+  const counts=team.lineupSlots||slotsFromRoster(team.roster);
+  const optimizer=freshness().actionable&&team.projectionCoverage==='complete'?optimizeLineup(team.roster,counts):
+    {available:false,reason:'A complete verified future player projection set was not supplied'};
+  const scored=compareScoredLineup(team.roster,counts);
+  let opt='',title='Projected optimal lineup',kicker='EXACT SLOT ASSIGNMENT';
   if(optimizer.available){
     opt='<div class="optresult"><div><div class="label">MAXIMIZED PROJECTED POINTS</div><div class="optbig">'+num(optimizer.score,2)+'</div></div>'+
     '<div class="optgain">'+(optimizer.gain===null?'BASELINE UNKNOWN':(optimizer.gain>=0?'+':'')+num(optimizer.gain,2)+' VS CURRENT')+'</div></div>'+
     '<div class="list">'+optimizer.assignments.map(a=>playerRow({...a.player,slot:a.slot})).join('')+'</div>'+
-    '<div class="subnote">Advisory projection optimization only; provider lineup locks and actual submission are not performed.</div>';
-  }else opt=empty('Optimization unavailable',optimizer.reason+'. Missing values are never replaced with guesses.');
-  return section('Projected optimal lineup','EXACT SLOT ASSIGNMENT',opt)+
+    '<div class="subnote">Advisory projected-point optimization; Yahoo locks and transactions are not handled by this page.</div>';
+  }else if(scored.available){
+    title='Highest-scoring lineup so far';kicker='WEEK '+txt(current.week)+' · ACTUAL POINTS';
+    const swaps=scored.in.length?
+      '<div class="waiverrow"><div><strong>Hindsight difference</strong><small>Bench in: '+$esc(scored.in.join(', '))+'</small><small>Starter out: '+$esc(scored.out.join(', '))+'</small></div></div>':
+      '<div class="subnote">Your starters already match the highest-scoring combination at capture.</div>';
+    opt='<div class="optresult"><div><div class="label">HIGHEST POINTS ALREADY SCORED</div><div class="optbig">'+num(scored.best,2)+'</div></div>'+
+      '<div class="optgain">'+(scored.gap>0?'+':'')+num(scored.gap,2)+' VS CURRENT '+num(scored.current,2)+'</div></div>'+
+      swaps+'<div class="subnote">Retrospective, week-to-date Yahoo scoring only. These are NOT future projections or start/sit recommendations. Some players may be locked; scores can change.</div>';
+  }else{
+    title='Lineup coverage';kicker='EVIDENCE CHECK';
+    opt='<div class="subnote">Verified future player projections are absent, and a complete scored-player comparison could not be calculated: '+$esc(scored.reason)+'. Current assignments remain shown below without speculative recommendations.</div>';
+  }
+  return section(title,kicker,opt)+
     section('Starting roster','CURRENT SNAPSHOT',buckets.starters.length?'<div class="list">'+buckets.starters.map(playerRow).join('')+'</div>':empty('No starters found','Import a full roster snapshot.'))+
     section('Bench','DEPTH',buckets.bench.length?'<div class="list">'+buckets.bench.map(playerRow).join('')+'</div>':empty('No bench entries','No bench data was saved.'))+
-    section('Reserve / IR','INJURY LIST',buckets.reserve.length?'<div class="list">'+buckets.reserve.map(playerRow).join('')+'</div>':empty('No reserve entries','No reserve players are present in the saved snapshot.'));}
-function waiverView(team){const old=!freshness().actionable, rated=old?{available:false,reason:'Archived snapshot: cannot rank waivers safely'}:rankWaiverTargets(team);
-  let dynamic=rated.available?(rated.recommendations.length?
+    section('Reserve / IR','INJURY LIST',buckets.reserve.length?'<div class="list">'+buckets.reserve.map(playerRow).join('')+'</div>':'<div class="subnote">No reserve assignments at capture.</div>');}
+function waiverView(team){
+  const old=!freshness().actionable;
+  const rated=old?{available:false,reason:'Archived capture'}:rankWaiverTargets(team);
+  const market=marketWatchlist(team.availablePlayers,5);
+  const dynamic=rated.available?(rated.recommendations.length?
     '<div class="list">'+rated.recommendations.map(r=>'<div class="waiverrow"><div><strong>'+$esc(r.add)+'</strong><small>Drop '+$esc(r.drop)+' · '+$esc(r.status)+'</small></div>'+badge('+'+num(r.improvement,2)+' pts','good')+'</div>').join('')+'</div>':
-    empty('No positive projected upgrade found','Among the imported candidates and droppable bench players.')):
-    empty('No verified waiver ranking',rated.reason);
-  const oldCards=(team.waivers||[]).map(w=>'<div class="waiverrow"><div><strong>'+$esc(w.name||'Unknown')+'</strong><small>'+$esc(w.pos||'')+'</small><p>'+$esc(w.why||'')+'</p></div>'+badge(w.tag||'ARCHIVE',old?'bad':'muted')+'</div>').join('');
+    '<div class="subnote">No positive verified projected upgrade among captured candidates.</div>'):
+    (market.length?'<div class="list">'+market.map(p=>'<div class="waiverrow"><div><strong>'+$esc(p.name)+'</strong><small>'+$esc([p.position,p.team].filter(Boolean).join(' · '))+' · '+$esc(p.acquisitionState==='waivers'?'On waivers':'Free agent')+'</small></div>'+badge(num(p.percentOwned,0)+'% rostered','muted')+'</div>').join('')+'</div>':
+      '<div class="subnote">No provider-backed available players were captured.</div>')+
+    '<div class="subnote">Ranked only by Yahoo-wide market roster rate, not projected performance or add/drop uplift. Yahoo’s market percentage is not this league’s ownership rate.</div>';
   const available=Array.isArray(team.availablePlayers)?team.availablePlayers:[];
   const availableRows=available.map(p=>{
-    const status=p.acquisitionState==='free_agent'?'FREE AGENT':p.acquisitionState==='waivers'?'ON WAIVERS':'AVAILABLE';
+    const status=p.acquisitionState==='free_agent'?'FREE AGENT':p.acquisitionState==='waivers'?'ON WAIVERS':'STATE UNKNOWN';
     const when=p.waiverDate?' · waiver date '+$esc(p.waiverDate):'';
-    const owned=Number.isFinite(p.percentOwned)?$esc(p.percentOwned+'% Yahoo-wide rostered'):'Yahoo market rate unavailable';
+    const owned=Number.isFinite(p.percentOwned)?$esc(p.percentOwned+'% Yahoo-wide rostered'):'Market rate unavailable';
     return '<div class="waiverrow"><div><strong>'+$esc(p.name||'Unknown player')+'</strong><small>'+$esc([p.position,p.team].filter(Boolean).join(' · '))+' · '+owned+when+'</small></div>'+badge(status,'muted')+'</div>';
   }).join('');
-  return section(old?'Archived available players':'Available in this league at capture','FLAIM FANTASY · YAHOO',availableRows?'<div class="list">'+availableRows+'</div><div class="subnote">This is league-specific availability as of the snapshot, not proof an immediate add is legal. Yahoo-wide rates are not ownership within this league.</div>':empty('No inventory captured','Available-player data was not included.'))+
-    section('Projected add/drop impact','DECISION ENGINE',dynamic)+
-    section(old?'Archived waiver notes':'Waiver watchlist','SNAPSHOT · NOT LIVE',
-      oldCards?'<div class="list">'+oldCards+'</div>':empty('No waiver notes','Import an updated waiver inventory for this league.'))+
-    '<div class="footnote">Yahoo waiver order, acquisition state, limits, deadlines and player eligibility must be checked directly before submitting any transaction.</div>';}
-function labView(team){const m=team.matchupModel||null;
+  const depth=positionDepth(team.roster);
+  const depthRows=depth.map(d=>'<div class="waiverrow"><div><strong>'+$esc(d.position)+' · '+d.total+' rostered</strong><small>'+d.active+' non-IR · '+d.flagged+' Yahoo status flag'+(d.flagged===1?'':'s')+'</small></div></div>').join('');
+  return section(old?'Archived available players':'Available in this league at capture','FLAIM FANTASY · YAHOO',availableRows?'<div class="list">'+availableRows+'</div><div class="subnote">League-specific availability at the saved capture; no claim that an acquisition is currently legal.</div>':'<div class="subnote">No available-player inventory was published in this capture.</div>')+
+    section(rated.available?'Projected add/drop uplift':'Top market-rate candidates',rated.available?'VERIFIED PROJECTION ENGINE':'YAHOO MARKET · NOT A PROJECTION',dynamic)+
+    section('Roster depth for waiver decisions','SAVED BROCK HARD ROSTER','<div class="list">'+depthRows+'</div><div class="subnote">Position counts describe your roster, not a prescription to drop or add a player.</div>')+
+    '<div class="footnote">Check Yahoo’s current waiver status, deadlines, eligible positions and roster rules before any transaction.</div>';
+}
+function labView(team){
+  const m=team.matchupModel||null;
   const chance=m&&freshness().actionable?estimateWinChance(m.myProjected,m.oppProjected,m.mySigma,m.oppSigma):null;
   const side=scoreFor(team);
   const providerChance=freshness().actionable&&typeof side?.mine?.winProbability==='number'?side.mine.winProbability*100:null;
+  const facts=team.standings&&typeof team.standings==='object'?team.standings:{};
+  const standings='<div class="metrics">'+
+    '<div class="metric"><div class="metriclabel">LEAGUE RANK</div><div class="metricvalue">'+$esc(txt(team.rank))+'</div></div>'+
+    '<div class="metric"><div class="metriclabel">RECORD</div><div class="metricvalue">'+$esc(txt(team.record))+'</div></div>'+
+    (Number.isFinite(facts.pointsFor)?'<div class="metric"><div class="metriclabel">POINTS FOR</div><div class="metricvalue">'+num(facts.pointsFor,1)+'</div></div>':'')+
+    (Number.isFinite(facts.pointsAgainst)?'<div class="metric"><div class="metriclabel">POINTS AGAINST</div><div class="metricvalue">'+num(facts.pointsAgainst,1)+'</div></div>':'')+
+    '</div>';
+  const schedule=Array.isArray(team.upcomingMatchups)?team.upcomingMatchups.filter(x=>Number.isInteger(x.week)&&x.week>current.week&&x.opponent&&Number.isFinite(x.myProjected)&&Number.isFinite(x.opponentProjected)).slice(0,5):[];
+  const schedules=schedule.length?'<div class="list">'+schedule.map(x=>
+    '<div class="waiverrow"><div><strong>Week '+x.week+' vs '+$esc(x.opponent)+'</strong>'+
+    '<small>Yahoo pregame team forecast: '+num(x.myProjected,1)+' vs '+num(x.opponentProjected,1)+'</small></div>'+
+    badge((x.myProjected-x.opponentProjected>=0?'+':'')+num(x.myProjected-x.opponentProjected,1)+' pts','muted')+'</div>').join('')+'</div>':'';
+  const depth=positionDepth(team.roster);
+  const tradeDepth='<div class="list">'+depth.map(d=>'<div class="waiverrow"><div><strong>'+$esc(d.position)+' · '+d.total+' rostered</strong>'+
+    '<small>'+d.active+' non-IR · '+d.flagged+' player status flag'+(d.flagged===1?'':'s')+'</small></div></div>').join('')+'</div>'+
+    '<div class="subnote">Position depth is verified from Brock Hard’s roster. Actual weekly scores are not rest-of-season trade values. A fair-value trade calculation requires the specific incoming players and comparable verified forward projections.</div>';
   return section('Matchup forecast','PROVIDER EVIDENCE',
-    providerChance!==null?'<div class="winprob">'+num(providerChance,1)+'<small>% YAHOO-REPORTED WIN ESTIMATE</small></div><div class="subnote">This estimate can change during games and is not our custom model.</div>':
-    chance===null?empty('Win probability not rated','A verified provider probability or a complete projection and uncertainty estimate for both teams is required.'):
-      '<div class="winprob">'+num(chance,1)+'<small>% ESTIMATED WIN CHANCE</small></div>'+
-      '<div class="subnote">Normal-distribution approximation; estimates are not guaranteed outcomes.</div>')+
-    section('Playoff outlook','MONTE CARLO',
-      empty('Full-season simulation not rated','Provide current standings, remaining schedule, playoff rules and matchup probabilities. This snapshot does not include complete evidence.'))+
-    section('Trade evaluation','ROSTER VALUE',
-      empty('Opponent roster valuation unavailable','Import current projections for both sides and roster requirements before comparing trades.'))+
-    section('Recent league activity',team.transactionsCoverage?.limited?'HISTORY · BOUNDED':'HISTORY',
+    providerChance!==null?'<div class="winprob">'+num(providerChance,1)+'<small>% YAHOO-REPORTED WIN ESTIMATE</small></div><div class="subnote">Yahoo’s captured estimate may change; it is not a custom simulation.</div>':
+    chance===null?'<div class="subnote">Yahoo did not provide a verified matchup probability at this capture.</div>':
+      '<div class="winprob">'+num(chance,1)+'<small>% MODEL ESTIMATE</small></div>'+
+      '<div class="subnote">Normal-distribution approximation only.</div>')+
+    section('Playoff race','VERIFIED STANDINGS · NO FABRICATED ODDS',
+      standings+schedules+
+      '<div class="subnote">These are current league standings'+(schedule.length?' and Yahoo’s upcoming pregame team forecasts':'')+'. A playoff probability requires verified playoff rules and a complete remaining schedule with defensible win probabilities; none is invented.</div>')+
+    section('Trade preparation','VERIFIED ROSTER DEPTH · NO GUESSED VALUE',tradeDepth)+
+    section('Recent Brock Hard activity',team.transactionsCoverage?.limited?'HISTORY · BOUNDED':'HISTORY',
       team.transactions.length?'<div class="list">'+team.transactions.slice(0,20).map(tr=>
-        '<div class="transaction"><span>'+$esc(txt(tr.date,''))+'</span><strong>'+$esc(tr.move||tr.type||'League transaction')+'</strong><small>'+$esc(tr.team||'')+'</small></div>').join('')+'</div>':
-        empty('No stored transactions','Historical activity is not verified as complete.'))}
+        '<div class="transaction"><span>'+$esc(txt(tr.date,''))+'</span><strong>'+$esc(tr.move||tr.type||'Transaction')+'</strong></div>').join('')+'</div>':
+        '<div class="subnote">No verified completed transactions were present in the saved bounded history.</div>');
+}
 function tabbar(){return '<div class="tabs" role="tablist" aria-label="Team dashboard views">'+[
   ['overview','Overview'],['lineup','Lineup'],['waivers','Waivers'],['lab','Analysis']].map(([id,label])=>
    '<button type="button" role="tab" aria-selected="'+(id===activeTab)+'" class="'+(id===activeTab?'active':'')+'" data-tab="'+id+'">'+label+'</button>').join('')+'</div>';}
@@ -162,7 +203,7 @@ function render(){
  if(!current){root.innerHTML='<div class="loader">Loading Brock Hard…</div>';return;}
  const team=current.teams.brock;
  document.title=team?'Brock Hard · Fantasy HQ':'Brock Hard · Data unavailable';
- root.innerHTML=team?(source==='published'&&!freshness().actionable?archivedView():teamView(team)):'<div class="loader">Brock Hard snapshot unavailable. Import a verified private snapshot.</div>';
+ root.innerHTML=team?teamView(team):'<div class="loader">Brock Hard snapshot unavailable. Import a verified private snapshot.</div>';
 }
 function onlyBrockRaw(raw){
  const normalized=normalizeSnapshot(raw);
