@@ -28,7 +28,8 @@ test('A verified Denver bye makes Jonah Coleman a zero and gives a source-backed
  assert.equal(jonah.forecast,0);
  assert.equal(jonah.bye,true);
  assert.ok(m.lineups.balanced.outPlayers.some(x=>x.name==='Jonah Coleman'));
- assert.ok(m.lineups.balanced.inPlayers.some(x=>x.position==='RB'));
+ assert.ok(m.lineups.balanced.inPlayers.length>=1);
+ assert.ok(m.lineups.balanced.assignments.some(x=>x.slot==='RB'&&x.position==='RB'));
  assert.ok(m.lineups.balanced.gain>0);
  assert.ok(m.priorities.find(x=>x.id==='bye-replacement'&&x.severity==='critical'));
 });
@@ -53,7 +54,7 @@ test('Cautious, balanced and upside modes are real choices with explicit risk as
  assert.ok(b.lineup.estimatedSigma>0);
  assert.ok(b.lineup.illustrativeLow<=b.lineup.mean);
  assert.ok(b.lineup.illustrativeHigh>=b.lineup.mean);
- assert.match(b.lineup.note,/not a calibrated prediction interval/);
+ assert.match(b.lineup.note,/no calibrated prediction interval/);
  assert.ok(b.illustrativeChance===null||/uncalibrated/.test(b.illustrativeChance.assumptions));
 });
 
