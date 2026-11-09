@@ -25,6 +25,7 @@ jobs:
           node --check fantasy/assets/engine.mjs
           node --check fantasy/assets/app-v2.mjs
           node --check fantasy/assets/coach-engine.mjs
+          node --check fantasy/assets/edge-engine.mjs
           node --check fantasy/assets/league-branding.mjs
           node --check fantasy/assets/snapshot-import.mjs
           node --check fantasy/adapter/flaim-private-v3.mjs
