@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {buildCoachPlan,coachBulletPoints} from '../assets/coach-engine.mjs';
+import {buildCoachPlan,coachBulletPoints,buildArchivedCoachReview} from '../assets/coach-engine.mjs';
 import {uiIcon} from '../assets/league-branding.mjs';
 
 const checkAt=Date.parse('2026-11-09T19:30:00Z');
@@ -168,4 +168,32 @@ test('Recap fails honestly when data is absent and does not repeat invented stan
  const stale=buildCoachPlan(fixture(),{now:Date.parse('2026-11-10T02:30:21Z')});
  assert.equal(stale.ready,false);
  assert.equal(stale.summary,undefined);
+});
+
+test('Historical recap survives a stale Yahoo snapshot without unlocking move recommendations',()=>{
+ const raw=fixture(),now=Date.parse('2026-11-10T05:30:00Z');
+ const live=buildCoachPlan(raw,{now});
+ assert.equal(live.ready,false);
+ assert.equal(live.status,'archived');
+ const review=buildArchivedCoachReview(raw,{now});
+ assert.ok(review);
+ assert.equal(review.historical,true);
+ assert.equal(review.captureAt,raw.syncedAtIso);
+ assert.equal(review.summary.length,3);
+ assert.match(review.summary[0],/At the saved Week 9 Yahoo capture, Brock Hard was 6–2/);
+ assert.ok(review.summary.every(p=>p.length>200));
+ assert.equal(review.priorities,undefined);
+ assert.equal(review.sections,undefined);
+ assert.doesNotMatch(JSON.stringify(review),/guaranteed champion|100% playoff|clinched/);
+});
+test('Archived review rejects wrong teams, manipulated player identities and future timestamps',()=>{
+ const now=Date.parse('2026-11-09T19:30:00Z');
+ const mixed=fixture();mixed.teams.other={name:'OTHER OWNED TEAM'};
+ assert.equal(buildArchivedCoachReview(mixed,{now}),null);
+ const bad=fixture();bad.teams.brock.teamId='7';
+ assert.equal(buildArchivedCoachReview(bad,{now}),null);
+ const badIds=fixture();badIds.teams.brock.roster[0].id=badIds.teams.brock.roster[1].id;
+ assert.equal(buildArchivedCoachReview(badIds,{now}),null);
+ const future=fixture();future.syncedAtIso='2026-11-10T20:00:00Z';
+ assert.equal(buildArchivedCoachReview(future,{now}),null);
 });
