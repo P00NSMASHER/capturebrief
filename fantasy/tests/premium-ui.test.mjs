@@ -64,8 +64,8 @@ test('premium app preserves Brock-only read-only snapshots and working client na
  assert.match(a,/preparePrivateImport\(raw/);
  assert.match(a,/cache:'no-store'/);
  assert.doesNotMatch(a,/new WebSocket|fetch\(['"]https:\/\/football\.fantasysports\.yahoo/);
- const nav=uiIcon('home')+uiIcon('lineup')+uiIcon('waivers')+uiIcon('league');
- assert.equal((nav.match(/<svg/g)||[]).length,4);
+ const nav=uiIcon('home')+uiIcon('lineup')+uiIcon('waivers')+uiIcon('league')+uiIcon('coach');
+ assert.equal((nav.match(/<svg/g)||[]).length,5);
 });
 test('iPhone-sized CSS includes safe-area navigation, reduced motion, good touch targets',()=>{
  const c=css();
@@ -78,6 +78,7 @@ test('iPhone-sized CSS includes safe-area navigation, reduced motion, good touch
  for(const path of ['fantasy/index.html','fantasy/brock/index.html']){
   const h=readFileSync(path,'utf8');
   assert.match(h,/premium-v3\.css\?v=1/);
-  assert.match(h,/app-v2\.mjs\?v=5/);
+  assert.match(h,/coach-v1\.css\?v=1/);
+  assert.match(h,/app-v2\.mjs\?v=6/);
  }
 });
