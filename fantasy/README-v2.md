@@ -1,38 +1,31 @@
-# Fantasy HQ v2
+# Fantasy HQ v2 — Brock Hard only
 
-A read-only, mobile-first fantasy football command center in the original \`/capturebrief/fantasy/\` URL family. Published from the capturebrief \`gh-pages\` branch only after owner review. This feature branch/PR is **not** a production deploy.
+Read-only, iPhone-friendly Yahoo football dashboard for **Brock Hard & Tee Baggin**. The existing PR #183 targets gh-pages and remains a **draft**. No public deployment is authorized.
 
-## Implemented
-- Three existing Yahoo team URLs continue working: /fantasy/brock/, /fantasy/quick/, /fantasy/highlight/.
-- Site shell, iPhone-friendly layout, Home Screen manifest, team switching and four functional analysis tabs.
-- Exact position-/FLEX-aware lineup assignment; rejects incomplete projections, invalid slots and locked players.
-- Waiver add/drop comparison requires a complete league-specific projection set and candidate acquisition states.
-- Matchup probability estimate requires both projected totals and standard deviations; playoff Monte Carlo requires schedule/standings/odds evidence.
-- A clear archived notice for snapshots older than 24h; no stale waiver action is presented as current.
-- Recheck the published snapshot with no-store fetching and fallback to last successful public snapshot; local JSON import never uploads private data.
+## UI and privacy
 
-## Flaim Fantasy data source
-The latest checked-in snapshot may be generated from connected Flaim Fantasy tools, retrieving team standings, Yahoo matchup scores and win probabilities, current rosters, league-specific available players and recent league moves. It is an **on-demand snapshot**, not an API reachable by the static website. The timestamp is when the data was retrieved. Flaim's player `points` are reported scoring, **not** future projections: the lineup optimizer remains disabled unless independently verified player projections exist. Yahoo pregame matchup projections are not in-progress final estimates, and can be smaller than the current score. Available-player percentOwned is a Yahoo-wide market rate, not league ownership, and waiverDate is a calendar date only. Recent transaction history can be truncated. Access denied on an additional connected league is treated as unavailable, not synthesized.
+- /capturebrief/fantasy/ and /capturebrief/fantasy/brock/ both open the Brock Hard dashboard directly.
+- There are no other personal team cards or a league switcher. The bottom navigation switches **Overview, Lineup, Waivers, and Analysis** for Brock Hard only.
+- Existing /quick/ and /highlight/ deep links redirect to /brock/ without rendering any other personal team. Only Brock is present in the draft branch's fantasy/data.json archive.
+- Historical legacy or private snapshots containing multiple teams are filtered to teams.brock before normalization, browser storage, and display. Old cached copies are filtered on next load. Never commit private Yahoo data to the public repository.
+- Original browser import remains schemaVersion 3 and 2 MB maximum. No file upload occurs. Refresh checks published static JSON and **does not contact Yahoo**. Fallback preserves previously verified Brock data.
 
-## Important limits
-**No Yahoo OAuth/session tokens are embedded or sent to GitHub.** On GitHub Pages, "Check snapshot" re-reads an existing JSON file and **is not a live Yahoo API sync**. True automatic Yahoo sync needs a separately hosted, authenticated adapter with owner-controlled Yahoo OAuth and server-side refresh token storage. No lineup moves, waiver claims, or trades are executed. Flaim-derived JSON snapshots contain fantasy-roster and matchup data. This repository is public, so review what becomes public before merging. ESPN/Sleeper adapters are future integration points, not shipped integrations.
+## Analysis safeguards
 
-## Data contract
-The app loads /fantasy/data.json (legacy schema 1 or source-backed schema 3). A user may explicitly import a private JSON object with \`schemaVersion: 3\`; the importer rejects >2MB and only retains the three known teams. \`fantasy/tests/fixtures/private-v3.sample.json\` is **fully fictional test data**.
+- Exact lineup optimization and projected waiver uplift require complete, currently verified individual player projections, eligibility, and league lineup settings. Without that evidence, rankings fail closed.
+- Reported Yahoo points are **scored points, not future player projections**.
+- Yahoo matchup projections can be pregame estimates below current scores; do not mistake those for live final projection. Yahoo win chance may be provided independently.
+- Yahoo-wide percentOwned is a platform-wide market rate, never ownership within this league. Yahoo waiverDate is only a date and does not establish waiver clearance time.
+- No lineup submissions, claims, transactions, or trades.
 
-Use fields:
-- top level: \`schemaVersion: 3\`, \`syncedAtIso\` (ISO UTC), \`season\`, \`week\`, \`teams\`.
-- team keys: \`brock\`, \`quick\`, \`highlight\`.
-- team: \`name\`, \`short\`, \`leagueId\`, \`teamId\`, \`roster\`, \`lineupSlots\`, \`projectionCoverage\`, optional \`availablePlayers\`, \`matchup\` and \`matchupModel\`.
-- player: \`id\`, \`name\`, \`position\`, \`eligiblePositions\`, \`slot\`, \`projection\` (number or null), \`injury\`, \`locked\`.
-- waiver player: \`acquisitionState\` must be \`free_agent\` or \`waivers\` plus numeric \`projection\`; optimization considers bench drops only, never submits.
-- matchup model: \`myProjected\`, \`oppProjected\`, \`mySigma\`, \`oppSigma\` as positive numeric estimates.
+## Current data and future provider access
 
-A complete \`projectionCoverage\` assertion is only trustworthy after upstream league settings, player IDs and projections have been reconciled. Missing projections must remain null, not 0.
+The static fantasy/data.json is an archived September 30, 2026 capture, now limited to Brock only. The existing Flaim Fantasy connection can read owner-authorized Brock data on demand and make a Brock-only private v3 file. The adapter at fantasy/adapter/flaim-private-v3.mjs accepts only the mapped Brock league/team and never emits other teams. Synthetic fixtures are distinctly labelled and deliberately archived.
+
+For **automatic** Yahoo refresh, obtain API application approval first, then separately obtain owner consent before enabling OAuth, adding secure hosting, handling credentials, changing the published site, or incurring costs. There is currently **no live synchronization** in the static site.
 
 ## Verification
-Run: \`node --check fantasy/assets/engine.mjs\`, \`node --check fantasy/assets/app-v2.mjs\`, \`node --test fantasy/tests/*.test.mjs\` from repository root.
-CI workflow: \`.github/workflows/fantasy-hq-v2.yml\`. GitHub Pages runtime and authenticated Yahoo connectivity are separate from source tests.
 
-## Reuse / attribution
-Architecture and feature reference: [lfrocharod/fantasy-dashboard](https://github.com/lfrocharod/fantasy-dashboard) (MIT). Other researched adapters: [whatadewitt/yahoo-fantasy-sports-api](https://github.com/whatadewitt/yahoo-fantasy-sports-api) (MIT), [cwendt94/espn-api](https://github.com/cwendt94/espn-api) (MIT), [nflverse/nflreadpy](https://github.com/nflverse/nflreadpy) (MIT, dataset terms vary). Core engine here is an original browser-side implementation; third-party packages are not yet vendored or deployed.
+Run node --check for fantasy/assets/engine.mjs, fantasy/assets/app-v2.mjs and fantasy/adapter/flaim-private-v3.mjs. Then run node --test fantasy/tests/*.test.mjs.
+
+The fantasy CI also exercises Chrome rendering on /fantasy/ and /fantasy/brock/ and the fictional optimization fixture. Do not merge or publish without explicit owner approval.

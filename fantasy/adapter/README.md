@@ -1,35 +1,25 @@
-# Private Yahoo snapshot adapter (prototype, NOT an automatic sync)
+# Yahoo/Flaim private schema-v3 bridge — Brock Hard only
 
-This is a standalone, testable read-only bridge for Fantasy HQ v2 PR #183. It is not loaded by the public site, is not deployed, and contains no authentication implementation, credentials, Yahoo API requests, or private responses. It never executes waiver transactions or lineup moves.
+This module is a read-only, testable **Brock Hard & Tee Baggin** data mapper for Fantasy HQ v2 PR #183. It makes **no network calls, OAuth requests, file writes, or roster transactions**. It contains no Yahoo credentials. It is not a background sync.
 
-## Preferred no-new-OAuth path
+## Owner-authorized input
 
-The owner already has an authorized Flaim Fantasy connection that can read the three requested 2026 Yahoo teams. This path requires no newly deployed service. Flaim is accessible through ChatGPT, not as a live API endpoint on GitHub Pages. The adapter accepts privately assembled response envelopes and produces a schemaVersion 3 object for the existing browser-local 2 MB importer. This is a MANUAL, provider-backed snapshot, not continuous background refresh.
+Only Brock's 2026 Yahoo football league and team is selected. Collect five owner-authorized read-only provider results for this league: league info including lineup slots and current week, current own-team roster, current-week matchups, standings, and a bounded league available-player list. Every result must be a success:true, data:{...} envelope.
 
-Collect these five read-only responses for each team via the already authorized connector: league settings, current own-team roster, current-week matchups, standings, and a bounded league-specific available-player list. Use the season and league/team keys provided by the current authenticated session. Each packet is an object with league, roster, matchups, standings, freeAgents properties. Each property must hold the connector result envelope with success:true and data. Do not extract OAuth credentials.
+Call buildPrivateV3 with an ephemeral input object containing seasonYear=2026, capturedAtIso as the actual capture timestamp, teamMap with only a brock key specifying the exact leagueKey and teamId, and teams.brock containing the league, roster, matchups, standings and freeAgents responses. Use buildPrivateV3(input, {previous, nowIso}), or inject the authorized function readLeague into refreshWithReader({readLeague,teamMap,previous,clock}). No readLeague implementation is shipped.
 
-The private input object contains seasonYear:2026, capturedAtIso (UTC time after the last provider response), and two maps keyed brock, quick, highlight:
-- teamMap: for each ID, the owner-authorized target leagueKey and teamId.
-- teams: for each ID, its five read-only source packets.
+Only when ok:true should the owner write JSON.stringify(result.snapshot) to an owner-private JSON file and use the dashboard's private JSON import control. Never commit private Yahoo snapshots, source envelopes, tokens or secrets to public GitHub or CI artifacts.
 
-Call buildPrivateV3(input, {previous, nowIso}) after a capture, or refreshWithReader({readLeague,teamMap,previous,clock}) with an injected authorized provider reader. The latter only coordinates reads; NO provider implementation is included. Only when ok:true should the caller save JSON.stringify(result.snapshot) to an OWNER-PRIVATE file outside the public repository. Import that file using "Import private JSON" in Fantasy HQ v2 once it is explicitly published after owner approval. Do not persist a failed response; the function returns the unchanged prior verified snapshot.
+## Safety guarantees
 
-Provider-reported points are actual scored points, not future projections. The adapter deliberately sets projectionCoverage:none, all roster and free-agent projections to null, and never fabricates a projection model. Thus lineup optimization, projected waiver gains and playoff scenarios remain unavailable until independently justified evidence exists. Yahoo pregame projected MATCHUP totals and win probabilities, if present, remain labelled as provider evidence, not per-player optimizer projections. Yahoo-wide owned percentages are not league-specific ownership. Waiver dates are dates, not exact clearance instants.
+- Only teams.brock is emitted, even if a caller provides extra teams. A multi-team previous snapshot is pruned on any failure path.
+- Wrong league/team keys, incomplete roster, mismatched current weeks, failed reads, 401/403 authorization, expired credentials, stale or future timestamps, and non-advancing captures reject replacement, retaining the last verified Brock-only snapshot.
+- Projection coverage remains none and all future player projections null. Provider-reported scored points are not future player projections; optimization and waiver ranking remain gated.
+- Test-only fixtures require explicit opt-in, are stamped as archived, and say SYNTHETIC TEST FIXTURE - NOT LIVE.
+- The module never changes lineups, trades, claims or rosters.
 
-Team identification is by full provider league/team keys in a private map, not display-name guesses; three distinct target keys are required. A failed source response, 401/403, a non-current roster, missing league rules, a mismatched team, an invalid capture timestamp, an earlier snapshot, or a failed reader all retain the previous verified snapshot. No partial "successful" refresh is emitted.
+## Genuine Yahoo authentication (separate approval)
 
-Synthetic fixtures require an explicit test opt-in, are labelled SYNTHETIC TEST FIXTURE and stamped with an archived 2020 date. They must not be presented to users as live Yahoo synchronization.
+Yahoo Fantasy API access currently requires application review and OAuth 2.0 and is read-only. Server-side authorization-code flow, registered exact redirect URI, CSRF state and PKCE protection, protected credential storage and refresh-token rotation, owner-only access and no-store responses are prerequisites. There is currently **no enabled Yahoo OAuth backend**.
 
-## What is required for truly automatic Yahoo refresh
-
-Obtain owner approval FIRST for Yahoo application review/OAuth scope, any Cloudflare Worker deployment, credential storage, site changes or expenses. Yahoo currently reviews Fantasy Sports API applications; approval is not guaranteed. A future implementation would need a private owner-authenticated, server-side OAuth authorization-code callback with anti-CSRF state, registered exact HTTPS redirect URL, read-only Fantasy Sports scope, encrypted refresh-token storage, token rotation and revocation handling, and an owner-only GET snapshot route (no public league data or OAuth tokens). Responses must be no-store and preserve last good verified snapshot on error.
-
-A Cloudflare Worker is a candidate low-cost host, subject to current free-plan quotas and account availability. Do NOT use a public GitHub Actions log/artifact, GitHub Pages JSON, or repo secrets to distribute private rosters. GitHub Pages itself cannot protect a private Yahoo token. There is no approved backend deployment in this PR.
-
-## Tests
-
-Run: node --test fantasy/tests/flaim-adapter.test.mjs
-
-Tests are entirely fictional, require no network, and cover three-team identity, incomplete projections, real zero points/probabilities, unauthorized/expired/denied reads, missing responses, roster/scoreboard age, timestamp monotonicity, fixture labeling and retaining the last verified snapshot. Existing Fantasy HQ engine and safety checks remain unchanged.
-
-Never commit actual owner snapshots or source response packets to this public repo.
+Run node --test fantasy/tests/flaim-adapter.test.mjs for fictional, no-network tests.

@@ -53,7 +53,7 @@ jobs:
                 echo "::error::Other personal team leaked into Brock-only dashboard"; exit 1;
               fi
               # Source notices differ correctly for archived versus fresh captures.
-              if ! grep -Eq 'ARCHIVED SOURCE NOTE|FLAIM FANTASY SNAPSHOT' /tmp/fantasy-render.html; then
+              if ! grep -Eq 'Outdated fantasy data|Data source notice' /tmp/fantasy-render.html; then
                 echo "::error::Expected freshness/provenance notice absent on home page"
                 tail -c 2000 /tmp/fantasy-render.html
                 exit 1

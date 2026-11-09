@@ -1,7 +1,7 @@
 {
-  "name": "Fantasy Football HQ",
-  "short_name": "Fantasy HQ",
-  "description": "Multi-league fantasy football analytics",
+  "name": "Brock Hard Fantasy HQ",
+  "short_name": "Brock Hard",
+  "description": "Brock Hard & Tee Baggin single-team read-only fantasy football dashboard",
   "id": "/capturebrief/fantasy/",
   "start_url": "/capturebrief/fantasy/",
   "scope": "/capturebrief/fantasy/",
