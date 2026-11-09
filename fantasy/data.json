@@ -1,11 +1,11 @@
 {
   "schemaVersion": 3,
-  "provider": "Yahoo",
   "season": 2026,
+  "provider": "Yahoo",
   "week": 9,
-  "syncedAtIso": "2026-11-09T15:28:46.125Z",
-  "source": "Flaim Fantasy / Yahoo owner-authorized verified read-only capture (automated publishing enabled; not streaming)",
-  "captureType": "initial-verified-publish",
+  "syncedAtIso": "2026-11-09T17:30:21.368Z",
+  "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
+  "captureType": "scheduled-provider-read",
   "teams": {
     "brock": {
       "name": "Brock Hard & Tee Baggin",
@@ -20,7 +20,7 @@
       "waiver": "#1",
       "health": "Yahoo roster flags at capture",
       "nextMove": "No verified projected add/drop or lineup move available",
-      "nextDetail": "Brock Hard's roster, standings, available-player list and matchup were checked via Flaim. Individual future projections were not available; no transaction was submitted.",
+      "nextDetail": "Roster, standings, available players and matchup verified via Flaim. Individual player projections unavailable; no transaction was submitted.",
       "score": "148.58–127.06",
       "scoreState": "Yahoo score at capture",
       "weekNote": "Week 9 vs Chasing Greatness",
@@ -346,10 +346,8 @@
           "id": "27581",
           "name": "Davante Adams",
           "position": "WR",
-          "eligiblePositions": [
-            "WR"
-          ],
           "team": "LAR",
+          "nflTeam": "LAR",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 84,
@@ -359,10 +357,8 @@
           "id": "31019",
           "name": "Dallas Goedert",
           "position": "TE",
-          "eligiblePositions": [
-            "TE"
-          ],
           "team": "Phi",
+          "nflTeam": "Phi",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 82,
@@ -372,10 +368,8 @@
           "id": "40126",
           "name": "Josh Downs",
           "position": "WR",
-          "eligiblePositions": [
-            "WR"
-          ],
           "team": "Ind",
+          "nflTeam": "Ind",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 82,
@@ -385,10 +379,8 @@
           "id": "31002",
           "name": "Lamar Jackson",
           "position": "QB",
-          "eligiblePositions": [
-            "QB"
-          ],
           "team": "Bal",
+          "nflTeam": "Bal",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 77,
@@ -398,10 +390,8 @@
           "id": "42661",
           "name": "Denzel Boston",
           "position": "WR",
-          "eligiblePositions": [
-            "WR"
-          ],
           "team": "Cle",
+          "nflTeam": "Cle",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 76,
@@ -411,10 +401,8 @@
           "id": "41825",
           "name": "Tyler Shough",
           "position": "QB",
-          "eligiblePositions": [
-            "QB"
-          ],
           "team": "NO",
+          "nflTeam": "NO",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 75,
@@ -424,10 +412,8 @@
           "id": "40042",
           "name": "Jordan Addison",
           "position": "WR",
-          "eligiblePositions": [
-            "WR"
-          ],
           "team": "Min",
+          "nflTeam": "Min",
           "acquisitionState": "free_agent",
           "waiverDate": null,
           "percentOwned": 73,
@@ -437,10 +423,8 @@
           "id": "42025",
           "name": "Kyle Monangai",
           "position": "RB",
-          "eligiblePositions": [
-            "RB"
-          ],
           "team": "Chi",
+          "nflTeam": "Chi",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 71,
@@ -450,10 +434,8 @@
           "id": "40875",
           "name": "Bo Nix",
           "position": "QB",
-          "eligiblePositions": [
-            "QB"
-          ],
           "team": "Den",
+          "nflTeam": "Den",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 70,
@@ -463,10 +445,8 @@
           "id": "31868",
           "name": "Deebo Samuel Sr.",
           "position": "WR",
-          "eligiblePositions": [
-            "WR"
-          ],
           "team": "SF",
+          "nflTeam": "SF",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 70,
@@ -476,10 +456,8 @@
           "id": "33100",
           "name": "Rico Dowdle",
           "position": "RB",
-          "eligiblePositions": [
-            "RB"
-          ],
           "team": "Pit",
+          "nflTeam": "Pit",
           "acquisitionState": "free_agent",
           "waiverDate": null,
           "percentOwned": 70,
@@ -489,10 +467,8 @@
           "id": "30180",
           "name": "Alvin Kamara",
           "position": "RB",
-          "eligiblePositions": [
-            "RB"
-          ],
           "team": "NO",
+          "nflTeam": "NO",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 65,
@@ -502,10 +478,8 @@
           "id": "40029",
           "name": "Bryce Young",
           "position": "QB",
-          "eligiblePositions": [
-            "QB"
-          ],
           "team": "Car",
+          "nflTeam": "Car",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 65,
@@ -515,10 +489,8 @@
           "id": "41823",
           "name": "TreVeyon Henderson",
           "position": "RB",
-          "eligiblePositions": [
-            "RB"
-          ],
           "team": "NE",
+          "nflTeam": "NE",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 61,
@@ -528,10 +500,8 @@
           "id": "41845",
           "name": "RJ Harvey",
           "position": "RB",
-          "eligiblePositions": [
-            "RB"
-          ],
           "team": "Den",
+          "nflTeam": "Den",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 59,
@@ -541,10 +511,8 @@
           "id": "41058",
           "name": "Malik Washington",
           "position": "WR",
-          "eligiblePositions": [
-            "WR"
-          ],
           "team": "Mia",
+          "nflTeam": "Mia",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 56,
@@ -554,10 +522,8 @@
           "id": "31010",
           "name": "Courtland Sutton",
           "position": "WR",
-          "eligiblePositions": [
-            "WR"
-          ],
           "team": "Den",
+          "nflTeam": "Den",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 53,
@@ -567,10 +533,8 @@
           "id": "31833",
           "name": "Kyler Murray",
           "position": "QB",
-          "eligiblePositions": [
-            "QB"
-          ],
           "team": "Min",
+          "nflTeam": "Min",
           "acquisitionState": "free_agent",
           "waiverDate": null,
           "percentOwned": 53,
@@ -580,10 +544,8 @@
           "id": "42642",
           "name": "Makai Lemon",
           "position": "WR",
-          "eligiblePositions": [
-            "WR"
-          ],
           "team": "Phi",
+          "nflTeam": "Phi",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 53,
@@ -593,10 +555,8 @@
           "id": "41097",
           "name": "Devaughn Vele",
           "position": "WR",
-          "eligiblePositions": [
-            "WR"
-          ],
           "team": "NO",
+          "nflTeam": "NO",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 51,
@@ -606,10 +566,8 @@
           "id": "33998",
           "name": "Wan'Dale Robinson",
           "position": "WR",
-          "eligiblePositions": [
-            "WR"
-          ],
           "team": "Ten",
+          "nflTeam": "Ten",
           "acquisitionState": "free_agent",
           "waiverDate": null,
           "percentOwned": 51,
@@ -619,10 +577,8 @@
           "id": "40915",
           "name": "Adonai Mitchell",
           "position": "WR",
-          "eligiblePositions": [
-            "WR"
-          ],
           "team": "NYJ",
+          "nflTeam": "NYJ",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 50,
@@ -632,10 +588,8 @@
           "id": "32231",
           "name": "Jakobi Meyers",
           "position": "WR",
-          "eligiblePositions": [
-            "WR"
-          ],
           "team": "Jax",
+          "nflTeam": "Jax",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 45,
@@ -645,10 +599,8 @@
           "id": "30973",
           "name": "Sam Darnold",
           "position": "QB",
-          "eligiblePositions": [
-            "QB"
-          ],
           "team": "Sea",
+          "nflTeam": "Sea",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 38,
@@ -658,10 +610,8 @@
           "id": "42693",
           "name": "Antonio Williams",
           "position": "WR",
-          "eligiblePositions": [
-            "WR"
-          ],
           "team": "Was",
+          "nflTeam": "Was",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 31,
@@ -675,7 +625,7 @@
           "teamId": "2",
           "teamName": "Brock Hard & Tee Baggin",
           "points": 148.58,
-          "projectedPoints": 155.51,
+          "projectedPoints": 155.57,
           "liveProjectedPoints": null,
           "winProbability": 0.99
         },
@@ -800,7 +750,7 @@
         "pointsFor": 1200.34,
         "pointsAgainst": 1125.9,
         "seasonPhase": "regular_season",
-        "asOfIso": "2026-11-09T17:15:24.065Z"
+        "asOfIso": "2026-11-09T17:30:21.368Z"
       },
       "upcomingMatchups": [
         {
@@ -822,7 +772,7 @@
           "opponentProjected": 141.46
         }
       ],
-      "analysisAsOfIso": "2026-11-09T17:15:24.065Z"
+      "analysisAsOfIso": "2026-11-09T17:30:21.368Z"
     }
   }
 }
