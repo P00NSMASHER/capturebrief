@@ -11,6 +11,7 @@
   "scoring": "ppr",
   "projectionSource": "FantasyBot position projected rankings / Week 10 / PPR, cross-checked against Yahoo 2026 Brock roster",
   "sourceNotes": [
+    "NFL official schedule confirms Denver Week 10 bye: Jonah Coleman cannot score fantasy points that week and must be replaced from the starting RB slot.",
     "FantasyBot projected points may differ from this Yahoo league's bonus scoring; they are NOT official Yahoo projections.",
     "Yahoo league availability is only verified at the linked Yahoo capture time.",
     "Upcoming opponent team projections come from Yahoo, not FantasyBot player estimates.",
@@ -102,8 +103,8 @@
       "position": "RB",
       "team": "Den",
       "slot": "RB",
-      "projection": null,
-      "projectedSource": null,
+      "projection": 0,
+      "projectedSource": "NFL official 2026 Week 10 Denver bye (not a player model projection)",
       "rank": null,
       "ppg": 12.6,
       "trend": {
@@ -127,7 +128,8 @@
       ],
       "modelInjury": null,
       "modelOpponent": null,
-      "matchupGrade": null
+      "matchupGrade": null,
+      "byeWeek": 10
     },
     {
       "id": "33393",
@@ -890,9 +892,9 @@
     }
   ],
   "coverage": {
-    "roster": 16,
+    "roster": 17,
     "rosterTotal": 18,
-    "starters": 9,
+    "starters": 10,
     "startersTotal": 10,
     "available": 16,
     "availableTotal": 25
@@ -906,5 +908,62 @@
       "label": "Flaim Fantasy / Yahoo Brock-only snapshot",
       "date": "2026-11-09T23:27:56.499Z"
     }
-  ]
+  ],
+  "scheduleSource": {
+    "name": "NFL.com official 2026 bye-week announcement",
+    "url": "https://www.nfl.com/news/2026-nfl-schedule-release-every-team-bye-week",
+    "checkedAtIso": "2026-11-09T23:48:33.793Z"
+  },
+  "teamByeWeeks": {
+    "5": [
+      "CAR",
+      "KC"
+    ],
+    "6": [
+      "CIN",
+      "DET",
+      "MIA",
+      "MIN"
+    ],
+    "7": [
+      "BUF",
+      "JAX",
+      "LAC",
+      "WAS"
+    ],
+    "8": [
+      "HOU",
+      "NO",
+      "NYG",
+      "SF"
+    ],
+    "9": [
+      "PIT",
+      "TEN"
+    ],
+    "10": [
+      "CHI",
+      "DEN",
+      "PHI",
+      "TB"
+    ],
+    "11": [
+      "ATL",
+      "CLE",
+      "GB",
+      "LAR",
+      "NE",
+      "SEA"
+    ],
+    "13": [
+      "BAL",
+      "IND",
+      "LV",
+      "NYJ"
+    ],
+    "14": [
+      "ARI",
+      "DAL"
+    ]
+  }
 }
