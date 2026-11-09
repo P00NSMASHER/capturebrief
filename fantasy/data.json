@@ -791,7 +791,38 @@
         "limited": true,
         "includedRows": 16,
         "window": "Recent owner team activity from Flaim"
-      }
+      },
+      "standings": {
+        "rank": 1,
+        "leagueSize": 8,
+        "wins": 6,
+        "losses": 2,
+        "pointsFor": 1200.34,
+        "pointsAgainst": 1125.9,
+        "seasonPhase": "regular_season",
+        "asOfIso": "2026-11-09T17:15:24.065Z"
+      },
+      "upcomingMatchups": [
+        {
+          "week": 10,
+          "opponent": "Josh ❤️creampies",
+          "myProjected": 147.06,
+          "opponentProjected": 126.92
+        },
+        {
+          "week": 11,
+          "opponent": "BEEFS GAY",
+          "myProjected": 134.96,
+          "opponentProjected": 110.2
+        },
+        {
+          "week": 12,
+          "opponent": "Jersey junkyard",
+          "myProjected": 149.36,
+          "opponentProjected": 141.46
+        }
+      ],
+      "analysisAsOfIso": "2026-11-09T17:15:24.065Z"
     }
   }
 }

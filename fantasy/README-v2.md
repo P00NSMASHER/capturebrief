@@ -41,3 +41,11 @@ The public site does not itself authenticate with Yahoo. On open, every five min
 Expect up to an hour between scheduled captures plus GitHub Pages build/caching delay; this is not continuous live scoring. The UI displays capture age. Missing future player projections stay null and projected lineup and waiver optimizers remain disabled.
 
 Private JSON import remains an optional fallback. Never store passwords, Yahoo OAuth tokens, cookies, or private Flaim source envelopes in the repository.
+
+## November 9 verified analytics repair
+
+The Brock Hard-only interface now derives Yahoo roster status alerts from the captured player flags instead of treating an absent manual alerts array as a healthy roster. When future player forecasts are unavailable, the lineup tab shows an exact highest-scoring-combination comparison using **already scored week-to-date** points, explicitly labelled retrospective and never as start/sit advice. Waiver scouting ranks captured league-available players by *Yahoo-wide* roster rate only; it does not imply projected add/drop gains.
+
+The Analysis tab shows saved Yahoo league rank, record, points for/against, and, when available, strictly Brock-only upcoming matchups with provider **team-level pregame forecasts**. A separate `analysisAsOfIso` preserves the observation time independently from the original core roster capture. The trade section reports verifiable Brock roster depth without pretending to value other teams or future performance. Full-season playoff odds, player-level optimization, and fair-value trades remain gated until their missing supporting evidence exists. Published captures older than six hours retain the original archive-only safety fallback, with explicit age warnings and a private import option; stale roster advice is not presented as current.
+
+All source enrichment must fail closed on wrong identity/week, missing counts or player IDs, non-finite stats, and privacy fields. Existing automatic publication remains a separate read-only ChatGPT task; no extra OAuth backend, paid API, GitHub Actions publisher, roster transaction, or private-team navigation was introduced by this change.

@@ -12,8 +12,9 @@ try{
  latest.teams.brock.record='6-2';
  localStorage.setItem('fantasy-hq-private-v3',JSON.stringify(old));
  const realFetch=window.fetch.bind(window);
+ let published=latest;
  window.fetch=(u,opts)=>String(u).includes('/fantasy/data.json?')?
-  Promise.resolve(new Response(JSON.stringify(latest),{status:200,headers:{'Content-Type':'application/json'}})):
+  Promise.resolve(new Response(JSON.stringify(published),{status:200,headers:{'Content-Type':'application/json'}})):
   realFetch(u,opts);
  await import('/capturebrief/fantasy/assets/app-v2.mjs?v=3');
  for(let i=0;i<120;i++){
@@ -25,6 +26,26 @@ try{
  if(localStorage.getItem('fantasy-hq-private-v3'))throw Error('Older private capture still blocks future automatic updates');
  if(document.querySelectorAll('[role="tablist"]').length!==1)throw Error('Multiple navigation bars');
  if(text.includes('Quick Snap Jamison')||text.includes('Highlight Reel Jamison'))throw Error('Other owned teams leaked');
+ const enrichment=structuredClone(latest);
+ enrichment.teams.brock.analysisAsOfIso=new Date().toISOString();
+ enrichment.teams.brock.nextMove='VERIFIED SAME-CAPTURE ANALYTICS UPDATED';
+ published=enrichment;
+ document.querySelector('[data-action="refresh"]')?.click();
+ for(let i=0;i<120;i++){
+  if(document.getElementById('root')?.textContent.includes('VERIFIED SAME-CAPTURE ANALYTICS UPDATED'))break;
+  await new Promise(r=>setTimeout(r,35));
+ }
+ if(!document.getElementById('root')?.textContent.includes('VERIFIED SAME-CAPTURE ANALYTICS UPDATED'))
+  throw Error('Same roster capture with newer verified analytics was not accepted');
+ const rollback=structuredClone(enrichment);
+ rollback.syncedAtIso=new Date(Date.now()-60*60*1000).toISOString();
+ rollback.teams.brock.analysisAsOfIso=new Date(Date.now()+60*60*1000).toISOString();
+ rollback.teams.brock.nextMove='OLD ROSTER ROLLBACK SHOULD BE REJECTED';
+ published=rollback;
+ document.querySelector('[data-action="refresh"]')?.click();
+ await new Promise(r=>setTimeout(r,150));
+ if(document.getElementById('root')?.textContent.includes('OLD ROSTER ROLLBACK SHOULD BE REJECTED'))
+  throw Error('Older roster capture illegally replaced a newer one');
  const v=document.createElement('div');v.textContent='AUTO_REFRESH_PASS';document.body.appendChild(v);
 }catch(e){
  const v=document.createElement('div');v.textContent='AUTO_REFRESH_FAIL: '+e.message;document.body.appendChild(v);

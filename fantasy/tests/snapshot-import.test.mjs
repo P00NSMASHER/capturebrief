@@ -81,7 +81,9 @@ test('automatic refresh checks while open and after iPhone return without exposi
  assert.match(code,/addEventListener\('visibilitychange',check\)/);
  assert.match(code,/addEventListener\('focus',check\)/);
  assert.match(code,/acceptNewer\(await getPublic\(\)\)/);
- assert.match(code,/captureMs\(latest\.syncedAtIso\)<=captureMs\(current\.syncedAtIso\)/);
+ assert.match(code,/if\(!isVerifiedAdvance\(latest,current\)\)return false/);
+ assert.match(code,/if\(fresh<old\)return false/);
+ assert.match(code,/captureMs\(latest\?\.teams\?\.brock\?\.analysisAsOfIso\)/);
  assert.match(code,/localStorage\.removeItem\(PRIVATE_KEY\)/);
  assert.doesNotMatch(code,/Yahoo OAuth token|client_secret=/);
 });
