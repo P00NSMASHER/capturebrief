@@ -9,7 +9,7 @@ const $esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'
 const txt=(v,empty='—')=>v===null||v===undefined||v===''?empty:String(v);
 const num=(v,dec=1)=>typeof v==='number'&&Number.isFinite(v)?v.toFixed(dec):'—';
 const cap=s=>String(s||'').replace(/(^|[\s_-])\w/g,c=>c.toUpperCase());
-const selected=()=>document.body.dataset.team||null;
+const selected=()=> 'brock';
 const freshness=()=>getFreshness(current?.syncedAtIso);
 const icon=(name)=>({bolt:'⚡',lineup:'▥',waiver:'↗',chart:'◉',home:'⌂',refresh:'↻'}[name]||'•');
 const badge=(value,tone='neutral')=>'<span class="badge '+tone+'">'+$esc(value)+'</span>';
@@ -17,12 +17,13 @@ const section=(title,kicker,inner,more='')=>'<section class="panel"><div class="
 const empty=(title,detail)=>'<div class="empty"><div class="emptymark">◇</div><strong>'+$esc(title)+'</strong><p>'+$esc(detail)+'</p></div>';
 function ageText(f){if(f.ageHours===null)return 'Timestamp unavailable';return f.ageHours<1?'Updated less than an hour ago':f.ageHours<24?'Updated '+num(f.ageHours,1)+'h ago':'Updated '+Math.floor(f.ageHours/24)+' days ago'}
 function safeLeagueLink(team){return isSafeUrl(team.leagueUrl)?'<a class="minorbtn" href="'+$esc(team.leagueUrl)+'" target="_blank" rel="noopener noreferrer">Open Yahoo <span aria-hidden="true">↗</span></a>':''}
-function nav(){return '<nav class="bottomnav" aria-label="Choose fantasy team">'+
-  '<a href="'+BASE+'" class="'+(!selected()?'active':'')+'"><span class="navglyph">⌂</span><span>HOME</span></a>'+
-  TEAM_IDS.map(id=>{const t=current?.teams[id];return '<a href="'+teamPath(id)+'" class="'+(selected()===id?'active':'')+'"><span class="navglyph">'+(id==='brock'?'B':id==='quick'?'Q':'H')+'</span><span>'+ $esc(t?.short?.split(' ')[0]||id.toUpperCase())+'</span></a>'}).join('')+
-  '</nav>'}
+function nav(){
+ const choices=[['overview','Overview','⌂'],['lineup','Lineup','▥'],['waivers','Waivers','↗'],['lab','Analysis','◉']];
+ return '<nav class="bottomnav" aria-label="Brock Hard sections">'+choices.map(([id,label,glyph])=>
+ '<button type="button" data-tab="'+id+'" class="'+(activeTab===id?'active':'')+'"><span class="navglyph">'+glyph+'</span><span>'+label+'</span></button>').join('')+'</nav>';
+}
 function masthead(team){const f=freshness();
-  const currentTeam=team?'<div class="context">'+$esc(team.name)+'</div>':'<div class="context">THREE LEAGUES · ONE COMMAND CENTER</div>';
+  const currentTeam='<div class="context">BROCK HARD & TEE BAGGIN · YAHOO FOOTBALL</div>';
   return '<header class="masthead"><div class="masttop"><a href="'+BASE+'" class="brand"><span class="brandmark">F<span>.</span></span><span>FANTASY <b>HQ</b><small>COMMAND CENTER</small></span></a>'+
     '<button class="refreshbtn" data-action="refresh" '+(loading?'disabled':'')+' aria-label="Recheck published snapshot">'+(loading?'Checking…':'↻ Check snapshot')+'</button></div>'+
     currentTeam+'<div class="statusrow"><span class="statusdot '+f.state+'"></span>'+
@@ -51,23 +52,6 @@ function matchupCard(team){const side=scoreFor(team);
     '<div class="against"><div class="matchlabel">OPPONENT</div><div class="matchname">'+$esc(opp.teamName||opp.name||'Opponent')+'</div><div class="matchscore">'+num(opp.points)+'</div><div class="matchproj">Pregame projection '+num(opp.liveProjectedPoints??opp.projectedPoints)+'</div></div></div>'+
     (typeof mine.winProbability==='number'?'<div class="subnote">Yahoo win probability at capture: '+num(mine.winProbability*100,0)+'%.</div>':'')+
     '<div class="subnote">Yahoo pregame projections may be lower than points already scored. Data does not update continuously.</div>');}
-function teamCard(id,t){const f=freshness(),warn=f.state==='stale'||f.state==='unknown';
-  return '<a class="teamcard '+$esc(t.accent)+'" href="'+teamPath(id)+'"><div class="teamrow"><span class="teamlogo">'+(id==='brock'?'BH':id==='quick'?'QS':'HR')+'</span>'+
-    '<div><div class="teamtitle">'+$esc(t.name)+'</div><div class="teamid">'+$esc(t.provider.toUpperCase())+' · '+$esc(txt(t.record))+' · '+$esc(txt(t.rank))+'</div></div><span class="chevron">↗</span></div>'+
-    '<div class="teamdivider"></div><div class="teamlabel">'+(warn?'ARCHIVED SOURCE NOTE':'FLAIM FANTASY SNAPSHOT')+'</div>'+
-    '<div class="teamdecision">'+$esc(txt(t.nextMove,'No recommendation saved'))+'</div>'+
-    '<div class="teamfoot"><span>Waiver '+$esc(t.waiver)+'</span><span>View team →</span></div></a>'}
-function homeView(){const ts=Object.entries(current.teams);
-  return '<div class="container">'+masthead()+'<div class="headline"><div class="label">2026 FANTASY SEASON</div><h1>Your teams.<br><em>One clear view.</em></h1>'+
-    '<p>Compare all three leagues, inspect rosters and waivers, and use verified projections when available.</p></div>'+
-    riskRibbon()+messageBox()+'<div class="kickerrow"><span>YOUR LEAGUES</span>'+badge(ts.length+' CONNECTED RECORDS')+'</div><div class="teamgrid">'+ts.map(([id,t])=>teamCard(id,t)).join('')+'</div>'+
-    section('Data controls','SOURCE & PRIVACY',controls())+
-    section('Available analysis','DECISION ENGINE',
-      '<div class="capgrid"><div><b>01 / LINEUP</b><p>Exact legal slot assignment once league-specific projections are complete.</p></div>'+
-      '<div><b>02 / WAIVERS</b><p>Compare add/drop scenarios only with verified availability and projections.</p></div>'+
-      '<div><b>03 / MATCHUPS</b><p>Model win chance only when projected points and uncertainty are supplied.</p></div>'+
-      '<div><b>04 / PLAYOFFS</b><p>Requires full remaining schedule, standings and playoff configuration.</p></div></div>')+
-    '<div class="footnote">Read-only interface. No lineup moves, claims or trades are sent to fantasy providers.</div></div>'+nav();}
 function controls(){return '<p class="controlcopy">Recheck the published JSON or import an updated private v3 snapshot stored only in this browser. Rechecking does not sign into Yahoo or produce new league data.</p>'+
   '<div class="controlrow"><button class="primarybutton" data-action="refresh">↻ Recheck published data</button><button class="minorbtn button" data-action="import">Import private JSON</button>'+
   (source==='private'?'<button class="minorbtn button" data-action="clear">Remove private import</button>':'')+'</div>'+
@@ -155,18 +139,29 @@ function teamView(team){const t=activeTab==='lineup'?lineupView(team):activeTab=
     '<div class="teamhero '+$esc(team.accent)+'"><div><span class="label">YOUR TEAM / '+$esc(team.provider.toUpperCase())+'</span><h1>'+$esc(team.name)+'</h1>'+
     '<div class="herosub">Season '+current.season+' · Week '+txt(current.week)+' · '+$esc(txt(team.record))+'</div></div>'+
     '<span class="crest">'+(team.id==='brock'?'BH':team.id==='quick'?'QS':'HR')+'</span></div>'+
-    riskRibbon()+'<div class="heroactions">'+safeLeagueLink(team)+'<a class="minorbtn" href="'+BASE+'">All teams</a></div>'+
+    riskRibbon()+'<div class="heroactions">'+safeLeagueLink(team)+'</div>'+
     tabbar()+'<div id="tabPanel" role="tabpanel">'+t+'</div>'+section('Data controls','PRESERVE YOUR SNAPSHOT',controls())+
     '<div class="footnote">Fantasy HQ operates in read-only mode. No transactions or lineup submissions occur through this application.</div></div>'+nav();}
-function render(){if(!root)return;
- if(!current){root.innerHTML='<div class="loader">Loading Fantasy HQ…</div>';return;}
- const key=selected(),team=current.teams[key];
- document.title=team?team.short+' · Fantasy HQ':'Fantasy HQ · Command Center';
- root.innerHTML=key?(team?teamView(team):'<div class="loader">Team not found. <a href="'+BASE+'">Return home</a></div>'):homeView();}
+function render(){
+ if(!root)return;
+ if(!current){root.innerHTML='<div class="loader">Loading Brock Hard…</div>';return;}
+ const team=current.teams.brock;
+ document.title=team?'Brock Hard · Fantasy HQ':'Brock Hard · Data unavailable';
+ root.innerHTML=team?teamView(team):'<div class="loader">Brock Hard snapshot unavailable. Import a verified private snapshot.</div>';
+}
+function onlyBrockRaw(raw){
+ const normalized=normalizeSnapshot(raw);
+ if(!normalized.teams.brock||!raw?.teams?.brock)throw new Error('Brock Hard not present in the snapshot');
+ const clean={};
+ for(const key of ['schemaVersion','provider','season','week','syncedAtIso','syncedAt','source','captureType'])
+  if(Object.hasOwn(raw,key))clean[key]=raw[key];
+ clean.teams={brock:raw.teams.brock};
+ return clean;
+}
 async function getPublic() {
  const r=await fetch(BASE+'data.json?cachebust='+Date.now(),{cache:'no-store',headers:{Accept:'application/json'}});
  if(!r.ok)throw new Error('Published snapshot request returned HTTP '+r.status);
- const raw=await r.json(),normalized=normalizeSnapshot(raw);
+ const raw=onlyBrockRaw(await r.json()),normalized=normalizeSnapshot(raw);
  try{localStorage.setItem(CACHE_KEY,JSON.stringify(raw))}catch{}
  return normalized;
 }
@@ -182,8 +177,9 @@ async function handleImport(file){if(!file)return;
  try{
   const raw=JSON.parse(await file.text());
   if(raw.schemaVersion!==3)throw new Error('Private import requires schemaVersion 3');
-  const normalized=normalizeSnapshot(raw);
-  try{localStorage.setItem(PRIVATE_KEY,JSON.stringify(raw))}catch{throw new Error('Browser storage is unavailable')}
+  const brockOnly=onlyBrockRaw(raw);
+  const normalized=normalizeSnapshot(brockOnly);
+  try{localStorage.setItem(PRIVATE_KEY,JSON.stringify(brockOnly))}catch{throw new Error('Browser storage is unavailable')}
   current=normalized;source='private';message='Private JSON imported locally. No file was uploaded.';render();
  }catch(e){message='Import rejected: '+e.message;render()}
 }
@@ -195,7 +191,7 @@ document.addEventListener('click',event=>{
  if(control.dataset.action==='import')document.getElementById('importFile')?.click();
  if(control.dataset.action==='clear'){
   localStorage.removeItem(PRIVATE_KEY);source='published';message='Private import cleared from this browser.';
-  try{const c=localStorage.getItem(CACHE_KEY);current=c?normalizeSnapshot(JSON.parse(c)):null}catch{current=null}
+  try{const c=localStorage.getItem(CACHE_KEY);if(c){const safe=onlyBrockRaw(JSON.parse(c));current=normalizeSnapshot(safe);localStorage.setItem(CACHE_KEY,JSON.stringify(safe))}else current=null}catch{current=null}
   if(current)render();else refresh();
  }
 });
@@ -207,11 +203,11 @@ document.addEventListener('change',event=>{
  if(['overview','lineup','waivers','lab'].includes(hash))activeTab=hash;
  try{
    const stored=localStorage.getItem(PRIVATE_KEY);
-   if(stored){current=normalizeSnapshot(JSON.parse(stored));source='private';render();return;}
+   if(stored){const safe=onlyBrockRaw(JSON.parse(stored));current=normalizeSnapshot(safe);localStorage.setItem(PRIVATE_KEY,JSON.stringify(safe));source='private';render();return;}
  }catch{try{localStorage.removeItem(PRIVATE_KEY)}catch{}}
  try{current=await getPublic();}
  catch(e){
-  try{const cached=localStorage.getItem(CACHE_KEY);if(cached){current=normalizeSnapshot(JSON.parse(cached));message='Network error. Showing the last successfully cached public snapshot.'}}
+  try{const cached=localStorage.getItem(CACHE_KEY);if(cached){const safe=onlyBrockRaw(JSON.parse(cached));current=normalizeSnapshot(safe);localStorage.setItem(CACHE_KEY,JSON.stringify(safe));message='Network error. Showing the last successfully cached public snapshot.'}}
   catch{}
   if(!current){root.innerHTML='<div class="loader"><strong>Fantasy HQ could not load.</strong><p>'+$esc(e.message)+'</p><button class="primarybutton" data-action="refresh">Retry</button></div>';return;}
  }

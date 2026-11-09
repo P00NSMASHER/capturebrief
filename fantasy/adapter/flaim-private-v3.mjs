@@ -1,7 +1,7 @@
 /* Private schema-v3 bridge for manually captured, authorized Flaim/Yahoo data.
    This module performs no network requests, OAuth, disk writes, or transactions.
    Never commit real response packets or output JSON to this public repository. */
-export const TEAM_IDS = Object.freeze(['brock', 'quick', 'highlight']);
+export const TEAM_IDS = Object.freeze(['brock']);
 const RESERVE = new Set(['BN','BE','BENCH','IR','IR+','NA','TAXI']);
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const numeric = value => typeof value === 'number' && Number.isFinite(value);
@@ -144,8 +144,11 @@ function mapOne(id, target, bundle) {
     transactions:[],transactionsCoverage:{limited:true}};
 }
 function priorOrNull(previous) {
-  return isObject(previous) && previous.schemaVersion === 3 &&
-    isObject(previous.teams) && validDate(previous.syncedAtIso) ? previous : null;
+  if(!isObject(previous) || previous.schemaVersion !== 3 ||
+     !isObject(previous.teams) || !isObject(previous.teams.brock) ||
+     !validDate(previous.syncedAtIso)) return null;
+  return Object.keys(previous.teams).length === 1 ? previous :
+    {...previous,teams:{brock:previous.teams.brock}};
 }
 /* All-or-nothing: a failing provider call, mismatched identity or stale clock never
    replaces the last verified snapshot. Returned snapshots are never persisted here. */

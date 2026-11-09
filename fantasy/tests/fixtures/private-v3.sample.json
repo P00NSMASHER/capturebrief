@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "source": "local-private",
+  "source": "SYNTHETIC TEST FIXTURE - NOT LIVE",
   "provider": "Yahoo",
   "season": 2026,
   "week": 9,
@@ -53,14 +53,6 @@
         }
       ],
       "availablePlayers": []
-    },
-    "quick": {
-      "name": "Fictional Quick",
-      "roster": []
-    },
-    "highlight": {
-      "name": "Fictional Highlight",
-      "roster": []
     }
   }
 }

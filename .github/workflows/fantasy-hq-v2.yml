@@ -24,6 +24,7 @@ jobs:
           node --version
           node --check fantasy/assets/engine.mjs
           node --check fantasy/assets/app-v2.mjs
+          node --check fantasy/adapter/flaim-private-v3.mjs
       - name: Run fail-closed data and UI regression tests
         run: node --test fantasy/tests/*.test.mjs
       - name: Render home and all deep links with headless Chrome
@@ -39,7 +40,7 @@ jobs:
           SERVER_PID=$!
           trap 'kill $SERVER_PID || true' EXIT
           sleep 2
-          for path in "" brock/ quick/ highlight/; do
+          for path in "" brock/; do
             "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=14000 --window-size=390,844 --dump-dom "http://127.0.0.1:8797/capturebrief/fantasy/$path" > /tmp/fantasy-render.html 2>/tmp/chrome-stderr.log || {
               cat /tmp/chrome-stderr.log; exit 1;
             }
@@ -48,6 +49,9 @@ jobs:
             }
             if [ -z "$path" ]; then
               grep -Fq 'Brock Hard' /tmp/fantasy-render.html
+              if grep -Eq 'Quick Snap Jamison|Highlight Reel Jamison|THREE LEAGUES|All teams' /tmp/fantasy-render.html; then
+                echo "::error::Other personal team leaked into Brock-only dashboard"; exit 1;
+              fi
               # Source notices differ correctly for archived versus fresh captures.
               if ! grep -Eq 'ARCHIVED SOURCE NOTE|FLAIM FANTASY SNAPSHOT' /tmp/fantasy-render.html; then
                 echo "::error::Expected freshness/provenance notice absent on home page"

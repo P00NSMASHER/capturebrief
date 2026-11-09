@@ -1,6 +1,6 @@
 /* Fantasy HQ v2 analytical core — no I/O, credential access or roster mutation. */
 export const VERSION = 3;
-export const TEAM_IDS = Object.freeze(['brock', 'quick', 'highlight']);
+export const TEAM_IDS = Object.freeze(['brock']);
 const FLEX = new Set(['FLEX','W/R/T','WR/RB/TE','RB/WR/TE']);
 const SUPER = new Set(['SUPERFLEX','SUPER_FLEX','OP','Q/W/R/T']);
 const DEFENSE = new Set(['DEF','DST','D/ST']);
