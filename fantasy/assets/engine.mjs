@@ -74,6 +74,7 @@ function fromVersion3(id,t) {
     lineupSlots:t.lineupSlots&&typeof t.lineupSlots==='object'?t.lineupSlots:null,
     projectionCoverage:t.projectionCoverage||'unknown',
     standings:t.standings&&typeof t.standings==='object'?t.standings:null,
+    analysisAsOfIso:typeof t.analysisAsOfIso==='string'&&!Number.isNaN(Date.parse(t.analysisAsOfIso))?t.analysisAsOfIso:null,
     upcomingMatchups:Array.isArray(t.upcomingMatchups)?t.upcomingMatchups.filter(g=>
       g&&Number.isInteger(g.week)&&typeof g.opponent==='string'&&g.opponent.length<=120&&
       finite(g.myProjected)&&g.myProjected>=0&&finite(g.opponentProjected)&&g.opponentProjected>=0
