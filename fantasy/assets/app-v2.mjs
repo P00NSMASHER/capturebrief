@@ -203,7 +203,7 @@ function render(){
  if(!current){root.innerHTML='<div class="loader">Loading Brock Hard…</div>';return;}
  const team=current.teams.brock;
  document.title=team?'Brock Hard · Fantasy HQ':'Brock Hard · Data unavailable';
- root.innerHTML=team?teamView(team):'<div class="loader">Brock Hard snapshot unavailable. Import a verified private snapshot.</div>';
+ root.innerHTML=team?(source==='published'&&!freshness().actionable?archivedView():teamView(team)):'<div class="loader">Brock Hard snapshot unavailable. Import a verified private snapshot.</div>';
 }
 function onlyBrockRaw(raw){
  const normalized=normalizeSnapshot(raw);
