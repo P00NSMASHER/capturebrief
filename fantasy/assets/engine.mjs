@@ -200,4 +200,76 @@ export function simulatePlayoffs({teams,schedule,playoffSpots,iterations=3000,se
   }
   return Object.fromEntries([...counts].map(([id,wins])=>[id,round(wins*100/iterations,1)]));
 }
+
+/* Snapshot-only interpretations. These never create future predictions, roster changes,
+   ownership claims, or trade values. Null points make a comparison unavailable. */
+const RESERVE_SLOTS = new Set(['IR','IR+','NA','TAXI']);
+const BENCH_SLOTS = new Set(['BN','BE','BENCH']);
+const statusWords = Object.freeze({
+  Q:'Questionable', QUESTIONABLE:'Questionable', D:'Doubtful', DOUBTFUL:'Doubtful',
+  O:'Out', OUT:'Out', IR:'Injured reserve', PUP:'Physically unable to perform',
+  NA:'Not active', SUSPENDED:'Suspended', SUSP:'Suspended', GTD:'Game-time decision'
+});
+export function rosterStatusAlerts(roster) {
+  const seen=new Set(), out=[];
+  for (const p of Array.isArray(roster)?roster:[]) {
+    const flag=String(p?.injury||'').trim().toUpperCase();
+    if (!flag || ['ACTIVE','A','HEALTHY'].includes(flag) || !p?.name) continue;
+    const id=String(p.id||p.name);
+    if(seen.has(id))continue;
+    seen.add(id);
+    const level=['O','OUT','IR','PUP','NA','SUSPENDED','SUSP','D','DOUBTFUL'].includes(flag)?'urgent':'watch';
+    out.push({id,name:p.name,status:flag,slot:normalizePosition(p.slot),
+      level,title:p.name+' · '+(statusWords[flag]||'Status '+flag),
+      text:'Yahoo '+flag+' flag in '+(p.slot||'unspecified')+' slot at capture; confirm status before roster decisions.'});
+  }
+  return out;
+}
+export function compareScoredLineup(roster,counts) {
+  if (!Array.isArray(roster))return {available:false,reason:'Roster is missing'};
+  const slots=expandedSlots(counts||slotsFromRoster(roster));
+  if(!slots||!slots.length)return {available:false,reason:'League starting slots are unavailable'};
+  const active=roster.filter(p=>p&&!RESERVE_SLOTS.has(normalizePosition(p.slot)));
+  const starters=active.filter(p=>!BENCH_SLOTS.has(normalizePosition(p.slot)));
+  if(starters.length!==slots.length || starters.some(p=>!canFill(p,p.slot)))
+    return {available:false,reason:'Saved starting lineup does not match verified slots'};
+  const ids=active.map(p=>String(p.id||''));
+  if(ids.some(id=>!id)||new Set(ids).size!==ids.length)
+    return {available:false,reason:'Missing or duplicate Yahoo player identities'};
+  if(active.some(p=>!finite(p.actualPoints)||p.actualPoints<0))
+    return {available:false,reason:'Complete current-week scored points are not available'};
+  // Treat points as already scored, not future projections. Ignore current injury/lock
+  // flags solely for this retrospective comparison; never suggest changing a locked slot.
+  const scored=active.map(p=>({...p,projection:p.actualPoints,locked:false,injury:null}));
+  const best=optimizeLineup(scored,counts||slotsFromRoster(roster));
+  if(!best.available)return {available:false,reason:best.reason};
+  const curr=round(starters.reduce((sum,p)=>sum+p.actualPoints,0),2);
+  const selected=new Set(best.assignments.map(a=>String(a.player.id)));
+  const starterIds=new Set(starters.map(p=>String(p.id)));
+  return {available:true,current:curr,best:best.score,gap:round(best.score-curr,2),
+    in:best.assignments.filter(a=>!starterIds.has(String(a.player.id))).map(a=>a.player.name),
+    out:starters.filter(p=>!selected.has(String(p.id))).map(p=>p.name),
+    assignment:best.assignments,
+    note:'Retrospective current-week points only; not a lineup recommendation or forecast'};
+}
+export function marketWatchlist(availablePlayers,limit=5) {
+  if(!Array.isArray(availablePlayers)||!Number.isInteger(limit)||limit<1||limit>25)return [];
+  const seen=new Set();
+  return availablePlayers.filter(p=>{
+    if(!p?.id||!p?.name||!finite(p.percentOwned)||p.percentOwned<0||p.percentOwned>100||
+      !['free_agent','waivers'].includes(p.acquisitionState))return false;
+    const id=String(p.id);if(seen.has(id))return false;seen.add(id);return true;
+  }).sort((a,b)=>b.percentOwned-a.percentOwned||String(a.name).localeCompare(String(b.name))).slice(0,limit);
+}
+export function positionDepth(roster) {
+  if(!Array.isArray(roster))return [];
+  const result=[];
+  for(const pos of ['QB','RB','WR','TE','K','DEF']){
+    const p=roster.filter(x=>normalizePosition(x?.position)===pos);
+    if(p.length)result.push({position:pos,total:p.length,active:p.filter(x=>!RESERVE_SLOTS.has(normalizePosition(x.slot))).length,
+      flagged:rosterStatusAlerts(p).length});
+  }
+  return result;
+}
+
 export function isSafeUrl(url){try{const u=new URL(url);return u.protocol==='https:'&&u.hostname==='football.fantasysports.yahoo.com'}catch{return false}}
