@@ -9,12 +9,14 @@ test('archive threshold and future timestamps never imply freshness of old data'
   assert.equal(getFreshness('not a date',at).actionable,false);
   assert.equal(getFreshness('2026-11-09T20:00:00Z',at).state,'unknown');
 });
-test('preserves exactly the three requested teams from a legacy snapshot',()=>{
+test('preserves only Brock Hard when a legacy snapshot contains other personal teams',()=>{
   const raw={syncedAtIso:'2026-09-30T14:10:03Z',week:4,teams:{
     brock:{short:'Brock',full:'Brock Hard',lineup:[{slot:'QB',name:'X'}],snapshot:{roster:[{name:'X',slot:'QB',position:'QB'}]}},
     quick:{short:'Quick'},highlight:{short:'Highlight'},taco:{short:'Excluded'}}};
   const out=normalizeSnapshot(raw);
-  assert.deepEqual(Object.keys(out.teams),['brock','quick','highlight']);
+  assert.deepEqual(Object.keys(out.teams),['brock']);
+  assert.equal(out.teams.quick,undefined);
+  assert.equal(out.teams.highlight,undefined);
   assert.equal(out.teams.brock.roster[0].projection,null);
   assert.equal(out.teams.brock.rawLegacy,true);
 });
