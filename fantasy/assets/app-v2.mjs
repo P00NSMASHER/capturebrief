@@ -22,7 +22,7 @@ function safeLeagueLink(team){return isSafeUrl(team.leagueUrl)?'<a class="minorb
 function nav(){
  const choices=[['overview','Home','home'],['lineup','Lineup','lineup'],['waivers','Players','waivers'],['lab','League','league']];
  return '<nav class="bottomnav" role="tablist" aria-label="Brock Hard sections">'+choices.map(([id,label,glyph])=>
- '<button type="button" role="tab" aria-selected="'+(activeTab===id)+'" data-tab="'+id+'" class="'+(activeTab===id?'active':'')+'">'+
+ '<button type="button" role="tab" aria-label="'+(id==='overview'?'Overview':id==='waivers'?'Waivers':label)+'" aria-selected="'+(activeTab===id)+'" data-tab="'+id+'" class="'+(activeTab===id?'active':'')+'">'+
  uiIcon(glyph)+'<span>'+label+'</span></button>').join('')+'</nav>';
 }
 function masthead(team){
@@ -263,7 +263,7 @@ function tabbar(){return '<div class="tabs" role="tablist" aria-label="Team dash
 function teamView(team){
  const view=activeTab==='lineup'?lineupView(team):activeTab==='waivers'?waiverView(team):activeTab==='lab'?labView(team):summaryView(team);
  return '<div class="container">'+masthead(team)+messageBox()+
- '<div class="teamhero '+$esc(team.accent)+'"><div class="hero-copy"><span class="eyebrow">YOUR TEAM · YAHOO FOOTBALL</span>'+
+ '<div class="teamhero '+$esc(team.accent)+'"><div class="hero-copy"><span class="eyebrow">BROCK HARD · YAHOO FOOTBALL</span>'+
  '<h1>'+$esc(team.name)+'</h1><div class="herosub"><span class="record-pill">'+$esc(txt(team.record))+'</span>'+
  '<span>Season '+current.season+' · Week '+txt(current.week)+'</span></div></div>'+
  '<div class="hero-crest">'+teamLogo('2','display')+'</div></div>'+
