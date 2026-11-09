@@ -1,0 +1,100 @@
+name: Fantasy phone PWA CI
+on:
+  push:
+    branches: [feature/fantasy-iphone-private-*, gh-pages]
+    paths: ['fantasy/phone/**', '.github/workflows/fantasy-phone-pwa.yml']
+  pull_request:
+    branches: [gh-pages]
+    paths: ['fantasy/phone/**', '.github/workflows/fantasy-phone-pwa.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check source code and public privacy boundary
+        run: |
+          set -euo pipefail
+          node --check fantasy/phone/assets/bootstrap.mjs
+          node --check fantasy/phone/assets/app-v2.mjs
+          node --check fantasy/phone/assets/engine.mjs
+          node --check fantasy/phone/sw.js
+          node --check fantasy/phone/tests/synthetic-vault.mjs
+          node - <<'NODE'
+          const fs=require('fs'),base='fantasy/phone/';
+          const v=JSON.parse(fs.readFileSync(base+'vault.json','utf8'));
+          const m=JSON.parse(fs.readFileSync(base+'manifest.webmanifest','utf8'));
+          if(v.v!==1||v.cipher!=='AES-256-GCM'||v.encoding!=='gzip'||v.iterations<200000||v.data.length<5000)throw Error('Invalid encryption');
+          if(m.display!=='standalone'||m.scope!=='./')throw Error('Invalid Home Screen manifest');
+          for(const file of ['index.html','brock/index.html','quick/index.html','highlight/index.html']){
+            if(!fs.readFileSync(base+file,'utf8').includes('bootstrap.mjs'))throw Error('Missing script: '+file);
+          }
+          for(const file of ['index.html','vault.json','assets/bootstrap.mjs','assets/app-v2.mjs','assets/engine.mjs','assets/styles-v2.css']){
+            if(/Brock Hard & Tee Baggin|Quick Snap Jamison|Highlight Reel Jamison|Jalen Hurts|access_token|refresh_token/i.test(fs.readFileSync(base+file,'utf8')))throw Error('Private data exposed: '+file);
+          }
+          if(!fs.readFileSync(base+'assets/engine.mjs','utf8').includes("['brock', 'quick', 'highlight']"))throw Error('Three-team support missing');
+          console.log('Encrypted source, PWA manifest, all teams: PASS');
+          NODE
+      - name: Generate only fictional encrypted test data in runner
+        run: node fantasy/phone/tests/synthetic-vault.mjs
+      - name: Verify iPhone-sized Chrome unlocking and routes
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$CHROME"
+          ln -s . capturebrief
+          python3 -m http.server 8878 >/tmp/fantasy-phone-http.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" || true' EXIT
+          sleep 2
+          BASE="http://127.0.0.1:8878/capturebrief/fantasy/phone/"
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --virtual-time-budget=16000 --window-size=390,844 --dump-dom "$BASE" >/tmp/locked.html 2>/tmp/chrome.err
+          grep -Fq 'Unlock your' /tmp/locked.html
+          ! grep -Fq 'Fictional Runner' /tmp/locked.html
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --virtual-time-budget=16000 --window-size=390,844 --dump-dom "$BASE#unlock=BBBBBBBBBBBBBBBBBBBBBB" >/tmp/wrong.html 2>/tmp/chrome.err
+          grep -Fq 'Could not unlock' /tmp/wrong.html
+          ! grep -Fq 'Fictional Runner' /tmp/wrong.html
+          for route in "" "brock/" "quick/" "highlight/"; do
+            "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --virtual-time-budget=16000 --window-size=390,844 --dump-dom "$BASE$route#unlock=AAAAAAAAAAAAAAAAAAAAAA" >/tmp/unlocked.html 2>/tmp/chrome.err
+            grep -Fq 'Fictional ' /tmp/unlocked.html
+            ! grep -Fq 'Could not unlock' /tmp/unlocked.html
+            if [ -z "$route" ]; then
+              grep -Fq 'Fictional brock' /tmp/unlocked.html
+              grep -Fq 'Fictional quick' /tmp/unlocked.html
+              grep -Fq 'Fictional highlight' /tmp/unlocked.html
+            else
+              grep -Fq 'Overview' /tmp/unlocked.html
+              grep -Fq 'Waivers' /tmp/unlocked.html
+            fi
+            echo "Browser PASS: $route"
+          done
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --virtual-time-budget=16000 --window-size=390,844 --screenshot=/tmp/fantasy-phone-mobile.png "$BASE#unlock=AAAAAAAAAAAAAAAAAAAAAA" >/dev/null 2>/tmp/chrome.err
+          test -s /tmp/fantasy-phone-mobile.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fantasy-phone-fictional-preview
+          path: /tmp/fantasy-phone-mobile.png
+          retention-days: 7
+  verify-published:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/gh-pages'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Verify real HTTPS Pages deployment
+        run: |
+          set -euo pipefail
+          url="https://p00nsmasher.github.io/capturebrief/fantasy/phone/"
+          ok=0
+          for i in $(seq 1 35); do
+            if curl --fail --location --silent --max-time 15 "$url" >/tmp/site.html; then
+              if grep -Fq 'bootstrap.mjs' /tmp/site.html && ! grep -Fq 'Brock Hard & Tee Baggin' /tmp/site.html; then ok=1; break; fi
+            fi
+            sleep 5
+          done
+          if [ "$ok" -ne 1 ]; then echo "::error::Phone PWA not verified on public HTTPS Pages"; exit 1; fi
+          curl --fail --location --silent --max-time 15 "https://p00nsmasher.github.io/capturebrief/fantasy/phone/vault.json" >/tmp/live-vault.json
+          node -e "const v=require('/tmp/live-vault.json');if(v.cipher!=='AES-256-GCM'||v.data.length<5000)process.exit(1)"
+          echo "Live encrypted iPhone PWA endpoint verified"
