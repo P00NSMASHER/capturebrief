@@ -1,11 +1,12 @@
 import {TEAM_IDS,normalizeSnapshot,getFreshness,rosterBuckets,slotsFromRoster,optimizeLineup,rankWaiverTargets,estimateWinChance,isSafeUrl,round,teamPath,rosterStatusAlerts,compareScoredLineup,marketWatchlist,positionDepth} from './engine.mjs';
 import {preparePrivateImport} from './snapshot-import.mjs';
+import {LEAGUE_TEAMS,resolveTeam,teamLogo,uiIcon,leagueGallery,upcomingCards,teamStrip} from './league-branding.mjs';
 
 const BASE='/capturebrief/fantasy/';
 const root=document.getElementById('root');
 const PRIVATE_KEY='fantasy-hq-private-v3';
 const CACHE_KEY='fantasy-hq-public-last-good-v2';
-let current=null,source='published',loading=false,activeTab='overview',message='';
+let current=null,source='published',loading=false,activeTab='overview',message='',waiverFilter='ALL';
 const $esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const txt=(v,empty='—')=>v===null||v===undefined||v===''?empty:String(v);
 const num=(v,dec=1)=>typeof v==='number'&&Number.isFinite(v)?v.toFixed(dec):'—';
@@ -19,22 +20,30 @@ const empty=(title,detail)=>'<div class="empty"><div class="emptymark">◇</div>
 function ageText(f){if(f.ageHours===null)return 'Timestamp unavailable';return f.ageHours<1?'Captured less than an hour ago':f.ageHours<24?'Captured '+num(f.ageHours,1)+'h ago':'Captured '+Math.floor(f.ageHours/24)+' days ago'}
 function safeLeagueLink(team){return isSafeUrl(team.leagueUrl)?'<a class="minorbtn" href="'+$esc(team.leagueUrl)+'" target="_blank" rel="noopener noreferrer">Open Yahoo <span aria-hidden="true">↗</span></a>':''}
 function nav(){
- const choices=[['overview','Overview','⌂'],['lineup','Lineup','▥'],['waivers','Waivers','↗'],['lab','Analysis','◉']];
+ const choices=[['overview','Home','home'],['lineup','Lineup','lineup'],['waivers','Players','waivers'],['lab','League','league']];
  return '<nav class="bottomnav" role="tablist" aria-label="Brock Hard sections">'+choices.map(([id,label,glyph])=>
- '<button type="button" role="tab" aria-selected="'+(activeTab===id)+'" data-tab="'+id+'" class="'+(activeTab===id?'active':'')+'"><span class="navglyph">'+glyph+'</span><span>'+label+'</span></button>').join('')+'</nav>';
+ '<button type="button" role="tab" aria-selected="'+(activeTab===id)+'" data-tab="'+id+'" class="'+(activeTab===id?'active':'')+'">'+
+ uiIcon(glyph)+'<span>'+label+'</span></button>').join('')+'</nav>';
 }
-function masthead(team){const f=freshness();
-  const currentTeam='<div class="context">BROCK HARD & TEE BAGGIN · YAHOO FOOTBALL</div>';
-  return '<header class="masthead"><div class="masttop"><a href="'+BASE+'" class="brand"><span class="brandmark">F<span>.</span></span><span>FANTASY <b>HQ</b><small>COMMAND CENTER</small></span></a>'+
-    '<button type="button" class="refreshbtn" data-action="refresh" '+(loading?'disabled':'')+' aria-label="Check latest published Yahoo capture">'+(loading?'Checking…':'↻ Refresh')+'</button></div>'+
-    currentTeam+'<div class="statusrow"><span class="statusdot '+f.state+'"></span>'+
-    '<span class="statusline">'+$esc(f.label)+'</span><span class="statussep">/</span><span>'+$esc(ageText(f))+'</span>'+
-    '<span class="sourcelabel">'+(source==='private'?'PRIVATE CAPTURE · NOT LIVE':'PUBLISHED AUTO CAPTURE · NOT LIVE')+'</span></div></header>'}
-function riskRibbon(){const f=freshness();const old=f.state==='stale'||f.state==='unknown';
-  const line=old?'Recommendations, waivers, injuries and player status below reflect an archived snapshot. They are NOT verified for today.':
-    source==='private'?'Local data was imported on this device. Verify the source timestamp before making roster moves.':
-    'This page checks for newer Brock Hard captures automatically. The scheduled publisher can update hourly; this is not continuous Yahoo streaming.';
-  return '<div class="riskbar '+(old?'archived':'')+'"><span class="riskicon">'+(old?'!':'i')+'</span><div><strong>'+(old?'Outdated fantasy data':'Data source notice')+'</strong><p>'+$esc(line)+'</p></div></div>'}
+function masthead(team){
+ const f=freshness();
+ return '<header class="masthead"><div class="masttop"><a href="'+BASE+'" class="brand" aria-label="Brock Hard Fantasy HQ home">'+
+ '<span class="brandmark">'+teamLogo('2','tiny')+'</span><span class="brandname">BROCK <b>HARD</b><small>FANTASY HQ · 2026</small></span></a>'+
+ '<button type="button" class="refreshbtn" data-action="refresh" '+(loading?'disabled':'')+' aria-label="Check latest published Yahoo capture">'+
+ uiIcon('refresh')+'<span>'+(loading?'Checking':'Refresh')+'</span></button></div>'+
+ '<div class="statusrow"><span class="statusdot '+f.state+'"></span><span class="statusline">'+$esc(f.label)+'</span>'+
+ '<span class="statussep">·</span><span>'+$esc(ageText(f))+'</span>'+
+ '<span class="sourcelabel">'+(source==='private'?'PRIVATE CAPTURE · NOT LIVE':'PUBLISHED AUTO CAPTURE · NOT LIVE')+'</span></div></header>';
+}
+function riskRibbon(){
+ const f=freshness(),old=f.state==='stale'||f.state==='unknown';
+ const title=old?'Outdated fantasy data':'Data source notice';
+ const line=old?'Archived Yahoo snapshot. Player status, waivers and decisions may have changed.':
+   source==='private'?'This is a local, read-only capture; verify details with Yahoo before acting.':
+   'Scores and roster details reflect the last Yahoo capture, not continuous live scoring.';
+ return '<div class="riskbar '+(old?'archived':'')+'"><span class="riskicon">'+uiIcon('info')+'</span>'+
+ '<div><strong>'+title+'</strong><p>'+line+'</p></div></div>';
+}
 function messageBox(){return message?'<div class="toast" role="status">'+$esc(message)+'</div>':''}
 function scoreFor(team){const m=team.matchup;if(!m)return null;
   if (m.my&&m.opponent)return {mine:m.my,opp:m.opponent};
@@ -45,23 +54,41 @@ function scoreFor(team){const m=team.matchup;if(!m)return null;
   if(own!==home&&own!==away)return null;
   return own===home?{mine:m.home,opp:m.away}:{mine:m.away,opp:m.home};
 }
-function matchupCard(team){const side=scoreFor(team);
-  if(!side)return section('This week','MATCHUP',empty('Scoreboard unavailable','A valid matchup for this team is not present in the saved snapshot.'));
-  const mine=side.mine,opp=side.opp;
-  return section('Matchup snapshot','WEEK '+txt(current.week,'—'),
-    '<div class="matchup"><div><div class="matchlabel">YOUR TEAM</div><div class="matchname">'+$esc(team.short)+'</div><div class="matchscore">'+num(mine.points)+'</div><div class="matchproj">Pregame projection '+num(mine.liveProjectedPoints??mine.projectedPoints)+'</div></div><span class="vs">VS</span>'+
-    '<div class="against"><div class="matchlabel">OPPONENT</div><div class="matchname">'+$esc(opp.teamName||opp.name||'Opponent')+'</div><div class="matchscore">'+num(opp.points)+'</div><div class="matchproj">Pregame projection '+num(opp.liveProjectedPoints??opp.projectedPoints)+'</div></div></div>'+
-    (typeof mine.winProbability==='number'?'<div class="subnote">Yahoo win probability at capture: '+num(mine.winProbability*100,0)+'%.</div>':'')+
-    '<div class="subnote">Yahoo pregame projections may be lower than points already scored. Data does not update continuously.</div>');}
+function matchupCard(team){
+ const side=scoreFor(team);
+ if(!side)return section('Week '+txt(current.week)+' matchup','MATCHUP',empty('Matchup not in this capture','Check the next published Yahoo snapshot.'));
+ const mine=side.mine,opp=side.opp;
+ const opponent=resolveTeam(opp.teamId||opp.teamName);
+ const probability=typeof mine.winProbability==='number'&&Number.isFinite(mine.winProbability)&&mine.winProbability>=0&&mine.winProbability<=1?mine.winProbability:null;
+ const status=team.matchup?.status||'snapshot';
+ return '<section class="panel matchup-panel"><div class="panelhead matchup-head"><div><div class="label">WEEK '+$esc(txt(current.week))+' · MATCHUP</div>'+
+ '<h2>'+ (status==='final'?'Final matchup':status==='upcoming'?'Upcoming matchup':'Game week snapshot')+'</h2></div>'+
+ '<span class="mini-pill">'+$esc(status.replace(/_/g,' ').toUpperCase())+'</span></div>'+
+ '<div class="matchup"><div class="match-team">'+teamLogo('2','hero')+'<div class="matchlabel">YOUR TEAM</div>'+
+ '<div class="matchname">'+$esc(team.short)+'</div><div class="matchscore">'+num(mine.points)+'</div>'+
+ '<div class="matchproj">Yahoo pregame '+num(mine.projectedPoints,1)+'</div></div>'+
+ '<div class="vs"><span>VS</span><i></i></div>'+
+ '<div class="match-team against">'+teamLogo(opponent?.id,'hero')+'<div class="matchlabel">OPPONENT</div>'+
+ '<div class="matchname">'+$esc(opp.teamName||opp.name||'Opponent')+'</div>'+
+ '<div class="matchscore">'+num(opp.points)+'</div>'+
+ '<div class="matchproj">Yahoo pregame '+num(opp.projectedPoints,1)+'</div></div></div>'+
+ (probability===null?'':'<div class="probability"><div class="probability-copy"><strong>Win chance at capture</strong><b>'+num(probability*100,0)+'%</b></div>'+
+ '<div class="probability-track" role="progressbar" aria-label="Yahoo win probability at capture" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(probability*100)+'"><span style="width:'+Math.round(probability*100)+'%"></span></div>'+
+ '<p>Yahoo estimate · not a live forecast</p></div>')+'</section>';
+}
 function controls(){return '<p class="controlcopy">Import a new Brock Hard JSON capture from your connected Flaim Fantasy conversation. Your file stays in this browser; this page does not contact Yahoo.</p>'+
   '<div class="controlrow"><button type="button" class="primarybutton" data-action="import">↥ Import updated Yahoo snapshot</button>'+
   (source==='private'?'<button type="button" class="minorbtn button" data-action="clear">Remove local capture</button>':'')+'</div>'+
   '<input id="importFile" type="file" accept=".json,application/json" hidden>'+
   '<div class="subnote">The capture is read-only and manual. This button imports a file; it is not a live Yahoo sync. Failed imports preserve your existing data.</div>'}
-function stats(team){const flagCount=team.roster.filter(p=>p.injury).length;
-  const val=(a,b)=>'<div class="metric"><div class="metriclabel">'+a+'</div><div class="metricvalue">'+$esc(b)+'</div></div>';
-  return '<div class="metrics">'+val('RECORD',txt(team.record))+val('LEAGUE RANK',txt(team.rank))+
-    val('WAIVER PRIORITY',txt(team.waiver))+val('ROSTER FLAGS',String(flagCount))+'</div>'}
+function stats(team){
+ const flags=rosterStatusAlerts(team.roster).length;
+ const val=(a,b,extra)=>'<div class="metric"><div class="metriclabel">'+a+'</div><div class="metricvalue">'+$esc(b)+'</div>'+
+ (extra?'<div class="metricextra">'+extra+'</div>':'')+'</div>';
+ return '<section class="metrics" aria-label="Team standings and availability">'+val('RECORD',txt(team.record),'Season record')+
+ val('LEAGUE RANK',txt(team.rank),'League of eight')+val('WAIVER PRIORITY',txt(team.waiver),'Yahoo queue')+
+ val('ROSTER FLAGS',String(flags),'At last capture')+'</section>';
+}
 function decision(team){
  const old=!freshness().actionable;
  const flags=rosterStatusAlerts(team.roster);
@@ -84,22 +111,47 @@ function decision(team){
   (team.confidence?badge('At capture: '+team.confidence):'')+'</div>'+enrichment+'</div>');
 }
 function alertList(team){
-  const derived=rosterStatusAlerts(team.roster), manual=Array.isArray(team.alerts)?team.alerts:[];
-  const alerts=[...derived,...manual];
-  return section('Roster status alerts','YAHOO STATUS AT CAPTURE',alerts.length?
-    '<div class="list">'+alerts.map(a=>'<div class="alertrow"><span class="alertdot '+$esc(a.level||'watch')+'"></span><div><strong>'+$esc(a.title||'Roster status')+'</strong><p>'+$esc(a.text||'')+'</p></div></div>').join('')+'</div>'+
-    '<div class="subnote">'+derived.length+' Yahoo status flags at capture. Verify current health and lineup eligibility in Yahoo before moving players.</div>':
-    '<div class="subnote">No provider status flags were included in this capture. This is not proof that the live roster is healthy.</div>');}
+ const derived=rosterStatusAlerts(team.roster),manual=Array.isArray(team.alerts)?team.alerts:[];
+ const alerts=[...derived,...manual];
+ const rows=alerts.length?'<div class="alert-grid">'+alerts.map(a=>
+ '<div class="alertrow"><span class="status-chip '+(a.level==='urgent'?'urgent':'watch')+'">'+$esc(a.status||'!')+'</span>'+
+ '<div><strong>'+$esc(a.name||a.title||'Roster status')+'</strong>'+
+ '<p>'+$esc((a.status||'Status')+' · '+(a.slot||'Roster')+' at capture')+'</p></div></div>').join('')+'</div>':
+ '<div class="quiet-empty">No player-status flags reported in this capture; verify current health on Yahoo.</div>';
+ return section('Player status','YAHOO ROSTER · '+derived.length+' FLAGS',rows,
+ '<button type="button" class="text-link" data-tab="lineup">See lineup '+uiIcon('arrow')+'</button>');
+}
 function strategy(team){const s=team.strategy;if(!s)return '';
   return section('Saved analysis','EXPLANATION',
     '<p class="bodycopy">'+$esc(s.summary||'')+'</p>'+
     '<div class="strategygrid">'+(s.bullets||[]).map(b=>'<div><span>'+$esc(b.label||'')+'</span><p>'+$esc(b.text||'')+'</p></div>').join('')+'</div>');}
-function summaryView(team){return stats(team)+matchupCard(team)+decision(team)+alertList(team)+strategy(team);}
-function playerRow(p){const injury=p.injury?badge(p.injury,'bad'):'';
-  const projected=typeof p.projection==='number'&&teamProjectionSupported();
-  const scored=typeof p.actualPoints==='number'&&Number.isFinite(p.actualPoints);
-  const points=projected?num(p.projection,2)+'<small>PROJECTION</small>':scored?num(p.actualPoints,2)+'<small>REPORTED PTS</small>':'—';
-  return '<div class="playerrow"><span class="slot">'+$esc(txt(p.slot,'—'))+'</span><div class="playername"><strong>'+$esc(p.name)+'</strong><small>'+$esc([p.nflTeam,p.position].filter(Boolean).join(' · '))+'</small></div>'+injury+'<span class="proj">'+points+'</span></div>';
+function overviewQuickPanels(team){
+ const market=marketWatchlist(team.availablePlayers,3);
+ const choices=market.length?market.map(p=>
+ '<div class="preview-player"><span class="player-avatar pos-'+$esc(p.position)+'">'+$esc(p.position)+'</span>'+
+ '<div><strong>'+$esc(p.name)+'</strong><small>'+$esc(p.team||'NFL')+' · '+$esc(p.acquisitionState==='waivers'?'Waivers':'Free agent')+'</small></div>'+
+ '<span class="market-number">'+num(p.percentOwned,0)+'%<small>Yahoo</small></span></div>').join(''):
+ '<div class="quiet-empty">No verified available players at capture.</div>';
+ return '<div class="home-columns"><section class="panel compact-panel"><div class="panelhead"><div><div class="label">LOOKING AHEAD</div><h2>Coming up</h2></div>'+
+ '<button class="text-link" type="button" data-tab="lab">League '+uiIcon('arrow')+'</button></div>'+
+ upcomingCards(team,current.week)+'</section>'+
+ '<section class="panel compact-panel"><div class="panelhead"><div><div class="label">AVAILABLE AT CAPTURE</div><h2>On the radar</h2></div>'+
+ '<button class="text-link" type="button" data-tab="waivers">All players '+uiIcon('arrow')+'</button></div>'+
+ '<div class="preview-list">'+choices+'</div><p class="caption-note">Ranked by Yahoo-wide roster rate, not projected performance.</p></section></div>';
+}
+function summaryView(team){
+ return matchupCard(team)+stats(team)+overviewQuickPanels(team)+alertList(team)+
+ '<details class="small-disclosure"><summary>Capture details '+uiIcon('chevron')+'</summary>'+decision(team)+'</details>'+strategy(team);
+}
+function playerRow(p){
+ const injury=p.injury?badge(p.injury,'bad'):'';
+ const projected=typeof p.projection==='number'&&teamProjectionSupported();
+ const scored=typeof p.actualPoints==='number'&&Number.isFinite(p.actualPoints);
+ const points=projected?num(p.projection,2)+'<small>PROJ.</small>':scored?num(p.actualPoints,2)+'<small>PTS</small>':'—';
+ return '<div class="playerrow"><span class="slot">'+$esc(txt(p.slot,'—'))+'</span>'+
+ '<span class="player-avatar pos-'+$esc(p.position||'UN')+'">'+$esc(p.position||'NFL')+'</span>'+
+ '<div class="playername"><strong>'+$esc(p.name)+'</strong><small>'+$esc([p.nflTeam,p.position].filter(Boolean).join(' · '))+'</small></div>'+
+ injury+'<span class="proj">'+points+'</span></div>';
 }
 function teamProjectionSupported(){const t=current?.teams[selected()];return t?.projectionCoverage==='complete'}
 function lineupView(team){
