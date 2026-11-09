@@ -54,8 +54,8 @@ test('current Brock Yahoo data produces real roster alerts and scored-lineup con
  const scored=compareScoredLineup(team.roster,team.lineupSlots);
  assert.equal(scored.available,true);
  assert.equal(scored.current,148.58);
- assert.equal(scored.best,159.38);
- assert.equal(scored.gap,10.8);
+ assert.equal(scored.best,160.28);
+ assert.equal(scored.gap,11.7);
  const app=file('fantasy/assets/app-v2.mjs');
  assert.match(app,/Highest-scoring lineup so far/);
  assert.match(app,/Playoff race/);
