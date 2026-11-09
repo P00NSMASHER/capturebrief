@@ -67,7 +67,7 @@ function writeCoachSummary({snapshot,team,rank,leagueSize,wins,losses,pointsFor,
    'The remaining opponent list and team-level forecasts are incomplete, so there is no defensible schedule ranking yet. ';
  return [
   standing+
-   'That is the profile of a team competing from a solid position, not a license to assume the playoffs are clinched. '+
+   'That is the profile of a team competing from a solid position, not proof of a secured playoff berth. '+
    'My focus is converting a good season start into a dependable lineup when each game matters.',
   'I would manage risk before chasing a headline transaction. '+health+
    flagged.length+' Yahoo player-status flag'+(flagged.length===1?' was':'s were')+
