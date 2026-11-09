@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2">
+<title>Brock Coach Archived Read-Only Acceptance</title></head>
+<body><div id="root">Testing archived Yahoo evidence…</div>
+<script type="module">
+try{
+ const realFetch=window.fetch.bind(window);
+ const raw=await (await realFetch('/capturebrief/fantasy/data.json',{cache:'no-store'})).json();
+ if(raw.schemaVersion!==3||Object.keys(raw.teams||{}).join(',')!=='brock')
+  throw Error('Archive source must be Brock only');
+ raw.syncedAtIso=new Date(Date.now()-9*60*60*1000).toISOString();
+ localStorage.removeItem('fantasy-hq-private-v3');
+ localStorage.removeItem('fantasy-hq-public-last-good-v2');
+ window.fetch=(url,opts)=>String(url).includes('/fantasy/data.json?')?
+  Promise.resolve(new Response(JSON.stringify(raw),{status:200,headers:{'Content-Type':'application/json'}})):
+  realFetch(url,opts);
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=7');
+ const until=async(check)=>{
+  for(let i=0;i<100;i++){if(check())return true;await new Promise(r=>setTimeout(r,30))}
+  return false
+ };
+ if(!await until(()=>document.querySelector('.archived-fallback')))throw Error('Stale snapshot not safely archived');
+ if(document.querySelector('.matchup-panel'))throw Error('Stale live matchup incorrectly rendered');
+ document.querySelector('[data-tab="coach"]')?.click();
+ if(!await until(()=>document.querySelector('.coach-assessment--archived')))
+  throw Error('Historical coach recap missing from archived tab');
+ const review=document.querySelectorAll('.coach-recap-paragraph');
+ if(review.length!==3)throw Error('Historical recap not exactly three paragraphs');
+ if(!review[0].textContent.includes('At the saved Week'))throw Error('Historical framing missing');
+ if(!document.querySelector('.coach-recap-source')?.textContent.includes('NOT current'))
+  throw Error('Stale report not prominently labeled historical');
+ if(document.querySelector('.coach-next')||document.querySelector('.coach-insight')||
+    document.querySelector('.coach-hero'))
+  throw Error('Stale source incorrectly presents actionable recommendations');
+ const mark=document.createElement('strong');mark.id='coach-archive-qa';
+ mark.textContent='COACH_ARCHIVE_PASS · 3 historical paragraphs · zero actionable moves';
+ document.body.appendChild(mark);
+}catch(e){
+ const mark=document.createElement('strong');mark.id='coach-archive-qa';
+ mark.textContent='COACH_ARCHIVE_FAIL: '+e.message;document.body.appendChild(mark);
+}
+</script></body></html>
