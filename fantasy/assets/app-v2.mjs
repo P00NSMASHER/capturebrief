@@ -62,11 +62,27 @@ function stats(team){const flagCount=team.roster.filter(p=>p.injury).length;
   const val=(a,b)=>'<div class="metric"><div class="metriclabel">'+a+'</div><div class="metricvalue">'+$esc(b)+'</div></div>';
   return '<div class="metrics">'+val('RECORD',txt(team.record))+val('LEAGUE RANK',txt(team.rank))+
     val('WAIVER PRIORITY',txt(team.waiver))+val('ROSTER FLAGS',String(flagCount))+'</div>'}
-function decision(team){const old=!freshness().actionable;return section(old?'Archived source note':'Flaim data status','LEAGUE DATA',
-  '<div class="decisionbox"><div class="decisionflag">'+(old?'ARCHIVED · DO NOT ACT ON WITHOUT RECHECKING':'SNAPSHOT ASSESSMENT')+'</div>'+
-  '<h3>'+$esc(txt(team.nextMove,'No saved recommendation'))+'</h3><p>'+$esc(team.nextDetail||'')+'</p>'+
-  '<div class="decisionbottom">'+badge('Evidence: '+(old?'outdated':'snapshot'),old?'bad':'muted')+
-  (team.confidence?badge('At capture: '+team.confidence):'')+'</div></div>');}
+function decision(team){
+ const old=!freshness().actionable;
+ const flags=rosterStatusAlerts(team.roster);
+ const rosterCount=Array.isArray(team.roster)?team.roster.length:0;
+ const candidates=Array.isArray(team.availablePlayers)?team.availablePlayers.length:0;
+ const movements=Array.isArray(team.transactions)?team.transactions.length:0;
+ const note=String(team.nextMove||'');
+ const generic=/^No verified projected|^No saved recommendation|^Optimization unavailable/i.test(note);
+ const headline=generic?'Brock Hard snapshot available':txt(team.nextMove,'Brock Hard snapshot available');
+ const detail=generic?
+   'Captured '+rosterCount+' Yahoo roster players, '+candidates+' league-available players, '+movements+
+   ' recent completed movements, and '+flags.length+' roster status flags. The lineup and waiver tabs use the verified evidence available; future player projections were not supplied.':
+   team.nextDetail||'Capture details are available on the Lineup, Waivers and Analysis tabs.';
+ const enrichment=team.analysisAsOfIso?
+   '<div class="subnote">Standings and upcoming matchup outlook checked '+$esc(team.analysisAsOfIso)+'. Core roster capture: '+$esc(txt(current.syncedAtIso))+'.</div>':'';
+ return section(old?'Archived data coverage':'Flaim data coverage','LEAGUE DATA',
+  '<div class="decisionbox"><div class="decisionflag">'+(old?'ARCHIVED · RECHECK IN YAHOO':'SNAPSHOT COVERAGE')+'</div>'+
+  '<h3>'+$esc(headline)+'</h3><p>'+$esc(detail)+'</p>'+
+  '<div class="decisionbottom">'+badge('Evidence: '+(old?'archived':'provider snapshot'),old?'bad':'muted')+
+  (team.confidence?badge('At capture: '+team.confidence):'')+'</div>'+enrichment+'</div>');
+}
 function alertList(team){
   const derived=rosterStatusAlerts(team.roster), manual=Array.isArray(team.alerts)?team.alerts:[];
   const alerts=[...derived,...manual];
