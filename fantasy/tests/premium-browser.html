@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3">
-<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2">
 <title>Premium Fantasy HQ UI Acceptance</title></head>
 <body><div id="root">Checking premium league interface…</div>
 <script type="module">
@@ -10,7 +10,7 @@ try{
  if(raw.schemaVersion!==3||Object.keys(raw.teams||{}).join(',')!=='brock')throw Error('Brock-only fixture invalid');
  raw.syncedAtIso=new Date().toISOString();
  localStorage.setItem('fantasy-hq-private-v3',JSON.stringify(raw));
- await import('/capturebrief/fantasy/assets/app-v2.mjs?v=6');
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=7');
  const until=async(fn)=>{
   for(let i=0;i<100;i++){if(fn())return true;await new Promise(r=>setTimeout(r,30))}
   return false
@@ -41,6 +41,20 @@ try{
  document.querySelector('[data-tab="coach"]').click();
  if(!await until(()=>document.querySelector('.coach-hero')))throw Error('Coach hero missing');
  if(document.querySelectorAll('.coach-section').length!==5)throw Error('Five Coach insight sections missing');
+ const cards=document.querySelectorAll('.coach-insight');
+ if(cards.length<7)throw Error('Coach did not render the full checklist');
+ if(document.querySelectorAll('.coach-insight .coach-points li').length<cards.length)
+   throw Error('Coach action bullets missing');
+ if(document.querySelector('.coach-insight > p'))throw Error('Old paragraph-style insight still showing');
+ const recap=document.querySelectorAll('.coach-recap-paragraph');
+ if(recap.length!==3)throw Error('Three-paragraph Coach assessment missing');
+ if([...recap].some(x=>x.textContent.length<180))throw Error('Coach recap is incomplete');
+ if(!recap[0].textContent.includes('6')||!recap[1].textContent.includes('quarterback')||
+    !recap[2].textContent.includes('playoff'))
+   throw Error('Coach recap lacks grounded performance, recommendation or outlook coverage');
+ const lastSection=[...document.querySelectorAll('.coach-section')].at(-1);
+ if(!lastSection||recap[0].compareDocumentPosition(lastSection)&Node.DOCUMENT_POSITION_FOLLOWING)
+   throw Error('Coach recap should follow the insight lists');
  if(!document.getElementById('root').textContent.includes('Trade strategy')||
     !document.getElementById('root').textContent.includes('Waiver targets')||
     !document.getElementById('root').textContent.includes('Playoff preparation'))
