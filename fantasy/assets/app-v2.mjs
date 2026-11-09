@@ -166,7 +166,7 @@ function labView(team){
       '<div class="subnote">Normal-distribution approximation only.</div>')+
     section('Playoff race','VERIFIED STANDINGS · NO FABRICATED ODDS',
       standings+schedules+
-      '<div class="subnote">These are current league standings'+(schedule.length?' and Yahoo’s upcoming pregame team forecasts':'')+'. A playoff probability requires verified playoff rules and a complete remaining schedule with defensible win probabilities; none is invented.</div>')+
+      '<div class="subnote">These are saved league standings'+(schedule.length?' and Yahoo’s upcoming pregame team forecasts':'')+(team.analysisAsOfIso?' (outlook checked '+$esc(team.analysisAsOfIso)+')':'')+'. A playoff probability requires verified playoff rules and a complete remaining schedule with defensible win probabilities; none is invented.</div>')+
     section('Trade preparation','VERIFIED ROSTER DEPTH · NO GUESSED VALUE',tradeDepth)+
     section('Recent Brock Hard activity',team.transactionsCoverage?.limited?'HISTORY · BOUNDED':'HISTORY',
       team.transactions.length?'<div class="list">'+team.transactions.slice(0,20).map(tr=>
