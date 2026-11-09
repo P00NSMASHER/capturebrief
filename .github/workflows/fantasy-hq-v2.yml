@@ -93,6 +93,14 @@ jobs:
             exit 1
           fi
           echo 'Browser smoke passed: automatically prefer newer published capture'
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=22000 --window-size=390,844 --dump-dom "http://127.0.0.1:8797/capturebrief/fantasy/tests/premium-browser.html" > /tmp/fantasy-premium-qa.html 2>/tmp/chrome-stderr.log
+          if ! grep -Fq 'PREMIUM_BROWSER_PASS' /tmp/fantasy-premium-qa.html; then
+            echo "::error::Premium Brock Hard mobile UI acceptance failed"
+            grep -o 'PREMIUM_BROWSER_FAIL[^<]*' /tmp/fantasy-premium-qa.html || true
+            exit 1
+          fi
+          echo 'Browser smoke passed: eight club crests, mobile navigation, waiver filters, lineup and privacy'
+
           mkdir -p fantasy/screenshots
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot=fantasy/screenshots/home.png "http://127.0.0.1:8797/capturebrief/fantasy/" >/dev/null 2>/tmp/chrome-stderr.log
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot=fantasy/screenshots/brock.png "http://127.0.0.1:8797/capturebrief/fantasy/brock/" >/dev/null 2>/tmp/chrome-stderr.log
