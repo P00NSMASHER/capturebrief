@@ -73,7 +73,12 @@ function fromVersion3(id,t) {
     availablePlayers:Array.isArray(t.availablePlayers)?t.availablePlayers:[],
     lineupSlots:t.lineupSlots&&typeof t.lineupSlots==='object'?t.lineupSlots:null,
     projectionCoverage:t.projectionCoverage||'unknown',
-    standings:t.standings||null,transactionsCoverage:t.transactionsCoverage||null,
+    standings:t.standings&&typeof t.standings==='object'?t.standings:null,
+    upcomingMatchups:Array.isArray(t.upcomingMatchups)?t.upcomingMatchups.filter(g=>
+      g&&Number.isInteger(g.week)&&typeof g.opponent==='string'&&g.opponent.length<=120&&
+      finite(g.myProjected)&&g.myProjected>=0&&finite(g.opponentProjected)&&g.opponentProjected>=0
+    ).map(g=>({week:g.week,opponent:g.opponent,myProjected:g.myProjected,opponentProjected:g.opponentProjected})):[],
+    transactionsCoverage:t.transactionsCoverage||null,
     source:String(t.source||'Unspecified'),rawLegacy:false
   };
 }
