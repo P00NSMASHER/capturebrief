@@ -1,0 +1,26 @@
+{
+  "id": "/capturebrief/fantasy/phone/",
+  "name": "Fantasy Football HQ — Private",
+  "short_name": "Fantasy HQ",
+  "description": "Private read-only three-league fantasy dashboard",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#071019",
+  "theme_color": "#071019",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
