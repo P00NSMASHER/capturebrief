@@ -24,6 +24,7 @@ jobs:
           node --version
           node --check fantasy/assets/engine.mjs
           node --check fantasy/assets/app-v2.mjs
+          node --check fantasy/assets/snapshot-import.mjs
           node --check fantasy/adapter/flaim-private-v3.mjs
       - name: Run fail-closed data and UI regression tests
         run: node --test fantasy/tests/*.test.mjs
@@ -49,6 +50,10 @@ jobs:
             }
             if [ -z "$path" ]; then
               grep -Fq 'Brock Hard' /tmp/fantasy-render.html
+              grep -Fq 'Update your Yahoo data' /tmp/fantasy-render.html
+              grep -Fq 'Import updated Yahoo snapshot' /tmp/fantasy-render.html
+              if grep -Eq 'Season 2026 .* Week 4|5th of 8|1–2' /tmp/fantasy-render.html; then echo '::error::Historic Week 4 stats incorrectly displayed as current'; exit 1; fi
+              if grep -Fq 'class="tabs"' /tmp/fantasy-render.html; then echo '::error::Duplicate top tabs'; exit 1; fi
               if grep -Eq 'Quick Snap Jamison|Highlight Reel Jamison|THREE LEAGUES|All teams' /tmp/fantasy-render.html; then
                 echo "::error::Other personal team leaked into Brock-only dashboard"; exit 1;
               fi

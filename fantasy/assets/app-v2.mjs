@@ -1,4 +1,5 @@
 import {TEAM_IDS,normalizeSnapshot,getFreshness,rosterBuckets,slotsFromRoster,optimizeLineup,rankWaiverTargets,estimateWinChance,isSafeUrl,round,teamPath} from './engine.mjs';
+import {preparePrivateImport} from './snapshot-import.mjs';
 
 const BASE='/capturebrief/fantasy/';
 const root=document.getElementById('root');
@@ -15,20 +16,20 @@ const icon=(name)=>({bolt:'⚡',lineup:'▥',waiver:'↗',chart:'◉',home:'⌂'
 const badge=(value,tone='neutral')=>'<span class="badge '+tone+'">'+$esc(value)+'</span>';
 const section=(title,kicker,inner,more='')=>'<section class="panel"><div class="panelhead"><div><div class="label">'+$esc(kicker)+'</div><h2>'+$esc(title)+'</h2></div>'+more+'</div>'+inner+'</section>';
 const empty=(title,detail)=>'<div class="empty"><div class="emptymark">◇</div><strong>'+$esc(title)+'</strong><p>'+$esc(detail)+'</p></div>';
-function ageText(f){if(f.ageHours===null)return 'Timestamp unavailable';return f.ageHours<1?'Updated less than an hour ago':f.ageHours<24?'Updated '+num(f.ageHours,1)+'h ago':'Updated '+Math.floor(f.ageHours/24)+' days ago'}
+function ageText(f){if(f.ageHours===null)return 'Timestamp unavailable';return f.ageHours<1?'Captured less than an hour ago':f.ageHours<24?'Captured '+num(f.ageHours,1)+'h ago':'Captured '+Math.floor(f.ageHours/24)+' days ago'}
 function safeLeagueLink(team){return isSafeUrl(team.leagueUrl)?'<a class="minorbtn" href="'+$esc(team.leagueUrl)+'" target="_blank" rel="noopener noreferrer">Open Yahoo <span aria-hidden="true">↗</span></a>':''}
 function nav(){
  const choices=[['overview','Overview','⌂'],['lineup','Lineup','▥'],['waivers','Waivers','↗'],['lab','Analysis','◉']];
- return '<nav class="bottomnav" aria-label="Brock Hard sections">'+choices.map(([id,label,glyph])=>
- '<button type="button" data-tab="'+id+'" class="'+(activeTab===id?'active':'')+'"><span class="navglyph">'+glyph+'</span><span>'+label+'</span></button>').join('')+'</nav>';
+ return '<nav class="bottomnav" role="tablist" aria-label="Brock Hard sections">'+choices.map(([id,label,glyph])=>
+ '<button type="button" role="tab" aria-selected="'+(activeTab===id)+'" data-tab="'+id+'" class="'+(activeTab===id?'active':'')+'"><span class="navglyph">'+glyph+'</span><span>'+label+'</span></button>').join('')+'</nav>';
 }
 function masthead(team){const f=freshness();
   const currentTeam='<div class="context">BROCK HARD & TEE BAGGIN · YAHOO FOOTBALL</div>';
   return '<header class="masthead"><div class="masttop"><a href="'+BASE+'" class="brand"><span class="brandmark">F<span>.</span></span><span>FANTASY <b>HQ</b><small>COMMAND CENTER</small></span></a>'+
-    '<button class="refreshbtn" data-action="refresh" '+(loading?'disabled':'')+' aria-label="Recheck published snapshot">'+(loading?'Checking…':'↻ Check snapshot')+'</button></div>'+
+    '<button type="button" class="refreshbtn" data-action="import" aria-label="Import updated private Yahoo snapshot">↥ Update data</button></div>'+
     currentTeam+'<div class="statusrow"><span class="statusdot '+f.state+'"></span>'+
     '<span class="statusline">'+$esc(f.label)+'</span><span class="statussep">/</span><span>'+$esc(ageText(f))+'</span>'+
-    '<span class="sourcelabel">'+(source==='private'?'PRIVATE IMPORT':'PUBLISHED SNAPSHOT')+'</span></div></header>'}
+    '<span class="sourcelabel">'+(source==='private'?'PRIVATE CAPTURE · NOT LIVE':'PUBLISHED SNAPSHOT · ARCHIVED')+'</span></div></header>'}
 function riskRibbon(){const f=freshness();const old=f.state==='stale'||f.state==='unknown';
   const line=old?'Recommendations, waivers, injuries and player status below reflect an archived snapshot. They are NOT verified for today.':
     source==='private'?'Local data was imported on this device. Verify the source timestamp before making roster moves.':
@@ -52,11 +53,11 @@ function matchupCard(team){const side=scoreFor(team);
     '<div class="against"><div class="matchlabel">OPPONENT</div><div class="matchname">'+$esc(opp.teamName||opp.name||'Opponent')+'</div><div class="matchscore">'+num(opp.points)+'</div><div class="matchproj">Pregame projection '+num(opp.liveProjectedPoints??opp.projectedPoints)+'</div></div></div>'+
     (typeof mine.winProbability==='number'?'<div class="subnote">Yahoo win probability at capture: '+num(mine.winProbability*100,0)+'%.</div>':'')+
     '<div class="subnote">Yahoo pregame projections may be lower than points already scored. Data does not update continuously.</div>');}
-function controls(){return '<p class="controlcopy">Recheck the published JSON or import an updated private v3 snapshot stored only in this browser. Rechecking does not sign into Yahoo or produce new league data.</p>'+
-  '<div class="controlrow"><button class="primarybutton" data-action="refresh">↻ Recheck published data</button><button class="minorbtn button" data-action="import">Import private JSON</button>'+
-  (source==='private'?'<button class="minorbtn button" data-action="clear">Remove private import</button>':'')+'</div>'+
+function controls(){return '<p class="controlcopy">Import a new Brock Hard JSON capture from your connected Flaim Fantasy conversation. Your file stays in this browser; this page does not contact Yahoo.</p>'+
+  '<div class="controlrow"><button type="button" class="primarybutton" data-action="import">↥ Import updated Yahoo snapshot</button>'+
+  (source==='private'?'<button type="button" class="minorbtn button" data-action="clear">Remove local capture</button>':'')+'</div>'+
   '<input id="importFile" type="file" accept=".json,application/json" hidden>'+
-  '<div class="subnote">Flaim retrieval happens inside ChatGPT, not from this website. Recheck only loads the saved published JSON; private imports stay on this device.</div>'}
+  '<div class="subnote">The capture is read-only and manual. This button imports a file; it is not a live Yahoo sync. Failed imports preserve your existing data.</div>'}
 function stats(team){const flagCount=team.roster.filter(p=>p.injury).length;
   const val=(a,b)=>'<div class="metric"><div class="metriclabel">'+a+'</div><div class="metricvalue">'+$esc(b)+'</div></div>';
   return '<div class="metrics">'+val('RECORD',txt(team.record))+val('LEAGUE RANK',txt(team.rank))+
@@ -140,14 +141,28 @@ function teamView(team){const t=activeTab==='lineup'?lineupView(team):activeTab=
     '<div class="herosub">Season '+current.season+' · Week '+txt(current.week)+' · '+$esc(txt(team.record))+'</div></div>'+
     '<span class="crest">'+(team.id==='brock'?'BH':team.id==='quick'?'QS':'HR')+'</span></div>'+
     riskRibbon()+'<div class="heroactions">'+safeLeagueLink(team)+'</div>'+
-    tabbar()+'<div id="tabPanel" role="tabpanel">'+t+'</div>'+section('Data controls','PRESERVE YOUR SNAPSHOT',controls())+
+    '<div id="tabPanel" role="tabpanel">'+t+'</div>'+section('Data controls','PRESERVE YOUR SNAPSHOT',controls())+
     '<div class="footnote">Fantasy HQ operates in read-only mode. No transactions or lineup submissions occur through this application.</div></div>'+nav();}
+function archivedView(){
+ const date=Number.isFinite(Date.parse(current?.syncedAtIso))?
+   new Date(current.syncedAtIso).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'unknown date';
+ return '<div class="container">'+masthead()+messageBox()+
+  '<section class="panel archived-fallback" role="status">'+
+  '<div class="label">BROCK HARD · NO CURRENT CAPTURE</div>'+
+  '<h1>Update your Yahoo data</h1>'+
+  '<p><strong>Outdated fantasy data.</strong> The public file was captured '+$esc(date)+
+  '. Week 4 results are intentionally hidden rather than shown as current.</p>'+
+  '<button type="button" class="primarybutton" data-action="import">↥ Import updated Yahoo snapshot</button>'+
+  '<input id="importFile" type="file" accept=".json,application/json" hidden>'+
+  '<p class="subnote">Use the private JSON file from Flaim Fantasy in ChatGPT. It stays on this device. Automatic Yahoo sign-in is not enabled.</p>'+
+  '</section><p class="footnote">Brock Hard only · read-only · no roster transactions</p></div>'+nav();
+}
 function render(){
  if(!root)return;
  if(!current){root.innerHTML='<div class="loader">Loading Brock Hard…</div>';return;}
  const team=current.teams.brock;
  document.title=team?'Brock Hard · Fantasy HQ':'Brock Hard · Data unavailable';
- root.innerHTML=team?teamView(team):'<div class="loader">Brock Hard snapshot unavailable. Import a verified private snapshot.</div>';
+ root.innerHTML=team?(source==='published'&&!freshness().actionable?archivedView():teamView(team)):'<div class="loader">Brock Hard snapshot unavailable. Import a verified private snapshot.</div>';
 }
 function onlyBrockRaw(raw){
  const normalized=normalizeSnapshot(raw);
@@ -177,10 +192,10 @@ async function handleImport(file){if(!file)return;
  try{
   const raw=JSON.parse(await file.text());
   if(raw.schemaVersion!==3)throw new Error('Private import requires schemaVersion 3');
-  const brockOnly=onlyBrockRaw(raw);
+  const brockOnly=preparePrivateImport(raw,{previousIso:source==='private'?current?.syncedAtIso:null});
   const normalized=normalizeSnapshot(brockOnly);
   try{localStorage.setItem(PRIVATE_KEY,JSON.stringify(brockOnly))}catch{throw new Error('Browser storage is unavailable')}
-  current=normalized;source='private';message='Private JSON imported locally. No file was uploaded.';render();
+  current=normalized;source='private';message='Brock Hard capture imported privately. No file was uploaded or published. This is not live synchronization.';render();
  }catch(e){message='Import rejected: '+e.message;render()}
 }
 document.addEventListener('click',event=>{
