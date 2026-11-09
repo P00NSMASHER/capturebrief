@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" rx="56" fill="#071c23"/><rect x="22" y="22" width="212" height="212" rx="44" fill="#113a3c" stroke="#38cfaa" stroke-width="4"/><path d="M83 182V75h87M83 123h71" fill="none" stroke="#f2f9f8" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/><circle cx="186" cy="178" r="16" fill="#36dfb1"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Brock Hard Fantasy HQ app icon">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#183c4b"/><stop offset="1" stop-color="#0b1729"/></linearGradient><linearGradient id="bolt" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#effff8"/><stop offset="1" stop-color="#6bffd5"/></linearGradient></defs>
+<rect x="0" y="0" width="256" height="256" rx="60" fill="url(#bg)"/>
+<circle cx="128" cy="128" r="105" fill="#41f5c7" fill-opacity=".12" stroke="#66fcd3" stroke-width="5"/>
+<circle cx="128" cy="128" r="87" fill="#52ffcd" fill-opacity=".13" stroke="#c6ffef" stroke-opacity=".25" stroke-width="2"/>
+<path d="m140 49-74 100h57l-14 68 82-116h-54Z" fill="url(#bolt)"/>
+<path d="M66 183q62 39 127-4" fill="none" stroke="#c4ffef" stroke-opacity=".65" stroke-width="6" stroke-linecap="round"/>
+<path d="m66 171-24-12 7 27 20 6m117-97 24-19-7 33-18 9" fill="#5aecc3" opacity=".85"/>
+</svg>
