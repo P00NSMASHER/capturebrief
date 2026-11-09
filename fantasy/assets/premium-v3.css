@@ -376,3 +376,26 @@ p{line-height:1.56}
 @media(prefers-reduced-motion:reduce){
  *,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
+
+/* First-screen optimization: put the matchup score above the iPhone fold. */
+@media(max-width:680px){
+ .masthead{padding-top:calc(13px + env(safe-area-inset-top));padding-bottom:8px}
+ .teamhero{min-height:164px;margin-top:7px;margin-bottom:9px;padding:17px 19px}
+ .teamhero h1{font-size:clamp(25px,5.6vw,31px);margin:8px 0 11px}
+ .hero-crest .club-emblem{width:96px;height:96px}
+ .riskbar{padding:8px 11px;margin-bottom:7px}
+ .riskbar strong{font-size:10px}
+ .riskbar p{font-size:10px}
+ .heroactions{margin-bottom:11px;gap:7px}
+ .heroactions .minorbtn{min-height:41px}
+ .mini-next .club-emblem{width:35px;height:35px}
+ .matchup-panel{margin-top:10px}
+ .matchup-panel .panelhead{margin-bottom:5px}
+ .matchup{padding-top:2px;padding-bottom:12px}
+ .match-team .club-emblem{width:66px;height:66px}
+}
+@media(max-width:410px){
+ .teamhero{min-height:160px;padding:15px 15px}
+ .hero-crest .club-emblem{width:86px;height:86px}
+ .matchup-panel{margin-top:9px}
+}
