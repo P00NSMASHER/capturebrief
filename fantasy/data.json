@@ -1,664 +1,796 @@
 {
-  "syncedAt": "September 30, 2026 — archived snapshot",
-  "syncedAtIso": "2026-09-30T14:10:03.819Z",
-  "week": 4,
-  "refreshPrompt": "Refresh my Brock Hard & Tee Baggin Yahoo fantasy team only, read-only. Do not present a saved JSON recheck as live Yahoo synchronization.",
+  "schemaVersion": 3,
+  "provider": "Yahoo",
+  "season": 2026,
+  "week": 9,
+  "syncedAtIso": "2026-11-09T15:28:46.125Z",
+  "source": "Flaim Fantasy / Yahoo owner-authorized verified read-only capture (automated publishing enabled; not streaming)",
+  "captureType": "initial-verified-publish",
   "teams": {
     "brock": {
+      "name": "Brock Hard & Tee Baggin",
       "short": "Brock Hard",
-      "full": "Brock Hard & Tee Baggin",
       "accent": "cyan",
+      "provider": "yahoo",
+      "leagueId": "470.l.290846",
+      "teamId": "2",
       "leagueUrl": "https://football.fantasysports.yahoo.com/f1/290846",
-      "record": "1–2",
-      "rank": "5th of 8",
+      "record": "6-2",
+      "rank": "1 of 8",
       "waiver": "#1",
-      "score": "0.00–0.00",
-      "scoreState": "projected ahead",
-      "weekNote": "Week 4 vs BEEFS GAY • projected 141.74–124.82",
-      "priority": "HOLD",
-      "health": "2 Q • 1 IR • 1 IR-R",
-      "nextMove": "HOLD waiver #1 — do not claim Achane",
-      "nextDetail": "De'Von Achane is a verified free agent in this league, but his Week 3 torn ACL ended his 2026 season. Breece Hall remains questionable and Braelon Allen has already been added by another team, so preserve the #1 priority for the next healthy player who can become a durable weekly starter.",
-      "confidence": "HIGH",
-      "cost": "Preserve waiver #1",
-      "nextPrompt": "Re-scan Brock Hard & Tee Baggin's live Yahoo league. Preserve waiver priority #1 unless a verified healthy available player has a durable path to my weekly lineup. Explicitly reject De'Von Achane because of the season-ending ACL injury, re-check Breece Hall and Justin Jefferson, and return HOLD #1 or the exact add/drop only if the threshold is clearly met.",
-      "alerts": [
+      "health": "Yahoo roster flags at capture",
+      "nextMove": "No verified projected add/drop or lineup move available",
+      "nextDetail": "Brock Hard's roster, standings, available-player list and matchup were checked via Flaim. Individual future projections were not available; no transaction was submitted.",
+      "score": "148.58–127.06",
+      "scoreState": "Yahoo score at capture",
+      "weekNote": "Week 9 vs Chasing Greatness",
+      "confidence": "Source-backed capture",
+      "roster": [
         {
-          "level": "bad",
-          "title": "De'Von Achane • FREE AGENT",
-          "text": "Do not claim. He was dropped after a season-ending torn ACL."
-        },
-        {
-          "level": "watch",
-          "title": "Breece Hall • Q",
-          "text": "Week-to-week with a quadriceps injury. Keep him rostered and monitor practice status."
-        },
-        {
-          "level": "watch",
-          "title": "Justin Jefferson • Q",
-          "text": "Ankle issue is not expected to be long-term; monitor Week 4 practice participation."
-        },
-        {
-          "level": "info",
-          "title": "Waiver leverage",
-          "text": "You still hold priority #1. Braelon Allen and Ollie Gordon II were already added elsewhere, so there is no reason to force a claim."
-        }
-      ],
-      "waivers": [
-        {
-          "name": "HOLD waiver #1",
-          "pos": "Strategy",
-          "why": "The premium Week 4 injury replacements have already been claimed, and the newly dropped Achane is out for the season.",
-          "tag": "BEST MOVE"
-        },
-        {
-          "name": "De'Von Achane",
-          "pos": "RB • MIA • verified free agent",
-          "why": "Season-ending ACL injury. Leave him on the wire even though the name value is tempting.",
-          "tag": "PASS"
-        },
-        {
-          "name": "Kyle Monangai",
-          "pos": "RB • CHI • 82% Yahoo-wide",
-          "why": "Best healthy RB near the top of the current availability list, but not enough to justify spending #1 in this 8-team roster.",
-          "tag": "WATCH"
-        },
-        {
-          "name": "Jordan Addison",
-          "pos": "WR • MIN • 77% Yahoo-wide",
-          "why": "Useful Jefferson insurance, but your WR room is already deep enough to preserve the claim.",
-          "tag": "WATCH"
-        }
-      ],
-      "lineup": [
-        {
+          "id": "33389",
+          "name": "Trevor Lawrence",
+          "position": "QB",
           "slot": "QB",
-          "name": "Jalen Hurts",
-          "meta": "PHI",
-          "points": "0.0",
-          "flag": ""
+          "eligiblePositions": [
+            "QB"
+          ],
+          "nflTeam": "Jax",
+          "injury": null,
+          "actualPoints": 13.58,
+          "projection": null,
+          "cantCut": false,
+          "editable": false,
+          "locked": false
         },
         {
-          "slot": "RB",
+          "id": "33423",
           "name": "Javonte Williams",
-          "meta": "DAL",
-          "points": "0.0",
-          "flag": ""
-        },
-        {
+          "position": "RB",
           "slot": "RB",
-          "name": "Breece Hall",
-          "meta": "NYJ • Q",
-          "points": "0.0",
-          "flag": "watch"
+          "eligiblePositions": [
+            "RB",
+            "W/R/T"
+          ],
+          "nflTeam": "Dal",
+          "injury": null,
+          "actualPoints": 22.4,
+          "projection": null,
+          "cantCut": false,
+          "editable": false,
+          "locked": false
         },
         {
-          "slot": "WR",
+          "id": "42730",
+          "name": "Jonah Coleman",
+          "position": "RB",
+          "slot": "RB",
+          "eligiblePositions": [
+            "RB",
+            "W/R/T"
+          ],
+          "nflTeam": "Den",
+          "injury": null,
+          "actualPoints": 18.8,
+          "projection": null,
+          "cantCut": false,
+          "editable": false,
+          "locked": false
+        },
+        {
+          "id": "33393",
           "name": "Ja'Marr Chase",
-          "meta": "CIN",
-          "points": "0.0",
-          "flag": ""
-        },
-        {
+          "position": "WR",
           "slot": "WR",
+          "eligiblePositions": [
+            "WR",
+            "W/R/T"
+          ],
+          "nflTeam": "Cin",
+          "injury": null,
+          "actualPoints": 31.5,
+          "projection": null,
+          "cantCut": true,
+          "editable": false,
+          "locked": false
+        },
+        {
+          "id": "32692",
           "name": "Justin Jefferson",
-          "meta": "MIN • Q",
-          "points": "0.0",
-          "flag": "watch"
+          "position": "WR",
+          "slot": "WR",
+          "eligiblePositions": [
+            "WR",
+            "W/R/T"
+          ],
+          "nflTeam": "Min",
+          "injury": null,
+          "actualPoints": 0,
+          "projection": null,
+          "cantCut": true,
+          "editable": true,
+          "locked": false
         },
         {
-          "slot": "TE",
+          "id": "40878",
           "name": "Brock Bowers",
-          "meta": "LV",
-          "points": "0.0",
-          "flag": ""
+          "position": "TE",
+          "slot": "TE",
+          "eligiblePositions": [
+            "TE",
+            "W/R/T"
+          ],
+          "nflTeam": "LV",
+          "injury": null,
+          "actualPoints": 22.3,
+          "projection": null,
+          "cantCut": true,
+          "editable": false,
+          "locked": false
         },
         {
-          "slot": "FLEX",
+          "id": "32703",
           "name": "Tee Higgins",
-          "meta": "CIN",
-          "points": "0.0",
-          "flag": ""
+          "position": "WR",
+          "slot": "W/R/T",
+          "eligiblePositions": [
+            "WR",
+            "W/R/T"
+          ],
+          "nflTeam": "Cin",
+          "injury": null,
+          "actualPoints": 20.2,
+          "projection": null,
+          "cantCut": false,
+          "editable": false,
+          "locked": false
         },
         {
-          "slot": "FLEX",
+          "id": "33508",
+          "name": "Rhamondre Stevenson",
+          "position": "RB",
+          "slot": "W/R/T",
+          "eligiblePositions": [
+            "RB",
+            "W/R/T"
+          ],
+          "nflTeam": "NE",
+          "injury": "Q",
+          "actualPoints": 14.8,
+          "projection": null,
+          "cantCut": false,
+          "editable": false,
+          "locked": false
+        },
+        {
+          "id": "40039",
           "name": "Zay Flowers",
-          "meta": "BAL",
-          "points": "0.0",
-          "flag": ""
+          "position": "WR",
+          "slot": "BN",
+          "eligiblePositions": [
+            "WR",
+            "W/R/T"
+          ],
+          "nflTeam": "Bal",
+          "injury": null,
+          "actualPoints": 5.3,
+          "projection": null,
+          "cantCut": false,
+          "editable": false,
+          "locked": false
         },
         {
-          "slot": "K",
-          "name": "Will Reichard",
-          "meta": "MIN",
-          "points": "0.0",
-          "flag": ""
+          "id": "41902",
+          "name": "Woody Marks",
+          "position": "RB",
+          "slot": "BN",
+          "eligiblePositions": [
+            "RB",
+            "W/R/T"
+          ],
+          "nflTeam": "Hou",
+          "injury": null,
+          "actualPoints": 8.4,
+          "projection": null,
+          "cantCut": false,
+          "editable": false,
+          "locked": false
         },
         {
-          "slot": "DEF",
-          "name": "Chiefs",
-          "meta": "KC",
-          "points": "0.0",
-          "flag": ""
+          "id": "40877",
+          "name": "Xavier Worthy",
+          "position": "WR",
+          "slot": "BN",
+          "eligiblePositions": [
+            "WR",
+            "W/R/T"
+          ],
+          "nflTeam": "KC",
+          "injury": "Q",
+          "actualPoints": 10.8,
+          "projection": null,
+          "cantCut": false,
+          "editable": false,
+          "locked": false
         },
         {
-          "slot": "IR",
-          "name": "Jonathon Brooks",
-          "meta": "CAR • IR",
-          "points": "0.0",
-          "flag": "bad"
+          "id": "31056",
+          "name": "Mark Andrews",
+          "position": "TE",
+          "slot": "BN",
+          "eligiblePositions": [
+            "TE",
+            "W/R/T"
+          ],
+          "nflTeam": "Bal",
+          "injury": null,
+          "actualPoints": 3.9,
+          "projection": null,
+          "cantCut": false,
+          "editable": false,
+          "locked": false
         },
         {
-          "slot": "IR",
+          "id": "33991",
+          "name": "Breece Hall",
+          "position": "RB",
+          "slot": "BN",
+          "eligiblePositions": [
+            "RB",
+            "W/R/T"
+          ],
+          "nflTeam": "NYJ",
+          "injury": null,
+          "actualPoints": 11.7,
+          "projection": null,
+          "cantCut": false,
+          "editable": false,
+          "locked": false
+        },
+        {
+          "id": "42630",
           "name": "Jordyn Tyson",
-          "meta": "NO • IR-R",
-          "points": "0.0",
-          "flag": "bad"
+          "position": "WR",
+          "slot": "BN",
+          "eligiblePositions": [
+            "WR",
+            "W/R/T"
+          ],
+          "nflTeam": "NO",
+          "injury": null,
+          "actualPoints": 5,
+          "projection": null,
+          "cantCut": false,
+          "editable": false,
+          "locked": false
+        },
+        {
+          "id": "42626",
+          "name": "Carnell Tate",
+          "position": "WR",
+          "slot": "IR",
+          "eligiblePositions": [
+            "WR",
+            "W/R/T",
+            "IR"
+          ],
+          "nflTeam": "Ten",
+          "injury": "O",
+          "actualPoints": 0,
+          "projection": null,
+          "cantCut": false,
+          "editable": true,
+          "locked": false
+        },
+        {
+          "id": "34063",
+          "name": "Dameon Pierce",
+          "position": "RB",
+          "slot": "IR",
+          "eligiblePositions": [
+            "RB",
+            "W/R/T"
+          ],
+          "nflTeam": "Phi",
+          "injury": "NA",
+          "actualPoints": 0,
+          "projection": null,
+          "cantCut": false,
+          "editable": false,
+          "locked": false
+        },
+        {
+          "id": "41093",
+          "name": "Will Reichard",
+          "position": "K",
+          "slot": "K",
+          "eligiblePositions": [
+            "K"
+          ],
+          "nflTeam": "Min",
+          "injury": null,
+          "actualPoints": 0,
+          "projection": null,
+          "cantCut": false,
+          "editable": true,
+          "locked": false
+        },
+        {
+          "id": "100018",
+          "name": "Saints",
+          "position": "DEF",
+          "slot": "DEF",
+          "eligiblePositions": [
+            "DEF"
+          ],
+          "nflTeam": "NO",
+          "injury": null,
+          "actualPoints": 5,
+          "projection": null,
+          "cantCut": false,
+          "editable": false,
+          "locked": false
         }
       ],
-      "actions": [
-        {
-          "label": "WAIVER #1 CHECK",
-          "prompt": "Audit Brock Hard & Tee Baggin's live Yahoo wire with an 8-team replacement-value model. Preserve #1 unless an available player clearly becomes an every-week starter for me."
-        },
-        {
-          "label": "HALL / JEFFERSON",
-          "prompt": "Update Breece Hall and Justin Jefferson from current injury reports, then tell me whether either status changes Brock Hard's Week 4 lineup or waiver #1 decision."
-        },
-        {
-          "label": "TRADE ANDREWS",
-          "prompt": "Find realistic 2-for-1 consolidation trades for Brock Hard using Mark Andrews plus one bench RB/WR to improve my weekly RB slot. Protect Hurts, Chase, Jefferson and Bowers."
-        },
-        {
-          "label": "LINEUP CHECK",
-          "prompt": "Optimize Brock Hard & Tee Baggin's Week 4 starting lineup from the live Yahoo roster. Make only changes that materially improve projected points."
-        }
-      ],
-      "strategy": {
-        "summary": "Brock is 1–2 but still has strong scoring volume and the most valuable waiver position in the league. The key is avoiding the Achane name-value trap and keeping #1 for a healthy difference-maker.",
-        "bullets": [
-          {
-            "label": "Hard pass",
-            "text": "Achane is a verified free agent because of a season-ending ACL tear, not because the league missed an opportunity."
-          },
-          {
-            "label": "RB injury",
-            "text": "Hall is week-to-week, but Allen was already claimed. Your bench depth can cover the short window."
-          },
-          {
-            "label": "Waiver leverage",
-            "text": "Do not convert #1 priority into a marginal depth add just because the roster is 1–2."
-          },
-          {
-            "label": "WR depth",
-            "text": "Chase, Jefferson, Higgins, Flowers and Harrison make WR a low-priority acquisition lane."
-          }
-        ]
+      "lineupSlots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "W/R/T": 2,
+        "K": 1,
+        "DEF": 1
       },
-      "recentTransactions": [
+      "projectionCoverage": "none",
+      "availablePlayers": [
         {
-          "date": "2026-09-30",
-          "type": "add",
-          "status": "complete",
-          "team": "Josh ❤️creampies",
-          "move": "Added Braelon Allen"
+          "id": "27581",
+          "name": "Davante Adams",
+          "position": "WR",
+          "eligiblePositions": [
+            "WR"
+          ],
+          "team": "LAR",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 84,
+          "projection": null
         },
         {
-          "date": "2026-09-30",
-          "type": "add",
-          "status": "complete",
-          "team": "Josh ❤️creampies",
-          "move": "Added Bears • Dropped Patriots"
+          "id": "31019",
+          "name": "Dallas Goedert",
+          "position": "TE",
+          "eligiblePositions": [
+            "TE"
+          ],
+          "team": "Phi",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 82,
+          "projection": null
         },
         {
-          "date": "2026-09-30",
-          "type": "add",
-          "status": "complete",
-          "team": "Hazleton Coal Mine",
-          "move": "Added Kenyon Sadiq • Dropped Dalton Schultz"
+          "id": "40126",
+          "name": "Josh Downs",
+          "position": "WR",
+          "eligiblePositions": [
+            "WR"
+          ],
+          "team": "Ind",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 82,
+          "projection": null
         },
         {
-          "date": "2026-09-30",
-          "type": "add",
-          "status": "complete",
-          "team": "Frenchville HornHog",
-          "move": "Added Juwan Johnson • Dropped Dallas Goedert"
+          "id": "31002",
+          "name": "Lamar Jackson",
+          "position": "QB",
+          "eligiblePositions": [
+            "QB"
+          ],
+          "team": "Bal",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 77,
+          "projection": null
         },
         {
-          "date": "2026-09-30",
-          "type": "add",
-          "status": "complete",
-          "team": "Hazleton Coal Mine",
-          "move": "Added Vikings • Dropped 49ers"
+          "id": "42661",
+          "name": "Denzel Boston",
+          "position": "WR",
+          "eligiblePositions": [
+            "WR"
+          ],
+          "team": "Cle",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 76,
+          "projection": null
         },
         {
-          "date": "2026-09-30",
-          "type": "add",
-          "status": "complete",
-          "team": "Jersey junkyard",
-          "move": "Added Ollie Gordon II • Dropped MarShawn Lloyd"
+          "id": "41825",
+          "name": "Tyler Shough",
+          "position": "QB",
+          "eligiblePositions": [
+            "QB"
+          ],
+          "team": "NO",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 75,
+          "projection": null
         },
         {
-          "date": "2026-09-29",
-          "type": "drop",
-          "status": "complete",
-          "team": "Josh ❤️creampies",
-          "move": "Dropped De'Von Achane"
+          "id": "40042",
+          "name": "Jordan Addison",
+          "position": "WR",
+          "eligiblePositions": [
+            "WR"
+          ],
+          "team": "Min",
+          "acquisitionState": "free_agent",
+          "waiverDate": null,
+          "percentOwned": 73,
+          "projection": null
+        },
+        {
+          "id": "42025",
+          "name": "Kyle Monangai",
+          "position": "RB",
+          "eligiblePositions": [
+            "RB"
+          ],
+          "team": "Chi",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 71,
+          "projection": null
+        },
+        {
+          "id": "40875",
+          "name": "Bo Nix",
+          "position": "QB",
+          "eligiblePositions": [
+            "QB"
+          ],
+          "team": "Den",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 70,
+          "projection": null
+        },
+        {
+          "id": "31868",
+          "name": "Deebo Samuel Sr.",
+          "position": "WR",
+          "eligiblePositions": [
+            "WR"
+          ],
+          "team": "SF",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 70,
+          "projection": null
+        },
+        {
+          "id": "33100",
+          "name": "Rico Dowdle",
+          "position": "RB",
+          "eligiblePositions": [
+            "RB"
+          ],
+          "team": "Pit",
+          "acquisitionState": "free_agent",
+          "waiverDate": null,
+          "percentOwned": 70,
+          "projection": null
+        },
+        {
+          "id": "30180",
+          "name": "Alvin Kamara",
+          "position": "RB",
+          "eligiblePositions": [
+            "RB"
+          ],
+          "team": "NO",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 65,
+          "projection": null
+        },
+        {
+          "id": "40029",
+          "name": "Bryce Young",
+          "position": "QB",
+          "eligiblePositions": [
+            "QB"
+          ],
+          "team": "Car",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 65,
+          "projection": null
+        },
+        {
+          "id": "41823",
+          "name": "TreVeyon Henderson",
+          "position": "RB",
+          "eligiblePositions": [
+            "RB"
+          ],
+          "team": "NE",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 61,
+          "projection": null
+        },
+        {
+          "id": "41845",
+          "name": "RJ Harvey",
+          "position": "RB",
+          "eligiblePositions": [
+            "RB"
+          ],
+          "team": "Den",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 59,
+          "projection": null
+        },
+        {
+          "id": "41058",
+          "name": "Malik Washington",
+          "position": "WR",
+          "eligiblePositions": [
+            "WR"
+          ],
+          "team": "Mia",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 56,
+          "projection": null
+        },
+        {
+          "id": "31010",
+          "name": "Courtland Sutton",
+          "position": "WR",
+          "eligiblePositions": [
+            "WR"
+          ],
+          "team": "Den",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 53,
+          "projection": null
+        },
+        {
+          "id": "31833",
+          "name": "Kyler Murray",
+          "position": "QB",
+          "eligiblePositions": [
+            "QB"
+          ],
+          "team": "Min",
+          "acquisitionState": "free_agent",
+          "waiverDate": null,
+          "percentOwned": 53,
+          "projection": null
+        },
+        {
+          "id": "42642",
+          "name": "Makai Lemon",
+          "position": "WR",
+          "eligiblePositions": [
+            "WR"
+          ],
+          "team": "Phi",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 53,
+          "projection": null
+        },
+        {
+          "id": "41097",
+          "name": "Devaughn Vele",
+          "position": "WR",
+          "eligiblePositions": [
+            "WR"
+          ],
+          "team": "NO",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 51,
+          "projection": null
+        },
+        {
+          "id": "33998",
+          "name": "Wan'Dale Robinson",
+          "position": "WR",
+          "eligiblePositions": [
+            "WR"
+          ],
+          "team": "Ten",
+          "acquisitionState": "free_agent",
+          "waiverDate": null,
+          "percentOwned": 51,
+          "projection": null
+        },
+        {
+          "id": "40915",
+          "name": "Adonai Mitchell",
+          "position": "WR",
+          "eligiblePositions": [
+            "WR"
+          ],
+          "team": "NYJ",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 50,
+          "projection": null
+        },
+        {
+          "id": "32231",
+          "name": "Jakobi Meyers",
+          "position": "WR",
+          "eligiblePositions": [
+            "WR"
+          ],
+          "team": "Jax",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 45,
+          "projection": null
+        },
+        {
+          "id": "30973",
+          "name": "Sam Darnold",
+          "position": "QB",
+          "eligiblePositions": [
+            "QB"
+          ],
+          "team": "Sea",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 38,
+          "projection": null
+        },
+        {
+          "id": "42693",
+          "name": "Antonio Williams",
+          "position": "WR",
+          "eligiblePositions": [
+            "WR"
+          ],
+          "team": "Was",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 31,
+          "projection": null
         }
       ],
-      "snapshot": {
-        "leagueId": "470.l.290846",
-        "teamId": "2",
-        "week": 4,
-        "standings": [
-          {
-            "rank": 1,
-            "teamId": "3",
-            "name": "Frenchville HornHog",
-            "wins": 3,
-            "losses": 0,
-            "ties": 0,
-            "pointsFor": 427.06,
-            "pointsAgainst": 302.2,
-            "waiverPriority": 8,
-            "faabBalance": null
-          },
-          {
-            "rank": 2,
-            "teamId": "6",
-            "name": "Josh ❤️creampies",
-            "wins": 2,
-            "losses": 1,
-            "ties": 0,
-            "pointsFor": 467.26,
-            "pointsAgainst": 423.98,
-            "waiverPriority": 5,
-            "faabBalance": null
-          },
-          {
-            "rank": 3,
-            "teamId": "5",
-            "name": "Jersey junkyard",
-            "wins": 2,
-            "losses": 1,
-            "ties": 0,
-            "pointsFor": 447.88,
-            "pointsAgainst": 381.7,
-            "waiverPriority": 6,
-            "faabBalance": null
-          },
-          {
-            "rank": 4,
-            "teamId": "8",
-            "name": "Hazleton Coal Mine",
-            "wins": 2,
-            "losses": 1,
-            "ties": 0,
-            "pointsFor": 423.18,
-            "pointsAgainst": 386.74,
-            "waiverPriority": 7,
-            "faabBalance": null
-          },
-          {
-            "rank": 5,
-            "teamId": "2",
-            "name": "Brock Hard & Tee Baggin",
-            "wins": 1,
-            "losses": 2,
-            "ties": 0,
-            "pointsFor": 440.4,
-            "pointsAgainst": 452.54,
-            "waiverPriority": 1,
-            "faabBalance": null
-          },
-          {
-            "rank": 6,
-            "teamId": "7",
-            "name": "Elmira Express",
-            "wins": 1,
-            "losses": 2,
-            "ties": 0,
-            "pointsFor": 423.84,
-            "pointsAgainst": 510.2,
-            "waiverPriority": 2,
-            "faabBalance": null
-          },
-          {
-            "rank": 7,
-            "teamId": "4",
-            "name": "Chasing Greatness",
-            "wins": 1,
-            "losses": 2,
-            "ties": 0,
-            "pointsFor": 387.8,
-            "pointsAgainst": 420.5,
-            "waiverPriority": 3,
-            "faabBalance": null
-          },
-          {
-            "rank": 8,
-            "teamId": "1",
-            "name": "BEEFS GAY",
-            "wins": 0,
-            "losses": 3,
-            "ties": 0,
-            "pointsFor": 313.88,
-            "pointsAgainst": 453.44000000000005,
-            "waiverPriority": 4,
-            "faabBalance": null
-          }
-        ],
-        "matchup": {
-          "matchupId": 1,
-          "week": 4,
-          "home": {
-            "teamKey": "470.l.290846.t.1",
-            "teamId": "1",
-            "teamName": "BEEFS GAY",
-            "points": 0,
-            "projectedPoints": 124.82,
-            "categories": null,
-            "categoryScore": null,
-            "categoriesWon": 0
-          },
-          "away": {
-            "teamKey": "470.l.290846.t.2",
-            "teamId": "2",
-            "teamName": "Brock Hard & Tee Baggin",
-            "points": 0,
-            "projectedPoints": 141.74,
-            "categories": null,
-            "categoryScore": null,
-            "categoriesWon": 0
-          },
-          "statWinnersAvailable": false
+      "matchup": {
+        "status": "in_progress",
+        "home": {
+          "teamKey": "470.l.290846.t.2",
+          "teamId": "2",
+          "teamName": "Brock Hard & Tee Baggin",
+          "points": 148.58,
+          "projectedPoints": 155.51,
+          "liveProjectedPoints": null,
+          "winProbability": 0.99
         },
-        "roster": [
-          {
-            "name": "Jalen Hurts",
-            "position": "QB",
-            "team": "Phi",
-            "slot": "QB",
-            "status": null
-          },
-          {
-            "name": "Javonte Williams",
-            "position": "RB",
-            "team": "Dal",
-            "slot": "RB",
-            "status": null
-          },
-          {
-            "name": "Breece Hall",
-            "position": "RB",
-            "team": "NYJ",
-            "slot": "RB",
-            "status": "Q"
-          },
-          {
-            "name": "Ja'Marr Chase",
-            "position": "WR",
-            "team": "Cin",
-            "slot": "WR",
-            "status": null
-          },
-          {
-            "name": "Justin Jefferson",
-            "position": "WR",
-            "team": "Min",
-            "slot": "WR",
-            "status": "Q"
-          },
-          {
-            "name": "Brock Bowers",
-            "position": "TE",
-            "team": "LV",
-            "slot": "TE",
-            "status": null
-          },
-          {
-            "name": "Tee Higgins",
-            "position": "WR",
-            "team": "Cin",
-            "slot": "W/R/T",
-            "status": null
-          },
-          {
-            "name": "Zay Flowers",
-            "position": "WR",
-            "team": "Bal",
-            "slot": "W/R/T",
-            "status": null
-          },
-          {
-            "name": "Mark Andrews",
-            "position": "TE",
-            "team": "Bal",
-            "slot": "BN",
-            "status": null
-          },
-          {
-            "name": "Rhamondre Stevenson",
-            "position": "RB",
-            "team": "NE",
-            "slot": "BN",
-            "status": null
-          },
-          {
-            "name": "Marvin Harrison Jr.",
-            "position": "WR",
-            "team": "Ari",
-            "slot": "BN",
-            "status": null
-          },
-          {
-            "name": "J.K. Dobbins",
-            "position": "RB",
-            "team": "Den",
-            "slot": "BN",
-            "status": null
-          },
-          {
-            "name": "RJ Harvey",
-            "position": "RB",
-            "team": "Den",
-            "slot": "BN",
-            "status": null
-          },
-          {
-            "name": "Tony Pollard",
-            "position": "RB",
-            "team": "Ten",
-            "slot": "BN",
-            "status": null
-          },
-          {
-            "name": "Jonathon Brooks",
-            "position": "RB",
-            "team": "Car",
-            "slot": "IR",
-            "status": "IR"
-          },
-          {
-            "name": "Jordyn Tyson",
-            "position": "WR",
-            "team": "NO",
-            "slot": "IR",
-            "status": "IR-R"
-          },
-          {
-            "name": "Will Reichard",
-            "position": "K",
-            "team": "Min",
-            "slot": "K",
-            "status": null
-          },
-          {
-            "name": "Chiefs",
-            "position": "DEF",
-            "team": "KC",
-            "slot": "DEF",
-            "status": null
-          }
-        ],
-        "availablePlayers": [
-          {
-            "name": "Trevor Lawrence",
-            "position": "QB",
-            "team": "Jax",
-            "status": null,
-            "yahooWideRostered": 94
-          },
-          {
-            "name": "Justin Herbert",
-            "position": "QB",
-            "team": "LAC",
-            "status": null,
-            "yahooWideRostered": 87
-          },
-          {
-            "name": "Tyler Shough",
-            "position": "QB",
-            "team": "NO",
-            "status": null,
-            "yahooWideRostered": 85
-          },
-          {
-            "name": "Bo Nix",
-            "position": "QB",
-            "team": "Den",
-            "status": null,
-            "yahooWideRostered": 83
-          },
-          {
-            "name": "Kyle Monangai",
-            "position": "RB",
-            "team": "Chi",
-            "status": null,
-            "yahooWideRostered": 82
-          },
-          {
-            "name": "Rico Dowdle",
-            "position": "RB",
-            "team": "Pit",
-            "status": "Q",
-            "yahooWideRostered": 81
-          },
-          {
-            "name": "Jordan Addison",
-            "position": "WR",
-            "team": "Min",
-            "status": null,
-            "yahooWideRostered": 77
-          },
-          {
-            "name": "Jordan Love",
-            "position": "QB",
-            "team": "GB",
-            "status": null,
-            "yahooWideRostered": 73
-          },
-          {
-            "name": "Quentin Johnston",
-            "position": "WR",
-            "team": "LAC",
-            "status": null,
-            "yahooWideRostered": 68
-          },
-          {
-            "name": "Kyler Murray",
-            "position": "QB",
-            "team": "Min",
-            "status": null,
-            "yahooWideRostered": 67
-          },
-          {
-            "name": "Michael Pittman Jr.",
-            "position": "WR",
-            "team": "Pit",
-            "status": null,
-            "yahooWideRostered": 66
-          },
-          {
-            "name": "Xavier Worthy",
-            "position": "WR",
-            "team": "KC",
-            "status": null,
-            "yahooWideRostered": 65
-          },
-          {
-            "name": "KC Concepcion Jr.",
-            "position": "WR",
-            "team": "Cle",
-            "status": null,
-            "yahooWideRostered": 63
-          },
-          {
-            "name": "Romeo Doubs",
-            "position": "WR",
-            "team": "NE",
-            "status": null,
-            "yahooWideRostered": 62
-          },
-          {
-            "name": "Devaughn Vele",
-            "position": "WR",
-            "team": "NO",
-            "status": null,
-            "yahooWideRostered": 61
-          }
-        ],
-        "recentTransactions": [
-          {
-            "date": "2026-09-30",
-            "type": "add",
-            "status": "complete",
-            "team": "Josh ❤️creampies",
-            "move": "Added Braelon Allen"
-          },
-          {
-            "date": "2026-09-30",
-            "type": "add",
-            "status": "complete",
-            "team": "Josh ❤️creampies",
-            "move": "Added Bears • Dropped Patriots"
-          },
-          {
-            "date": "2026-09-30",
-            "type": "add",
-            "status": "complete",
-            "team": "Hazleton Coal Mine",
-            "move": "Added Kenyon Sadiq • Dropped Dalton Schultz"
-          },
-          {
-            "date": "2026-09-30",
-            "type": "add",
-            "status": "complete",
-            "team": "Frenchville HornHog",
-            "move": "Added Juwan Johnson • Dropped Dallas Goedert"
-          },
-          {
-            "date": "2026-09-30",
-            "type": "add",
-            "status": "complete",
-            "team": "Hazleton Coal Mine",
-            "move": "Added Vikings • Dropped 49ers"
-          },
-          {
-            "date": "2026-09-30",
-            "type": "add",
-            "status": "complete",
-            "team": "Jersey junkyard",
-            "move": "Added Ollie Gordon II • Dropped MarShawn Lloyd"
-          },
-          {
-            "date": "2026-09-29",
-            "type": "drop",
-            "status": "complete",
-            "team": "Josh ❤️creampies",
-            "move": "Dropped De'Von Achane"
-          }
-        ]
+        "away": {
+          "teamKey": "470.l.290846.t.4",
+          "teamId": "4",
+          "teamName": "Chasing Greatness",
+          "points": 127.06,
+          "projectedPoints": 142.35,
+          "liveProjectedPoints": null,
+          "winProbability": 0.01
+        }
+      },
+      "transactions": [
+        {
+          "date": "2026-11-05",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add Saints / Drop Patriots"
+        },
+        {
+          "date": "2026-11-01",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add Jonah Coleman"
+        },
+        {
+          "date": "2026-11-01",
+          "type": "drop",
+          "team": "Brock Hard",
+          "move": "Drop Jalen Hurts"
+        },
+        {
+          "date": "2026-10-28",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add Patriots / Drop Texans"
+        },
+        {
+          "date": "2026-10-28",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add Trevor Lawrence / Drop Kirk Cousins"
+        },
+        {
+          "date": "2026-10-22",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add Will Reichard / Drop Blake Grupe"
+        },
+        {
+          "date": "2026-10-22",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add Texans / Drop Patriots"
+        },
+        {
+          "date": "2026-10-18",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add Carnell Tate"
+        },
+        {
+          "date": "2026-10-18",
+          "type": "drop",
+          "team": "Brock Hard",
+          "move": "Drop Jonathon Brooks"
+        },
+        {
+          "date": "2026-10-18",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add Dameon Pierce / Drop MarShawn Lloyd"
+        },
+        {
+          "date": "2026-10-15",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add Kirk Cousins / Drop RJ Harvey"
+        },
+        {
+          "date": "2026-10-14",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add MarShawn Lloyd / Drop Tony Pollard"
+        },
+        {
+          "date": "2026-10-14",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add Blake Grupe / Drop Will Reichard"
+        },
+        {
+          "date": "2026-10-14",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add Xavier Worthy / Drop Jordan Addison"
+        },
+        {
+          "date": "2026-10-14",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add Patriots / Drop Texans"
+        },
+        {
+          "date": "2026-10-14",
+          "type": "add",
+          "team": "Brock Hard",
+          "move": "Add Woody Marks / Drop Malik Washington"
+        }
+      ],
+      "transactionsCoverage": {
+        "limited": true,
+        "includedRows": 16,
+        "window": "Recent owner team activity from Flaim"
       }
     }
   }
