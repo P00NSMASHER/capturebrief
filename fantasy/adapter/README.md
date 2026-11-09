@@ -1,6 +1,6 @@
 # Yahoo/Flaim private schema-v3 bridge — Brock Hard only
 
-This module is a read-only, testable **Brock Hard & Tee Baggin** data mapper for Fantasy HQ v2 PR #183. It makes **no network calls, OAuth requests, file writes, or roster transactions**. It contains no Yahoo credentials. It is not a background sync.
+This module is a read-only, testable **Brock Hard & Tee Baggin** data mapper for the released, Brock-only Fantasy HQ v2 site (owner-merged PR #183). It makes **no network calls, OAuth requests, file writes, or roster transactions**. It contains no Yahoo credentials. It is not a background sync.
 
 ## Owner-authorized input
 
