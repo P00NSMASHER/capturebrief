@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1">
+<title>Premium Fantasy HQ UI Acceptance</title></head>
+<body><div id="root">Checking premium league interface…</div>
+<script type="module">
+try{
+ const raw=await (await fetch('/capturebrief/fantasy/data.json',{cache:'no-store'})).json();
+ if(raw.schemaVersion!==3||Object.keys(raw.teams||{}).join(',')!=='brock')throw Error('Brock-only fixture invalid');
+ raw.syncedAtIso=new Date().toISOString();
+ localStorage.setItem('fantasy-hq-private-v3',JSON.stringify(raw));
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=5');
+ const until=async(fn)=>{
+  for(let i=0;i<100;i++){if(fn())return true;await new Promise(r=>setTimeout(r,30))}
+  return false
+ };
+ if(!await until(()=>document.querySelector('.matchup-panel')))throw Error('Home matchup missing');
+ if(!document.querySelector('.teamhero svg.club-emblem'))throw Error('Brock crest did not render');
+ if(!document.querySelector('.statusrow'))throw Error('Source timestamp missing');
+ if(document.querySelectorAll('.bottomnav button').length!==4)throw Error('Navigation does not contain 4 options');
+ if(!document.querySelector('.matchup-panel .match-team.against svg.club-emblem'))throw Error('Opponent crest missing');
+ document.querySelector('[data-tab="lab"]').click();
+ if(!await until(()=>document.querySelectorAll('.club-tile').length===8))throw Error('8 club logos missing');
+ if(document.querySelectorAll('.league-gallery svg.club-emblem').length!==8)throw Error('8 crest SVG elements missing');
+ if(!document.getElementById('root').textContent.includes('Next three matchups'))throw Error('Future matchups missing');
+ document.querySelector('[data-tab="waivers"]').click();
+ if(!await until(()=>document.querySelector('.filterbar')))throw Error('Player filters missing');
+ const all=document.querySelectorAll('.available-row').length;
+ document.querySelector('[data-filter="WR"]').click();
+ const wr=document.querySelectorAll('.available-row').length;
+ if(all!==25||!wr||wr>=all)throw Error('Position filter failed: '+wr+' of '+all);
+ if(!document.querySelector('[data-filter="WR"][aria-pressed="true"]'))throw Error('Filter focus/selection broken');
+ document.querySelector('[data-tab="lineup"]').click();
+ if(!await until(()=>document.querySelector('.playerrow')))throw Error('Lineup not rendered');
+ if(!document.getElementById('root').textContent.includes('Highest-scoring lineup so far'))throw Error('Scored-point evidence missing');
+ document.querySelector('[data-tab="overview"]').click();
+ if(!await until(()=>document.querySelector('.matchup-panel')))throw Error('Home navigation did not work');
+ const overflow=document.documentElement.scrollWidth-window.innerWidth;
+ if(overflow>2)throw Error('Mobile horizontal overflow '+overflow+'px');
+ const css=getComputedStyle(document.querySelector('.teamhero'));
+ if(!css.backgroundImage.includes('gradient'))throw Error('Premium theme stylesheet not applied');
+ if(document.getElementById('root').textContent.includes('Quick Snap Jamison')||document.getElementById('root').textContent.includes('Highlight Reel Jamison'))throw Error('Other owned team leaked');
+ const mark=document.createElement('strong');mark.id='premium-qa';
+ mark.textContent='PREMIUM_BROWSER_PASS · '+all+' players · '+wr+' WR · 8 crests · mobile viewport';
+ document.body.appendChild(mark);
+}catch(e){
+ const mark=document.createElement('strong');mark.id='premium-qa';
+ mark.textContent='PREMIUM_BROWSER_FAIL: '+e.message;document.body.appendChild(mark);
+}
+</script></body></html>
