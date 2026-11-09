@@ -37,10 +37,11 @@ function availableByPosition(team,pos){
 /* Three-paragraph coach's assessment derived strictly from saved Brock-only facts.
    No LLM/API call in the browser. Every named player is present in the capture. */
 function writeCoachSummary({snapshot,team,rank,leagueSize,wins,losses,pointsFor,pointsAgainst,differential,
-                           flagged,flaggedStarters,qbDepth,qbs,future}){
+                           flagged,flaggedStarters,qbDepth,qbs,future,archived=false}){
  const standing=rank!==null&&wins!==null&&losses!==null?
-   'Brock Hard is '+wins+'–'+losses+' and '+(rank===1?'sitting atop':'ranked '+rank+' of')+
-   ' the '+leagueSize+'-team Yahoo table at the Week '+snapshot.week+' capture. '+
+   (archived?'At the saved Week '+snapshot.week+' Yahoo capture, Brock Hard was ':'Brock Hard is ')+
+   wins+'–'+losses+' and '+(rank===1?'first in':'ranked '+rank+' of')+
+   ' the '+leagueSize+'-team Yahoo table at that capture. '+
    (pointsFor!==null&&pointsAgainst!==null&&differential!==null?
      'The team has scored '+pointsFor.toFixed(2)+' points and allowed '+pointsAgainst.toFixed(2)+
      ', a '+(differential>=0?'+':'')+differential.toFixed(2)+' point differential. ':
@@ -84,6 +85,41 @@ function readyResponse(status,label){
  return {ready:false,status,headline:label,subtitle:'The verified Brock Hard capture is required before showing move recommendations.',
   metrics:[],priorities:[],sections:{},captureAt:null};
 }
+/* Archived mode: the user can read a historical three-paragraph report while
+   move recommendations remain completely disabled by the six-hour safety gate. */
+export function buildArchivedCoachReview(snapshot,{now=Date.now()}={}){
+ if(!snapshot||snapshot.schemaVersion!==3||snapshot.season!==2026||
+   !snapshot.teams||Object.keys(snapshot.teams).join(',')!=='brock')return null;
+ const team=snapshot.teams.brock;
+ if(String(team?.leagueId)!=='470.l.290846'||String(team?.teamId)!=='2'||
+    !Array.isArray(team.roster)||!team.roster.length)return null;
+ const ids=team.roster.map(p=>String(p?.id||''));
+ if(ids.some(id=>!id)||new Set(ids).size!==ids.length)return null;
+ const captured=Date.parse(snapshot.syncedAtIso||'');
+ if(!Number.isFinite(captured)||captured>now+300_000)return null;
+ const flagged=rosterStatusAlerts(team.roster);
+ const flaggedStarters=flagged.filter(a=>{
+   const player=team.roster.find(p=>String(p.id)===String(a.id));
+   return player&&!nonStarter(normalizePosition(player.slot));
+ });
+ const qbDepth=positionDepth(team.roster).find(d=>d.position==='QB')?.active||0;
+ const qbs=availableByPosition(team,'QB');
+ const rank=number(team.standings?.rank)??number(String(team.rank||'').match(/^\d+/)?.[0]);
+ const leagueSize=number(team.standings?.leagueSize)||8;
+ const wins=number(team.standings?.wins),losses=number(team.standings?.losses);
+ const pointsFor=number(team.standings?.pointsFor),pointsAgainst=number(team.standings?.pointsAgainst);
+ const differential=pointsFor!==null&&pointsAgainst!==null?
+   Math.round((pointsFor-pointsAgainst)*100)/100:null;
+ const future=(Array.isArray(team.upcomingMatchups)?team.upcomingMatchups:[])
+   .filter(g=>Number.isInteger(g?.week)&&g.week>snapshot.week&&g.opponent&&
+     finite(g.myProjected)&&finite(g.opponentProjected)&&g.myProjected>=0&&g.opponentProjected>=0)
+   .map(g=>({...g,margin:Math.round((g.myProjected-g.opponentProjected)*100)/100}))
+   .sort((a,b)=>a.week-b.week).slice(0,3);
+ return {captureAt:snapshot.syncedAtIso,status:'archived',historical:true,
+   summary:writeCoachSummary({snapshot,team,rank,leagueSize,wins,losses,
+    pointsFor,pointsAgainst,differential,flagged,flaggedStarters,qbDepth,qbs,future,archived:true})};
+}
+
 /** No “AI live manager” claim. Each output is traceable to Brock-only Yahoo fields. */
 export function buildCoachPlan(snapshot,{now=Date.now()}={}){
  if(!snapshot||snapshot.schemaVersion!==3||snapshot.season!==2026||
