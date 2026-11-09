@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 3,
+  "source": "SYNTHETIC TEST FIXTURE - NOT LIVE",
+  "provider": "Yahoo",
+  "season": 2026,
+  "week": 9,
+  "syncedAtIso": "2026-11-08T21:00:00Z",
+  "teams": {
+    "brock": {
+      "name": "Fictional Brock Test Team",
+      "short": "Brock Test",
+      "provider": "yahoo",
+      "leagueId": "test.league",
+      "teamId": "2",
+      "record": "5–3",
+      "rank": "2",
+      "waiver": "#3",
+      "lineupSlots": {
+        "QB": 1,
+        "RB": 1,
+        "WR": 1,
+        "FLEX": 1
+      },
+      "projectionCoverage": "complete",
+      "roster": [
+        {
+          "id": "1",
+          "name": "Fictional QB",
+          "position": "QB",
+          "slot": "QB",
+          "projection": 18
+        },
+        {
+          "id": "2",
+          "name": "Fictional RB",
+          "position": "RB",
+          "slot": "RB",
+          "projection": 13
+        },
+        {
+          "id": "3",
+          "name": "Fictional WR",
+          "position": "WR",
+          "slot": "WR",
+          "projection": 12
+        },
+        {
+          "id": "4",
+          "name": "Fictional WR Bench",
+          "position": "WR",
+          "slot": "BN",
+          "projection": 14
+        }
+      ],
+      "availablePlayers": []
+    }
+  }
+}

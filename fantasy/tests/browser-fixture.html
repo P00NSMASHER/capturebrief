@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic Browser QA Fixture</title><link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css"></head>
+<body data-team="brock"><div id="root">Loading synthetic test fixture…</div>
+<script type="module">
+const fixture=await (await fetch('/capturebrief/fantasy/tests/fixtures/private-v3.sample.json',{cache:'no-store'})).json();
+fixture.syncedAtIso=new Date().toISOString();
+localStorage.setItem('fantasy-hq-private-v3',JSON.stringify(fixture));
+location.hash='#lineup';
+await import('/capturebrief/fantasy/assets/app-v2.mjs');
+</script></body></html>

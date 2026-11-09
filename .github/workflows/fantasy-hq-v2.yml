@@ -1,0 +1,85 @@
+name: Fantasy HQ v2 CI
+on:
+  push:
+    branches:
+      - feature/fantasy-hq-v2-*
+    paths:
+      - 'fantasy/**'
+      - '.github/workflows/fantasy-hq-v2.yml'
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'fantasy/**'
+      - '.github/workflows/fantasy-hq-v2.yml'
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify source syntax
+        run: |
+          node --version
+          node --check fantasy/assets/engine.mjs
+          node --check fantasy/assets/app-v2.mjs
+          node --check fantasy/adapter/flaim-private-v3.mjs
+      - name: Run fail-closed data and UI regression tests
+        run: node --test fantasy/tests/*.test.mjs
+      - name: Render home and all deep links with headless Chrome
+        run: |
+          set -eu
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -z "$CHROME" ]; then
+            echo "::error::No browser executable available to verify the page"
+            exit 1
+          fi
+          ln -s . capturebrief
+          python3 -m http.server 8797 >/tmp/fantasy-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          for path in "" brock/; do
+            "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=14000 --window-size=390,844 --dump-dom "http://127.0.0.1:8797/capturebrief/fantasy/$path" > /tmp/fantasy-render.html 2>/tmp/chrome-stderr.log || {
+              cat /tmp/chrome-stderr.log; exit 1;
+            }
+            grep -Fq 'PUBLISHED SNAPSHOT' /tmp/fantasy-render.html || {
+              echo "::error::App failed to load snapshot at $path"; tail -c 1500 /tmp/fantasy-render.html; exit 1;
+            }
+            if [ -z "$path" ]; then
+              grep -Fq 'Brock Hard' /tmp/fantasy-render.html
+              if grep -Eq 'Quick Snap Jamison|Highlight Reel Jamison|THREE LEAGUES|All teams' /tmp/fantasy-render.html; then
+                echo "::error::Other personal team leaked into Brock-only dashboard"; exit 1;
+              fi
+              # Source notices differ correctly for archived versus fresh captures.
+              if ! grep -Eq 'Outdated fantasy data|Data source notice' /tmp/fantasy-render.html; then
+                echo "::error::Expected freshness/provenance notice absent on home page"
+                tail -c 2000 /tmp/fantasy-render.html
+                exit 1
+              fi
+            else
+              grep -Fq 'Waiver' /tmp/fantasy-render.html
+              grep -Fq 'Overview' /tmp/fantasy-render.html
+            fi
+            echo "Browser smoke passed: /fantasy/$path"
+          done
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=14000 --window-size=390,844 --dump-dom "http://127.0.0.1:8797/capturebrief/fantasy/tests/browser-fixture.html" > /tmp/fantasy-fixture.html 2>/tmp/chrome-stderr.log
+          grep -Fq 'MAXIMIZED PROJECTED POINTS' /tmp/fantasy-fixture.html || { echo '::error::Projected lineup failed to render'; tail -c 1800 /tmp/fantasy-fixture.html; exit 1; }
+          grep -Fq 'Fictional WR Bench' /tmp/fantasy-fixture.html || { echo '::error::Bench slot optimizer failed to render'; exit 1; }
+          echo 'Browser smoke passed: synthetic projections and optimizer'
+          mkdir -p fantasy/screenshots
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot=fantasy/screenshots/home.png "http://127.0.0.1:8797/capturebrief/fantasy/" >/dev/null 2>/tmp/chrome-stderr.log
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot=fantasy/screenshots/brock.png "http://127.0.0.1:8797/capturebrief/fantasy/brock/" >/dev/null 2>/tmp/chrome-stderr.log
+          test -s fantasy/screenshots/home.png
+          test -s fantasy/screenshots/brock.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fantasy-hq-v2-mobile-preview
+          path: fantasy/screenshots/*.png
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fantasy-hq-v2-site-files
+          path: fantasy/
+          retention-days: 7

@@ -1,0 +1,19 @@
+{
+  "name": "Brock Hard Fantasy HQ",
+  "short_name": "Brock Hard",
+  "description": "Brock Hard & Tee Baggin single-team read-only fantasy football dashboard",
+  "id": "/capturebrief/fantasy/",
+  "start_url": "/capturebrief/fantasy/",
+  "scope": "/capturebrief/fantasy/",
+  "display": "standalone",
+  "background_color": "#071019",
+  "theme_color": "#071019",
+  "icons": [
+    {
+      "src": "/capturebrief/fantasy/assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
