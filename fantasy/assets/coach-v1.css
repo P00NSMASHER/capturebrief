@@ -180,3 +180,12 @@
  .coach-recap{gap:17px}
  .coach-recap-paragraph{font-size:13px;padding-left:13px;line-height:1.68}
 }
+
+/* An archived Coach recap is readable, but never styled like fresh advice. */
+.coach-assessment--archived{
+ border-color:#e5b87a68;
+ background:radial-gradient(ellipse at 92% -10%,#b18a4d22,transparent 65%),linear-gradient(145deg,#302a2b,#182532);
+}
+.coach-assessment--archived .label{color:#f5ce92}
+.coach-assessment--archived .coach-recap-paragraph{border-left-color:#deb77b82}
+.coach-assessment--archived .coach-recap-source{color:#e5bf93}
