@@ -215,6 +215,17 @@ function onlyBrockRaw(raw){
  return clean;
 }
 function captureMs(s){const n=Date.parse(s||'');return Number.isFinite(n)?n:-Infinity}
+// Extra verified analysis may arrive without changing the provider roster capture.
+// Never advance to an older core capture, even if enrichment is newer.
+function isVerifiedAdvance(latest,previous){
+ if(!previous)return true;
+ const fresh=captureMs(latest?.syncedAtIso),old=captureMs(previous?.syncedAtIso);
+ if(fresh>old)return true;
+ if(fresh<old)return false;
+ const x=captureMs(latest?.teams?.brock?.analysisAsOfIso);
+ const y=captureMs(previous?.teams?.brock?.analysisAsOfIso);
+ return x>y;
+}
 function validatePublished(raw){
  const cleaned=onlyBrockRaw(raw);
  const snapshot=normalizeSnapshot(cleaned);
@@ -232,14 +243,14 @@ async function getPublic(){
  try{
   const stored=localStorage.getItem(CACHE_KEY);
   const existing=stored?validatePublished(JSON.parse(stored)).snapshot:null;
-  if(!existing||captureMs(result.snapshot.syncedAtIso)>captureMs(existing.syncedAtIso))
+  if(isVerifiedAdvance(result.snapshot,existing))
     localStorage.setItem(CACHE_KEY,JSON.stringify(result.raw));
  }catch{}
  return result.snapshot;
 }
 function acceptNewer(latest){
  if(!latest?.teams?.brock||!Number.isFinite(captureMs(latest.syncedAtIso)))return false;
- if(current&&captureMs(latest.syncedAtIso)<=captureMs(current.syncedAtIso))return false;
+ if(!isVerifiedAdvance(latest,current))return false;
  current=latest;source='published';
  try{localStorage.removeItem(PRIVATE_KEY)}catch{}
  return true;
