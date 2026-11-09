@@ -33,7 +33,7 @@ test('wrong or missing owner identity cannot become a Brock snapshot',()=>{
 });
 test('newer current local capture is never replaced by older/equal imports',()=>{
  const raw=fixture();
- for(const time of [raw.syncedAtIso,'2026-11-09T14:50:53Z']){
+ for(const time of [raw.syncedAtIso,'2026-11-09T14:51:00Z']){
   assert.throws(()=>preparePrivateImport(raw,{now,previousIso:time}),/not newer/);
  }
 });
