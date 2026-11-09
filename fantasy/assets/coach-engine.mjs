@@ -9,8 +9,14 @@ const nonStarter=s=>bench.has(s)||reserve.has(s);
 const number=n=>finite(n)?n:(typeof n==='string'&&n.trim()!==''&&Number.isFinite(Number(n))?Number(n):null);
 const signed=n=>(n>=0?'+':'')+n.toFixed(1);
 
+/* Keep full source rationale for tests, but deliver small, scannable action bullets.
+   Split at sentence boundaries only: decimal values (e.g., 148.58) stay intact. */
+export function coachBulletPoints(detail){
+ return String(detail||'').split(/(?<=[.!?])\s+(?=[A-Z0-9])/u)
+  .map(line=>line.trim()).filter(Boolean).slice(0,5);
+}
 const card=(id,title,detail,evidence,{tone='neutral',actionTab=null,actionLabel=null,filter=null}={})=>({
- id,title,detail,evidence,tone,actionTab,actionLabel,filter
+ id,title,detail,bullets:coachBulletPoints(detail),evidence,tone,actionTab,actionLabel,filter
 });
 function matchFor(team){
  const m=team?.matchup;
@@ -28,6 +34,52 @@ function availableByPosition(team,pos){
     !seen.has(String(p.id))&&(seen.add(String(p.id)),true))
   .sort((a,b)=>b.percentOwned-a.percentOwned||String(a.name).localeCompare(String(b.name)));
 }
+/* Three-paragraph coach's assessment derived strictly from saved Brock-only facts.
+   No LLM/API call in the browser. Every named player is present in the capture. */
+function writeCoachSummary({snapshot,team,rank,leagueSize,wins,losses,pointsFor,pointsAgainst,differential,
+                           flagged,flaggedStarters,qbDepth,qbs,future}){
+ const standing=rank!==null&&wins!==null&&losses!==null?
+   'Brock Hard is '+wins+'–'+losses+' and '+(rank===1?'sitting atop':'ranked '+rank+' of')+
+   ' the '+leagueSize+'-team Yahoo table at the Week '+snapshot.week+' capture. '+
+   (pointsFor!==null&&pointsAgainst!==null&&differential!==null?
+     'The team has scored '+pointsFor.toFixed(2)+' points and allowed '+pointsAgainst.toFixed(2)+
+     ', a '+(differential>=0?'+':'')+differential.toFixed(2)+' point differential. ':
+     'The full points-for and points-against comparison is not verified. '):
+   'The latest saved standings are not complete enough to grade Brock Hard’s league position. ';
+ const health=flaggedStarters.length?
+   flaggedStarters[0].name+' carried a '+flaggedStarters[0].status+' designation in the '+flaggedStarters[0].slot+
+   ' starting slot at capture. ':
+   'No starting-player injury designation was captured, but that is not proof of current health. ';
+ const depth=qbDepth===1?
+   'Only one active quarterback is rostered, so I want a contingency before a late-season injury or bye causes a scramble. ':
+   'I would check quarterback coverage alongside the other positional needs, not force an unnecessary move. ';
+ const qbCandidates=qbDepth===1&&qbs.length?
+   'The saved free-agent board listed '+qbs[0].name+
+   (qbs[0].acquisitionState==='waivers'?' on waivers':' as a free agent')+
+   '; that is a scouting lead, not an add recommendation until current eligibility and value are checked. ':
+   'No verified quarterback pickup can be nominated from this saved inventory. ';
+ const closest=future.length?
+   [...future].sort((a,b)=>Math.abs(a.margin)-Math.abs(b.margin)||a.week-b.week)[0]:null;
+ const schedule=closest?
+   'Of the next '+future.length+' captured Yahoo matchups, Week '+closest.week+' against '+closest.opponent+
+   ' carries the narrowest team-level pregame projection gap ('+(closest.margin>=0?'+':'')+
+   closest.margin.toFixed(1)+' points for Brock Hard). ':
+   'The remaining opponent list and team-level forecasts are incomplete, so there is no defensible schedule ranking yet. ';
+ return [
+  standing+
+   'That is the profile of a team competing from a solid position, not a license to assume the playoffs are clinched. '+
+   'My focus is converting a good season start into a dependable lineup when each game matters.',
+  'I would manage risk before chasing a headline transaction. '+health+
+   flagged.length+' Yahoo player-status flag'+(flagged.length===1?' was':'s were')+
+   ' present in the snapshot. '+depth+qbCandidates+
+   'I would not give away a strong starter for an unproven trade package without comparable forward values.',
+  'For the stretch run, I want healthy starters, flexible bench coverage, and waiver priority spent deliberately. '+
+   schedule+
+   'Check the official playoff format, deadlines, byes and current player news in Yahoo. '+
+   'Those projections are saved team estimates—not winning probabilities—and the goal is to arrive at the playoff weeks with options, not regrets.'
+ ];
+}
+
 function readyResponse(status,label){
  return {ready:false,status,headline:label,subtitle:'The verified Brock Hard capture is required before showing move recommendations.',
   metrics:[],priorities:[],sections:{},captureAt:null};
@@ -179,6 +231,7 @@ export function buildCoachPlan(snapshot,{now=Date.now()}={}){
   headline:first?.title||'Review your Brock Hard roster',
   subtitle:'Prioritized checks from the last verified Yahoo snapshot—not live predictions or submitted roster moves.',
   metrics,priorities,sections:{lineup,waivers:waiver,trades,playoffs,league},
+  summary:writeCoachSummary({snapshot,team,rank,leagueSize,wins,losses,pointsFor,pointsAgainst,differential,flagged,flaggedStarters,qbDepth,qbs,future}),
   facts:{rank,leagueSize,wins,losses,differential,qbDepth,flaggedStarters:flaggedStarters.length,
    scoredGap:scored.available?scored.gap:null,nextMatchups:future.length},
   projectionCoverage:team.projectionCoverage||'unknown'};
