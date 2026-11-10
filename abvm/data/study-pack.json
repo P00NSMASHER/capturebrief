@@ -3,29 +3,30 @@
   "syncPolicy": {
     "intervalHours": 4
   },
-  "sourceCapturedAt": "2026-11-07T14:00:22.886Z",
+  "sourceCapturedAt": "2026-11-09T22:35:21.525Z",
   "pack": {
     "gaps": [],
     "homework": [
       {
-        "day": "Daily",
-        "due": "Ongoing",
-        "subject": "Religion",
-        "task": "Attend Mass"
+        "day": "Monday",
+        "due": "Not specified",
+        "subject": "Spelling",
+        "task": "Spelling Choice Board activity"
       },
       {
-        "day": "Daily",
-        "due": "Ongoing",
+        "day": "Monday",
+        "due": "Not specified",
+        "subject": "Math",
+        "task": "Math pg. 56"
+      },
+      {
+        "day": "Monday",
+        "due": "Not specified",
         "subject": "Reading",
         "task": "Read and update Reading log"
       }
     ],
     "importantDates": [
-      {
-        "date": "Friday Nov. 6",
-        "kind": "test",
-        "label": "Spelling (consonant digraphs) and Handwriting Test"
-      },
       {
         "date": "Tuesday Nov. 10",
         "kind": "event",
@@ -54,7 +55,7 @@
       {
         "date": "Friday Nov. 13",
         "kind": "test",
-        "label": "Spelling (3 letter blends) and Handwriting Test"
+        "label": "Spelling Test (3 letter blends) and Handwriting"
       },
       {
         "date": "Thursday Nov. 19",
@@ -64,144 +65,118 @@
     ],
     "questions": [
       {
-        "answer": "In the Bible, in Church, and through others",
+        "answer": "So we can love God and others",
         "choices": [
-          "In the Bible, in Church, and through others",
-          "Only in books",
-          "Only through the weather"
+          "So we can love God and others",
+          "To help us learn to read",
+          "To tell us what to eat"
         ],
         "difficulty": "easy",
-        "explanation": "God speaks to us in many ways, including through the Bible, during Church services, and through the people in our lives.",
+        "explanation": "God gave us the 10 Commandments to follow so we can love God and others.",
         "format": "multiple_choice",
-        "hint": "Think about where we pray and what we read.",
+        "hint": "It is about showing love.",
         "id": "q1",
-        "prompt": "Where does God speak to us?",
-        "subject": "Religion"
-      },
-      {
-        "answer": "His son, Jesus",
-        "choices": [
-          "His son, Jesus",
-          "The angels",
-          "The kings"
-        ],
-        "difficulty": "easy",
-        "explanation": "The Bible teaches that Jesus is the best way God communicates His message to us.",
-        "format": "multiple_choice",
-        "hint": "He is God's greatest gift.",
-        "id": "q2",
-        "prompt": "Who is the best way God speaks to us?",
+        "prompt": "Why did God give us the 10 Commandments?",
         "subject": "Religion"
       },
       {
         "answer": "true",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "The Bible consists of two major sections: the Old Testament and the New Testament.",
+        "explanation": "The 1st Great Commandment states you shall love the Lord your God with all your heart, soul, mind, and strength.",
         "format": "true_false",
-        "hint": "There are two main parts.",
+        "hint": "Think about the Great Commandment.",
+        "id": "q2",
+        "prompt": "The 1st Great Commandment says you should love the Lord your God with all your heart.",
+        "subject": "Religion"
+      },
+      {
+        "answer": "offspring",
+        "choices": [
+          "offspring",
+          "adult",
+          "mammal"
+        ],
+        "difficulty": "medium",
+        "explanation": "Offspring is the term used for the young of an animal.",
+        "format": "multiple_choice",
+        "hint": "It starts with 'o'.",
         "id": "q3",
-        "prompt": "The Bible is broken into the Old and New Testament.",
-        "subject": "Religion"
+        "prompt": "Which vocabulary word means the young of an animal?",
+        "subject": "Reading"
       },
       {
-        "answer": "Original sin",
+        "answer": "An animal that feeds its babies milk",
         "choices": [
-          "Original sin",
-          "Good deeds",
-          "The Holy Spirit"
+          "An animal that feeds its babies milk",
+          "An animal that has feathers",
+          "An insect that turns into a butterfly"
         ],
         "difficulty": "medium",
-        "explanation": "At Baptism, original sin is washed away and we receive the gift of the Holy Spirit.",
+        "explanation": "A mammal is a type of animal that feeds its babies milk.",
         "format": "multiple_choice",
-        "hint": "It is the tendency to sin we are born with.",
+        "hint": "It relates to how they feed their young.",
         "id": "q4",
-        "prompt": "What is washed away at Baptism?",
-        "subject": "Religion"
+        "prompt": "What is a mammal?",
+        "subject": "Reading"
       },
       {
-        "answer": "Mary",
-        "choices": [
-          "Mary",
-          "Eve",
-          "Sarah"
-        ],
+        "answer": "giant",
+        "choices": [],
         "difficulty": "easy",
-        "explanation": "Mary is recognized as the Mother of the Church.",
-        "format": "multiple_choice",
-        "hint": "She is also Jesus' mother.",
+        "explanation": "Giant means very large.",
+        "format": "word_build",
+        "hint": "Starts with 'g'.",
         "id": "q5",
-        "prompt": "Who is the Mother of the Church?",
-        "subject": "Religion"
+        "prompt": "Build the vocabulary word that means very large.",
+        "subject": "Reading"
       },
       {
-        "answer": "Jesus",
+        "answer": "scratch",
         "choices": [],
         "difficulty": "medium",
-        "explanation": "Jesus is the head of the Church, while we are the body.",
-        "format": "short_answer",
-        "hint": "He is God's son.",
+        "explanation": "Scratch is a basic spelling word this week featuring a 3-letter blend.",
+        "format": "word_build",
+        "hint": "Starts with the 3-letter blend 'scr'.",
         "id": "q6",
-        "prompt": "Who is the head of the Church?",
-        "subject": "Religion"
+        "prompt": "Spell the word that means to use your nails to rub an itch.",
+        "subject": "Spelling"
       },
       {
-        "answer": "Faith",
+        "answer": "until",
         "choices": [
-          "Faith",
-          "Money",
-          "Sight"
+          "until",
+          "splash",
+          "throne"
         ],
         "difficulty": "easy",
-        "explanation": "Faith is a gift from God that helps us believe in Him.",
+        "explanation": "Until, far, and flower are the high frequency words for this week.",
         "format": "multiple_choice",
-        "hint": "It is a gift received at Baptism.",
+        "hint": "It is one of the three high frequency words.",
         "id": "q7",
-        "prompt": "What gift from God helps us believe?",
-        "subject": "Religion"
-      },
-      {
-        "answer": "false",
-        "choices": [],
-        "difficulty": "easy",
-        "explanation": "The Trinity is three persons in one God: Father, Son, and Holy Spirit.",
-        "format": "true_false",
-        "hint": "Think of the Father, Son, and Holy Spirit.",
-        "id": "q8",
-        "prompt": "The Trinity is four persons in one God.",
-        "subject": "Religion"
-      },
-      {
-        "answer": "chop",
-        "choices": [],
-        "difficulty": "easy",
-        "explanation": "Chop is a word using the consonant digraph 'ch'.",
-        "format": "word_build",
-        "hint": "Starts with the 'ch' digraph.",
-        "id": "q9",
-        "prompt": "Build the word that means to cut something with a quick blow.",
+        "prompt": "Which of these is a high frequency word from your list?",
         "subject": "Spelling"
       },
       {
-        "answer": "phone",
+        "answer": "true",
+        "choices": [],
+        "difficulty": "easy",
+        "explanation": "Groom means to clean or brush an animal.",
+        "format": "true_false",
+        "hint": "Think about taking care of a pet's fur.",
+        "id": "q8",
+        "prompt": "The word 'groom' means to clean or brush an animal.",
+        "subject": "Reading"
+      },
+      {
+        "answer": "throne",
         "choices": [],
         "difficulty": "medium",
-        "explanation": "Phone uses the 'ph' digraph.",
+        "explanation": "Throne is a spelling word with a 3-letter blend.",
         "format": "word_build",
-        "hint": "Uses the 'ph' digraph for the /f/ sound.",
-        "id": "q10",
-        "prompt": "Build the word for a device used to make calls.",
-        "subject": "Spelling"
-      },
-      {
-        "answer": "thin",
-        "choices": [],
-        "difficulty": "easy",
-        "explanation": "Thin uses the 'th' digraph.",
-        "format": "word_build",
-        "hint": "Starts with the 'th' digraph.",
-        "id": "q11",
-        "prompt": "Build the word that means the opposite of thick.",
+        "hint": "Starts with 'thr'.",
+        "id": "q9",
+        "prompt": "Spell the word for a chair a king or queen sits on.",
         "subject": "Spelling"
       },
       {
@@ -212,169 +187,72 @@
           "bus"
         ],
         "difficulty": "medium",
-        "explanation": "Words like 'mule' follow the u_e pattern for a long u sound.",
+        "explanation": "The long u sound is often found in CVCe words like u_e.",
         "format": "multiple_choice",
-        "hint": "Look for the silent e at the end.",
-        "id": "q12",
+        "hint": "Look for the silent 'e' at the end.",
+        "id": "q10",
         "prompt": "Which word has a long 'u' sound (u_e)?",
         "subject": "Reading"
-      },
-      {
-        "answer": "hope",
-        "choices": [
-          "hope",
-          "hop",
-          "hot"
-        ],
-        "difficulty": "medium",
-        "explanation": "Hope uses the o_e pattern for the long o sound.",
-        "format": "multiple_choice",
-        "hint": "The silent e makes the vowel say its name.",
-        "id": "q13",
-        "prompt": "Which word has a long 'o' sound (o_e)?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "true",
-        "choices": [],
-        "difficulty": "easy",
-        "explanation": "Diagrams and labels are text features that help explain information in a story.",
-        "format": "true_false",
-        "hint": "Think about how books show information.",
-        "id": "q14",
-        "prompt": "A diagram with labels is a type of text feature.",
-        "subject": "Reading"
-      },
-      {
-        "answer": "Sacrament",
-        "choices": [
-          "Sacrament",
-          "Parable",
-          "Senses"
-        ],
-        "difficulty": "medium",
-        "explanation": "A sacrament is a sacred sign given to the Church by Jesus.",
-        "format": "multiple_choice",
-        "hint": "Baptism is one of these.",
-        "id": "q15",
-        "prompt": "What is the sacred sign given to the Church by Jesus?",
-        "subject": "Religion"
-      },
-      {
-        "answer": "Church leaders",
-        "choices": [
-          "Church leaders",
-          "Only parents",
-          "Only children"
-        ],
-        "difficulty": "easy",
-        "explanation": "Church leaders act in Jesus' name and guide the Church.",
-        "format": "multiple_choice",
-        "hint": "They guide the members.",
-        "id": "q16",
-        "prompt": "Who are the people that guide the Church and act in Jesus' name?",
-        "subject": "Religion"
-      },
-      {
-        "answer": "Living; not dead",
-        "choices": [
-          "Living; not dead",
-          "Very big",
-          "Covered in fur"
-        ],
-        "difficulty": "easy",
-        "explanation": "Alive means something is living.",
-        "format": "multiple_choice",
-        "hint": "It is the opposite of dead.",
-        "id": "q17",
-        "prompt": "What does the word 'alive' mean?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "Very large",
-        "choices": [
-          "Very large",
-          "Very small",
-          "A type of bird"
-        ],
-        "difficulty": "easy",
-        "explanation": "Giant means something is very large.",
-        "format": "multiple_choice",
-        "hint": "Think of something huge.",
-        "id": "q18",
-        "prompt": "What does 'giant' mean?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "Offspring",
-        "choices": [
-          "Offspring",
-          "Adult",
-          "Groom"
-        ],
-        "difficulty": "medium",
-        "explanation": "Offspring refers to the young of a person, animal, or plant.",
-        "format": "multiple_choice",
-        "hint": "Baby bears are the offspring of a mother bear.",
-        "id": "q19",
-        "prompt": "Which word means the young of an animal?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "catch",
-        "choices": [],
-        "difficulty": "medium",
-        "explanation": "Catch is one of the review words on the spelling list.",
-        "format": "word_build",
-        "hint": "Ends with the 'tch' sound.",
-        "id": "q20",
-        "prompt": "Build the word that means to take hold of something that is moving.",
-        "subject": "Spelling"
       }
     ],
     "reminders": [
+      "Last day to buy wounded warrior wrist bands ($5) is Tuesday Nov. 10",
       "Pretzel money is due Friday Nov. 13",
-      "Trimester 1 Book Project is due Thursday Nov. 19",
-      "Nut Roll pick up is Tuesday Nov. 17"
+      "Keep Reading log and Behavior chart in the HW folder",
+      "Trimester 1 Book Project is due Thursday Nov. 19"
     ],
     "schemaVersion": 2,
-    "sourceCapturedAt": "2026-11-07T14:00:22.886Z",
-    "sourceHash": "bad1aedf895a6ddf3b9210227927d28d203d875295032a5517f62be9821355b0",
+    "sourceCapturedAt": "2026-11-09T22:35:21.525Z",
+    "sourceHash": "a9895951f9061a4658bf569c122cdd2cd9ec2d3dc75800356e67f4dbf202264d",
     "sourceSufficient": true,
     "subjects": [
       {
         "studyNotes": [
-          "God speaks to us in the Bible, in Church, and through others.",
-          "Jesus is the best way God speaks to us.",
-          "At Baptism, original sin is washed away and we receive the Holy Spirit, faith, and grace.",
-          "Jesus is the head of the Church, Mary is the Mother of the Church, and we are the body.",
-          "The Trinity consists of three persons in one God: Father, Son, and Holy Spirit."
+          "God gave us the 10 Commandments to follow so we can love God and others.",
+          "The 1st Great Commandment: You shall love the Lord your God with all your heart, with all your soul, with all your mind, and with all your strength."
         ],
         "subject": "Religion",
         "topics": [
-          "God Speaks to Us (Chapter 4)",
-          "Jesus Lives in His Church (Chapter 3)",
-          "The Rite of Baptism",
-          "The Bible: Old and New Testament"
+          "Unit 2: Jesus Call Us to Give Ourselves in Love",
+          "Chapter 5: Jesus Shows Us How to Love God our Father",
+          "The 10 Commandments",
+          "The 1st Great Commandment"
         ]
       },
       {
         "studyNotes": [
-          "Focus on CVCe words and silent e rules.",
-          "Identify text features in informational stories.",
-          "Practice consonant digraphs: ch, sh, th, wh, ph."
+          "Focus on identifying the main idea and supporting details in texts.",
+          "Learn to use diagrams and labels as text features.",
+          "Practice word structure with -ed and -ing endings on silent e and CVC words."
         ],
-        "subject": "Reading and Phonics",
+        "subject": "Reading",
         "topics": [
-          "Stories: Eagles and Eaglets, Baby Bears, From Caterpillar to Butterfly",
-          "Phonics: Long o (o_e), short o, long u (u_e), short u",
-          "Word Structure: -ed and -ing endings",
-          "Reading Comprehension: Main idea, details, diagrams, and labels"
+          "Eagles and Eaglets",
+          "Baby Bears",
+          "From Caterpillar to Butterfly",
+          "Main idea and details",
+          "Diagrams and labels",
+          "Text features",
+          "Long o (o_e) and short o",
+          "Long u (u_e) and short u",
+          "Word endings -ed and -ing (silent e and CVC words)",
+          "CVCe words"
         ]
       },
       {
         "studyNotes": [
-          "Review for the test on Thursday, Nov. 12."
+          "Basic words include: scratch, scrape, spring, throne, stripe, strange, shred, shrub, splash, split.",
+          "Review words: catch, sting.",
+          "High frequency words: far, flower, until."
+        ],
+        "subject": "Spelling",
+        "topics": [
+          "3 letter blends"
+        ]
+      },
+      {
+        "studyNotes": [
+          "Test on singular and plural nouns scheduled for Thursday."
         ],
         "subject": "Grammar",
         "topics": [
@@ -382,7 +260,7 @@
         ]
       }
     ],
-    "summary": "This week, students are exploring God's message in Religion, focusing on Baptism and the Bible. In Reading and Phonics, the class is studying life cycles through stories like 'Eagles and Eaglets' while practicing consonant digraphs and long/short vowel sounds. Preparation for upcoming tests on singular and plural nouns and three-letter blends is also underway.",
+    "summary": "This week, students are exploring the life cycles of animals and insects in Reading, focusing on 3-letter blends in Spelling, and learning about the 10 Commandments and the Great Commandment in Religion. Key assessments include Reading, Grammar, and Spelling tests.",
     "vocabulary": [
       {
         "meaning": "A fully grown person or animal",
@@ -390,14 +268,24 @@
         "term": "adult"
       },
       {
-        "meaning": "A type of animal that has fur or hair and feeds its young milk",
+        "meaning": "Having life; not dead",
         "subject": "Reading",
-        "term": "mammal"
+        "term": "alive"
       },
       {
-        "meaning": "The young of a person, animal, or plant",
+        "meaning": "To have something over the surface of",
         "subject": "Reading",
-        "term": "offspring"
+        "term": "covered"
+      },
+      {
+        "meaning": "The thick hair that covers the bodies of some animals",
+        "subject": "Reading",
+        "term": "fur"
+      },
+      {
+        "meaning": "Very large",
+        "subject": "Reading",
+        "term": "giant"
       },
       {
         "meaning": "To clean or brush an animal",
@@ -405,26 +293,16 @@
         "term": "groom"
       },
       {
-        "meaning": "The human tendency to sin resulting from Adam and Eve's sin",
-        "subject": "Religion",
-        "term": "original sin"
+        "meaning": "A type of animal that feeds its babies milk",
+        "subject": "Reading",
+        "term": "mammal"
       },
       {
-        "meaning": "A gift from God that helps us believe",
-        "subject": "Religion",
-        "term": "faith"
-      },
-      {
-        "meaning": "A sacred sign given to the Church by Jesus",
-        "subject": "Religion",
-        "term": "sacrament"
-      },
-      {
-        "meaning": "Three persons in one God: Father, Son, and Holy Spirit",
-        "subject": "Religion",
-        "term": "Trinity"
+        "meaning": "The young of an animal",
+        "subject": "Reading",
+        "term": "offspring"
       }
     ],
-    "weekLabel": "Friday November 6, 2026"
+    "weekLabel": "Week of November 9, 2026"
   }
 }
