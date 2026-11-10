@@ -107,3 +107,29 @@ test('No private identity, tokens, current-week fake forecasts or provider write
  assert.doesNotMatch(engine,/fetch\(|XMLHttpRequest|WebSocket|submitTrade|submitWaiver|claimPlayer/);
  assert.equal(d.sources.length,2);
 });
+
+
+test('Independently rechecked FantasyBot roster enables research-only predictions after Yahoo passes six hours',()=>{
+ const yy=source(),ee=inputs();
+ const now=Date.parse(ee.observedAtIso)+9*3600000;
+ const model=analyzeEdge(yy,ee,{now});
+ assert.equal(model.ready,true,JSON.stringify(model));
+ assert.equal(model.quality.yahooFresh,false);
+ assert.ok(model.quality.yahooAgeHours>6);
+ assert.equal(model.lineups.balanced.available,true);
+ assert.ok(model.priorities.some(x=>x.id==='bye-replacement'));
+ assert.equal(model.waivers.positive.length,0);
+ assert.equal(model.waivers.watches.length,0);
+ const unverified=structuredClone(ee);delete unverified.rosterVerifiedAtIso;
+ assert.equal(analyzeEdge(yy,unverified,{now}).ready,false);
+ const staleRoster=structuredClone(ee);staleRoster.rosterVerifiedAtIso=
+   new Date(Date.parse(ee.observedAtIso)-26*3600000).toISOString();
+ assert.equal(analyzeEdge(yy,staleRoster,{now}).ready,false);
+});
+
+test('A Yahoo snapshot older than the model source baseline cannot be silently paired with newer model observations',()=>{
+ const yy=source(),ee=inputs();
+ const now=Date.parse(ee.observedAtIso)+3600000;
+ yy.syncedAtIso=new Date(Date.parse(ee.yahooCapturedAtIso)-5*60000).toISOString();
+ assert.equal(analyzeEdge(yy,ee,{now}).ready,false);
+});
