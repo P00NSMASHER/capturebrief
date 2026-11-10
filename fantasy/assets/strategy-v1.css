@@ -56,6 +56,8 @@
 .strat-swap{padding:14px;border-radius:15px;background:#0d2436;border:1px solid #658b9c4c;min-width:0}
 .strat-swap--in{border-color:#60dfae76;background:#143f39}
 .strat-swap--out{border-color:#e6b36c66;background:#322d31}
+.strat-swap--shift{border-color:#82b7f37c;background:#1b3048}
+.strat-swap--shift span{color:#a5d5ff}
 .strat-swap span{display:block;font-weight:850;letter-spacing:.08em;font-size:10px;color:#8ceacb}
 .strat-swap--out span{color:#e7c592}
 .strat-swap strong{display:block;margin:7px 0 3px;font-size:15px}
