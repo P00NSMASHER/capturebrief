@@ -1,19 +1,19 @@
 import {TEAM_IDS,normalizeSnapshot,getFreshness,rosterBuckets,slotsFromRoster,optimizeLineup,rankWaiverTargets,estimateWinChance,isSafeUrl,round,teamPath,rosterStatusAlerts,compareScoredLineup,marketWatchlist,positionDepth} from './engine.mjs';
 import {preparePrivateImport} from './snapshot-import.mjs';
-import {LEAGUE_TEAMS,resolveTeam,teamLogo,uiIcon,leagueGallery,upcomingCards,teamStrip} from './league-branding.mjs';
-import {buildCoachPlan,buildArchivedCoachReview} from './coach-engine.mjs';
+import {resolveTeam,teamLogo,uiIcon,teamStrip} from './league-branding.mjs';
+import {buildCoachPlan} from './coach-engine.mjs';
 import {analyzeEdge} from './edge-engine.mjs';
-import {renderEdgeLab} from './edge-view.mjs';
+
 import {buildStrategicReport} from './strategy-engine.mjs';
-import {homeStrategy,lineupStrategy,playersStrategy,leagueStrategy,archivedStrategy} from './strategic-widgets.mjs';
 import {buildGeniusLab} from './genius-engine.mjs';
-import {geniusHome,geniusLineup,geniusPlayers,geniusLeague,geniusCoach,geniusArchived} from './genius-widgets.mjs';
+import {geniusArchived} from './genius-widgets.mjs';
+import {focusHome,focusLineup,focusPlayers,focusLeague,focusCoach} from './focused-experience.mjs';
 
 const BASE='/capturebrief/fantasy/';
 const root=document.getElementById('root');
 const PRIVATE_KEY='fantasy-hq-private-v3';
 const CACHE_KEY='fantasy-hq-public-last-good-v2';
-let current=null,source='published',loading=false,activeTab='overview',message='',waiverFilter='ALL';
+let current=null,source='published',loading=false,activeTab='overview',message='',waiverFilter='ALL',playerPoolOpen=false;
 let edgeRaw=null,edgeMode='balanced',edgeLoadError='',edgeLoading=false,lastEdgeCheck=0;
 let intelRaw=null,intelLoading=false,lastIntelCheck=0,strategyCache=null;
 let geniusField=4,geniusRealization=.5,geniusCache=null;
@@ -91,293 +91,33 @@ function controls(){return '<p class="controlcopy">Import a new Brock Hard JSON 
   (source==='private'?'<button type="button" class="minorbtn button" data-action="clear">Remove local capture</button>':'')+'</div>'+
   '<input id="importFile" type="file" accept=".json,application/json" hidden>'+
   '<div class="subnote">The capture is read-only and manual. This button imports a file; it is not a live Yahoo sync. Failed imports preserve your existing data.</div>'}
-function stats(team){
- const flags=rosterStatusAlerts(team.roster).length;
- const val=(a,b,extra)=>'<div class="metric"><div class="metriclabel">'+a+'</div><div class="metricvalue">'+$esc(b)+'</div>'+
- (extra?'<div class="metricextra">'+extra+'</div>':'')+'</div>';
- return '<section class="metrics" aria-label="Team standings and availability">'+val('RECORD',txt(team.record),'Season record')+
- val('LEAGUE RANK',txt(team.rank),'League of eight')+val('WAIVER PRIORITY',txt(team.waiver),'Yahoo queue')+
- val('ROSTER FLAGS',String(flags),'At last capture')+'</section>';
-}
-function decision(team){
- const old=!freshness().actionable;
- const flags=rosterStatusAlerts(team.roster);
- const rosterCount=Array.isArray(team.roster)?team.roster.length:0;
- const candidates=Array.isArray(team.availablePlayers)?team.availablePlayers.length:0;
- const movements=Array.isArray(team.transactions)?team.transactions.length:0;
- const note=String(team.nextMove||'');
- const generic=/^No verified projected|^No saved recommendation|^Optimization unavailable/i.test(note);
- const headline=generic?'Brock Hard snapshot available':txt(team.nextMove,'Brock Hard snapshot available');
- const detail=generic?
-   'Captured '+rosterCount+' Yahoo roster players, '+candidates+' league-available players, '+movements+
-   ' recent completed movements, and '+flags.length+' roster status flags. The lineup and waiver tabs use the verified evidence available; future player projections were not supplied.':
-   team.nextDetail||'Capture details are available on the Lineup, Waivers and Analysis tabs.';
- const enrichment=team.analysisAsOfIso?
-   '<div class="subnote">Standings and upcoming matchup outlook checked '+$esc(team.analysisAsOfIso)+'. Core roster capture: '+$esc(txt(current.syncedAtIso))+'.</div>':'';
- return section(old?'Archived data coverage':'Flaim data coverage','LEAGUE DATA',
-  '<div class="decisionbox"><div class="decisionflag">'+(old?'ARCHIVED · RECHECK IN YAHOO':'SNAPSHOT COVERAGE')+'</div>'+
-  '<h3>'+$esc(headline)+'</h3><p>'+$esc(detail)+'</p>'+
-  '<div class="decisionbottom">'+badge('Evidence: '+(old?'archived':'provider snapshot'),old?'bad':'muted')+
-  (team.confidence?badge('At capture: '+team.confidence):'')+'</div>'+enrichment+'</div>');
-}
-function alertList(team){
- const derived=rosterStatusAlerts(team.roster),manual=Array.isArray(team.alerts)?team.alerts:[];
- const alerts=[...derived,...manual];
- const rows=alerts.length?'<div class="alert-grid">'+alerts.map(a=>
- '<div class="alertrow"><span class="status-chip '+(a.level==='urgent'?'urgent':'watch')+'">'+$esc(a.status||'!')+'</span>'+
- '<div><strong>'+$esc(a.name||a.title||'Roster status')+'</strong>'+
- '<p>'+$esc((a.status||'Status')+' · '+(a.slot||'Roster')+' at capture')+'</p></div></div>').join('')+'</div>':
- '<div class="quiet-empty">No player-status flags reported in this capture; verify current health on Yahoo.</div>';
- return section('Player status','YAHOO ROSTER · '+derived.length+' FLAGS',rows,
- '<button type="button" class="text-link" data-tab="lineup">See lineup '+uiIcon('arrow')+'</button>');
-}
-function strategy(team){const s=team.strategy;if(!s)return '';
-  return section('Saved analysis','EXPLANATION',
-    '<p class="bodycopy">'+$esc(s.summary||'')+'</p>'+
-    '<div class="strategygrid">'+(s.bullets||[]).map(b=>'<div><span>'+$esc(b.label||'')+'</span><p>'+$esc(b.text||'')+'</p></div>').join('')+'</div>');}
-function overviewQuickPanels(team){
- const market=marketWatchlist(team.availablePlayers,3);
- const choices=market.length?market.map(p=>
- '<div class="preview-player"><span class="player-avatar pos-'+$esc(p.position)+'">'+$esc(p.position)+'</span>'+
- '<div><strong>'+$esc(p.name)+'</strong><small>'+$esc(p.team||'NFL')+' · '+$esc(p.acquisitionState==='waivers'?'Waivers':'Free agent')+'</small></div>'+
- '<span class="market-number">'+num(p.percentOwned,0)+'%<small>Yahoo</small></span></div>').join(''):
- '<div class="quiet-empty">No verified available players at capture.</div>';
- return '<div class="home-columns"><section class="panel compact-panel"><div class="panelhead"><div><div class="label">LOOKING AHEAD</div><h2>Coming up</h2></div>'+
- '<button class="text-link" type="button" data-tab="lab">League '+uiIcon('arrow')+'</button></div>'+
- upcomingCards(team,current.week)+'</section>'+
- '<section class="panel compact-panel"><div class="panelhead"><div><div class="label">AVAILABLE AT CAPTURE</div><h2>On the radar</h2></div>'+
- '<button class="text-link" type="button" data-tab="waivers">All players '+uiIcon('arrow')+'</button></div>'+
- '<div class="preview-list">'+choices+'</div><p class="caption-note">Ranked by Yahoo-wide roster rate, not projected performance.</p></section></div>';
-}
 function summaryView(team){
- return geniusHome(geniusReport())+homeStrategy(strategicReport())+matchupCard(team)+stats(team)+overviewQuickPanels(team)+alertList(team)+
- '<details class="small-disclosure"><summary>Provider details '+uiIcon('chevron')+'</summary>'+decision(team)+'</details>'+strategy(team);
+ const model=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
+ return focusHome({team,genius:geniusReport(),model,currentWeek:current.week})+
+  matchupCard(team);
 }
-function playerRow(p){
- const injury=p.injury?badge(p.injury,'bad'):'';
- const projected=typeof p.projection==='number'&&teamProjectionSupported();
- const scored=typeof p.actualPoints==='number'&&Number.isFinite(p.actualPoints);
- const points=projected?num(p.projection,2)+'<small>PROJ.</small>':scored?num(p.actualPoints,2)+'<small>PTS</small>':'—';
- return '<div class="playerrow"><span class="slot">'+$esc(txt(p.slot,'—'))+'</span>'+
- '<span class="player-avatar pos-'+$esc(p.position||'UN')+'">'+$esc(p.position||'NFL')+'</span>'+
- '<div class="playername"><strong>'+$esc(p.name)+'</strong><small>'+$esc([p.nflTeam,p.position].filter(Boolean).join(' · '))+'</small></div>'+
- injury+'<span class="proj">'+points+'</span></div>';
-}
-function teamProjectionSupported(){const t=current?.teams[selected()];return t?.projectionCoverage==='complete'}
 function lineupView(team){
-  const buckets=rosterBuckets(team.roster);
-  const counts=team.lineupSlots||slotsFromRoster(team.roster);
-  const optimizer=freshness().actionable&&team.projectionCoverage==='complete'?optimizeLineup(team.roster,counts):
-    {available:false,reason:'A complete verified future player projection set was not supplied'};
-  const scored=compareScoredLineup(team.roster,counts);
-  let opt='',title='Projected optimal lineup',kicker='EXACT SLOT ASSIGNMENT';
-  if(optimizer.available){
-    opt='<div class="optresult"><div><div class="label">MAXIMIZED PROJECTED POINTS</div><div class="optbig">'+num(optimizer.score,2)+'</div></div>'+
-    '<div class="optgain">'+(optimizer.gain===null?'BASELINE UNKNOWN':(optimizer.gain>=0?'+':'')+num(optimizer.gain,2)+' VS CURRENT')+'</div></div>'+
-    '<div class="list">'+optimizer.assignments.map(a=>playerRow({...a.player,slot:a.slot})).join('')+'</div>'+
-    '<div class="subnote">Advisory projected-point optimization; Yahoo locks and transactions are not handled by this page.</div>';
-  }else if(scored.available){
-    title='Highest-scoring lineup so far';kicker='WEEK '+txt(current.week)+' · ACTUAL POINTS';
-    const swaps=scored.in.length?
-      '<div class="waiverrow"><div><strong>Hindsight difference</strong><small>Bench in: '+$esc(scored.in.join(', '))+'</small><small>Starter out: '+$esc(scored.out.join(', '))+'</small></div></div>':
-      '<div class="subnote">Your starters already match the highest-scoring combination at capture.</div>';
-    opt='<div class="optresult"><div><div class="label">HIGHEST POINTS ALREADY SCORED</div><div class="optbig">'+num(scored.best,2)+'</div></div>'+
-      '<div class="optgain">'+(scored.gap>0?'+':'')+num(scored.gap,2)+' VS CURRENT '+num(scored.current,2)+'</div></div>'+
-      swaps+'<div class="subnote">Retrospective, week-to-date Yahoo scoring only. These are NOT future projections or start/sit recommendations. Some players may be locked; scores can change.</div>';
-  }else{
-    title='Lineup coverage';kicker='EVIDENCE CHECK';
-    opt='<div class="subnote">Verified future player projections are absent, and a complete scored-player comparison could not be calculated: '+$esc(scored.reason)+'. Current assignments remain shown below without speculative recommendations.</div>';
-  }
-  const intel=strategicReport();
-  return geniusLineup(geniusReport())+lineupStrategy(intel)+
-    (intel?.ready&&intel.model?.lineups?.balanced?.available?'':section(title,kicker,opt))+
-
-    section('Starting roster','CURRENT SNAPSHOT',buckets.starters.length?'<div class="list">'+buckets.starters.map(playerRow).join('')+'</div>':empty('No starters found','Import a full roster snapshot.'))+
-    section('Bench','DEPTH',buckets.bench.length?'<div class="list">'+buckets.bench.map(playerRow).join('')+'</div>':empty('No bench entries','No bench data was saved.'))+
-    section('Reserve / IR','INJURY LIST',buckets.reserve.length?'<div class="list">'+buckets.reserve.map(playerRow).join('')+'</div>':'<div class="subnote">No reserve assignments at capture.</div>');}
+ const model=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
+ const privateOptimizer=source==='private'&&team.projectionCoverage==='complete'?
+  optimizeLineup(team.roster,team.lineupSlots||slotsFromRoster(team.roster)):null;
+ return '<div class="focus-introline"><span>LINEUP</span><h1>Who should actually start?</h1></div>'+
+  focusLineup({team,model,mode:edgeMode,privateOptimizer});
+}
 function waiverView(team){
- const old=!freshness().actionable;
- const rated=old?{available:false,reason:'Archived capture'}:rankWaiverTargets(team);
- const market=marketWatchlist(team.availablePlayers,5);
- const all=Array.isArray(team.availablePlayers)?team.availablePlayers:[];
- const positions=['ALL','QB','RB','WR','TE','K','DEF'];
- const filtered=waiverFilter==='ALL'?all:all.filter(p=>String(p.position).toUpperCase()===waiverFilter);
- const filters='<div class="filterbar" role="group" aria-label="Filter by player position">'+positions.map(pos=>
- '<button type="button" data-filter="'+pos+'" aria-pressed="'+(waiverFilter===pos)+'" class="'+(waiverFilter===pos?'chosen':'')+'">'+(pos==='ALL'?'All':pos)+'</button>').join('')+'</div>';
- const rows=filtered.map(p=>{
-  const status=p.acquisitionState==='free_agent'?'FREE AGENT':p.acquisitionState==='waivers'?'WAIVERS':'UNKNOWN';
-  const owned=Number.isFinite(p.percentOwned)?num(p.percentOwned,0)+'%':'—';
-  return '<div class="playerrow available-row"><span class="player-avatar pos-'+$esc(p.position||'NFL')+'">'+$esc(p.position||'NFL')+'</span>'+
-  '<div class="playername"><strong>'+$esc(p.name||'Unknown')+'</strong><small>'+$esc(p.team||'NFL')+' · '+status+
-  (p.waiverDate?' · '+$esc(p.waiverDate):'')+'</small></div>'+
-  '<span class="market-number">'+owned+'<small>rostered</small></span></div>';
- }).join('');
- const spotlight=market.map((p,i)=>'<div class="preview-player"><span class="scout-rank">'+(i+1)+'</span>'+
- '<span class="player-avatar pos-'+$esc(p.position)+'">'+$esc(p.position)+'</span><div><strong>'+$esc(p.name)+'</strong>'+
- '<small>'+$esc(p.team||'NFL')+' · '+$esc(p.acquisitionState==='waivers'?'On waivers':'Free agent')+'</small></div>'+
- '<span class="market-number">'+num(p.percentOwned,0)+'%<small>Yahoo</small></span></div>').join('');
- const depth=positionDepth(team.roster);
- const depthRows=depth.map(d=>'<div class="depth-item"><strong>'+d.position+'</strong><div class="depth-rail"><span style="width:'+Math.round(d.total/8*100)+'%"></span></div>'+
- '<b>'+d.total+'</b></div>').join('');
- const decision=rated.available?(rated.recommendations.length?
- '<div class="list">'+rated.recommendations.map(p=>'<div class="waiverrow"><strong>'+$esc(p.add)+'</strong><small>Drop '+$esc(p.drop)+' · +'+num(p.improvement,2)+' proj. pts</small></div>').join('')+'</div>':
- '<p class="caption-note">No positive projected upgrade from verified candidates.</p>'):
- '<p class="caption-note">Yahoo does not provide complete player-level forward projections in this capture. This list uses market roster rate only—not add/drop improvement.</p>';
- const intel=strategicReport();
- return '<div class="tab-intro"><span class="eyebrow">FANTASY WAIVER INTELLIGENCE</span><h1>Win the next roster spot.</h1>'+
- '<p>Position needs, Week 13 coverage and the actual projected advantage—not a popularity contest.</p></div>'+
- geniusPlayers(geniusReport())+playersStrategy(intel)+
- (intel?.ready?'':section('Most rostered available','YAHOO MARKET · FALLBACK',
- spotlight?'<div class="preview-list">'+spotlight+'</div>':'<div class="quiet-empty">Availability was not captured.</div>'))+
- section('Player pool',''+filtered.length+' MATCH'+(filtered.length===1?'':'ES'),
- filters+(rows?'<div class="list">'+rows+'</div>':'<div class="quiet-empty">No '+$esc(waiverFilter)+' players in this capture.</div>'))+
- '<div class="home-columns"><section class="panel compact-panel"><div class="panelhead"><div><div class="label">ROSTER FIT</div><h2>Your position depth</h2></div></div>'+
- '<div class="depth-list">'+depthRows+'</div></section>'+
- '<section class="panel compact-panel"><div class="panelhead"><div><div class="label">DECISION SUPPORT</div><h2>Projected upgrade</h2></div></div>'+
- decision+'</section></div>'+
- '<p class="footnote">Yahoo roster rates are platform-wide, not your league’s ownership %. Waiver dates are calendar days, not guaranteed clearance times. This app never adds or drops players.</p>';
+ const model=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
+ return '<div class="focus-introline"><span>PLAYERS</span><h1>What improves your roster?</h1></div>'+
+  focusPlayers({team,genius:geniusReport(),model,filter:waiverFilter,poolOpen:playerPoolOpen});
 }
 function labView(team){
- const model=strategicReport();
- if(model?.ready){
-  const rows=Array.isArray(team.transactions)?team.transactions.slice(0,8):[];
-  const list=rows.length?'<div class="activity-feed">'+rows.map(tr=>
-   '<div class="activity"><span class="activity-bullet"></span><div><strong>'+$esc(tr.move||tr.type||'Transaction')+
-   '</strong><span>'+$esc(txt(tr.date,'Date unavailable'))+'</span></div></div>').join('')+'</div>':
-   '<div class="quiet-empty">No bounded completed moves in this capture.</div>';
-  return '<div class="tab-intro"><span class="eyebrow">LEAGUE WAR ROOM</span><h1>Know your competition.</h1>'+
-   '<p>Conditional playoff paths, powerful opponents and forecast accuracy measured against actual scores.</p></div>'+
-   geniusLeague(geniusReport())+leagueStrategy(model)+
-   '<details class="small-disclosure"><summary>All eight club crests '+uiIcon('chevron')+'</summary>'+leagueGallery()+'</details>'+
-   section('Recent Brock Hard moves','SAVED COMPLETED TRANSACTIONS',list);
- }
- const m=team.matchupModel||null;
- const chance=m&&freshness().actionable?estimateWinChance(m.myProjected,m.oppProjected,m.mySigma,m.oppSigma):null;
- const side=scoreFor(team);
- const providerChance=freshness().actionable&&typeof side?.mine?.winProbability==='number'?side.mine.winProbability*100:null;
- const facts=team.standings&&typeof team.standings==='object'?team.standings:{};
- const stat=(label,value)=>'<div class="league-stat"><span>'+label+'</span><strong>'+$esc(String(value))+'</strong></div>';
- const standings='<div class="league-standings"><div class="league-standings-head">'+teamLogo('2','lg')+
- '<div><span>YOUR STANDING</span><strong>'+ $esc(team.name) +'</strong><small>'+ $esc(txt(team.record)) +' · '+$esc(txt(team.rank))+'</small></div></div>'+
- '<div class="league-stats">'+stat('POINTS FOR',Number.isFinite(facts.pointsFor)?num(facts.pointsFor,1):'—')+
- stat('POINTS AGAINST',Number.isFinite(facts.pointsAgainst)?num(facts.pointsAgainst,1):'—')+
- stat('WAIVER',txt(team.waiver))+'</div></div>';
- const depth=positionDepth(team.roster);
- const depthRows=depth.map(d=>'<div class="depth-item"><strong>'+$esc(d.position)+'</strong>'+
- '<div class="depth-rail"><span style="width:'+Math.round(d.total/8*100)+'%"></span></div><b>'+d.total+'</b></div>').join('');
- const transactions=Array.isArray(team.transactions)?team.transactions.slice(0,12):[];
- const recent=transactions.length?'<div class="activity-feed">'+transactions.map(tr=>
- '<div class="activity"><span class="activity-bullet"></span><div><strong>'+$esc(tr.move||tr.type||'Transaction')+'</strong>'+
- '<span>'+$esc(txt(tr.date,'Date unavailable'))+'</span></div></div>').join('')+'</div>':
- '<div class="quiet-empty">No completed moves found in the bounded capture.</div>';
- const chanceCard=providerChance!==null?'<div class="winprob">'+num(providerChance,1)+'<small>% YAHOO WIN ESTIMATE AT CAPTURE</small></div>':
- chance!==null?'<div class="winprob">'+num(chance,1)+'<small>% MODEL ESTIMATE</small></div>':
- '<p class="caption-note">No verified win probability is present for this matchup.</p>';
- return '<div class="tab-intro"><span class="eyebrow">YOUR FANTASY LEAGUE</span><h1>The League.</h1><p>Eight clubs. One trophy. Your view is Brock Hard only.</p></div>'+
- leagueGallery()+
- section('Playoff race','YOUR VERIFIED POSITION',standings+
- '<p class="caption-note">This is Brock Hard’s Yahoo standing—not an estimated final playoff position. Other teams’ records were not included in the public Brock-only capture.</p>')+
- section('Next three matchups','YAHOO TEAM FORECASTS',upcomingCards(team,current.week)+
- '<p class="caption-note">Team pregame projections, not final scores or modeled playoff odds.</p>')+
- '<div class="home-columns"><section class="panel compact-panel"><div class="panelhead"><div><div class="label">YOUR TEAM</div><h2>Trade preparation</h2></div></div>'+
- '<div class="depth-list">'+depthRows+'</div><p class="caption-note">Roster depth, not player trade valuations.</p></section>'+
- '<section class="panel compact-panel"><div class="panelhead"><div><div class="label">AT CAPTURE</div><h2>Matchup forecast</h2></div></div>'+
- chanceCard+'<p class="caption-note">No individual player projections were supplied.</p></section></div>'+
- section('Recent Brock Hard activity','COMPLETED MOVES · BOUNDED',recent);
-}
-function tabbar(){return '<div class="tabs" role="tablist" aria-label="Team dashboard views">'+[
-  ['overview','Overview'],['lineup','Lineup'],['waivers','Waivers'],['lab','Analysis']].map(([id,label])=>
-   '<button type="button" role="tab" aria-selected="'+(id===activeTab)+'" class="'+(id===activeTab?'active':'')+'" data-tab="'+id+'">'+label+'</button>').join('')+'</div>';}
-
-function coachAction(item){
- if(!item?.actionTab||!['overview','lineup','waivers','lab'].includes(item.actionTab))return '';
- return '<button type="button" class="coach-action" data-tab="'+item.actionTab+'"'+
- (item.filter==='QB'&&item.actionTab==='waivers'?' data-coach-filter="QB"':'')+'>'+
- $esc(item.actionLabel||'Review')+uiIcon('arrow')+'</button>';
-}
-function coachInsight(item){
- const tone=['priority','attention'].includes(item.tone)?item.tone:'neutral';
- return '<article class="coach-insight coach-insight--'+tone+'">'+
- '<div class="coach-insight-head"><span class="coach-signal coach-signal--'+tone+'">'+
- (tone==='priority'?'PRIORITY':tone==='attention'?'WATCH':'SOURCE-BACKED')+'</span></div>'+
- '<h3>'+$esc(item.title)+'</h3>'+
- '<ul class="coach-points">'+(Array.isArray(item.bullets)?item.bullets:[]).map(line=>
- '<li>'+$esc(line)+'</li>').join('')+'</ul>'+
- '<div class="coach-evidence"><span>'+uiIcon('info')+$esc(item.evidence)+'</span>'+coachAction(item)+'</div></article>';
-}
-function coachAssessment(summary,capture,archived=false){
- if(!Array.isArray(summary)||summary.length!==3)return '';
- return '<section class="panel coach-assessment'+(archived?' coach-assessment--archived':'')+'" aria-labelledby="coach-assessment-title">'+
- '<div class="panelhead"><div><div class="label">'+
- (archived?'LAST VERIFIED CAPTURE · ARCHIVED REVIEW':'THE BIG PICTURE · MANAGER’S DESK')+'</div>'+
- '<h2 id="coach-assessment-title">'+(archived?'Coach’s saved assessment':'Coach’s final assessment')+'</h2></div>'+
- '<span class="mini-pill">3-PARAGRAPH RECAP</span></div>'+
- '<div class="coach-recap">'+summary.map((paragraph,i)=>
- '<p class="coach-recap-paragraph" data-recap-index="'+(i+1)+'">'+$esc(paragraph)+'</p>').join('')+'</div>'+
- '<div class="coach-recap-source">'+uiIcon('info')+
- '<span>Based on the saved Week '+$esc(String(current.week))+' Yahoo capture · '+$esc(String(capture))+
- (archived?'. Historical review only: old availability and player statuses are NOT current and no moves are recommended.':
- '. Recheck Yahoo before acting; this is not live analysis.')+'</span></div></section>';
-}
-
-function classicCoachView(team){
- const plan=buildCoachPlan(current,{now:Date.now()});
- if(!plan.ready){
-  const saved=plan.status==='archived'?buildArchivedCoachReview(current):null;
-  return '<div class="tab-intro"><span class="eyebrow">FANTASY HQ · COACH</span>'+
-  '<h1>Coach needs a fresh capture.</h1></div>'+
-  '<section class="panel coach-unverified"><p>'+$esc(plan.subtitle)+'</p>'+
-  '<button class="primarybutton" type="button" data-action="refresh">'+uiIcon('refresh')+
-  ' Check published snapshot</button></section>'+
-  (saved?coachAssessment(saved.summary,saved.captureAt,true):'');
- }
- const priority=plan.priorities||[];
- const metrics=plan.metrics.map(m=>'<div class="coach-metric"><span>'+$esc(m.label)+'</span><strong>'+$esc(m.value)+'</strong></div>').join('');
- const next=priority.map((c,i)=>'<article class="coach-step"><span class="coach-step-number">'+String(i+1)+'</span>'+
- '<div><strong>'+$esc(c.title)+'</strong><p>'+$esc(c.evidence)+'</p></div>'+coachAction(c)+'</article>').join('');
- const categories=[
-  ['lineup','Lineup decisions','YOUR STARTERS'],
-  ['waivers','Waiver targets','LEAGUE-AVAILABLE PLAYERS'],
-  ['trades','Trade strategy','VALUE BEFORE VOLUME'],
-  ['playoffs','Playoff preparation','ROAD AHEAD'],
-  ['league','League insights','THE STANDINGS']
- ];
- const areas=categories.map(([id,label,kicker])=>{
-  const cards=Array.isArray(plan.sections[id])?plan.sections[id]:[];
-  return '<section class="panel coach-section" id="coach-'+id+'"><div class="panelhead"><div><div class="label">'+kicker+'</div>'+
-   '<h2>'+label+'</h2></div><span class="mini-pill">'+cards.length+' CHECK'+(cards.length===1?'':'S')+'</span></div>'+
-   '<div class="coach-insights">'+cards.map(coachInsight).join('')+'</div></section>';
- }).join('');
- return '<div class="tab-intro coach-intro"><span class="eyebrow">BROCK HARD · FANTASY COACH</span>'+
- '<h1>Your game plan.</h1><p>Manager-style insights from your saved Yahoo data. Clear next steps, no invented player projections.</p></div>'+
- '<section class="coach-hero"><div class="coach-hero-top"><span class="coach-orb">'+uiIcon('coach')+'</span>'+
- '<span class="coach-source">YAHOO SNAPSHOT · READ-ONLY</span></div><div class="coach-hero-kicker">COACH’S TOP CALL</div>'+
- '<h2>'+$esc(plan.headline)+'</h2><p>'+$esc(plan.subtitle)+'</p>'+
- '<div class="coach-hero-action">'+coachAction(priority[0])+'</div>'+
- '<div class="coach-hero-metrics">'+metrics+'</div></section>'+
- '<section class="panel coach-next"><div class="panelhead"><div><div class="label">PRIORITIZED FOR BROCK HARD</div>'+
- '<h2>Your next three checks</h2></div></div><div class="coach-steps">'+next+'</div></section>'+
- '<div class="coach-section-grid">'+areas+'</div>'+
- coachAssessment(plan.summary,plan.captureAt)+
- '<p class="coach-footer">Snapshot-based advice only. No player transactions, trade proposals, or Yahoo lineup edits are made by Coach.</p>';
+ return '<div class="focus-introline"><span>LEAGUE</span><h1>Who is the real competition?</h1></div>'+
+  focusLeague({genius:geniusReport(),strategic:strategicReport()});
 }
 function coachView(team){
- const scenario=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
- if(scenario.ready){
-  return geniusCoach(geniusReport(),{field:geniusField,realization:geniusRealization})+renderEdgeLab(scenario)+
-  '<details class="edge-classic"><summary>Original source-only Coach checklist '+uiIcon('chevron')+'</summary>'+
-  classicCoachView(team)+'</details>';
- }
- const status=edgeLoading?'Checking the published prediction model…':
- edgeLoadError?'Model data could not load: '+edgeLoadError:
- scenario.reason||'No matching, recent and complete forward forecasts are available.';
- return geniusCoach(geniusReport(),{field:geniusField,realization:geniusRealization})+
- '<div class="edge-available-notice"><div><strong>Predictive Edge lab is not ready.</strong>'+
- '<p>'+$esc(status)+'</p></div>'+
- '<button type="button" class="edge-button" data-action="edge-refresh">'+uiIcon('refresh')+' Recheck model</button></div>'+
- classicCoachView(team);
+ const model=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
+ const plan=buildCoachPlan(current,{now:Date.now()});
+ return '<div class="focus-introline"><span>COACH</span><h1>One game plan. No filler.</h1></div>'+
+  focusCoach({genius:geniusReport(),model,plan,field:geniusField,realization:geniusRealization});
 }
-
 function geniusReport(){
  if(!current||!intelRaw)return null;
  const key=[current.syncedAtIso,current.week,edgeRaw?.observedAtIso||'none',
@@ -418,19 +158,10 @@ function teamView(team){
 }
 
 function archivedView(){
- // Independently reverified FantasyBot roster supports information-only planning.
- // Keep every old Yahoo action and acquisition warning intact; never label it live.
- if(activeTab==='coach'&&edgeRaw){
-  const research=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
-  if(research.ready&&research.quality?.yahooFresh===false){
-   return teamView(current.teams.brock);
-  }
- }
+ // Stale Yahoo captures must never bypass the archive screen on any tab.
  const date=Number.isFinite(Date.parse(current?.syncedAtIso))?
  new Date(current.syncedAtIso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'unknown date';
  const t=current?.teams?.brock;
- const savedReport=activeTab==='coach'?buildArchivedCoachReview(current):null;
- const historical=strategicReport();
  const geniusHistory=geniusReport();
  return '<div class="container">'+masthead(t)+messageBox()+
  '<section class="archived-fallback panel"><div class="archive-logo">'+teamLogo('2','display')+'</div>'+
@@ -441,9 +172,7 @@ function archivedView(){
  '<details class="small-disclosure"><summary>Import a saved capture '+uiIcon('chevron')+'</summary>'+
  '<button type="button" class="minorbtn" data-action="import">↥ Import updated Yahoo snapshot</button></details>'+
  '<input id="importFile" type="file" accept=".json,application/json" hidden>'+
- '</section>'+(savedReport?coachAssessment(savedReport.summary,savedReport.captureAt,true):'')+
- (historical?.ready?archivedStrategy(historical):'')+
- (geniusHistory?.ready?geniusArchived(geniusHistory):'')+
+ '</section>'+(geniusHistory?.ready?geniusArchived(geniusHistory):'')+
  '<p class="footnote">No Yahoo credentials or live provider access are used by this page.</p></div>'+nav();
 }
 function render(){
@@ -593,9 +322,9 @@ document.addEventListener('click',event=>{
   return;
  }
  const tab=event.target.closest('button[data-tab]');
- if(tab){activeTab=tab.dataset.tab;location.hash=activeTab;waiverFilter=tab.dataset.coachFilter==='QB'&&activeTab==='waivers'?'QB':'ALL';render();window.scrollTo({top:0,behavior:'instant'});return}
+ if(tab){activeTab=tab.dataset.tab;location.hash=activeTab;waiverFilter=tab.dataset.coachFilter==='QB'&&activeTab==='waivers'?'QB':'ALL';playerPoolOpen=activeTab==='waivers'&&waiverFilter!=='ALL';render();window.scrollTo({top:0,behavior:'instant'});return}
  const chip=event.target.closest('button[data-filter]');
- if(chip){waiverFilter=chip.dataset.filter;render();return}
+ if(chip){waiverFilter=chip.dataset.filter;playerPoolOpen=true;render();return}
  const control=event.target.closest('[data-action]');if(!control)return;
  if(control.dataset.action==='refresh')refresh(false);
  if(control.dataset.action==='edge-refresh')getEdgeData(true);
