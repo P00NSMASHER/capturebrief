@@ -75,6 +75,11 @@ test('iPhone-sized CSS includes safe-area navigation, reduced motion, good touch
  assert.match(c,/focus-visible/);
  assert.match(c,/min-height:44px/);
  assert.match(c,/\.club-grid/);
+ const focus=readFileSync('fantasy/assets/focus-v1.css','utf8');
+ assert.match(focus,/prefers-reduced-motion:reduce/);
+ assert.match(focus,/\.focus-home/);
+ assert.match(focus,/\.focus-coach/);
+ assert.match(focus,/min-height:44px/);
  const future=readFileSync('fantasy/assets/future-v1.css','utf8');
  const genius=readFileSync('fantasy/assets/genius-v1.css','utf8');
  assert.match(genius,/prefers-reduced-motion:reduce/);
@@ -94,6 +99,7 @@ test('iPhone-sized CSS includes safe-area navigation, reduced motion, good touch
   assert.match(h,/strategy-v1\.css\?v=1/);
   assert.match(h,/future-v1\.css\?v=1/);
   assert.match(h,/genius-v1\.css\?v=1/);
-  assert.match(h,/app-v2\.mjs\?v=11/);
+  assert.match(h,/app-v2\.mjs\?v=12/);
+  assert.match(h,/focus-v1\.css\?v=1/);
  }
 });
