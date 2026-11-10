@@ -1,13 +1,13 @@
 {
   "name": "Brock Hard Fantasy HQ",
   "short_name": "Brock Hard",
-  "description": "Brock Hard & Tee Baggin single-team read-only fantasy football dashboard",
+  "description": "Brock Hard futuristic five-tab fantasy intelligence dashboard: predictive lineup, waiver, league and playoff analysis.",
   "id": "/capturebrief/fantasy/",
   "start_url": "/capturebrief/fantasy/",
   "scope": "/capturebrief/fantasy/",
   "display": "standalone",
-  "background_color": "#071019",
-  "theme_color": "#071019",
+  "background_color": "#040b17",
+  "theme_color": "#040b17",
   "icons": [
     {
       "src": "/capturebrief/fantasy/assets/icon.svg",
