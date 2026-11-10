@@ -55,7 +55,7 @@ test('upcoming team preview uses only real saved team-level forecasts and escape
 });
 test('premium app preserves Brock-only read-only snapshots and working client navigation',()=>{
  const a=app();
- assert.match(a,/leagueGallery\(\)/);
+ assert.match(a,/focusLeague\(/);
  assert.match(a,/premium/i.test(css())?/teamLogo\('2','display'\)/:/teamLogo/);
  assert.match(a,/waiverFilter/);
  assert.match(a,/data-filter/);
