@@ -133,3 +133,36 @@ test('A Yahoo snapshot older than the model source baseline cannot be silently p
  yy.syncedAtIso=new Date(Date.parse(ee.yahooCapturedAtIso)-5*60000).toISOString();
  assert.equal(analyzeEdge(yy,ee,{now}).ready,false);
 });
+
+test('Yahoo opponent forecasts above 100 points survive independent-source validation',()=>{
+ const y=source(),edge=inputs();
+ const model=analyzeEdge(y,edge,{now:at(edge)});
+ assert.equal(model.ready,true,JSON.stringify(model));
+ const next=model.opponents.find(x=>x.week===10);
+ assert.equal(next.teamName,'Josh ❤️creampies');
+ assert.equal(next.yahooMyProjected,147.4);
+ assert.equal(next.yahooOppProjected,127.68);
+ const week12=model.opponents.find(x=>x.week===12);
+ assert.equal(week12.yahooMyProjected,149.61);
+ assert.equal(week12.yahooOppProjected,141.09);
+ assert.ok(model.illustrativeChance===null||model.illustrativeChance.value>0);
+ const bad=structuredClone(y);
+ bad.teams.brock.upcomingMatchups[0].opponentProjected=9000;
+ const changed=analyzeEdge(bad,edge,{now:at(edge)});
+ assert.equal(changed.ready,true);
+ assert.equal(changed.opponents.find(x=>x.week===10).yahooOppProjected,null);
+});
+test('Week 10 bye priority explains a valid multi-slot replacement instead of implying WR fills RB',()=>{
+ const m=analyze();
+ assert.equal(m.ready,true);
+ const bye=m.priorities.find(x=>x.id==='bye-replacement');
+ assert.ok(bye);
+ assert.match(bye.detail,/Move Jonah Coleman out/);
+ assert.match(bye.detail,/Slide Rhamondre Stevenson into RB/);
+ assert.match(bye.detail,/Zay Flowers into W\/R\/T/);
+ assert.match(bye.detail,/Yahoo locks/);
+ const assigned=m.lineup.assignments.find(x=>x.name==='Rhamondre Stevenson');
+ assert.equal(assigned?.slot,'RB');
+ const promoted=m.lineup.assignments.find(x=>x.name==='Zay Flowers');
+ assert.equal(promoted?.slot,'W/R/T');
+});
