@@ -164,3 +164,11 @@
 .edge-trade-row>div{min-width:0}
 .edge-trade-row strong{display:block;font-size:13px;line-height:1.35}
 .edge-trade-row p{margin:6px 0 0;color:#a7c2cf;font-size:11px;line-height:1.56}
+
+.edge-stale-banner{
+ display:flex;flex-direction:column;gap:4px;padding:14px 16px;margin:7px 0;
+ border:1px solid #f1c16a8c;border-radius:14px;
+ background:linear-gradient(125deg,#403528,#23313d);box-shadow:inset 0 1px #f8e2ac24
+}
+.edge-stale-banner strong{color:#ffe4b8;font-size:12px;font-weight:820}
+.edge-stale-banner p{color:#e0cfb0;font-size:11px;line-height:1.6;margin:0}
