@@ -1,6 +1,7 @@
 /* BROCK HARD // FOCUS DESIGN SYSTEM
  * A deliberate reduction in density. Each tab has one objective and one
  * primary information hierarchy. The underlying models are unchanged. */
+.bottomnav{grid-template-columns:repeat(4,minmax(0,1fr))}
 .focus-introline{padding:9px 2px 4px}
 .focus-introline>span{font:850 10px ui-monospace,Menlo,monospace;color:#7becd5;letter-spacing:.2em}
 .focus-introline h1{font-size:clamp(26px,4vw,37px);letter-spacing:-.058em;line-height:1.12;

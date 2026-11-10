@@ -4,8 +4,8 @@ import {readFileSync} from 'node:fs';
 import {analyzeEdge} from '../assets/edge-engine.mjs';
 import {renderEdgeLab} from '../assets/edge-view.mjs';
 
-const y=()=>JSON.parse(readFileSync('fantasy/data.json','utf8'));
-const e=()=>JSON.parse(readFileSync('fantasy/edge.json','utf8'));
+const y=()=>JSON.parse(readFileSync('fantasy/tests/fixtures/historical-week10/data.json','utf8'));
+const e=()=>JSON.parse(readFileSync('fantasy/tests/fixtures/historical-week10/edge.json','utf8'));
 const ready=()=>{const inputs=e(),snapshot=y();return analyzeEdge(snapshot,inputs,{now:Math.max(Date.parse(inputs.observedAtIso),Date.parse(snapshot.syncedAtIso))+3*60000})};
 test('Model-driven fifth-tab renders distinct intelligence—not a Yahoo scoreboard recap',()=>{
  const model=ready();assert.equal(model.ready,true);

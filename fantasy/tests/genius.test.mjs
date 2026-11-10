@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {buildGeniusLab} from '../assets/genius-engine.mjs';
 const read=p=>JSON.parse(readFileSync(p,'utf8'));
-const yahoo=()=>read('fantasy/data.json'),edge=()=>read('fantasy/edge.json'),intel=()=>read('fantasy/intelligence.json');
+const yahoo=()=>read('fantasy/tests/fixtures/historical-week10/data.json'),edge=()=>read('fantasy/tests/fixtures/historical-week10/edge.json'),intel=()=>read('fantasy/tests/fixtures/historical-week10/intelligence.json');
 const timed=()=>Date.parse(yahoo().syncedAtIso)+2*60*1000;
 const run=opts=>buildGeniusLab(yahoo(),edge(),intel(),{now:timed(),field:4,realization:.5,simulations:700,...opts});
 test('All-play strength uses exactly eight real Yahoo completed weeks and all eight teams',()=>{

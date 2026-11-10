@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "scripts": {
+    "test": "cd .. && node --test fantasy/tests/*.test.mjs",
+    "test:historical": "cd .. && node --test fantasy/tests/edge.test.mjs fantasy/tests/edge-view.test.mjs fantasy/tests/focus.test.mjs fantasy/tests/genius.test.mjs fantasy/tests/strategy.test.mjs",
+    "test:publication": "cd .. && node --test fantasy/tests/publication-contract.test.mjs"
+  }
+}
