@@ -2,12 +2,15 @@ import {TEAM_IDS,normalizeSnapshot,getFreshness,rosterBuckets,slotsFromRoster,op
 import {preparePrivateImport} from './snapshot-import.mjs';
 import {LEAGUE_TEAMS,resolveTeam,teamLogo,uiIcon,leagueGallery,upcomingCards,teamStrip} from './league-branding.mjs';
 import {buildCoachPlan,buildArchivedCoachReview} from './coach-engine.mjs';
+import {analyzeEdge} from './edge-engine.mjs';
+import {renderEdgeLab} from './edge-view.mjs';
 
 const BASE='/capturebrief/fantasy/';
 const root=document.getElementById('root');
 const PRIVATE_KEY='fantasy-hq-private-v3';
 const CACHE_KEY='fantasy-hq-public-last-good-v2';
 let current=null,source='published',loading=false,activeTab='overview',message='',waiverFilter='ALL';
+let edgeRaw=null,edgeMode='balanced',edgeLoadError='',edgeLoading=false,lastEdgeCheck=0;
 const $esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const txt=(v,empty='—')=>v===null||v===undefined||v===''?empty:String(v);
 const num=(v,dec=1)=>typeof v==='number'&&Number.isFinite(v)?v.toFixed(dec):'—';
@@ -293,7 +296,7 @@ function coachAssessment(summary,capture,archived=false){
  '. Recheck Yahoo before acting; this is not live analysis.')+'</span></div></section>';
 }
 
-function coachView(team){
+function classicCoachView(team){
  const plan=buildCoachPlan(current,{now:Date.now()});
  if(!plan.ready){
   const saved=plan.status==='archived'?buildArchivedCoachReview(current):null;
@@ -334,6 +337,22 @@ function coachView(team){
  coachAssessment(plan.summary,plan.captureAt)+
  '<p class="coach-footer">Snapshot-based advice only. No player transactions, trade proposals, or Yahoo lineup edits are made by Coach.</p>';
 }
+function coachView(team){
+ const scenario=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
+ if(scenario.ready){
+  return renderEdgeLab(scenario)+
+  '<details class="edge-classic"><summary>Original source-only Coach checklist '+uiIcon('chevron')+'</summary>'+
+  classicCoachView(team)+'</details>';
+ }
+ const status=edgeLoading?'Checking the published prediction model…':
+ edgeLoadError?'Model data could not load: '+edgeLoadError:
+ scenario.reason||'No matching, recent and complete forward forecasts are available.';
+ return '<div class="edge-available-notice"><div><strong>Predictive Edge lab is not ready.</strong>'+
+ '<p>'+$esc(status)+'</p></div>'+
+ '<button type="button" class="edge-button" data-action="edge-refresh">'+uiIcon('refresh')+' Recheck model</button></div>'+
+ classicCoachView(team);
+}
+
 function teamView(team){
  const view=activeTab==='coach'?coachView(team):activeTab==='lineup'?lineupView(team):activeTab==='waivers'?waiverView(team):activeTab==='lab'?labView(team):summaryView(team);
  const home=activeTab==='overview';
@@ -355,6 +374,14 @@ function teamView(team){
 }
 
 function archivedView(){
+ // Independently reverified FantasyBot roster supports information-only planning.
+ // Keep every old Yahoo action and acquisition warning intact; never label it live.
+ if(activeTab==='coach'&&edgeRaw){
+  const research=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
+  if(research.ready&&research.quality?.yahooFresh===false){
+   return teamView(current.teams.brock);
+  }
+ }
  const date=Number.isFinite(Date.parse(current?.syncedAtIso))?
  new Date(current.syncedAtIso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'unknown date';
  const t=current?.teams?.brock;
@@ -409,6 +436,28 @@ function validatePublished(raw){
     throw new Error('Published capture time is missing or invalid');
  return {raw:cleaned,snapshot};
 }
+// Separate public forecast artifact. It never requests FantasyBot or Yahoo from the browser,
+// changes the provider snapshot, or caches private inputs.
+async function getEdgeData(force=false){
+ if(edgeLoading)return false;
+ if(!force && lastEdgeCheck && Date.now()-lastEdgeCheck<30*60*1000)return !!edgeRaw;
+ edgeLoading=true;lastEdgeCheck=Date.now();
+ try{
+  const response=await fetch(BASE+'edge.json?cachebust='+Date.now(),{
+   cache:'no-store',headers:{Accept:'application/json'}});
+  if(!response.ok)throw new Error('Prediction artifact HTTP '+response.status);
+  const raw=await response.text();
+  if(raw.length>250000)throw new Error('Prediction artifact exceeds 250KB safety limit');
+  const parsed=JSON.parse(raw);
+  if(parsed?.schemaVersion!==1||parsed.kind!=='brock-hard-prediction-inputs'||
+    parsed.leagueId!=='470.l.290846'||String(parsed.teamId)!=='2'||parsed.season!==2026)
+    throw new Error('Prediction artifact is not the authorized Brock Hard league');
+  edgeRaw=parsed;edgeLoadError='';return true;
+ }catch(error){edgeLoadError=String(error?.message||'Source unavailable').slice(0,180);
+   edgeRaw=null;return false;}
+ finally{edgeLoading=false;if(current&&activeTab==='coach')render();}
+}
+
 async function getPublic(){
  const r=await fetch(BASE+'data.json?cachebust='+Date.now(),{cache:'no-store',headers:{Accept:'application/json'}});
  if(!r.ok)throw new Error('Published snapshot request returned HTTP '+r.status);
@@ -437,7 +486,7 @@ async function refresh(silent=false){
   if(changed)message='Verified newer provider capture loaded: '+latest.syncedAtIso+'. This is a saved snapshot, not continuous live sync.';
   else if(!silent)message='Already showing the newest verified capture available. Captured at '+(current?.syncedAtIso||'unknown')+'.';
  }catch(err){if(!silent)message='Update unavailable: '+err.message+'. Previous verified capture retained.'}
- finally{loading=false;render()}
+ finally{loading=false;render();getEdgeData(!silent)}
 }
 async function handleImport(file){if(!file)return;
  if(file.size>2_000_000){message='Import rejected: limit is 2 MB.';render();return;}
@@ -451,12 +500,26 @@ async function handleImport(file){if(!file)return;
  }catch(e){message='Import rejected: '+e.message;render()}
 }
 document.addEventListener('click',event=>{
+ const modeButton=event.target.closest('button[data-edge-mode]');
+ if(modeButton){
+  const next=modeButton.dataset.edgeMode;
+  if(['safe','balanced','upside'].includes(next)){edgeMode=next;render();}
+  return;
+ }
+ const edgeJump=event.target.closest('button[data-edge-jump]');
+ if(edgeJump){
+  if(edgeJump.dataset.edgeJump==='players'){
+   activeTab='waivers';waiverFilter='ALL';location.hash='waivers';render();window.scrollTo({top:0,behavior:'instant'});
+  }
+  return;
+ }
  const tab=event.target.closest('button[data-tab]');
  if(tab){activeTab=tab.dataset.tab;location.hash=activeTab;waiverFilter=tab.dataset.coachFilter==='QB'&&activeTab==='waivers'?'QB':'ALL';render();window.scrollTo({top:0,behavior:'instant'});return}
  const chip=event.target.closest('button[data-filter]');
  if(chip){waiverFilter=chip.dataset.filter;render();return}
  const control=event.target.closest('[data-action]');if(!control)return;
  if(control.dataset.action==='refresh')refresh(false);
+ if(control.dataset.action==='edge-refresh')getEdgeData(true);
  if(control.dataset.action==='import')document.getElementById('importFile')?.click();
  if(control.dataset.action==='clear'){
   localStorage.removeItem(PRIVATE_KEY);source='published';message='Private import cleared from this browser.';
@@ -492,6 +555,7 @@ document.addEventListener('change',event=>{
   if(!current){root.innerHTML='<div class="loader"><strong>Fantasy HQ could not load.</strong><p>'+$esc(error.message)+'</p><button class="primarybutton" data-action="refresh">Retry</button></div>'}
  }
  if(current)render();
+ getEdgeData(true);
  // iPhone background tabs may suspend timers. A visibility check catches the next foreground visit.
  const check=()=>{if(document.visibilityState==='visible')refresh(true)};
  setInterval(check,5*60*1000);
