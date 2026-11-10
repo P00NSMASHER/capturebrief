@@ -113,7 +113,7 @@ test('No private identity, tokens, current-week fake forecasts or provider write
 
 test('Independently rechecked FantasyBot roster enables research-only predictions after Yahoo passes six hours',()=>{
  const yy=source(),ee=inputs();
- const now=Date.parse(ee.observedAtIso)+9*3600000;
+ const now=Math.max(Date.parse(ee.observedAtIso)+9*3600000,Date.parse(yy.syncedAtIso)+7*3600000);
  const model=analyzeEdge(yy,ee,{now});
  assert.equal(model.ready,true,JSON.stringify(model));
  assert.equal(model.quality.yahooFresh,false);
@@ -142,11 +142,14 @@ test('Yahoo opponent forecasts above 100 points survive independent-source valid
  assert.equal(model.ready,true,JSON.stringify(model));
  const next=model.opponents.find(x=>x.week===10);
  assert.equal(next.teamName,'Josh ❤️creampies');
- assert.equal(next.yahooMyProjected,147.4);
- assert.equal(next.yahooOppProjected,127.68);
+ const nextYahoo=y.teams.brock.upcomingMatchups.find(x=>x.week===10);
+ assert.equal(next.yahooMyProjected,nextYahoo.myProjected);
+ assert.equal(next.yahooOppProjected,nextYahoo.opponentProjected);
+ assert.ok(next.yahooMyProjected>100&&next.yahooOppProjected>100);
  const week12=model.opponents.find(x=>x.week===12);
- assert.equal(week12.yahooMyProjected,149.61);
- assert.equal(week12.yahooOppProjected,141.09);
+ const week12Yahoo=y.teams.brock.upcomingMatchups.find(x=>x.week===12);
+ assert.equal(week12.yahooMyProjected,week12Yahoo.myProjected);
+ assert.equal(week12.yahooOppProjected,week12Yahoo.opponentProjected);
  assert.ok(model.illustrativeChance===null||model.illustrativeChance.value>0);
  const bad=structuredClone(y);
  bad.teams.brock.upcomingMatchups[0].opponentProjected=9000;
