@@ -44,6 +44,11 @@ try{
  if(!await until(()=>document.querySelector('.strat-lineup-metrics')))throw Error('Forecast first lineup panel missing');
  if(!document.getElementById('root').textContent.includes('Jonah Coleman'))throw Error('Lineup forgot Week 10 bye');
  if(!document.querySelector('.strat-swaps'))throw Error('Projected starters changes absent');
+ const shift=document.querySelector('.strat-swap--shift');
+ if(!shift||!shift.textContent.includes('Rhamondre Stevenson')||!shift.textContent.includes('W/R/T → RB'))
+   throw Error('Exact flex-to-RB reshuffle missing from Lineup tab');
+ if(!document.querySelector('.strat-swap--in')?.textContent.includes('Zay Flowers'))
+   throw Error('Promoted receiver not shown in flex');
  hit('waivers');
  if(!await until(()=>document.querySelector('.strat-shortage')))throw Error('Future TE bye alert absent on Players');
  if(!document.getElementById('root').textContent.includes('Dallas Goedert'))throw Error('Week 13 TE wire candidate not shown');
