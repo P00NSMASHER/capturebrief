@@ -60,6 +60,10 @@ try{
   throw Error('Duplicate historical analysis was retained on Home');
  const homeLabel=document.querySelector('.focus-home .focus-lead-action strong')?.textContent;
  if(!homeLabel||homeLabel.length<8)throw Error('Home recommendation empty');
+ const headline=document.querySelector('.focus-home .focus-lead-action strong');
+ const cta=document.querySelector('.focus-home .focus-lead-action .focus-cta');
+ if(window.innerWidth<=720&&cta.getBoundingClientRect().top<headline.getBoundingClientRect().bottom)
+  throw Error('Home action button crowds the headline on iPhone');
  tab('lineup');
  if(!await until(()=>document.querySelector('.focus-lineup')))throw Error('Lineup focus view missing');
  unique();
