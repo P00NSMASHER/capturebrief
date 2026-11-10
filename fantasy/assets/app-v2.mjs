@@ -168,8 +168,10 @@ function playerRow(p){
 function teamProjectionSupported(){const t=current?.teams[selected()];return t?.projectionCoverage==='complete'}
 function lineupView(team){
  const model=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
+ const privateOptimizer=source==='private'&&team.projectionCoverage==='complete'?
+  optimizeLineup(team.roster,team.lineupSlots||slotsFromRoster(team.roster)):null;
  return '<div class="focus-introline"><span>LINEUP</span><h1>Who should actually start?</h1></div>'+
-  focusLineup({team,model,mode:edgeMode});
+  focusLineup({team,model,mode:edgeMode,privateOptimizer});
 }
 function waiverView(team){
  const model=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
