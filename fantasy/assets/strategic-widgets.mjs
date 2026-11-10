@@ -39,16 +39,24 @@ export function homeStrategy(report){
 export function lineupStrategy(report){
  if(!report?.ready)return '<section class="strat-card">'+head('MODELED START/SIT','Find your lineup advantage')+error()+'</section>';
  const model=report.model,v=model?.lineups?.balanced,source=report.source;
+ const shifted=v?.available?(v.assignments||[]).filter(a=>{
+   const original=(model.roster||[]).find(p=>String(p.id)===String(a.id));
+   return original&&original.slot!==a.slot&&
+     !['BN','BE','BENCH','IR','IR+','NA','TAXI'].includes(String(original.slot).toUpperCase());
+ }).slice(0,3).map(a=>({name:a.name,from:(model.roster||[]).find(p=>String(p.id)===String(a.id))?.slot,to:a.slot})):[];
  const plan=v?.available?
  '<div class="strat-lineup-metrics">'+
  '<div><span>CAPTURED STARTERS</span><strong>'+num(v.currentScore,1)+'</strong><small>model PPR pts</small></div>'+
  '<div><span>EXACT BEST LINEUP</span><strong>'+num(v.mean,1)+'</strong><small>model PPR pts</small></div>'+
  '<div><span>PROJECTED GAIN</span><strong>'+ch(v.gain,1)+'</strong><small>uncertain</small></div></div>'+
- '<div class="strat-swaps">'+(v.inPlayers?.length?v.inPlayers.map(p=>
- '<div class="strat-swap strat-swap--in"><span>START</span><strong>'+esc(p.name)+'</strong><small>'+esc(p.slot)+' · '+num(p.modelPoints,1)+' projected</small></div>').join(''):
- '<p class="strat-muted">No positive roster switch projected.</p>')+
+ '<div class="strat-swaps">'+
  (v.outPlayers?.length?v.outPlayers.map(p=>'<div class="strat-swap strat-swap--out"><span>MOVE OUT</span><strong>'+esc(p.name)+
- '</strong><small>'+esc(p.slot)+(p.bye?' · BYE':'')+'</small></div>').join(''):'')+'</div>':
+ '</strong><small>'+esc(p.slot)+(p.bye?' · BYE':'')+'</small></div>').join(''):'')+
+ shifted.map(p=>'<div class="strat-swap strat-swap--shift"><span>SLIDE POSITION</span><strong>'+esc(p.name)+
+ '</strong><small>'+esc(p.from)+' → '+esc(p.to)+'</small></div>').join('')+
+ (v.inPlayers?.length?v.inPlayers.map(p=>
+ '<div class="strat-swap strat-swap--in"><span>START</span><strong>'+esc(p.name)+'</strong><small>'+esc(p.slot)+' · '+num(p.modelPoints,1)+' projected</small></div>').join(''):
+ '<p class="strat-muted">No new starter required.</p>')+'</div>':
  '<div class="strat-muted">Full lineup recommendations are unavailable: '+esc(v?.reason||'Missing player forecasts')+'.</div>';
  const risk=v?.available?'<div class="strat-riskline"><span>Illustrative team band</span><strong>'+num(v.illustrativeLow,0)+'–'+num(v.illustrativeHigh,0)+'</strong></div>':'';
  const next=report.model?.byes?.filter(b=>b.week<=14&&b.startingCount>0).slice(0,3)||[];
