@@ -155,3 +155,12 @@
  .edge-brief-paragraphs p{font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){.edge-mode button,.edge-button{transition:none}}
+
+.edge-trade-list{display:grid;gap:9px}
+.edge-trade-row{display:flex;align-items:flex-start;gap:13px;padding:13px 14px;border-radius:14px;
+ background:linear-gradient(135deg,#102638,#102234);border:1px solid #7fa6b442}
+.edge-trade-index{display:grid;place-items:center;flex:none;width:27px;height:27px;border-radius:8px;
+ color:#a5ffdf;background:#4ce9b61d;border:1px solid #58f2b951;font-size:12px;font-weight:850}
+.edge-trade-row>div{min-width:0}
+.edge-trade-row strong{display:block;font-size:13px;line-height:1.35}
+.edge-trade-row p{margin:6px 0 0;color:#a7c2cf;font-size:11px;line-height:1.56}
