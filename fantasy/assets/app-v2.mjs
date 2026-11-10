@@ -302,19 +302,10 @@ function teamView(team){
 }
 
 function archivedView(){
- // Independently reverified FantasyBot roster supports information-only planning.
- // Keep every old Yahoo action and acquisition warning intact; never label it live.
- if(activeTab==='coach'&&edgeRaw){
-  const research=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
-  if(research.ready&&research.quality?.yahooFresh===false){
-   return teamView(current.teams.brock);
-  }
- }
+ // Stale Yahoo captures must never bypass the archive screen on any tab.
  const date=Number.isFinite(Date.parse(current?.syncedAtIso))?
  new Date(current.syncedAtIso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'unknown date';
  const t=current?.teams?.brock;
- const savedReport=activeTab==='coach'?buildArchivedCoachReview(current):null;
- const historical=strategicReport();
  const geniusHistory=geniusReport();
  return '<div class="container">'+masthead(t)+messageBox()+
  '<section class="archived-fallback panel"><div class="archive-logo">'+teamLogo('2','display')+'</div>'+
