@@ -1,4 +1,4 @@
-/* One purpose per tab. Decision data comes from previously validated read-only
+﻿/* One purpose per tab. Decision data comes from previously validated read-only
  * Yahoo, FantasyBot and league-intelligence sources. Presentational only.
  * No provider network calls, user mutations, invented player projections or
  * duplicated analytics cards. Everything user-supplied is escaped.
@@ -9,6 +9,7 @@ const n=(v,p=1)=>typeof v==='number'&&Number.isFinite(v)?v.toFixed(p):'—';
 const signed=(v,p=1)=>typeof v==='number'&&Number.isFinite(v)?(v>0?'+':'')+n(v,p):'—';
 const valid=(p)=>p&&typeof p.name==='string'&&p.name.length>0;
 const btn=(label,tab,extra='')=>'<button type="button" class="focus-cta" data-tab="'+esc(tab)+'"'+extra+'>'+esc(label)+uiIcon('arrow')+'</button>';
+const refreshBtn=label=>'<button type="button" class="focus-cta" data-action="refresh">'+esc(label)+uiIcon('refresh')+'</button>';
 const heading=(kicker,title)=>'<header class="focus-head"><span>'+esc(kicker)+'</span><h2>'+esc(title)+'</h2></header>';
 const card=(cls,html)=>'<section class="focus-panel '+cls+'">'+html+'</section>';
 const sourceLine=(label,copy)=>'<p class="focus-source"><span>'+esc(label)+'</span> · '+esc(copy)+'</p>';
@@ -16,18 +17,31 @@ const empty=copy=>'<div class="focus-empty">'+esc(copy)+'</div>';
 const historical=(model)=>model?.quality?.yahooFresh===false;
 const note=()=>'<span class="focus-model-tag">ESTIMATE · NOT A GUARANTEE</span>';
 
-export function focusHome({team,genius,model,currentWeek}){
- const healthy=genius?.ready&&genius.sourceGrade==='source-checked-model';
- const top=genius?.ready&&healthy?genius.actionablePriorities?.[0]:null;
+export function focusHome({team,genius,model,currentWeek,freshness}){
+ const healthy=(genius?.ready&&genius.sourceGrade==='source-checked-model')||
+  (model?.ready&&model?.quality?.yahooFresh===true);
+ const top=genius?.ready&&genius.sourceGrade==='source-checked-model'?genius.actionablePriorities?.[0]:
+  healthy?model?.priorities?.[0]:null;
  const first=top||null;
- const title=first?.title||'Check the latest lineup before kickoff';
- const desc=first?.body||'The current forecast is incomplete or the Yahoo snapshot is old. Review roster health and eligibility in Yahoo rather than acting on a stale model.';
+ const rosterOld=model?.quality?.yahooFresh===false;
+ const age=typeof freshness?.ageHours==='number'?Math.round(freshness.ageHours):null;
+ const title=first?.title||(rosterOld?'Refresh the Yahoo roster snapshot':'Check the latest lineup before kickoff');
+ const desc=(first?.body||first?.detail)||(rosterOld?
+  'The roster capture is '+(age===null?'outdated':age+' hours old')+'. Newer standings and matchup research cannot safely prove a start, sit, add or drop until the roster is refreshed.':
+  'The forward model is incomplete. Verify roster health and eligibility in Yahoo before making a move.');
  const destination=first?.tab||'lineup';
+ const standings=team?.standings;
+ const upcoming=Array.isArray(team?.upcomingMatchups)?team.upcomingMatchups.slice(0,3):[];
+ const facts=standings?'<div class="focus-lineup-metrics"><div><span>RECORD</span><strong>'+esc(team.record||'—')+'</strong></div>'+
+  '<div><span>YAHOO RANK</span><strong>'+esc(standings.rank)+' / '+esc(standings.leagueSize)+'</strong></div>'+
+  '<div><span>POINT DIFFERENTIAL</span><strong>'+signed(standings.pointsFor-standings.pointsAgainst,1)+'</strong></div></div>':'';
+ const schedule=upcoming.length?'<details class="focus-secondary"><summary>Next '+upcoming.length+' captured matchups '+uiIcon('chevron')+'</summary><div class="focus-roster">'+
+  upcoming.map(r=>'<div class="focus-schedule-row"><span>W'+esc(r.week)+'</span><strong>'+esc(r.opponent)+'</strong><small>Yahoo team gap '+signed(r.myProjected-r.opponentProjected,1)+' pts</small></div>').join('')+'</div></details>':'';
  return card('focus-home',heading('YOUR ONE NEXT DECISION','Make one move that matters')+
  '<div class="focus-lead-action"><div><strong>'+esc(title)+'</strong><p>'+esc(desc)+'</p></div>'+
- (healthy?btn('See the exact decision',destination):btn('Inspect lineup evidence','lineup'))+'</div>'+
+ (healthy?btn('See the exact decision',destination):rosterOld?refreshBtn('Check for a new capture'):btn('Inspect lineup evidence','lineup'))+'</div>'+facts+schedule+
  '<div class="focus-subline"><span>Week '+esc(currentWeek)+' Yahoo capture</span>'+
- '<span>'+(healthy?'Independent Week '+esc(model?.modelWeek||currentWeek+1)+' forecast':'No current move recommendation')+'</span></div>');
+ '<span>'+(healthy?'Independent Week '+esc(model?.modelWeek||currentWeek+1)+' forecast':'Actions blocked until evidence agrees')+'</span></div>');
 }
 const line=(label,body,tone='neutral')=>'<div class="focus-move focus-move--'+esc(tone)+'"><span>'+esc(label)+'</span><strong>'+esc(body)+'</strong></div>';
 const rosterRow=p=>'<div class="focus-roster-row"><span>'+esc(p.slot||'—')+'</span><strong>'+esc(p.name)+'</strong>'+
@@ -121,9 +135,16 @@ export function focusPlayers({team,genius,model,filter='ALL',poolOpen=false}){
  '<div class="focus-roster">'+(market||empty('No players in this position at capture.'))+'</div></details>'+
  sourceLine('CURRENT STATUS',marketNote));
 }
-export function focusLeague({genius,strategic}){
- if(!genius?.ready)return card('focus-league',heading('EIGHT-TEAM SCOUTING','No current league evidence')+
- empty('The full league record is missing or the saved weeks have changed. Do not infer opponent strength from rankings alone.'));
+export function focusLeague({genius,strategic,team}){
+ if(!genius?.ready){
+  const s=team?.standings,upcoming=Array.isArray(team?.upcomingMatchups)?team.upcomingMatchups:[];
+  const verified=s?'<div class="focus-lineup-metrics"><div><span>YAHOO RANK</span><strong>'+esc(s.rank)+' / '+esc(s.leagueSize)+'</strong></div>'+
+   '<div><span>POINTS FOR</span><strong>'+n(s.pointsFor,1)+'</strong></div><div><span>POINT DIFFERENTIAL</span><strong>'+signed(s.pointsFor-s.pointsAgainst,1)+'</strong></div></div>':'';
+  const schedule=upcoming.length?'<div class="focus-roster">'+upcoming.map(r=>'<div class="focus-schedule-row"><span>W'+esc(r.week)+'</span><strong>'+esc(r.opponent)+'</strong><small>Yahoo team gap '+signed(r.myProjected-r.opponentProjected,1)+' pts</small></div>').join('')+'</div>':empty('No upcoming team-level forecasts were captured.');
+  return card('focus-league',heading('VERIFIED LEAGUE SNAPSHOT','What is known without pretending')+verified+
+   '<h3>Upcoming opponents</h3>'+schedule+
+   sourceLine('LIMIT','The historical all-play comparison is withheld because its saved weeks do not match the current league snapshot.'));
+ }
  const ranking=genius.rankings||[];
  const leader=ranking[0],b=ranking.find(x=>x.teamId==='2'),rel=genius.reliability;
  const table=ranking.map((p,i)=>

@@ -1,4 +1,4 @@
-import {TEAM_IDS,normalizeSnapshot,getFreshness,rosterBuckets,slotsFromRoster,optimizeLineup,rankWaiverTargets,estimateWinChance,isSafeUrl,round,teamPath,rosterStatusAlerts,compareScoredLineup,marketWatchlist,positionDepth} from './engine.mjs';
+﻿import {TEAM_IDS,normalizeSnapshot,getFreshness,rosterBuckets,slotsFromRoster,optimizeLineup,rankWaiverTargets,estimateWinChance,isSafeUrl,round,teamPath,rosterStatusAlerts,compareScoredLineup,marketWatchlist,positionDepth} from './engine.mjs';
 import {preparePrivateImport} from './snapshot-import.mjs';
 import {resolveTeam,teamLogo,uiIcon,teamStrip} from './league-branding.mjs';
 import {buildCoachPlan} from './coach-engine.mjs';
@@ -30,7 +30,7 @@ const empty=(title,detail)=>'<div class="empty"><div class="emptymark">◇</div>
 function ageText(f){if(f.ageHours===null)return 'Timestamp unavailable';return f.ageHours<1?'Captured less than an hour ago':f.ageHours<24?'Captured '+num(f.ageHours,1)+'h ago':'Captured '+Math.floor(f.ageHours/24)+' days ago'}
 function safeLeagueLink(team){return isSafeUrl(team.leagueUrl)?'<a class="minorbtn" href="'+$esc(team.leagueUrl)+'" target="_blank" rel="noopener noreferrer">Open Yahoo <span aria-hidden="true">↗</span></a>':''}
 function nav(){
- const choices=[['overview','Home','home'],['lineup','Lineup','lineup'],['waivers','Players','waivers'],['lab','League','league'],['coach','Coach','coach']];
+ const choices=[['overview','Today','home'],['lineup','Lineup','lineup'],['waivers','Market','waivers'],['lab','League','league']];
  return '<nav class="bottomnav" role="tablist" aria-label="Brock Hard sections">'+choices.map(([id,label,glyph])=>
  '<button type="button" role="tab" aria-label="'+(id==='overview'?'Overview':id==='waivers'?'Waivers':label)+'" aria-selected="'+(activeTab===id)+'" data-tab="'+id+'" class="'+(activeTab===id?'active':'')+'">'+
  uiIcon(glyph)+'<span>'+label+'</span></button>').join('')+'</nav>';
@@ -93,8 +93,7 @@ function controls(){return '<p class="controlcopy">Import a new Brock Hard JSON 
   '<div class="subnote">The capture is read-only and manual. This button imports a file; it is not a live Yahoo sync. Failed imports preserve your existing data.</div>'}
 function summaryView(team){
  const model=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
- return focusHome({team,genius:geniusReport(),model,currentWeek:current.week})+
-  matchupCard(team);
+ return focusHome({team,genius:geniusReport(),model,currentWeek:current.week,freshness:freshness()});
 }
 function lineupView(team){
  const model=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
@@ -110,7 +109,7 @@ function waiverView(team){
 }
 function labView(team){
  return '<div class="focus-introline"><span>LEAGUE</span><h1>Who is the real competition?</h1></div>'+
-  focusLeague({genius:geniusReport(),strategic:strategicReport()});
+  focusLeague({genius:geniusReport(),strategic:strategicReport(),team});
 }
 function coachView(team){
  const model=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
@@ -138,16 +137,8 @@ function strategicReport(){
  return report;
 }
 function teamView(team){
- const view=activeTab==='coach'?coachView(team):activeTab==='lineup'?lineupView(team):activeTab==='waivers'?waiverView(team):activeTab==='lab'?labView(team):summaryView(team);
- const home=activeTab==='overview';
- const lead=home?
- '<div class="teamhero '+$esc(team.accent)+'"><div class="hero-copy"><span class="eyebrow">BROCK HARD · YAHOO FOOTBALL</span>'+
- '<h1>'+$esc(team.name)+'</h1><div class="herosub"><span class="record-pill">'+$esc(txt(team.record))+'</span>'+
- '<span>Season '+current.season+' · Week '+txt(current.week)+'</span></div></div>'+
- '<div class="hero-crest">'+teamLogo('2','display')+'</div></div>'+
- riskRibbon()+
- '<div class="heroactions">'+teamStrip(team,current.week)+safeLeagueLink(team)+'</div>':
- '<div class="subpage-context">'+teamLogo('2','sm')+
+ const view=activeTab==='lineup'?lineupView(team):activeTab==='waivers'?waiverView(team):activeTab==='lab'?labView(team):summaryView(team);
+ const lead='<div class="subpage-context">'+teamLogo('2','sm')+
  '<div><strong>Brock Hard</strong><span>Week '+$esc(txt(current.week))+' · '+$esc(txt(team.record))+' · Read-only Yahoo snapshot</span></div>'+
  safeLeagueLink(team)+'</div>';
  return '<div class="container">'+masthead(team)+messageBox()+lead+
@@ -340,7 +331,7 @@ document.addEventListener('change',event=>{
 });
 (async()=>{
  const hash=location.hash.replace('#','');
- if(['overview','lineup','waivers','lab','coach'].includes(hash))activeTab=hash;
+ if(['overview','lineup','waivers','lab'].includes(hash))activeTab=hash;
  try{
   const stored=localStorage.getItem(PRIVATE_KEY);
   if(stored){

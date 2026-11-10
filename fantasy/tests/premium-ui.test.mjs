@@ -99,7 +99,7 @@ test('iPhone-sized CSS includes safe-area navigation, reduced motion, good touch
   assert.match(h,/strategy-v1\.css\?v=1/);
   assert.match(h,/future-v1\.css\?v=1/);
   assert.match(h,/genius-v1\.css\?v=1/);
-  assert.match(h,/app-v2\.mjs\?v=12/);
-  assert.match(h,/focus-v1\.css\?v=1/);
+  assert.match(h,/app-v2\.mjs\?v=13/);
+  assert.match(h,/focus-v1\.css\?v=2/);
  }
 });

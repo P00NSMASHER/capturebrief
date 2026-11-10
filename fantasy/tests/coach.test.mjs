@@ -97,13 +97,13 @@ test('Fail-closed when season, league, team, roster, or source freshness is inva
  const mixed=fixture();mixed.teams.other={name:'OTHER OWNED TEAM'};
  assert.equal(buildCoachPlan(mixed,{now:checkAt}).ready,false);
 });
-test('Navigation remains Brock-only, five tabs, current published data and no extra API',()=>{
+test('Navigation remains Brock-only, four decision jobs, current published data and no extra API',()=>{
  const app=readFileSync('fantasy/assets/app-v2.mjs','utf8');
- assert.match(app,/\['coach','Coach','coach'\]/);
+ assert.doesNotMatch(app,/\['coach','Coach','coach'\]/);
  assert.match(app,/function coachView\(team\)/);
  assert.match(app,/playerPoolOpen/);
  assert.match(app,/focusPlayers\(/);
- assert.match(app,/\['overview','lineup','waivers','lab','coach'\]/);
+ assert.match(app,/\['overview','lineup','waivers','lab'\]/);
  assert.match(app,/source==='published'&&!freshness\(\)\.actionable\?archivedView\(\)/);
  assert.match(app,/buildCoachPlan\(current,/);
  assert.doesNotMatch(app,/new WebSocket|client_secret|rosterTransaction|submitTrade/);
