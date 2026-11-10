@@ -11,6 +11,7 @@
  box-shadow:inset 0 1px #def9ff20,0 16px 50px #0008}
 .focus-panel:before{content:"";position:absolute;left:18px;top:-1px;width:70px;height:1px;
  background:linear-gradient(90deg,transparent,#aafbea,transparent);pointer-events:none}
+.focus-coach{border-color:#8e92e285;background:radial-gradient(ellipse at 94% -25%,#5c488a42,transparent 60%),linear-gradient(148deg,#172840,#0c1e33)}
 .focus-home{border-color:#5cd7c58f;background:radial-gradient(ellipse at 95% -30%,#146b7064,transparent 65%),
  linear-gradient(144deg,#103a49,#0e253f)}
 .focus-head{margin:0 0 16px}
