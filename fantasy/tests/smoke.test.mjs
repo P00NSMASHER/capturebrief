@@ -61,8 +61,14 @@ test('current Brock Yahoo data produces real roster alerts and scored-lineup con
  assert.ok(scored.best>=scored.current);
  assert.equal(scored.gap,Math.round((scored.best-scored.current)*100)/100);
  const app=file('fantasy/assets/app-v2.mjs');
- assert.match(app,/Highest-scoring lineup so far/);
- assert.match(app,/Playoff race/);
- assert.match(app,/Trade preparation/);
+ assert.match(app,/focusHome\(/);
+ assert.match(app,/focusLineup\(/);
+ assert.match(app,/focusPlayers\(/);
+ assert.match(app,/focusLeague\(/);
+ assert.match(app,/focusCoach\(/);
+ // No compounded analytics panels: each tab has exactly one focused layout.
+ assert.doesNotMatch(app,/return geniusHome\(geniusReport\(\)\)\+homeStrategy/);
+ assert.doesNotMatch(app,/geniusPlayers\(geniusReport\(\)\)\+playersStrategy/);
+ assert.doesNotMatch(app,/geniusCoach\(geniusReport\(\).*renderEdgeLab/);
  assert.doesNotMatch(app,/No saved alerts|Full-season simulation not rated|Opponent roster valuation unavailable/);
 });
