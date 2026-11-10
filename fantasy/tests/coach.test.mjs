@@ -101,7 +101,8 @@ test('Navigation remains Brock-only, five tabs, current published data and no ex
  const app=readFileSync('fantasy/assets/app-v2.mjs','utf8');
  assert.match(app,/\['coach','Coach','coach'\]/);
  assert.match(app,/function coachView\(team\)/);
- assert.match(app,/data-coach-filter/);
+ assert.match(app,/playerPoolOpen/);
+ assert.match(app,/focusPlayers\(/);
  assert.match(app,/\['overview','lineup','waivers','lab','coach'\]/);
  assert.match(app,/source==='published'&&!freshness\(\)\.actionable\?archivedView\(\)/);
  assert.match(app,/buildCoachPlan\(current,/);
