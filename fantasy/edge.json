@@ -16,7 +16,8 @@
     "Yahoo league availability is only verified at the linked Yahoo capture time.",
     "Upcoming opponent team projections come from Yahoo, not FantasyBot player estimates.",
     "Full roster optimization is withheld if required projections are missing.",
-    "No automated claims, lineup moves, trades or messages."
+    "No automated claims, lineup moves, trades or messages.",
+    "If the core Yahoo capture ages past six hours, a separately verified FantasyBot roster allows informational Week 10 scouting for up to 24 hours, but Yahoo acquisition legality and lineup locks remain unverified; no real add/drop advice from stale Yahoo."
   ],
   "rosterProjections": [
     {
@@ -965,5 +966,8 @@
       "ARI",
       "DAL"
     ]
-  }
+  },
+  "rosterVerifiedAtIso": "2026-11-09T23:47:23.697Z",
+  "rosterCrossCheckCount": 18,
+  "rosterCrossCheckSource": "FantasyBot get_my_roster: linked The League; matched 18/18 Brock player names to Yahoo"
 }
