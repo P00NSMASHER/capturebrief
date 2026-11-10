@@ -3,7 +3,7 @@
   "season": 2026,
   "provider": "Yahoo",
   "week": 9,
-  "syncedAtIso": "2026-11-09T23:27:56.499Z",
+  "syncedAtIso": "2026-11-10T03:26:15.000Z",
   "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
   "captureType": "scheduled-provider-read",
   "teams": {
@@ -21,7 +21,7 @@
       "health": "Yahoo roster flags at capture",
       "nextMove": "No verified projected add/drop or lineup move available",
       "nextDetail": "Roster, standings, available players and matchup verified via Flaim. Individual player projections unavailable; no transaction was submitted.",
-      "score": "148.58–127.06",
+      "score": "163.48–127.06",
       "scoreState": "Yahoo score at capture",
       "weekNote": "Week 9 vs Chasing Greatness",
       "confidence": "Source-backed capture",
@@ -104,10 +104,10 @@
           ],
           "nflTeam": "Min",
           "injury": null,
-          "actualPoints": 0,
+          "actualPoints": 5.9,
           "projection": null,
           "cantCut": true,
-          "editable": true,
+          "editable": false,
           "locked": false
         },
         {
@@ -308,10 +308,10 @@
           ],
           "nflTeam": "Min",
           "injury": null,
-          "actualPoints": 0,
+          "actualPoints": 9,
           "projection": null,
           "cantCut": false,
-          "editable": true,
+          "editable": false,
           "locked": false
         },
         {
@@ -376,22 +376,22 @@
           "projection": null
         },
         {
-          "id": "31002",
-          "name": "Lamar Jackson",
-          "position": "QB",
-          "team": "Bal",
-          "nflTeam": "Bal",
-          "acquisitionState": "waivers",
-          "waiverDate": "2026-11-11",
-          "percentOwned": 77,
-          "projection": null
-        },
-        {
           "id": "42661",
           "name": "Denzel Boston",
           "position": "WR",
           "team": "Cle",
           "nflTeam": "Cle",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 76,
+          "projection": null
+        },
+        {
+          "id": "31002",
+          "name": "Lamar Jackson",
+          "position": "QB",
+          "team": "Bal",
+          "nflTeam": "Bal",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 76,
@@ -414,8 +414,8 @@
           "position": "WR",
           "team": "Min",
           "nflTeam": "Min",
-          "acquisitionState": "free_agent",
-          "waiverDate": null,
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
           "percentOwned": 73,
           "projection": null
         },
@@ -458,8 +458,8 @@
           "position": "RB",
           "team": "Pit",
           "nflTeam": "Pit",
-          "acquisitionState": "free_agent",
-          "waiverDate": null,
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
           "percentOwned": 70,
           "projection": null
         },
@@ -535,8 +535,8 @@
           "position": "QB",
           "team": "Min",
           "nflTeam": "Min",
-          "acquisitionState": "free_agent",
-          "waiverDate": null,
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
           "percentOwned": 53,
           "projection": null
         },
@@ -557,20 +557,9 @@
           "position": "WR",
           "team": "Ten",
           "nflTeam": "Ten",
-          "acquisitionState": "free_agent",
-          "waiverDate": null,
-          "percentOwned": 51,
-          "projection": null
-        },
-        {
-          "id": "40915",
-          "name": "Adonai Mitchell",
-          "position": "WR",
-          "team": "NYJ",
-          "nflTeam": "NYJ",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 50,
+          "percentOwned": 51,
           "projection": null
         },
         {
@@ -582,6 +571,17 @@
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 50,
+          "projection": null
+        },
+        {
+          "id": "40915",
+          "name": "Adonai Mitchell",
+          "position": "WR",
+          "team": "NYJ",
+          "nflTeam": "NYJ",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 49,
           "projection": null
         },
         {
@@ -624,8 +624,8 @@
           "teamKey": "470.l.290846.t.2",
           "teamId": "2",
           "teamName": "Brock Hard & Tee Baggin",
-          "points": 148.58,
-          "projectedPoints": 155.63,
+          "points": 163.48,
+          "projectedPoints": 155.87,
           "liveProjectedPoints": null,
           "winProbability": 0.99
         },
@@ -740,7 +740,7 @@
       "transactionsCoverage": {
         "limited": true,
         "includedRows": 16,
-        "window": "Recent owner team activity from Flaim"
+        "window": "Recent 30-day owner team activity from Flaim; upstream completeness unverified"
       },
       "standings": {
         "rank": 1,
@@ -750,29 +750,29 @@
         "pointsFor": 1200.34,
         "pointsAgainst": 1125.9,
         "seasonPhase": "regular_season",
-        "asOfIso": "2026-11-09T17:30:21.368Z"
+        "asOfIso": "2026-11-10T03:26:15.000Z"
       },
       "upcomingMatchups": [
         {
           "week": 10,
           "opponent": "Josh ❤️creampies",
-          "myProjected": 147.4,
-          "opponentProjected": 127.68
+          "myProjected": 148.24,
+          "opponentProjected": 126.51
         },
         {
           "week": 11,
           "opponent": "BEEFS GAY",
-          "myProjected": 135.11,
-          "opponentProjected": 110.2
+          "myProjected": 135.2,
+          "opponentProjected": 110.15
         },
         {
           "week": 12,
           "opponent": "Jersey junkyard",
-          "myProjected": 149.61,
+          "myProjected": 149.7,
           "opponentProjected": 141.09
         }
       ],
-      "analysisAsOfIso": "2026-11-09T23:27:56.499Z"
+      "analysisAsOfIso": "2026-11-10T03:26:15.000Z"
     }
   }
 }
