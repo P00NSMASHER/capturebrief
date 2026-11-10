@@ -3,6 +3,7 @@
 import {optimizeLineup,getFreshness,normalizePosition,round,estimateWinChance} from './engine.mjs';
 const n=x=>typeof x==='number'&&Number.isFinite(x);
 const npos=x=>n(x)&&x>=0&&x<=100;
+const teamPoints=x=>n(x)&&x>=0&&x<=600; // Yahoo team totals can exceed 100 fantasy points.
 const bench=new Set(['BN','BE','BENCH']),reserve=new Set(['IR','IR+','NA','TAXI']);
 const starter=p=>!bench.has(normalizePosition(p?.slot))&&!reserve.has(normalizePosition(p?.slot));
 const active=p=>!reserve.has(normalizePosition(p?.slot));
@@ -133,8 +134,15 @@ function choosePriorities(model){
   list.push({id:'bye-replacement',severity:'critical',
     title:'Replace '+needsBye.name+' — Week '+model.modelWeek+' bye',
     detail:best?.available&&best.inPlayers.length?
-      'The model selects '+best.inPlayers.map(x=>x.name).join(' and ')+
-      ' from your existing roster. Confirm the Yahoo slot before kickoff.':
+      (()=>{
+        const original=model.roster;
+        const replacement=best.assignments.find(a=>a.slot===needsBye.slot&&
+          !original.some(p=>String(p.id)===String(a.id)&&p.slot===needsBye.slot));
+        const promoted=best.inPlayers.map(p=>p.name+' into '+p.slot).join('; ');
+        return 'Move '+needsBye.name+' out of the Week '+model.modelWeek+' lineup. '+
+          (replacement?'Slide '+replacement.name+' into '+needsBye.slot+'; ':'')+
+          'start '+promoted+'. Confirm slot eligibility and Yahoo locks before making the changes.';
+      })():
       'This NFL club is on a verified bye; confirm an eligible, active substitute before kickoff.',
     evidence:'Official NFL bye schedule, plus exact roster slot assignment'});
  }
@@ -216,8 +224,8 @@ export function analyzeEdge(snapshot,edge,{now=Date.now(),mode='balanced'}={}){
  .map(x=>{
   const power=rankForPower(edge.leaguePower||[],x.opponent);
   return {week:x.week,teamName:x.opponent,rank:power?.rank??null,rating:power?.rating??null,
-   yahooMyProjected:npos(x.myProjected)?x.myProjected:null,
-   yahooOppProjected:npos(x.opponentProjected)?x.opponentProjected:null};
+   yahooMyProjected:teamPoints(x.myProjected)?x.myProjected:null,
+   yahooOppProjected:teamPoints(x.opponentProjected)?x.opponentProjected:null};
  });
  const lineup=lineups[licensed(mode)];
  const chance=lineup?.available&&opp.some(x=>x.week===modelWeek&&x.yahooOppProjected!==null)?
