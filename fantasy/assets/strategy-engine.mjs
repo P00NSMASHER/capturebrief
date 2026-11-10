@@ -41,6 +41,8 @@ function validateSource(y,edge,intel,now){
  }
  for(let w=1;w<=8;w++)if(intel.history.filter(g=>g.week===w).length!==4)return 'Historical Yahoo evidence incomplete';
  for(let w=10;w<=14;w++)if(intel.futureSchedule.filter(g=>g.week===w).length!==4)return 'Future Yahoo league schedule incomplete';
+ const yahooClock=Date.parse(y.syncedAtIso||'');
+ if(!Number.isFinite(yahooClock)||yahooClock>now+300000)return 'Yahoo capture timestamp is invalid';
  const d=Date.parse(intel.capturedAtIso||'');
  if(!Number.isFinite(d)||d>now+300000)return 'Invalid league capture timestamp';
  if(edge&&edge.kind==='brock-hard-prediction-inputs'&&
@@ -170,7 +172,10 @@ export function buildStrategicReport(y,edge,intel,{now=Date.now(),simulations=40
  if(error)return unavailable(error);
  const calibration=calibrate(intel.history);
  const model=edge?analyzeEdge(y,edge,{now,mode:'balanced'}):null;
- const permitted=model?.ready===true;
+ const trust=getSourceAge(y,edge,intel,now);
+ // Research-only modeling is useful when Yahoo is stale, but must never become
+ // a current trade, waiver, or lineup recommendation.
+ const permitted=model?.ready===true&&trust.yahooAgeHours<=6;
  const shift=permitted&&model.lineups?.balanced?.available?Math.max(0,model.lineups.balanced.gain):0;
  const odds=simulate(intel,calibration,shift,simulations);
  const ranking=leagueRanking(intel,edge),upcoming=intel.futureSchedule
@@ -184,7 +189,7 @@ export function buildStrategicReport(y,edge,intel,{now=Date.now(),simulations=40
     opponentProjected:home?g.awayProjected:g.homeProjected,
     projectedMargin:round((home?g.homeProjected-g.awayProjected:g.awayProjected-g.homeProjected),2)};
   });
- const next=upcoming[0],trust=getSourceAge(y,edge,intel,now);
+ const next=upcoming[0];
  const urgent=positionIssue(y,edge);
  const trades=computeTradeIntel(intel,edge);
  const needsWeek13=urgent.te13Shortage;
@@ -201,6 +206,7 @@ export function buildStrategicReport(y,edge,intel,{now=Date.now(),simulations=40
   detail:'Yahoo pregame gap '+(next.projectedMargin>=0?'+':'')+next.projectedMargin.toFixed(1)+
   '; historical matchup forecasts chose only '+calibration.winnerCorrect+' of '+calibration.winnerTested+' winners.',
   severity:'watch',tab:'lab'});
+ if(trust.yahooAgeHours>6)priorities.length=0;
  const ma=trust.yahooAgeHours<=6;
  const rankedAvailable=model?.waivers?.watches||[];
  const waiverPriorities=ma?
