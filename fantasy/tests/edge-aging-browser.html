@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/edge-v1.css?v=1">
+<title>Edge Aged Yahoo / Research-Only Browser QA</title></head>
+<body><div id="root">Testing safe research-only forecasts…</div>
+<script type="module">
+try{
+ const nativeFetch=window.fetch.bind(window);
+ const yahoo=await(await nativeFetch('/capturebrief/fantasy/data.json',{cache:'no-store'})).json();
+ const edge=await(await nativeFetch('/capturebrief/fantasy/edge.json',{cache:'no-store'})).json();
+ yahoo.syncedAtIso=new Date(Date.now()-9*3600000).toISOString();
+ edge.yahooCapturedAtIso=yahoo.syncedAtIso;
+ edge.observedAtIso=new Date().toISOString();
+ edge.rosterVerifiedAtIso=edge.observedAtIso;
+ edge.rosterCrossCheckCount=18;
+ if(Object.keys(yahoo.teams).join(',')!=='brock'||edge.kind!=='brock-hard-prediction-inputs')
+  throw Error('Wrong fixture identity');
+ localStorage.removeItem('fantasy-hq-public-last-good-v2');
+ localStorage.removeItem('fantasy-hq-private-v3');
+ window.fetch=(url,opt)=>{
+  const path=String(url);
+  if(path.includes('/fantasy/data.json?'))return Promise.resolve(
+    new Response(JSON.stringify(yahoo),{status:200,headers:{'Content-Type':'application/json'}}));
+  if(path.includes('/fantasy/edge.json?'))return Promise.resolve(
+    new Response(JSON.stringify(edge),{status:200,headers:{'Content-Type':'application/json'}}));
+  return nativeFetch(url,opt);
+ };
+ location.hash='#coach';
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=8');
+ let found=false;
+ for(let i=0;i<120;i++){
+  if(document.querySelector('.edge-stale-banner')&&document.querySelector('.edge-hero')){found=true;break}
+  await new Promise(r=>setTimeout(r,40));
+ }
+ if(!found)throw Error('Aged Yahoo source did not render independently verified research');
+ if(!document.querySelector('.edge-no-data')?.textContent.includes('pickup')&&
+    !document.getElementById('root').textContent.includes('Waiver decisions on hold'))
+   throw Error('Stale provider waiver recommendations not withheld');
+ if(document.querySelectorAll('.edge-waiver-row').length)throw Error('Aged Yahoo waiver action leaked');
+ if(document.querySelector('.edge-hero h2')?.textContent.includes('guaranteed'))throw Error('False guaranteed winner');
+ if(!document.querySelector('.edge-bye-warning'))throw Error('Verified NFL byes lost');
+ const m=document.createElement('strong');
+ m.textContent='EDGE_AGING_PASS · research only · zero stale waiver claims';m.id='edge-aging-result';
+ document.body.appendChild(m);
+}catch(e){
+ const m=document.createElement('strong');
+ m.textContent='EDGE_AGING_FAIL: '+e.message;m.id='edge-aging-result';
+ document.body.appendChild(m);
+}
+</script></body></html>
