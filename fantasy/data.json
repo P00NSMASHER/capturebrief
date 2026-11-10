@@ -3,7 +3,7 @@
   "season": 2026,
   "provider": "Yahoo",
   "week": 10,
-  "syncedAtIso": "2026-11-10T11:29:45.113Z",
+  "syncedAtIso": "2026-11-10T19:31:44.461Z",
   "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
   "captureType": "scheduled-provider-read",
   "teams": {
@@ -60,16 +60,16 @@
           "locked": false
         },
         {
-          "id": "33508",
-          "name": "Rhamondre Stevenson",
+          "id": "33991",
+          "name": "Breece Hall",
           "position": "RB",
           "slot": "RB",
           "eligiblePositions": [
             "RB",
             "W/R/T"
           ],
-          "nflTeam": "NE",
-          "injury": "Q",
+          "nflTeam": "NYJ",
+          "injury": null,
           "actualPoints": 0,
           "projection": null,
           "cantCut": false,
@@ -162,6 +162,23 @@
           "locked": false
         },
         {
+          "id": "33508",
+          "name": "Rhamondre Stevenson",
+          "position": "RB",
+          "slot": "BN",
+          "eligiblePositions": [
+            "RB",
+            "W/R/T"
+          ],
+          "nflTeam": "NE",
+          "injury": "D",
+          "actualPoints": 0,
+          "projection": null,
+          "cantCut": false,
+          "editable": true,
+          "locked": false
+        },
+        {
           "id": "41902",
           "name": "Woody Marks",
           "position": "RB",
@@ -171,23 +188,6 @@
             "W/R/T"
           ],
           "nflTeam": "Hou",
-          "injury": null,
-          "actualPoints": 0,
-          "projection": null,
-          "cantCut": false,
-          "editable": true,
-          "locked": false
-        },
-        {
-          "id": "33991",
-          "name": "Breece Hall",
-          "position": "RB",
-          "slot": "BN",
-          "eligiblePositions": [
-            "RB",
-            "W/R/T"
-          ],
-          "nflTeam": "NYJ",
           "injury": null,
           "actualPoints": 0,
           "projection": null,
@@ -270,11 +270,10 @@
           "slot": "IR",
           "eligiblePositions": [
             "WR",
-            "W/R/T",
-            "IR"
+            "W/R/T"
           ],
           "nflTeam": "Ten",
-          "injury": "O",
+          "injury": "Q",
           "actualPoints": 0,
           "projection": null,
           "cantCut": false,
@@ -348,10 +347,10 @@
           "position": "WR",
           "team": "LAR",
           "nflTeam": "LAR",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 84,
-          "projection": null
+          "percentOwned": 84
         },
         {
           "id": "31019",
@@ -359,10 +358,10 @@
           "position": "TE",
           "team": "Phi",
           "nflTeam": "Phi",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 82,
-          "projection": null
+          "percentOwned": 82
         },
         {
           "id": "40126",
@@ -370,10 +369,10 @@
           "position": "WR",
           "team": "Ind",
           "nflTeam": "Ind",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 82,
-          "projection": null
+          "percentOwned": 82
         },
         {
           "id": "42661",
@@ -381,10 +380,10 @@
           "position": "WR",
           "team": "Cle",
           "nflTeam": "Cle",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 76,
-          "projection": null
+          "percentOwned": 76
         },
         {
           "id": "31002",
@@ -392,10 +391,10 @@
           "position": "QB",
           "team": "Bal",
           "nflTeam": "Bal",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 76,
-          "projection": null
+          "percentOwned": 76
         },
         {
           "id": "41825",
@@ -403,10 +402,10 @@
           "position": "QB",
           "team": "NO",
           "nflTeam": "NO",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 75,
-          "projection": null
+          "percentOwned": 75
         },
         {
           "id": "40042",
@@ -414,10 +413,10 @@
           "position": "WR",
           "team": "Min",
           "nflTeam": "Min",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 73,
-          "projection": null
+          "percentOwned": 73
         },
         {
           "id": "42025",
@@ -425,10 +424,10 @@
           "position": "RB",
           "team": "Chi",
           "nflTeam": "Chi",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 71,
-          "projection": null
+          "percentOwned": 71
         },
         {
           "id": "40875",
@@ -436,10 +435,10 @@
           "position": "QB",
           "team": "Den",
           "nflTeam": "Den",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 70,
-          "projection": null
+          "percentOwned": 70
         },
         {
           "id": "31868",
@@ -447,10 +446,10 @@
           "position": "WR",
           "team": "SF",
           "nflTeam": "SF",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 70,
-          "projection": null
+          "percentOwned": 70
         },
         {
           "id": "33100",
@@ -458,21 +457,10 @@
           "position": "RB",
           "team": "Pit",
           "nflTeam": "Pit",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 70,
-          "projection": null
-        },
-        {
-          "id": "30180",
-          "name": "Alvin Kamara",
-          "position": "RB",
-          "team": "NO",
-          "nflTeam": "NO",
-          "acquisitionState": "waivers",
-          "waiverDate": "2026-11-11",
-          "percentOwned": 65,
-          "projection": null
+          "percentOwned": 70
         },
         {
           "id": "40029",
@@ -480,10 +468,21 @@
           "position": "QB",
           "team": "Car",
           "nflTeam": "Car",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 65,
-          "projection": null
+          "percentOwned": 66
+        },
+        {
+          "id": "30180",
+          "name": "Alvin Kamara",
+          "position": "RB",
+          "team": "NO",
+          "nflTeam": "NO",
+          "projection": null,
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 64
         },
         {
           "id": "41823",
@@ -491,10 +490,10 @@
           "position": "RB",
           "team": "NE",
           "nflTeam": "NE",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 61,
-          "projection": null
+          "percentOwned": 60
         },
         {
           "id": "41845",
@@ -502,10 +501,10 @@
           "position": "RB",
           "team": "Den",
           "nflTeam": "Den",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 59,
-          "projection": null
+          "percentOwned": 58
         },
         {
           "id": "41058",
@@ -513,10 +512,10 @@
           "position": "WR",
           "team": "Mia",
           "nflTeam": "Mia",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 56,
-          "projection": null
+          "percentOwned": 55
         },
         {
           "id": "31010",
@@ -524,10 +523,10 @@
           "position": "WR",
           "team": "Den",
           "nflTeam": "Den",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 53,
-          "projection": null
+          "percentOwned": 53
         },
         {
           "id": "31833",
@@ -535,10 +534,10 @@
           "position": "QB",
           "team": "Min",
           "nflTeam": "Min",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 52,
-          "projection": null
+          "percentOwned": 52
         },
         {
           "id": "42642",
@@ -546,10 +545,10 @@
           "position": "WR",
           "team": "Phi",
           "nflTeam": "Phi",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 52,
-          "projection": null
+          "percentOwned": 52
         },
         {
           "id": "33998",
@@ -557,10 +556,10 @@
           "position": "WR",
           "team": "Ten",
           "nflTeam": "Ten",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 51,
-          "projection": null
+          "percentOwned": 51
         },
         {
           "id": "41097",
@@ -568,10 +567,10 @@
           "position": "WR",
           "team": "NO",
           "nflTeam": "NO",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 50,
-          "projection": null
+          "percentOwned": 50
         },
         {
           "id": "40915",
@@ -579,10 +578,10 @@
           "position": "WR",
           "team": "NYJ",
           "nflTeam": "NYJ",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 49,
-          "projection": null
+          "percentOwned": 48
         },
         {
           "id": "32231",
@@ -590,10 +589,10 @@
           "position": "WR",
           "team": "Jax",
           "nflTeam": "Jax",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 45,
-          "projection": null
+          "percentOwned": 45
         },
         {
           "id": "30973",
@@ -601,10 +600,10 @@
           "position": "QB",
           "team": "Sea",
           "nflTeam": "Sea",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 38,
-          "projection": null
+          "percentOwned": 38
         },
         {
           "id": "42693",
@@ -612,10 +611,10 @@
           "position": "WR",
           "team": "Was",
           "nflTeam": "Was",
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 31,
-          "projection": null
+          "percentOwned": 31
         }
       ],
       "matchup": {
@@ -625,7 +624,7 @@
           "teamId": "2",
           "teamName": "Brock Hard & Tee Baggin",
           "points": 0,
-          "projectedPoints": 143.96,
+          "projectedPoints": 147.05,
           "liveProjectedPoints": null,
           "winProbability": 0.6
         },
@@ -634,7 +633,7 @@
           "teamId": "6",
           "teamName": "Josh ❤️creampies",
           "points": 0,
-          "projectedPoints": 129.1,
+          "projectedPoints": 132.28,
           "liveProjectedPoints": null,
           "winProbability": 0.4
         }
@@ -751,28 +750,7 @@
         "pointsAgainst": 1252.96,
         "seasonPhase": "regular_season",
         "asOfIso": "2026-11-10T11:29:45.113Z"
-      },
-      "upcomingMatchups": [
-        {
-          "week": 11,
-          "opponent": "BEEFS GAY",
-          "myProjected": 135.2,
-          "opponentProjected": 110.15
-        },
-        {
-          "week": 12,
-          "opponent": "Jersey junkyard",
-          "myProjected": 149.7,
-          "opponentProjected": 141.09
-        },
-        {
-          "week": 13,
-          "opponent": "Frenchville HornHog",
-          "myProjected": 110.6,
-          "opponentProjected": 131.89
-        }
-      ],
-      "analysisAsOfIso": "2026-11-10T11:29:45.113Z"
+      }
     }
   }
 }
