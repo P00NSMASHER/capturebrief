@@ -3,7 +3,7 @@
   "season": 2026,
   "provider": "Yahoo",
   "week": 10,
-  "syncedAtIso": "2026-11-10T19:31:44.461Z",
+  "syncedAtIso": "2026-11-10T23:30:48.449Z",
   "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
   "captureType": "scheduled-provider-read",
   "teams": {
@@ -353,22 +353,22 @@
           "percentOwned": 84
         },
         {
+          "id": "40126",
+          "name": "Josh Downs",
+          "position": "WR",
+          "team": "KC",
+          "nflTeam": "KC",
+          "projection": null,
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 83
+        },
+        {
           "id": "31019",
           "name": "Dallas Goedert",
           "position": "TE",
           "team": "Phi",
           "nflTeam": "Phi",
-          "projection": null,
-          "acquisitionState": "waivers",
-          "waiverDate": "2026-11-11",
-          "percentOwned": 82
-        },
-        {
-          "id": "40126",
-          "name": "Josh Downs",
-          "position": "WR",
-          "team": "Ind",
-          "nflTeam": "Ind",
           "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
@@ -430,17 +430,6 @@
           "percentOwned": 71
         },
         {
-          "id": "40875",
-          "name": "Bo Nix",
-          "position": "QB",
-          "team": "Den",
-          "nflTeam": "Den",
-          "projection": null,
-          "acquisitionState": "waivers",
-          "waiverDate": "2026-11-11",
-          "percentOwned": 70
-        },
-        {
           "id": "31868",
           "name": "Deebo Samuel Sr.",
           "position": "WR",
@@ -461,6 +450,17 @@
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 70
+        },
+        {
+          "id": "40875",
+          "name": "Bo Nix",
+          "position": "QB",
+          "team": "Den",
+          "nflTeam": "Den",
+          "projection": null,
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 69
         },
         {
           "id": "40029",
@@ -529,17 +529,6 @@
           "percentOwned": 53
         },
         {
-          "id": "31833",
-          "name": "Kyler Murray",
-          "position": "QB",
-          "team": "Min",
-          "nflTeam": "Min",
-          "projection": null,
-          "acquisitionState": "waivers",
-          "waiverDate": "2026-11-11",
-          "percentOwned": 52
-        },
-        {
           "id": "42642",
           "name": "Makai Lemon",
           "position": "WR",
@@ -549,6 +538,17 @@
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
           "percentOwned": 52
+        },
+        {
+          "id": "31833",
+          "name": "Kyler Murray",
+          "position": "QB",
+          "team": "Min",
+          "nflTeam": "Min",
+          "projection": null,
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-11",
+          "percentOwned": 51
         },
         {
           "id": "33998",
@@ -624,18 +624,18 @@
           "teamId": "2",
           "teamName": "Brock Hard & Tee Baggin",
           "points": 0,
-          "projectedPoints": 147.05,
+          "projectedPoints": 149.97,
           "liveProjectedPoints": null,
-          "winProbability": 0.6
+          "winProbability": 0.62
         },
         "away": {
           "teamKey": "470.l.290846.t.6",
           "teamId": "6",
           "teamName": "Josh ❤️creampies",
           "points": 0,
-          "projectedPoints": 132.28,
+          "projectedPoints": 132.43,
           "liveProjectedPoints": null,
-          "winProbability": 0.4
+          "winProbability": 0.38
         }
       },
       "transactions": [
@@ -750,7 +750,28 @@
         "pointsAgainst": 1252.96,
         "seasonPhase": "regular_season",
         "asOfIso": "2026-11-10T11:29:45.113Z"
-      }
+      },
+      "upcomingMatchups": [
+        {
+          "week": 11,
+          "opponent": "BEEFS GAY",
+          "myProjected": 147.27,
+          "opponentProjected": 108.78
+        },
+        {
+          "week": 12,
+          "opponent": "Jersey junkyard",
+          "myProjected": 151.54,
+          "opponentProjected": 140.69
+        },
+        {
+          "week": 13,
+          "opponent": "Frenchville HornHog",
+          "myProjected": 99.67,
+          "opponentProjected": 137.61
+        }
+      ],
+      "analysisAsOfIso": "2026-11-10T23:30:48.449Z"
     }
   }
 }
