@@ -1,0 +1,97 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Brock Hard Genius Lab browser acceptance</title>
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/edge-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/strategy-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/future-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/genius-v1.css?v=1">
+</head><body><div id="root">Verifying Brock Genius Lab…</div>
+<script type="module">
+try{
+ const sourceFetch=window.fetch.bind(window);
+ const [raw,edge,intel]=await Promise.all([
+  sourceFetch('/capturebrief/fantasy/data.json').then(r=>r.json()),
+  sourceFetch('/capturebrief/fantasy/edge.json').then(r=>r.json()),
+  sourceFetch('/capturebrief/fantasy/intelligence.json').then(r=>r.json())
+ ]);
+ if(raw.schemaVersion!==3||Object.keys(raw.teams).join(',')!=='brock'||
+  edge.week!==10||intel.history?.length!==32)throw Error('Wrong source coverage');
+ const now=Date.now();raw.syncedAtIso=new Date(now).toISOString();
+ edge.observedAtIso=new Date(now).toISOString();
+ edge.yahooCapturedAtIso=new Date(now-30000).toISOString();
+ edge.rosterVerifiedAtIso=new Date(now).toISOString();
+ intel.capturedAtIso=new Date(now).toISOString();
+ localStorage.removeItem('fantasy-hq-public-last-good-v2');
+ localStorage.setItem('fantasy-hq-private-v3',JSON.stringify(raw));
+ window.fetch=(url,options)=>{
+  const u=String(url);
+  if(u.includes('/fantasy/edge.json?'))
+   return Promise.resolve(new Response(JSON.stringify(edge),{status:200,headers:{'Content-Type':'application/json'}}));
+  if(u.includes('/fantasy/intelligence.json?'))
+   return Promise.resolve(new Response(JSON.stringify(intel),{status:200,headers:{'Content-Type':'application/json'}}));
+  return sourceFetch(url,options);
+ };
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=11');
+ const wait=async check=>{
+  for(let i=0;i<150;i++){if(check())return true;await new Promise(resolve=>setTimeout(resolve,35))}
+  return false
+ };
+ const clickTab=id=>document.querySelector('button[data-tab="'+id+'"]')?.click();
+ if(!await wait(()=>document.querySelector('.genius-panel--hero')))throw Error('Genius Home panel missing');
+ if(!document.body.textContent.includes('How strong are you really?'))throw Error('All-play audit missing');
+ if(!document.querySelector('.genius-opponent'))throw Error('Opponent score context missing');
+ if(!document.body.textContent.includes('8-WEEK POWER AUDIT'))throw Error('Historical source label missing');
+ clickTab('lineup');
+ if(!await wait(()=>document.querySelector('.genius-player-signal')))throw Error('Genius lineup signals missing');
+ if(!document.body.textContent.includes('Know what the forecast misses'))throw Error('Lineup uncertainty disclosure missing');
+ if(!document.querySelector('.strat-swap--shift')?.textContent.includes('Rhamondre Stevenson'))
+  throw Error('Original legal-slot lineup plan disrupted');
+ clickTab('waivers');
+ if(!await wait(()=>document.querySelector('.genius-trade')))throw Error('Trade shortlist missing');
+ if(!document.body.textContent.includes('Woody Marks')||!document.body.textContent.includes('Travis Kelce'))
+  throw Error('Sourced named trade candidate missing');
+ if(!document.body.textContent.includes('Dallas Goedert'))throw Error('TE coverage research missing');
+ if(!document.querySelector('.filterbar'))throw Error('Original position filters missing');
+ clickTab('lab');
+ if(!await wait(()=>document.querySelectorAll('.genius-standing').length===8))
+  throw Error('All-play league standings must show 8 unique clubs');
+ if(!document.body.textContent.includes('20 genuine out-of-sample')&&
+    !document.body.textContent.includes('20 future-held-out games')&&
+    !document.body.textContent.includes('20 genuine out-of-sample matchups'))
+  throw Error('Rolling held-out forecast benchmark missing');
+ if(!document.querySelector('.strat-odds-table'))throw Error('Existing playoff conditional scenarios missing');
+ clickTab('coach');
+ if(!await wait(()=>document.querySelector('.genius-panel--scenario')))throw Error('Interactive Genius scenario not rendered');
+ if(document.querySelectorAll('button[data-genius-realization]').length!==5)
+  throw Error('Forecast realization selector must have five choices');
+ if(document.querySelectorAll('button[data-genius-field]').length!==2)
+  throw Error('Playoff field selector must have two choices');
+ document.querySelector('button[data-genius-realization="0"]')?.click();
+ if(!await wait(()=>document.querySelector('button[data-genius-realization="0"][aria-pressed="true"]')))
+  throw Error('Zero gain should select successfully');
+ const zeroText=document.querySelector('.genius-statgrid--playoff')?.textContent||'';
+ if(!zeroText.includes('0.0'))throw Error('Scenario did not apply zero gain');
+ document.querySelector('button[data-genius-field="6"]')?.click();
+ if(!await wait(()=>document.querySelector('button[data-genius-field="6"][aria-pressed="true"]')))
+  throw Error('Six-team scenario not selectable');
+ if(!document.querySelector('.genius-statgrid--playoff')?.textContent.includes('TOP-6'))
+  throw Error('Six-team scenario output did not update');
+ document.querySelector('button[data-genius-realization="1"]')?.click();
+ if(!await wait(()=>document.querySelector('button[data-genius-realization="1"][aria-pressed="true"]')))
+  throw Error('Full-model gain scenario not selectable');
+ if(!document.querySelector('.edge-shell'))throw Error('Original Coach Edge engine broken');
+ const overflow=document.documentElement.scrollWidth-window.innerWidth;
+ if(overflow>2)throw Error('Horizontal scrolling at phone width: '+overflow+'px');
+ if(document.body.textContent.includes('Quick Snap Jamison')||
+    document.body.textContent.includes('Highlight Reel Jamison'))throw Error('Another user-owned team leaked');
+ const marker=document.createElement('strong');marker.id='genius-browser-qa';
+ marker.textContent='GENIUS_BROWSER_PASS · 8 all-play clubs · 20 holdouts · lineup risk · trade fit · 2-field x 5-gain scenarios';
+ document.body.appendChild(marker);
+}catch(e){
+ const marker=document.createElement('strong');marker.id='genius-browser-qa';
+ marker.textContent='GENIUS_BROWSER_FAIL: '+String(e.message||e);document.body.appendChild(marker);
+}
+</script></body></html>
