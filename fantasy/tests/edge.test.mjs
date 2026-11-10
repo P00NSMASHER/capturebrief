@@ -4,7 +4,9 @@ import {readFileSync} from 'node:fs';
 import {analyzeEdge} from '../assets/edge-engine.mjs';
 const source=()=>JSON.parse(readFileSync('fantasy/data.json','utf8'));
 const inputs=()=>JSON.parse(readFileSync('fantasy/edge.json','utf8'));
-const at=(edge)=>Date.parse(edge.observedAtIso)+10*60000;
+// A scheduled Yahoo capture can legitimately advance after the independent model read.
+// Keep tests anchored AFTER both sources, not to a stale hard-coded capture time.
+const at=edge=>Math.max(Date.parse(edge.observedAtIso),Date.parse(source().syncedAtIso))+10*60000;
 const analyze=(risk='balanced')=>{const y=source(),edge=inputs();return analyzeEdge(y,edge,{now:at(edge),mode:risk})};
 
 test('Only matching 2026 Brock Yahoo and explicit Week 10 model input can power the Edge lab',()=>{
