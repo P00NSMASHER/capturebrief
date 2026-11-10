@@ -76,6 +76,11 @@ test('iPhone-sized CSS includes safe-area navigation, reduced motion, good touch
  assert.match(c,/min-height:44px/);
  assert.match(c,/\.club-grid/);
  const future=readFileSync('fantasy/assets/future-v1.css','utf8');
+ const genius=readFileSync('fantasy/assets/genius-v1.css','utf8');
+ assert.match(genius,/prefers-reduced-motion:reduce/);
+ assert.match(genius,/\.genius-segments/);
+ assert.match(genius,/\.genius-standing/);
+ assert.match(genius,/\.genius-statgrid/);
  assert.match(future,/prefers-reduced-motion:reduce/);
  assert.match(future,/\.bottomnav/);
  assert.match(future,/\.teamhero/);
@@ -88,6 +93,7 @@ test('iPhone-sized CSS includes safe-area navigation, reduced motion, good touch
   assert.match(h,/edge-v1\.css\?v=1/);
   assert.match(h,/strategy-v1\.css\?v=1/);
   assert.match(h,/future-v1\.css\?v=1/);
-  assert.match(h,/app-v2\.mjs\?v=10/);
+  assert.match(h,/genius-v1\.css\?v=1/);
+  assert.match(h,/app-v2\.mjs\?v=11/);
  }
 });
