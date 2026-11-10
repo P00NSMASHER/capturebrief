@@ -374,6 +374,14 @@ function teamView(team){
 }
 
 function archivedView(){
+ // Independently reverified FantasyBot roster supports information-only planning.
+ // Keep every old Yahoo action and acquisition warning intact; never label it live.
+ if(activeTab==='coach'&&edgeRaw){
+  const research=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
+  if(research.ready&&research.quality?.yahooFresh===false){
+   return teamView(current.teams.brock);
+  }
+ }
  const date=Number.isFinite(Date.parse(current?.syncedAtIso))?
  new Date(current.syncedAtIso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'unknown date';
  const t=current?.teams?.brock;
