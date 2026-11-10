@@ -137,14 +137,20 @@ export function optimizeLineup(roster, counts, options={}) {
   if (players.some(p=>p.locked===true)) return {available:false,reason:'Lineup includes locked players; submission-safe optimization unavailable'};
   const eligible=players.filter(p=>slots.some(s=>canFill(p,s)) && !['OUT','IR','PUP','SUSPENDED'].includes(String(p.injury||'').toUpperCase()));
   if (eligible.some(p=>!finite(p.projection)||p.projection<0)) return {available:false,reason:'Missing current projections for eligible players'};
-  const dp=new Map([[0,{score:0,picks:[]}]]);
+  // Maximize forecast first; among equally good assignments preserve as many
+  // already-started Yahoo slots as possible. Avoid confusing unnecessary WR/FLEX
+  // reshuffles that have zero predictive benefit.
+  const dp=new Map([[0,{score:0,picks:[],stability:0}]]);
   for(const p of eligible) {
     const previous=Array.from(dp.entries());
     for(const [mask,row] of previous) for(let j=0;j<slots.length;j++){
       const bit=1<<j;
       if ((mask&bit)||!canFill(p,slots[j])) continue;
       const next=mask|bit,score=row.score+p.projection,old=dp.get(next);
-      if (!old||score>old.score+1e-9) dp.set(next,{score,picks:[...row.picks,{slot:slots[j],player:p}]});
+      const stability=row.stability+(normalizePosition(p.slot)===slots[j]?1:0);
+      if (!old||score>old.score+1e-9||
+        (Math.abs(score-old.score)<=1e-9&&stability>old.stability))
+        dp.set(next,{score,stability,picks:[...row.picks,{slot:slots[j],player:p}]});
     }
   }
   const best=dp.get((1<<slots.length)-1);

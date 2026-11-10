@@ -1,0 +1,338 @@
+/* BROCK HARD FANTASY HQ // CHROME FUTURE DESIGN SYSTEM
+   Entire existing five-tab experience; pure CSS, no third-party assets.
+   Snapshot status is always identified accurately (not a live provider feed). */
+:root{
+ --bg:#040b17;--bg2:#091727;--panel:#0e1c34;--panel2:#132743;
+ --line:#3e6386;--muted:#9db9d3;--text:#f4fbff;
+ --accent:#61f6e4;--cyan:#61caff;--violet:#ae8dff;--lime:#bbffdd;
+ --glow:0 19px 67px #000a;
+ --future-border:rgba(108,214,255,.39);
+ --future-panel:linear-gradient(152deg,rgba(20,44,71,.96),rgba(9,24,45,.98) 72%);
+ --future-shadow:0 16px 50px #0008,inset 0 1px rgba(208,247,255,.16);
+ --future-soft:rgba(67,181,238,.10);
+}
+html{background:#040b17}
+body{
+ color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Inter,system-ui,sans-serif;
+ font-feature-settings:"tnum" 1,"ss01" 1;
+ background:
+ radial-gradient(ellipse 900px 560px at 45% -240px,#1e557655,transparent 74%),
+ radial-gradient(ellipse 570px 470px at 105% 25%,#3027694b,transparent 72%),
+ radial-gradient(ellipse 570px 420px at -18% 72%,#063f4b55,transparent 74%),
+ #040b17;
+}
+body:before{
+ opacity:.46;inset:0;z-index:-1;
+ background-image:
+ linear-gradient(90deg,rgba(75,199,239,.055) 1px,transparent 1px),
+ linear-gradient(0deg,rgba(75,199,239,.038) 1px,transparent 1px);
+ background-size:34px 34px;
+ mask-image:linear-gradient(#000,rgba(0,0,0,.43) 35%,rgba(0,0,0,.15));
+ -webkit-mask-image:linear-gradient(#000,rgba(0,0,0,.43) 35%,rgba(0,0,0,.15));
+}
+::selection{background:#00ddf37a;color:#fff}
+a{transition:color .16s}
+:where(button,a,summary):focus-visible{outline:2px solid #aafdfd;outline-offset:3px}
+:where(button,summary){cursor:pointer}
+.label,.eyebrow,.strat-kicker,.edge-eyebrow,.coach-hero-kicker{
+ font-weight:880;letter-spacing:.17em;color:#7ff8e7;
+}
+.label,.eyebrow,.strat-kicker,.edge-eyebrow{text-shadow:0 0 20px #2cf5c341}
+:where(.metricvalue,.matchscore,.strat-metric strong,.strat-lineup-metrics strong,
+ .strat-cal-metrics strong,.edge-hero-metrics strong,.coach-metric strong,.strat-odds-row span){
+ font-variant-numeric:tabular-nums;letter-spacing:-.045em;
+}
+.masthead{position:relative}
+.masthead:after{
+ content:"INTELLIGENCE // V.2026";position:absolute;right:4px;bottom:-3px;
+ color:#5e95a5;font:700 8px ui-monospace,SFMono-Regular,Consolas,monospace;
+ letter-spacing:.16em;pointer-events:none;opacity:.75
+}
+.brandmark{
+ position:relative;border-radius:14px;border-color:#71ffe199;
+ background:linear-gradient(155deg,#174a57,#091b30);
+ box-shadow:inset 0 1px #eaffff5f,0 0 0 1px #31f8ca14,
+  0 0 29px #25f8cc25,0 14px 31px #0009
+}
+.brandname{letter-spacing:-.05em;font-weight:920}
+.brandname b{color:#81ffec;text-shadow:0 0 16px #32e7ce5c}
+.brandname small{color:#87bfcf;letter-spacing:.18em}
+.refreshbtn,.minorbtn,.primarybutton,.coach-action,.strat-link,.edge-button{
+ position:relative;overflow:hidden;
+ border-radius:12px;border-color:#5887aa7a!important;
+ background:linear-gradient(145deg,#1b3954,#0c223b);
+ box-shadow:inset 0 1px #d0f5ff1d,0 8px 24px #0005
+}
+.refreshbtn:hover,.minorbtn:hover,.primarybutton:hover,.coach-action:hover,.strat-link:hover,.edge-button:hover{
+ border-color:#7fffe2!important;box-shadow:inset 0 1px #e9ffff25,0 0 19px #3be5cc20;
+}
+.refreshbtn .ui-icon{color:#85fbe3}
+.statusrow{color:#a6c5d6}
+.statusline{color:#e1f9ff}
+.statusdot{
+ background:#5affc9!important;
+ box-shadow:0 0 0 4px rgba(77,255,205,.12),0 0 13px rgba(69,252,198,.67);
+ animation:future-beacon 2.8s ease-in-out infinite;
+}
+.statusdot.stale,.statusdot.unknown{animation:none;background:#ffae83!important;box-shadow:0 0 0 4px #ffb96d15}
+.sourcelabel{color:#80dfdf;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:9px}
+.teamhero{
+ border-radius:25px;border-color:#7bdaea80;
+ background:
+ radial-gradient(ellipse at 81% 34%,#336acc84,transparent 49%),
+ radial-gradient(ellipse at 21% 100%,#136c7357,transparent 65%),
+ linear-gradient(118deg,#104152,#122e4c 62%,#111c39);
+ box-shadow:0 0 0 1px #aff5ff10,inset 0 1px #e2ffff51,
+  0 21px 72px #000b,0 0 48px #20d9e01c;
+}
+.teamhero:before{
+ background:
+ repeating-linear-gradient(135deg,transparent 0 34px,#c5f7ff07 34px 35px,transparent 35px 54px),
+ linear-gradient(110deg,#ffffff03,transparent 70%);
+ transform:none;
+}
+.teamhero:after{
+ border-color:#abfaff37;
+ box-shadow:0 0 0 17px #cbffff0b,0 0 0 43px #caffff07,0 0 0 78px #b9ffff04;
+}
+.teamhero .eyebrow{color:#a2ffff}
+.teamhero h1{color:#f6fcff;text-shadow:0 2px 24px #001424a6}
+.hero-crest{filter:drop-shadow(0 0 22px #35ffe47d);background:#65ffd109}
+.record-pill{
+ background:linear-gradient(135deg,#35deb824,#2ecfeb14);border-color:#a1ffe187;
+ color:#c5ffec;box-shadow:0 0 16px #35eea413;
+}
+.riskbar{
+ background:linear-gradient(135deg,#102b3e,#10243a);
+ border-color:#5e9ab849;
+}
+.riskbar strong{color:#d4f5fa}
+.riskbar p{color:#9abed0}
+.riskicon{background:#35d0c31d;color:#81f4ed}
+.subpage-context{
+ background:linear-gradient(130deg,#12374c,#0b233b 70%);
+ border:1px solid #68bfd04c;
+ box-shadow:inset 0 1px #d6ffff26,0 7px 28px #0005
+}
+.subpage-context:before{
+ content:"";height:3px;width:3px;border:1px solid #8df7df;border-radius:50%;
+ background:#7affdd;box-shadow:0 0 9px #64f5d4
+}
+.subpage-context strong{color:#ebffff}
+.subpage-context span{color:#8db4ca}
+.panel,.strat-card,.edge-card,.coach-section,.league-gallery{
+ position:relative;
+ background:var(--future-panel);
+ border:1px solid var(--future-border);
+ border-radius:22px;
+ box-shadow:var(--future-shadow);
+}
+.panel:before,.strat-card:before,.edge-card:before,.coach-section:before{
+ content:"";position:absolute;z-index:0;pointer-events:none;
+ left:13px;top:-1px;width:61px;height:1px;
+ background:linear-gradient(90deg,transparent,#83f8ef,transparent);
+}
+.panel>*,
+.strat-card>*,
+.edge-card>*{position:relative;z-index:1}
+.panelhead .label{color:#79cddb}
+.panelhead h2,.strat-heading h2,.edge-card-heading h2{color:#f3fbff}
+.matchup-panel{
+ border-color:#68e8e485;
+ background:
+ radial-gradient(ellipse at 50% -30%,#2363a373,transparent 63%),
+ linear-gradient(160deg,#132f4d,#101c37 87%);
+ box-shadow:inset 0 1px #d2ffff28,0 18px 65px #000b,0 0 28px #25e4d318;
+}
+.matchup-panel:after{
+ content:"";position:absolute;inset:9px;pointer-events:none;
+ border:1px solid #7dccff10;border-radius:17px;z-index:0
+}
+.matchscore{color:#f1ffff;text-shadow:0 0 22px #408ff549}
+.match-team:first-child .matchscore{color:#9dffe6;text-shadow:0 0 26px #44ffc85c}
+.match-team .club-emblem{filter:drop-shadow(0 0 16px #22d7e22a) drop-shadow(0 10px 15px #0007)}
+.matchproj{color:#a0c4d3}
+.probability{border-color:#6db2ca59;background:#0a233c}
+.probability-track{height:8px;background:#34516b}
+.probability-track span{background:linear-gradient(90deg,#537dff,#39d1ed 52%,#54ffd0)}
+.metrics .metric{
+ border-color:#5ab4cc56;border-radius:17px;
+ background:linear-gradient(145deg,#173450,#0d2139);
+}
+.metriclabel{color:#7de1da}
+.metricvalue{color:#f2fbff;text-shadow:0 0 20px #5798e026}
+.metricextra{color:#91b4c6}
+.preview-player,.playerrow,.upcoming-card,.alertrow,.waiverrow,.club-tile,.activity{
+ border-color:#6996bb44;
+ background:linear-gradient(130deg,#152f4b,#0e223c 88%);
+ border-radius:13px;
+}
+.preview-player:hover,.playerrow:hover,.upcoming-card:hover,.club-tile:hover{
+ border-color:#6ce5ce7c;
+}
+.player-avatar{border-color:#76b1d96e;box-shadow:inset 0 1px #ffffff20}
+.slot{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.proj{font-variant-numeric:tabular-nums;color:#d2f9ff}
+.playername strong,.preview-player strong{color:#f6fbff}
+.winprob{color:#86ffee;text-shadow:0 0 24px #19e1b849}
+.optresult{
+ background:linear-gradient(122deg,#133d50,#132b4c);
+ border-color:#5de3d684;
+}
+.optbig{color:#a9ffe9;text-shadow:0 0 23px #2fd9c84e}
+.optgain{color:#87d5ff}
+.depth-rail{background:#27475c}
+.depth-rail span{background:linear-gradient(90deg,#8578fd,#42c3ff,#5dffe0)}
+.league-gallery,.club-tile--me{
+ background:radial-gradient(ellipse at 80% -30%,#4a31a75a,transparent 67%),
+ linear-gradient(150deg,#173350,#101f37);
+}
+.club-tile--me{border-color:#71ffe493;box-shadow:inset 0 1px #d5fff53d,0 0 21px #44e6d322}
+.club-tile{min-height:106px}
+.club-tile .club-emblem{filter:drop-shadow(0 8px 16px #0008) drop-shadow(0 0 12px #40dbd329)}
+.bottomnav{
+ border-top:1px solid #73c5e86b;
+ background:linear-gradient(180deg,rgba(14,32,55,.97),rgba(6,17,35,.98));
+ box-shadow:0 -10px 36px #000c;
+}
+.bottomnav button{color:#92b2ca;border-radius:12px}
+.bottomnav button .ui-icon{stroke-width:1.8}
+.bottomnav button.active{
+ color:#a2fff4;border-color:#7bf7df78;
+ background:linear-gradient(150deg,#204d6b,#12443e);
+ box-shadow:inset 0 1px #d7ffff2b,0 0 21px #29efd628
+}
+.bottomnav button.active .ui-icon{filter:drop-shadow(0 0 5px #61f5d4aa)}
+.bottomnav button:active{transform:scale(.97)}
+.strat-card{
+ border:1px solid #6bc5e178;border-radius:22px;
+ background:radial-gradient(ellipse at 98% 0%,#1456a346,transparent 55%),
+ linear-gradient(146deg,#142d4d,#0b223e 72%)
+}
+.strat-card--home{
+ border-color:#84ffe087;
+ background:radial-gradient(ellipse at 85% -30%,#266df95d,transparent 64%),
+ linear-gradient(150deg,#123f55,#0c2441 75%);
+ box-shadow:0 0 0 1px #a4feef16,0 18px 62px #000a,0 0 29px #11eac926
+}
+.strat-heading h2{letter-spacing:-.053em}
+.strat-pill{
+ border:1px solid #82f8e19c;color:#c6fff6;
+ background:linear-gradient(135deg,#134e4f,#17395a);
+ font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+ font-size:9px;letter-spacing:.05em;
+}
+.strat-pill--amber{border-color:#ecc28488;color:#ffe2b3;background:#573d3350}
+.strat-metric,.strat-lineup-metrics>div,.strat-cal-metrics>div,.strat-swap,.strat-priority,
+.strat-odds-row,.strat-power-row,.strat-pick,.strat-shortage,.strat-trade-preview{
+ border-color:#5d9cbb58;
+ background:linear-gradient(145deg,#15334d,#0d2542);
+ box-shadow:inset 0 1px #eef9ff12;
+}
+.strat-metric strong,.strat-lineup-metrics strong,.strat-cal-metrics strong{
+ color:#d9fcff;text-shadow:0 0 18px #31deeb30;
+}
+.strat-metric>span,.strat-lineup-metrics span,.strat-cal-metrics span{
+ color:#87dada;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+ font-size:9px;
+}
+.strat-priority{border-radius:12px}
+.strat-order{
+ background:linear-gradient(135deg,#163d66,#145c55);color:#9effe8;
+ border-color:#65e3d3a0;
+}
+.strat-link{
+ border-color:#63e4e198!important;
+ background:linear-gradient(135deg,#174e62,#203a62);
+ color:#dbfffa;
+}
+.strat-link:hover{background:linear-gradient(135deg,#246a7a,#31517e)}
+.strat-swap--out{border-color:#f2b36b87;background:linear-gradient(145deg,#42343b,#2d2b40)}
+.strat-swap--out span{color:#ffcb91}
+.strat-swap--shift{border-color:#8ea8ff97;background:linear-gradient(145deg,#233659,#1a3457)}
+.strat-swap--shift span{color:#b4c7ff}
+.strat-swap--in{border-color:#62f8ce92;background:linear-gradient(145deg,#135346,#12424c)}
+.strat-swap--in span{color:#abffe3}
+.strat-riskline,.strat-odds-table,.strat-power-table{
+ border-color:#5cacca6f;background:#0e2741;
+}
+.strat-odds-head,.strat-power-row--head{
+ background:linear-gradient(110deg,#1c4b64,#173b56)!important;
+ color:#a1f2e3;letter-spacing:.06em
+}
+.strat-odds-row:nth-child(odd),.strat-power-row:nth-child(odd){background:#153249}
+.strat-odds-row:nth-child(even),.strat-power-row:nth-child(even){background:#112941}
+.strat-threat{border-color:#7ee8eb79;background:linear-gradient(135deg,#184a5b,#132d47)}
+.strat-threat span{color:#80e8f6}
+.strat-trade-preview{border-color:#8eddea7d;background:linear-gradient(135deg,#15495a,#183451)}
+.strat-exchange{color:#8fe6ff;text-shadow:0 0 16px #26bdf86b}
+.coach-hero,.edge-hero{
+ border-color:#86fae17a;
+ background:radial-gradient(ellipse at 90% 0%,#4663bf67,transparent 62%),
+ radial-gradient(ellipse at 4% 100%,#0c928048,transparent 64%),
+ linear-gradient(140deg,#123d56,#111e44 82%);
+ box-shadow:inset 0 1px #f0ffff48,0 21px 72px #000b,0 0 36px #38daca27
+}
+.coach-orb{border-color:#77f7e498;background:linear-gradient(135deg,#275a85,#1a887e)}
+.coach-hero h2,.edge-hero h2{color:#f3fcff;text-shadow:0 0 24px #194d855c}
+.coach-hero-metrics,.edge-hero-metrics{border-color:#71bbd25b}
+.coach-metric strong,.edge-hero-metrics strong{color:#cefff4}
+.coach-insight,.coach-step,.edge-priority,.edge-card{
+ border-color:#729ec660;background:linear-gradient(145deg,#17304b,#10233e)
+}
+.coach-insight--priority,.edge-priority--critical{border-color:#63f3d088}
+.coach-insight--attention{border-color:#ffcf8180;background:linear-gradient(145deg,#3d3541,#182b42)}
+.coach-assessment{
+ border-color:#76cafa8a;
+ background:radial-gradient(ellipse at 90% -30%,#5643a055,transparent 62%),
+ linear-gradient(150deg,#1a3354,#0c2443 80%);
+}
+.coach-recap-paragraph{border-left-color:#55e2d4}
+.edge-provenance{color:#b3ecff;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.edge-indicator{background:#78ffd9;box-shadow:0 0 0 4px #56fae22a,0 0 15px #5fffd5a0}
+.edge-method{border-color:#b6adff;color:#dcd4ff;background:#7165c522}
+.edge-hero-label{color:#85fff0}
+.edge-mode button.selected{color:#04192b!important;background:linear-gradient(135deg,#67d6ff,#73ffe1)!important}
+.edge-button,.edge-action{border-color:#6ed4e288;background:linear-gradient(135deg,#1a5470,#1a3e61)}
+.settings-panel,.small-disclosure{
+ background:#0d1f35;border-color:#5e8cae69;border-radius:14px;
+}
+.settings-panel>summary,.small-disclosure>summary{color:#add1df}
+.filterbar button{border-color:#5b9bbd7b;background:#17324c;color:#a7cadd}
+.filterbar button.chosen{background:linear-gradient(135deg,#69d2ff,#72ffe1);border-color:#a7fffa;color:#09283b}
+.loader{
+ background:linear-gradient(135deg,#16334e,#0a2036);
+ border:1px solid #6ce6d76a;color:#d9f8ff
+}
+/* Lightweight HUD accents — static on low-power and reduced-motion devices. */
+@keyframes future-beacon{
+ 0%,100%{box-shadow:0 0 0 3px #4dffc01c,0 0 9px #6ef8da6c}
+ 50%{box-shadow:0 0 0 5px #52ffe80a,0 0 17px #6ef8dab8}
+}
+@media(hover:hover) and (pointer:fine){
+ .strat-card:hover,.panel:hover{border-color:#7ddfe291}
+ .club-tile:hover{transform:translateY(-2px);transition:transform .17s ease}
+}
+@media(min-width:860px){
+ .bottomnav{
+  border:1px solid #80deed80;
+  background:linear-gradient(140deg,#112d4aee,#0c1b36f4);
+  box-shadow:0 8px 31px #0009,0 0 25px #2feddb12
+ }
+ .teamhero{min-height:243px}
+}
+@media(max-width:480px){
+ .strat-card,.panel{border-radius:19px}
+ .strat-card--home{padding:16px 14px}
+ .masthead:after{font-size:7px;bottom:-2px;opacity:.53}
+ .strat-heading h2{font-size:19px}
+ .strat-pill{font-size:8px}
+ .teamhero{border-radius:21px}
+ .brandname small{letter-spacing:.11em}
+ .bottomnav button.active{box-shadow:inset 0 1px #f0ffff22,0 0 13px #28f0d921}
+}
+@media(prefers-reduced-motion:reduce){
+ .statusdot{animation:none!important}
+ .bottomnav button:active{transform:none}
+ *{transition-duration:.01ms!important;animation-duration:.01ms!important;scroll-behavior:auto!important}
+}

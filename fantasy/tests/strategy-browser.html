@@ -1,0 +1,88 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Brock Hard four-tab strategy acceptance</title>
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/edge-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/strategy-v1.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/future-v1.css?v=1">
+</head><body><div id="root">Checking strategic fantasy app…</div>
+<script type="module">
+try{
+ const fetchOrig=window.fetch.bind(window);
+ const [raw,edge,intel]=await Promise.all([
+  fetchOrig('/capturebrief/fantasy/data.json').then(r=>r.json()),
+  fetchOrig('/capturebrief/fantasy/edge.json').then(r=>r.json()),
+  fetchOrig('/capturebrief/fantasy/intelligence.json').then(r=>r.json())
+ ]);
+ if(Object.keys(raw.teams).join(',')!=='brock'||edge.week!==10||intel.history?.length!==32)
+  throw Error('Fixture identity, model week or historical coverage incomplete');
+ const fresh=new Date(),now=fresh.toISOString();
+ raw.syncedAtIso=now;
+ edge.observedAtIso=now;
+ edge.yahooCapturedAtIso=new Date(fresh.valueOf()-30000).toISOString();
+ edge.rosterVerifiedAtIso=now;
+ intel.capturedAtIso=now;
+ localStorage.removeItem('fantasy-hq-public-last-good-v2');
+ localStorage.setItem('fantasy-hq-private-v3',JSON.stringify(raw));
+ window.fetch=(url,opts)=>{
+  const u=String(url);
+  if(u.includes('/fantasy/edge.json?'))return Promise.resolve(new Response(JSON.stringify(edge),{status:200,headers:{'Content-Type':'application/json'}}));
+  if(u.includes('/fantasy/intelligence.json?'))return Promise.resolve(new Response(JSON.stringify(intel),{status:200,headers:{'Content-Type':'application/json'}}));
+  return fetchOrig(url,opts);
+ };
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=10');
+ const until=async fn=>{
+  for(let i=0;i<130;i++){if(fn())return true;await new Promise(r=>setTimeout(r,35))}
+  return false
+ };
+ const hit=label=>document.querySelector('button[data-tab="'+label+'"]')?.click();
+ if(!await until(()=>document.querySelector('.strat-card--home .strat-priority')))throw Error('Home priorities missing');
+ const futuristic=getComputedStyle(document.querySelector('.strat-card--home'));
+ if(!futuristic.backgroundImage.includes('gradient'))throw Error('Futuristic HUD gradient missing');
+ if(getComputedStyle(document.querySelector('.bottomnav')).backgroundImage==='none')
+  throw Error('Futuristic bottom nav gradient missing');
+ const ink=getComputedStyle(document.querySelector('.strat-card--home')).color;
+ if(!ink)throw Error('Futuristic information card lacks text color');
+
+ if(!document.getElementById('root').textContent.includes('Make the next move count'))throw Error('Home is still score-only');
+ if(!document.getElementById('root').textContent.includes('18 of 32'))throw Error('Historical winner accuracy missing');
+ hit('lineup');
+ if(!await until(()=>document.querySelector('.strat-lineup-metrics')))throw Error('Forecast first lineup panel missing');
+ if(!document.getElementById('root').textContent.includes('Jonah Coleman'))throw Error('Lineup forgot Week 10 bye');
+ if(!document.querySelector('.strat-swaps'))throw Error('Projected starters changes absent');
+ const shift=document.querySelector('.strat-swap--shift');
+ if(!shift||!shift.textContent.includes('Rhamondre Stevenson')||!shift.textContent.includes('W/R/T → RB'))
+   throw Error('Exact flex-to-RB reshuffle missing from Lineup tab');
+ if(!document.querySelector('.strat-swap--in')?.textContent.includes('Zay Flowers'))
+   throw Error('Promoted receiver not shown in flex');
+ hit('waivers');
+ if(!await until(()=>document.querySelector('.strat-shortage')))throw Error('Future TE bye alert absent on Players');
+ if(!document.getElementById('root').textContent.includes('Dallas Goedert'))throw Error('Week 13 TE wire candidate not shown');
+ if(!document.getElementById('root').textContent.includes('Travis Kelce'))throw Error('Fair trade candidate not shown');
+ if(!document.querySelector('.filterbar'))throw Error('Original Players position filters broken');
+ document.querySelector('[data-filter="QB"]').click();
+ if(!document.querySelector('[data-filter="QB"][aria-pressed="true"]'))throw Error('QB filter no longer works');
+ hit('lab');
+ if(!await until(()=>document.querySelector('.strat-odds-table')))throw Error('Conditional playoff simulator missing');
+ if(document.querySelectorAll('.strat-power-row .club-emblem').length!==8)throw Error('Power ranking should show 8 crests');
+ if(!document.getElementById('root').textContent.includes('historical')&&!document.getElementById('root').textContent.includes('forecast miss'))
+  throw Error('Forecast reliability not disclosed');
+ if(!document.getElementById('root').textContent.includes('Actual Yahoo playoff rules are not verified'))
+  throw Error('Conditional playoff format disclosure missing');
+ hit('coach');
+ if(!await until(()=>document.querySelector('.edge-shell')))throw Error('Fifth Coach tab disrupted');
+ hit('overview');
+ const horizontal=document.documentElement.scrollWidth-window.innerWidth;
+ if(horizontal>2)throw Error('Horizontal overflow at iPhone width: '+horizontal);
+ if(document.getElementById('root').textContent.includes('Quick Snap Jamison')||
+    document.getElementById('root').textContent.includes('Highlight Reel Jamison'))
+  throw Error('Other personal teams leaked');
+ const el=document.createElement('strong');el.id='strategy-browser-qa';
+ el.textContent='STRATEGY_BROWSER_PASS · four tabs · 32-game calibration · playoffs · no actions';
+ document.body.append(el);
+}catch(e){
+ const el=document.createElement('strong');el.id='strategy-browser-qa';
+ el.textContent='STRATEGY_BROWSER_FAIL: '+String(e.message||e);document.body.append(el);
+}
+</script></body></html>

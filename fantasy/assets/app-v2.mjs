@@ -4,6 +4,8 @@ import {LEAGUE_TEAMS,resolveTeam,teamLogo,uiIcon,leagueGallery,upcomingCards,tea
 import {buildCoachPlan,buildArchivedCoachReview} from './coach-engine.mjs';
 import {analyzeEdge} from './edge-engine.mjs';
 import {renderEdgeLab} from './edge-view.mjs';
+import {buildStrategicReport} from './strategy-engine.mjs';
+import {homeStrategy,lineupStrategy,playersStrategy,leagueStrategy,archivedStrategy} from './strategic-widgets.mjs';
 
 const BASE='/capturebrief/fantasy/';
 const root=document.getElementById('root');
@@ -11,6 +13,7 @@ const PRIVATE_KEY='fantasy-hq-private-v3';
 const CACHE_KEY='fantasy-hq-public-last-good-v2';
 let current=null,source='published',loading=false,activeTab='overview',message='',waiverFilter='ALL';
 let edgeRaw=null,edgeMode='balanced',edgeLoadError='',edgeLoading=false,lastEdgeCheck=0;
+let intelRaw=null,intelLoading=false,lastIntelCheck=0,strategyCache=null;
 const $esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const txt=(v,empty='—')=>v===null||v===undefined||v===''?empty:String(v);
 const num=(v,dec=1)=>typeof v==='number'&&Number.isFinite(v)?v.toFixed(dec):'—';
@@ -144,8 +147,8 @@ function overviewQuickPanels(team){
  '<div class="preview-list">'+choices+'</div><p class="caption-note">Ranked by Yahoo-wide roster rate, not projected performance.</p></section></div>';
 }
 function summaryView(team){
- return matchupCard(team)+stats(team)+overviewQuickPanels(team)+alertList(team)+
- '<details class="small-disclosure"><summary>Capture details '+uiIcon('chevron')+'</summary>'+decision(team)+'</details>'+strategy(team);
+ return homeStrategy(strategicReport())+matchupCard(team)+stats(team)+overviewQuickPanels(team)+alertList(team)+
+ '<details class="small-disclosure"><summary>Provider details '+uiIcon('chevron')+'</summary>'+decision(team)+'</details>'+strategy(team);
 }
 function playerRow(p){
  const injury=p.injury?badge(p.injury,'bad'):'';
@@ -182,7 +185,10 @@ function lineupView(team){
     title='Lineup coverage';kicker='EVIDENCE CHECK';
     opt='<div class="subnote">Verified future player projections are absent, and a complete scored-player comparison could not be calculated: '+$esc(scored.reason)+'. Current assignments remain shown below without speculative recommendations.</div>';
   }
-  return section(title,kicker,opt)+
+  const intel=strategicReport();
+  return lineupStrategy(intel)+
+    (intel?.ready&&intel.model?.lineups?.balanced?.available?'':section(title,kicker,opt))+
+
     section('Starting roster','CURRENT SNAPSHOT',buckets.starters.length?'<div class="list">'+buckets.starters.map(playerRow).join('')+'</div>':empty('No starters found','Import a full roster snapshot.'))+
     section('Bench','DEPTH',buckets.bench.length?'<div class="list">'+buckets.bench.map(playerRow).join('')+'</div>':empty('No bench entries','No bench data was saved.'))+
     section('Reserve / IR','INJURY LIST',buckets.reserve.length?'<div class="list">'+buckets.reserve.map(playerRow).join('')+'</div>':'<div class="subnote">No reserve assignments at capture.</div>');}
@@ -214,10 +220,12 @@ function waiverView(team){
  '<div class="list">'+rated.recommendations.map(p=>'<div class="waiverrow"><strong>'+$esc(p.add)+'</strong><small>Drop '+$esc(p.drop)+' · +'+num(p.improvement,2)+' proj. pts</small></div>').join('')+'</div>':
  '<p class="caption-note">No positive projected upgrade from verified candidates.</p>'):
  '<p class="caption-note">Yahoo does not provide complete player-level forward projections in this capture. This list uses market roster rate only—not add/drop improvement.</p>';
- return '<div class="tab-intro"><span class="eyebrow">YOUR FREE-AGENT BOARD</span><h1>Find your next pickup.</h1>'+
- '<p>'+all.length+' players available in this league at the last Yahoo capture.</p></div>'+
- section('Most rostered available','YAHOO MARKET · NOT A RECOMMENDATION',
- spotlight?'<div class="preview-list">'+spotlight+'</div>':'<div class="quiet-empty">Availability was not captured.</div>')+
+ const intel=strategicReport();
+ return '<div class="tab-intro"><span class="eyebrow">FANTASY WAIVER INTELLIGENCE</span><h1>Win the next roster spot.</h1>'+
+ '<p>Position needs, Week 13 coverage and the actual projected advantage—not a popularity contest.</p></div>'+
+ playersStrategy(intel)+
+ (intel?.ready?'':section('Most rostered available','YAHOO MARKET · FALLBACK',
+ spotlight?'<div class="preview-list">'+spotlight+'</div>':'<div class="quiet-empty">Availability was not captured.</div>'))+
  section('Player pool',''+filtered.length+' MATCH'+(filtered.length===1?'':'ES'),
  filters+(rows?'<div class="list">'+rows+'</div>':'<div class="quiet-empty">No '+$esc(waiverFilter)+' players in this capture.</div>'))+
  '<div class="home-columns"><section class="panel compact-panel"><div class="panelhead"><div><div class="label">ROSTER FIT</div><h2>Your position depth</h2></div></div>'+
@@ -227,6 +235,19 @@ function waiverView(team){
  '<p class="footnote">Yahoo roster rates are platform-wide, not your league’s ownership %. Waiver dates are calendar days, not guaranteed clearance times. This app never adds or drops players.</p>';
 }
 function labView(team){
+ const model=strategicReport();
+ if(model?.ready){
+  const rows=Array.isArray(team.transactions)?team.transactions.slice(0,8):[];
+  const list=rows.length?'<div class="activity-feed">'+rows.map(tr=>
+   '<div class="activity"><span class="activity-bullet"></span><div><strong>'+$esc(tr.move||tr.type||'Transaction')+
+   '</strong><span>'+$esc(txt(tr.date,'Date unavailable'))+'</span></div></div>').join('')+'</div>':
+   '<div class="quiet-empty">No bounded completed moves in this capture.</div>';
+  return '<div class="tab-intro"><span class="eyebrow">LEAGUE WAR ROOM</span><h1>Know your competition.</h1>'+
+   '<p>Conditional playoff paths, powerful opponents and forecast accuracy measured against actual scores.</p></div>'+
+   leagueStrategy(model)+
+   '<details class="small-disclosure"><summary>All eight club crests '+uiIcon('chevron')+'</summary>'+leagueGallery()+'</details>'+
+   section('Recent Brock Hard moves','SAVED COMPLETED TRANSACTIONS',list);
+ }
  const m=team.matchupModel||null;
  const chance=m&&freshness().actionable?estimateWinChance(m.myProjected,m.oppProjected,m.mySigma,m.oppSigma):null;
  const side=scoreFor(team);
@@ -353,6 +374,15 @@ function coachView(team){
  classicCoachView(team);
 }
 
+function strategicReport(){
+ if(!current||!intelRaw)return null;
+ const key=[current.syncedAtIso,current.week,edgeRaw?.observedAtIso||'none',
+   intelRaw.capturedAtIso,Math.floor(Date.now()/600000)].join('|');
+ if(strategyCache?.key===key)return strategyCache.report;
+ const report=buildStrategicReport(current,edgeRaw,intelRaw,{now:Date.now(),simulations:1600});
+ strategyCache={key,report};
+ return report;
+}
 function teamView(team){
  const view=activeTab==='coach'?coachView(team):activeTab==='lineup'?lineupView(team):activeTab==='waivers'?waiverView(team):activeTab==='lab'?labView(team):summaryView(team);
  const home=activeTab==='overview';
@@ -386,6 +416,7 @@ function archivedView(){
  new Date(current.syncedAtIso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'unknown date';
  const t=current?.teams?.brock;
  const savedReport=activeTab==='coach'?buildArchivedCoachReview(current):null;
+ const historical=strategicReport();
  return '<div class="container">'+masthead(t)+messageBox()+
  '<section class="archived-fallback panel"><div class="archive-logo">'+teamLogo('2','display')+'</div>'+
  '<div class="label">BROCK HARD · NO CURRENT CAPTURE</div><h1>Update your Yahoo data</h1>'+
@@ -396,6 +427,7 @@ function archivedView(){
  '<button type="button" class="minorbtn" data-action="import">↥ Import updated Yahoo snapshot</button></details>'+
  '<input id="importFile" type="file" accept=".json,application/json" hidden>'+
  '</section>'+(savedReport?coachAssessment(savedReport.summary,savedReport.captureAt,true):'')+
+ (historical?.ready?archivedStrategy(historical):'')+
  '<p class="footnote">No Yahoo credentials or live provider access are used by this page.</p></div>'+nav();
 }
 function render(){
@@ -438,6 +470,25 @@ function validatePublished(raw){
 }
 // Separate public forecast artifact. It never requests FantasyBot or Yahoo from the browser,
 // changes the provider snapshot, or caches private inputs.
+async function getIntelligenceData(force=false){
+ if(intelLoading)return false;
+ if(!force&&lastIntelCheck&&Date.now()-lastIntelCheck<30*60*1000)return !!intelRaw;
+ intelLoading=true;lastIntelCheck=Date.now();
+ try{
+  const response=await fetch(BASE+'intelligence.json?cachebust='+Date.now(),{
+   cache:'no-store',headers:{Accept:'application/json'}});
+  if(!response.ok)throw new Error('League intelligence HTTP '+response.status);
+  const raw=await response.text();
+  if(raw.length>250000)throw new Error('League intelligence exceeds 250KB safety limit');
+  const parsed=JSON.parse(raw);
+  if(parsed?.schemaVersion!==1||parsed.kind!=='brock-league-intelligence'||
+   parsed.season!==2026||parsed.leagueId!=='470.l.290846'||String(parsed.teamId)!=='2')
+    throw new Error('League intelligence belongs to the wrong team');
+  intelRaw=parsed;strategyCache=null;return true;
+ }catch(error){intelRaw=null;strategyCache=null;return false}
+ finally{intelLoading=false;if(current)render()}
+}
+
 async function getEdgeData(force=false){
  if(edgeLoading)return false;
  if(!force && lastEdgeCheck && Date.now()-lastEdgeCheck<30*60*1000)return !!edgeRaw;
@@ -452,10 +503,10 @@ async function getEdgeData(force=false){
   if(parsed?.schemaVersion!==1||parsed.kind!=='brock-hard-prediction-inputs'||
     parsed.leagueId!=='470.l.290846'||String(parsed.teamId)!=='2'||parsed.season!==2026)
     throw new Error('Prediction artifact is not the authorized Brock Hard league');
-  edgeRaw=parsed;edgeLoadError='';return true;
+  edgeRaw=parsed;edgeLoadError='';strategyCache=null;return true;
  }catch(error){edgeLoadError=String(error?.message||'Source unavailable').slice(0,180);
    edgeRaw=null;return false;}
- finally{edgeLoading=false;if(current&&activeTab==='coach')render();}
+ finally{edgeLoading=false;if(current)render();}
 }
 
 async function getPublic(){
@@ -486,7 +537,7 @@ async function refresh(silent=false){
   if(changed)message='Verified newer provider capture loaded: '+latest.syncedAtIso+'. This is a saved snapshot, not continuous live sync.';
   else if(!silent)message='Already showing the newest verified capture available. Captured at '+(current?.syncedAtIso||'unknown')+'.';
  }catch(err){if(!silent)message='Update unavailable: '+err.message+'. Previous verified capture retained.'}
- finally{loading=false;render();getEdgeData(!silent)}
+ finally{loading=false;render();getEdgeData(!silent);getIntelligenceData(!silent)}
 }
 async function handleImport(file){if(!file)return;
  if(file.size>2_000_000){message='Import rejected: limit is 2 MB.';render();return;}
@@ -556,6 +607,7 @@ document.addEventListener('change',event=>{
  }
  if(current)render();
  getEdgeData(true);
+ getIntelligenceData(true);
  // iPhone background tabs may suspend timers. A visibility check catches the next foreground visit.
  const check=()=>{if(document.visibilityState==='visible')refresh(true)};
  setInterval(check,5*60*1000);

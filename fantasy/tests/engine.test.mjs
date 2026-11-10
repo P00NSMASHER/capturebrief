@@ -107,3 +107,31 @@ test('scouting sorts only verified Yahoo-wide roster rates, not fabricated uplif
  assert.deepEqual(positionDepth([{id:'a',name:'Receiver A',position:'WR',slot:'WR',injury:'Q'},{id:'b',name:'Receiver B',position:'WR',slot:'IR',injury:'O'}]),[
    {position:'WR',total:2,active:1,flagged:2}]);
 });
+
+test('forecast optimizer preserves existing slot assignments when identical point scores allow it',()=>{
+ const roster=[
+  {id:'w1',name:'Receiver One',position:'WR',slot:'WR',eligiblePositions:['WR','W/R/T'],projection:17,locked:false},
+  {id:'w2',name:'Receiver Two',position:'WR',slot:'W/R/T',eligiblePositions:['WR','W/R/T'],projection:16,locked:false},
+  {id:'r1',name:'Runner',position:'RB',slot:'RB',eligiblePositions:['RB','W/R/T'],projection:15,locked:false}
+ ];
+ const best=optimizeLineup(roster,{RB:1,WR:1,'W/R/T':1});
+ assert.equal(best.available,true);
+ assert.equal(best.gain,0);
+ assert.equal(best.assignments.find(x=>x.player.id==='w1').slot,'WR');
+ assert.equal(best.assignments.find(x=>x.player.id==='w2').slot,'W/R/T');
+ assert.equal(best.assignments.find(x=>x.player.id==='r1').slot,'RB');
+});
+test('forecast optimizer only changes RB/FLEX positions required for a real bye replacement',()=>{
+ const roster=[
+  {id:'bye',name:'Bye RB',position:'RB',slot:'RB',eligiblePositions:['RB','W/R/T'],projection:0,locked:false},
+  {id:'flexRB',name:'Flex RB',position:'RB',slot:'W/R/T',eligiblePositions:['RB','W/R/T'],projection:12,locked:false},
+  {id:'wr1',name:'WR One',position:'WR',slot:'WR',eligiblePositions:['WR','W/R/T'],projection:20,locked:false},
+  {id:'wr2',name:'Bench WR',position:'WR',slot:'BN',eligiblePositions:['WR','W/R/T'],projection:17,locked:false}
+ ];
+ const best=optimizeLineup(roster,{RB:1,WR:1,'W/R/T':1});
+ assert.equal(best.available,true);
+ assert.equal(best.gain,17);
+ assert.equal(best.assignments.find(x=>x.player.name==='Flex RB').slot,'RB');
+ assert.equal(best.assignments.find(x=>x.player.name==='WR One').slot,'WR');
+ assert.equal(best.assignments.find(x=>x.player.name==='Bench WR').slot,'W/R/T');
+});
