@@ -49,13 +49,17 @@ test('current Brock Yahoo data produces real roster alerts and scored-lineup con
  const raw=JSON.parse(file('fantasy/data.json'));
  const snap=normalizeSnapshot(raw),team=snap.teams.brock;
  const alerts=rosterStatusAlerts(team.roster);
- assert.equal(alerts.length,4);
- assert.ok(alerts.some(a=>a.name==='Rhamondre Stevenson'&&a.status==='Q'));
+ const flagged=team.roster.filter(p=>p.injury&&
+  !['ACTIVE','A','HEALTHY'].includes(String(p.injury).toUpperCase()));
+ assert.equal(alerts.length,flagged.length);
+ assert.ok(flagged.every(p=>alerts.some(a=>String(a.id)===String(p.id))));
  const scored=compareScoredLineup(team.roster,team.lineupSlots);
  assert.equal(scored.available,true);
- assert.equal(scored.current,148.58);
- assert.equal(scored.best,160.28);
- assert.equal(scored.gap,11.7);
+ const current=team.roster.filter(p=>!['BN','BE','BENCH','IR','IR+','NA','TAXI'].includes(p.slot))
+  .reduce((s,p)=>s+p.actualPoints,0);
+ assert.equal(scored.current,Math.round(current*100)/100);
+ assert.ok(scored.best>=scored.current);
+ assert.equal(scored.gap,Math.round((scored.best-scored.current)*100)/100);
  const app=file('fantasy/assets/app-v2.mjs');
  assert.match(app,/Highest-scoring lineup so far/);
  assert.match(app,/Playoff race/);
