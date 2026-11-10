@@ -1,0 +1,915 @@
+{
+  "schemaVersion": 1,
+  "kind": "brock-league-intelligence",
+  "season": 2026,
+  "leagueId": "470.l.290846",
+  "teamId": "2",
+  "capturedAtIso": "2026-11-10T01:08:31.490Z",
+  "modelWeek": 10,
+  "baselineWeek": 9,
+  "scope": "league-team-identities-only-no-owners",
+  "leagueScoring": {
+    "source": "Yahoo/Flaim verified league settings 2026",
+    "type": "points",
+    "ppr": true,
+    "scoring": "full_ppr",
+    "verifiedNoAdditionalOffensiveBonusThresholds": true,
+    "statModifiers": [
+      {
+        "id": "4",
+        "value": 0.04,
+        "label": "Passing Yards"
+      },
+      {
+        "id": "5",
+        "value": 4,
+        "label": "Passing Touchdowns"
+      },
+      {
+        "id": "6",
+        "value": -1,
+        "label": "Interceptions"
+      },
+      {
+        "id": "9",
+        "value": 0.1,
+        "label": "Rushing Yards"
+      },
+      {
+        "id": "10",
+        "value": 6,
+        "label": "Rushing Touchdowns"
+      },
+      {
+        "id": "11",
+        "value": 1,
+        "label": "Receptions"
+      },
+      {
+        "id": "12",
+        "value": 0.1,
+        "label": "Receiving Yards"
+      },
+      {
+        "id": "13",
+        "value": 6,
+        "label": "Receiving Touchdowns"
+      },
+      {
+        "id": "15",
+        "value": 6,
+        "label": "Return Touchdowns"
+      },
+      {
+        "id": "16",
+        "value": 2,
+        "label": "Two-Point Conversions"
+      },
+      {
+        "id": "18",
+        "value": -2,
+        "label": "Fumbles Lost"
+      },
+      {
+        "id": "57",
+        "value": 6,
+        "label": "Offensive Fumble Recovery TD"
+      },
+      {
+        "id": "19",
+        "value": 3,
+        "label": "FG 0-19"
+      },
+      {
+        "id": "20",
+        "value": 3,
+        "label": "FG 20-29"
+      },
+      {
+        "id": "21",
+        "value": 3,
+        "label": "FG 30-39"
+      },
+      {
+        "id": "22",
+        "value": 4,
+        "label": "FG 40-49"
+      },
+      {
+        "id": "23",
+        "value": 5,
+        "label": "FG 50+"
+      },
+      {
+        "id": "29",
+        "value": 1,
+        "label": "PAT Made"
+      },
+      {
+        "id": "32",
+        "value": 1,
+        "label": "Sack"
+      },
+      {
+        "id": "33",
+        "value": 2,
+        "label": "Interception"
+      },
+      {
+        "id": "34",
+        "value": 2,
+        "label": "Fumble Recovery"
+      },
+      {
+        "id": "35",
+        "value": 6,
+        "label": "Defensive TD"
+      },
+      {
+        "id": "36",
+        "value": 2,
+        "label": "Safety"
+      },
+      {
+        "id": "37",
+        "value": 2,
+        "label": "Blocked Kick"
+      },
+      {
+        "id": "49",
+        "value": 6,
+        "label": "Return TD"
+      },
+      {
+        "id": "50",
+        "value": 10,
+        "label": "PA 0"
+      },
+      {
+        "id": "51",
+        "value": 7,
+        "label": "PA 1-6"
+      },
+      {
+        "id": "52",
+        "value": 4,
+        "label": "PA 7-13"
+      },
+      {
+        "id": "53",
+        "value": 1,
+        "label": "PA 14-20"
+      },
+      {
+        "id": "54",
+        "value": 0,
+        "label": "PA 21-27"
+      },
+      {
+        "id": "55",
+        "value": -1,
+        "label": "PA 28-34"
+      },
+      {
+        "id": "56",
+        "value": -4,
+        "label": "PA 35+"
+      },
+      {
+        "id": "82",
+        "value": 2,
+        "label": "Extra point returned"
+      }
+    ],
+    "notes": [
+      "Yahoo official stat modifiers agree with standard full-PPR offensive scoring. Yahoo did not report any configured yardage bonus thresholds.",
+      "DST and K use verified league point rules; independent projection event-level component breakdown is unavailable, so projected point adjustments for K/DEF remain unverified.",
+      "No betting odds or guaranteed outcomes are inferred."
+    ]
+  },
+  "teams": [
+    {
+      "id": "2",
+      "name": "Brock Hard & Tee Baggin",
+      "rank": 1,
+      "wins": 6,
+      "losses": 2,
+      "pointsFor": 1200.34,
+      "pointsAgainst": 1125.9
+    },
+    {
+      "id": "8",
+      "name": "Hazleton Coal Mine",
+      "rank": 2,
+      "wins": 5,
+      "losses": 3,
+      "pointsFor": 1246.4,
+      "pointsAgainst": 1105.56
+    },
+    {
+      "id": "6",
+      "name": "Josh ❤️creampies",
+      "rank": 3,
+      "wins": 5,
+      "losses": 3,
+      "pointsFor": 1133.38,
+      "pointsAgainst": 1088.48
+    },
+    {
+      "id": "3",
+      "name": "Frenchville HornHog",
+      "rank": 4,
+      "wins": 4,
+      "losses": 4,
+      "pointsFor": 1068.04,
+      "pointsAgainst": 1012.8
+    },
+    {
+      "id": "1",
+      "name": "BEEFS GAY",
+      "rank": 5,
+      "wins": 4,
+      "losses": 4,
+      "pointsFor": 1001.24,
+      "pointsAgainst": 1159.28
+    },
+    {
+      "id": "4",
+      "name": "Chasing Greatness",
+      "rank": 6,
+      "wins": 3,
+      "losses": 5,
+      "pointsFor": 1114.42,
+      "pointsAgainst": 1091.46
+    },
+    {
+      "id": "5",
+      "name": "Jersey junkyard",
+      "rank": 7,
+      "wins": 3,
+      "losses": 5,
+      "pointsFor": 1082.52,
+      "pointsAgainst": 1102.1
+    },
+    {
+      "id": "7",
+      "name": "Elmira Express",
+      "rank": 8,
+      "wins": 2,
+      "losses": 6,
+      "pointsFor": 1046.8,
+      "pointsAgainst": 1207.56
+    }
+  ],
+  "history": [
+    {
+      "week": 1,
+      "home": "1",
+      "away": "6",
+      "homeProjected": 124.34,
+      "awayProjected": 136.05,
+      "homePoints": 131.16,
+      "awayPoints": 173.26
+    },
+    {
+      "week": 1,
+      "home": "2",
+      "away": "7",
+      "homeProjected": 146.95,
+      "awayProjected": 135.96,
+      "homePoints": 165.92,
+      "awayPoints": 182.26
+    },
+    {
+      "week": 1,
+      "home": "3",
+      "away": "8",
+      "homeProjected": 136.13,
+      "awayProjected": 134.71,
+      "homePoints": 129.46,
+      "awayPoints": 105.36
+    },
+    {
+      "week": 1,
+      "home": "4",
+      "away": "5",
+      "homeProjected": 140.68,
+      "awayProjected": 130.31,
+      "homePoints": 122.02,
+      "awayPoints": 161.9
+    },
+    {
+      "week": 2,
+      "home": "1",
+      "away": "3",
+      "homeProjected": 122.32,
+      "awayProjected": 139.77,
+      "homePoints": 80.98,
+      "awayPoints": 128.6
+    },
+    {
+      "week": 2,
+      "home": "2",
+      "away": "4",
+      "homeProjected": 137.89,
+      "awayProjected": 131.98,
+      "homePoints": 116.06,
+      "awayPoints": 134.22
+    },
+    {
+      "week": 2,
+      "home": "5",
+      "away": "6",
+      "homeProjected": 130.24,
+      "awayProjected": 141.96,
+      "homePoints": 134.4,
+      "awayPoints": 157.94
+    },
+    {
+      "week": 2,
+      "home": "7",
+      "away": "8",
+      "homeProjected": 142.91,
+      "awayProjected": 130.48,
+      "homePoints": 125.72,
+      "awayPoints": 175.28
+    },
+    {
+      "week": 3,
+      "home": "1",
+      "away": "5",
+      "homeProjected": 127.67,
+      "awayProjected": 140.75,
+      "homePoints": 101.74,
+      "awayPoints": 151.58
+    },
+    {
+      "week": 3,
+      "home": "2",
+      "away": "6",
+      "homeProjected": 142.57,
+      "awayProjected": 129.87,
+      "homePoints": 158.42,
+      "awayPoints": 136.06
+    },
+    {
+      "week": 3,
+      "home": "3",
+      "away": "7",
+      "homeProjected": 142.87,
+      "awayProjected": 143.37,
+      "homePoints": 169,
+      "awayPoints": 115.86
+    },
+    {
+      "week": 3,
+      "home": "4",
+      "away": "8",
+      "homeProjected": 136.66,
+      "awayProjected": 136.7,
+      "homePoints": 131.56,
+      "awayPoints": 142.54
+    },
+    {
+      "week": 4,
+      "home": "1",
+      "away": "2",
+      "homeProjected": 127.2,
+      "awayProjected": 137.71,
+      "homePoints": 114.66,
+      "awayPoints": 176.12
+    },
+    {
+      "week": 4,
+      "home": "3",
+      "away": "5",
+      "homeProjected": 142.4,
+      "awayProjected": 141.33,
+      "homePoints": 124.3,
+      "awayPoints": 133.62
+    },
+    {
+      "week": 4,
+      "home": "4",
+      "away": "7",
+      "homeProjected": 149.15,
+      "awayProjected": 145.54,
+      "homePoints": 192.86,
+      "awayPoints": 143.22
+    },
+    {
+      "week": 4,
+      "home": "6",
+      "away": "8",
+      "homeProjected": 150.35,
+      "awayProjected": 149.27,
+      "homePoints": 118.08,
+      "awayPoints": 170.24
+    },
+    {
+      "week": 5,
+      "home": "1",
+      "away": "8",
+      "homeProjected": 116.96,
+      "awayProjected": 153.55,
+      "homePoints": 178.48,
+      "awayPoints": 171.3
+    },
+    {
+      "week": 5,
+      "home": "2",
+      "away": "5",
+      "homeProjected": 146.63,
+      "awayProjected": 129.06,
+      "homePoints": 156,
+      "awayPoints": 152.86
+    },
+    {
+      "week": 5,
+      "home": "3",
+      "away": "4",
+      "homeProjected": 146.33,
+      "awayProjected": 137.6,
+      "homePoints": 164.54,
+      "awayPoints": 154.26
+    },
+    {
+      "week": 5,
+      "home": "6",
+      "away": "7",
+      "homeProjected": 146.52,
+      "awayProjected": 147,
+      "homePoints": 141.24,
+      "awayPoints": 108.18
+    },
+    {
+      "week": 6,
+      "home": "1",
+      "away": "7",
+      "homeProjected": 138.38,
+      "awayProjected": 131.21,
+      "homePoints": 111.84,
+      "awayPoints": 109.2
+    },
+    {
+      "week": 6,
+      "home": "2",
+      "away": "3",
+      "homeProjected": 126.79,
+      "awayProjected": 127.46,
+      "homePoints": 109.22,
+      "awayPoints": 108.72
+    },
+    {
+      "week": 6,
+      "home": "4",
+      "away": "6",
+      "homeProjected": 127.49,
+      "awayProjected": 139.95,
+      "homePoints": 111.1,
+      "awayPoints": 119.3
+    },
+    {
+      "week": 6,
+      "home": "5",
+      "away": "8",
+      "homeProjected": 142.46,
+      "awayProjected": 157.86,
+      "homePoints": 137.46,
+      "awayPoints": 167.64
+    },
+    {
+      "week": 7,
+      "home": "1",
+      "away": "4",
+      "homeProjected": 143.33,
+      "awayProjected": 143.62,
+      "homePoints": 126.42,
+      "awayPoints": 117.54
+    },
+    {
+      "week": 7,
+      "home": "2",
+      "away": "8",
+      "homeProjected": 151.55,
+      "awayProjected": 153.11,
+      "homePoints": 160.4,
+      "awayPoints": 156.36
+    },
+    {
+      "week": 7,
+      "home": "3",
+      "away": "6",
+      "homeProjected": 130.42,
+      "awayProjected": 145.77,
+      "homePoints": 119.02,
+      "awayPoints": 155.82
+    },
+    {
+      "week": 7,
+      "home": "5",
+      "away": "7",
+      "homeProjected": 143.85,
+      "awayProjected": 115.33,
+      "homePoints": 93.22,
+      "awayPoints": 121.6
+    },
+    {
+      "week": 8,
+      "home": "1",
+      "away": "6",
+      "homeProjected": 141.02,
+      "awayProjected": 137.83,
+      "homePoints": 155.96,
+      "awayPoints": 131.68
+    },
+    {
+      "week": 8,
+      "home": "2",
+      "away": "7",
+      "homeProjected": 159.82,
+      "awayProjected": 145.85,
+      "homePoints": 158.2,
+      "awayPoints": 140.76
+    },
+    {
+      "week": 8,
+      "home": "3",
+      "away": "8",
+      "homeProjected": 147.77,
+      "awayProjected": 146.28,
+      "homePoints": 124.4,
+      "awayPoints": 157.68
+    },
+    {
+      "week": 8,
+      "home": "4",
+      "away": "5",
+      "homeProjected": 137.12,
+      "awayProjected": 130.22,
+      "homePoints": 150.86,
+      "awayPoints": 117.48
+    }
+  ],
+  "week9": [
+    {
+      "week": 9,
+      "home": "1",
+      "away": "3",
+      "homeProjected": 140.13,
+      "awayProjected": 142.07,
+      "homePoints": 133.58,
+      "awayPoints": 66.8,
+      "homeWinProbability": 0.91,
+      "status": "in_progress"
+    },
+    {
+      "week": 9,
+      "home": "2",
+      "away": "4",
+      "homeProjected": 155.75,
+      "awayProjected": 142.35,
+      "homePoints": 148.58,
+      "awayPoints": 127.06,
+      "homeWinProbability": 0.99,
+      "status": "in_progress"
+    },
+    {
+      "week": 9,
+      "home": "5",
+      "away": "6",
+      "homeProjected": 148.57,
+      "awayProjected": 134.66,
+      "homePoints": 157.28,
+      "awayPoints": 139.66,
+      "homeWinProbability": 1,
+      "status": "in_progress"
+    },
+    {
+      "week": 9,
+      "home": "7",
+      "away": "8",
+      "homeProjected": 111.8,
+      "awayProjected": 143.79,
+      "homePoints": 116.12,
+      "awayPoints": 157.04,
+      "homeWinProbability": 0.01,
+      "status": "in_progress"
+    }
+  ],
+  "futureSchedule": [
+    {
+      "week": 10,
+      "home": "1",
+      "away": "5",
+      "homeProjected": 97.1,
+      "awayProjected": 123.46,
+      "status": "upcoming"
+    },
+    {
+      "week": 10,
+      "home": "2",
+      "away": "6",
+      "homeProjected": 148.24,
+      "awayProjected": 126.51,
+      "status": "upcoming"
+    },
+    {
+      "week": 10,
+      "home": "3",
+      "away": "7",
+      "homeProjected": 143.66,
+      "awayProjected": 115.3,
+      "status": "upcoming"
+    },
+    {
+      "week": 10,
+      "home": "4",
+      "away": "8",
+      "homeProjected": 140.2,
+      "awayProjected": 129.35,
+      "status": "upcoming"
+    },
+    {
+      "week": 11,
+      "home": "1",
+      "away": "2",
+      "homeProjected": 110.15,
+      "awayProjected": 135.2,
+      "status": "upcoming"
+    },
+    {
+      "week": 11,
+      "home": "3",
+      "away": "5",
+      "homeProjected": 93.63,
+      "awayProjected": 141.01,
+      "status": "upcoming"
+    },
+    {
+      "week": 11,
+      "home": "4",
+      "away": "7",
+      "homeProjected": 123.43,
+      "awayProjected": 87.18,
+      "status": "upcoming"
+    },
+    {
+      "week": 11,
+      "home": "6",
+      "away": "8",
+      "homeProjected": 109.91,
+      "awayProjected": 105.77,
+      "status": "upcoming"
+    },
+    {
+      "week": 12,
+      "home": "1",
+      "away": "8",
+      "homeProjected": 136.08,
+      "awayProjected": 146.43,
+      "status": "upcoming"
+    },
+    {
+      "week": 12,
+      "home": "2",
+      "away": "5",
+      "homeProjected": 149.7,
+      "awayProjected": 141.09,
+      "status": "upcoming"
+    },
+    {
+      "week": 12,
+      "home": "3",
+      "away": "4",
+      "homeProjected": 142.05,
+      "awayProjected": 145.81,
+      "status": "upcoming"
+    },
+    {
+      "week": 12,
+      "home": "6",
+      "away": "7",
+      "homeProjected": 139.48,
+      "awayProjected": 131.78,
+      "status": "upcoming"
+    },
+    {
+      "week": 13,
+      "home": "1",
+      "away": "7",
+      "homeProjected": 130.08,
+      "awayProjected": 115.33,
+      "status": "upcoming"
+    },
+    {
+      "week": 13,
+      "home": "2",
+      "away": "3",
+      "homeProjected": 110.6,
+      "awayProjected": 131.89,
+      "status": "upcoming"
+    },
+    {
+      "week": 13,
+      "home": "4",
+      "away": "6",
+      "homeProjected": 129.94,
+      "awayProjected": 120.11,
+      "status": "upcoming"
+    },
+    {
+      "week": 13,
+      "home": "5",
+      "away": "8",
+      "homeProjected": 139.19,
+      "awayProjected": 118.99,
+      "status": "upcoming"
+    },
+    {
+      "week": 14,
+      "home": "1",
+      "away": "4",
+      "homeProjected": 119.37,
+      "awayProjected": 138.43,
+      "status": "upcoming"
+    },
+    {
+      "week": 14,
+      "home": "2",
+      "away": "8",
+      "homeProjected": 130.31,
+      "awayProjected": 123.87,
+      "status": "upcoming"
+    },
+    {
+      "week": 14,
+      "home": "3",
+      "away": "6",
+      "homeProjected": 141.92,
+      "awayProjected": 121.7,
+      "status": "upcoming"
+    },
+    {
+      "week": 14,
+      "home": "5",
+      "away": "7",
+      "homeProjected": 139.88,
+      "awayProjected": 108.08,
+      "status": "upcoming"
+    }
+  ],
+  "tradeResearch": {
+    "source": "FantasyBot connected 2026 league rosters and named 1-for-1 trade comparison",
+    "collectedAtIso": "2026-11-10T01:08:31.490Z",
+    "opponentNeeds": [
+      {
+        "team": "Hazleton Coal Mine",
+        "needs": [],
+        "surplus": [
+          "QB",
+          "DEF"
+        ]
+      },
+      {
+        "team": "Jersey junkyard",
+        "needs": [
+          "WR"
+        ],
+        "surplus": [
+          "RB"
+        ]
+      },
+      {
+        "team": "Josh ❤️creampies",
+        "needs": [
+          "RB"
+        ],
+        "surplus": [
+          "TE"
+        ]
+      },
+      {
+        "team": "BEEFS GAY",
+        "needs": [
+          "TE",
+          "DEF"
+        ],
+        "surplus": []
+      },
+      {
+        "team": "Chasing Greatness",
+        "needs": [],
+        "surplus": [
+          "TE"
+        ]
+      },
+      {
+        "team": "Frenchville HornHog",
+        "needs": [],
+        "surplus": []
+      },
+      {
+        "team": "Elmira Express",
+        "needs": [],
+        "surplus": []
+      }
+    ],
+    "prospects": [
+      {
+        "team": "Josh ❤️creampies",
+        "needs": [
+          "RB"
+        ],
+        "surplus": [
+          "TE"
+        ],
+        "target": "Travis Kelce",
+        "outgoing": "Woody Marks",
+        "modelValueOutgoing": 3,
+        "modelValueIncoming": 3,
+        "fairness": "even",
+        "supported": true,
+        "market": "FantasyBot direct one-for-one comparison",
+        "inboundPosition": "TE",
+        "outgoingPosition": "RB"
+      },
+      {
+        "team": "Josh ❤️creampies",
+        "needs": [
+          "RB"
+        ],
+        "surplus": [
+          "TE"
+        ],
+        "target": "T.J. Hockenson",
+        "outgoing": "Breece Hall",
+        "modelValueOutgoing": 21,
+        "modelValueIncoming": 2,
+        "fairness": "Brock would overpay substantially",
+        "supported": false,
+        "market": "FantasyBot direct comparison",
+        "inboundPosition": "TE",
+        "outgoingPosition": "RB"
+      },
+      {
+        "team": "Jersey junkyard",
+        "needs": [
+          "WR"
+        ],
+        "surplus": [
+          "RB"
+        ],
+        "target": "Colston Loveland",
+        "outgoing": "Xavier Worthy",
+        "modelValueOutgoing": 2,
+        "modelValueIncoming": 16,
+        "fairness": "Jersey would receive substantially less model value",
+        "supported": false,
+        "market": "FantasyBot direct comparison",
+        "inboundPosition": "TE",
+        "outgoingPosition": "WR"
+      }
+    ]
+  },
+  "postseason": {
+    "confirmedPlayoffSpots": null,
+    "confirmedRegularSeasonEndWeek": null,
+    "scenarioRegularSeasonEndWeek": 14,
+    "scenarioPlayoffTeamCounts": [
+      4,
+      6
+    ],
+    "tiebreakerScenario": "wins_then_points_for",
+    "notes": [
+      "The Yahoo league's exact playoff field size, bracket seeding, and regular-season end week were not verified; only conditional what-if odds are permitted.",
+      "Week 9 has not been finalized. Use Yahoo provider win probabilities for its four unresolved games and do not mark those outcomes as certain."
+    ]
+  },
+  "sourceProvenance": [
+    {
+      "source": "Flaim/Yahoo 2026 470.l.290846 league settings and standings",
+      "observedAtIso": "2026-11-10T01:08:31.490Z"
+    },
+    {
+      "source": "Flaim/Yahoo final matchups, weeks 1-8",
+      "sampleCount": 32
+    },
+    {
+      "source": "Flaim/Yahoo pending matchups week 9",
+      "sampleCount": 4
+    },
+    {
+      "source": "Flaim/Yahoo scheduled matchups weeks 10-14",
+      "sampleCount": 20
+    },
+    {
+      "source": "FantasyBot connected The League seven opponent team needs/surpluses",
+      "sampleCount": 7
+    },
+    {
+      "source": "FantasyBot three direct 1-for-1 trade comparisons",
+      "sampleCount": 3
+    }
+  ]
+}
