@@ -3,44 +3,43 @@
   "syncPolicy": {
     "intervalHours": 4
   },
-  "sourceCapturedAt": "2026-11-09T22:35:21.525Z",
+  "sourceCapturedAt": "2026-11-10T18:55:23.553Z",
   "pack": {
-    "gaps": [],
+    "gaps": [
+      "No specific math problems or examples provided beyond the topic of 2-digit addition.",
+      "Grammar rules for singular/plural and compound words are mentioned as test topics but not explained in detail.",
+      "Specific homework due dates are not listed, only the tasks."
+    ],
     "homework": [
       {
-        "day": "Monday",
+        "day": "Daily",
         "due": "Not specified",
         "subject": "Spelling",
         "task": "Spelling Choice Board activity"
       },
       {
-        "day": "Monday",
+        "day": "Daily",
         "due": "Not specified",
         "subject": "Math",
-        "task": "Math pg. 56"
+        "task": "Math pg. 57"
       },
       {
-        "day": "Monday",
+        "day": "Daily",
         "due": "Not specified",
         "subject": "Reading",
-        "task": "Read and update Reading log"
+        "task": "Read and complete Reading log"
       }
     ],
     "importantDates": [
       {
         "date": "Tuesday Nov. 10",
-        "kind": "event",
-        "label": "DDD for Wounded Warriors"
+        "kind": "test",
+        "label": "Reading Test"
       },
       {
         "date": "Wednesday Nov. 11",
         "kind": "event",
         "label": "Prayer Service at St. John the Baptist"
-      },
-      {
-        "date": "Wednesday Nov. 11",
-        "kind": "test",
-        "label": "Reading Test"
       },
       {
         "date": "Thursday Nov. 12",
@@ -58,9 +57,54 @@
         "label": "Spelling Test (3 letter blends) and Handwriting"
       },
       {
+        "date": "Tuesday Nov. 17",
+        "kind": "event",
+        "label": "Nut Roll pick up"
+      },
+      {
+        "date": "Tuesday Nov. 17",
+        "kind": "test",
+        "label": "Religion Test"
+      },
+      {
+        "date": "Tuesday Nov. 17",
+        "kind": "test",
+        "label": "Math Test (lessons 1-5)"
+      },
+      {
+        "date": "Wednesday Nov. 18",
+        "kind": "test",
+        "label": "Trimester 1 Math assessment"
+      },
+      {
         "date": "Thursday Nov. 19",
         "kind": "deadline",
         "label": "Trimester 1 Book Project due"
+      },
+      {
+        "date": "Thursday Nov. 19",
+        "kind": "event",
+        "label": "Pretzel day"
+      },
+      {
+        "date": "Thursday Nov. 19",
+        "kind": "test",
+        "label": "Grammar Test (compound words)"
+      },
+      {
+        "date": "Friday Nov. 20",
+        "kind": "event",
+        "label": "End of Trimester 1"
+      },
+      {
+        "date": "Friday Nov. 20",
+        "kind": "test",
+        "label": "Spelling Test (long a) and Handwriting"
+      },
+      {
+        "date": "Friday Nov. 20",
+        "kind": "test",
+        "label": "Phonics Test (long vowels)"
       }
     ],
     "questions": [
@@ -72,7 +116,7 @@
           "To tell us what to eat"
         ],
         "difficulty": "easy",
-        "explanation": "God gave us the 10 Commandments to follow so we can love God and others.",
+        "explanation": "The source states God gave us the 10 Commandments so we can love God and others.",
         "format": "multiple_choice",
         "hint": "It is about showing love.",
         "id": "q1",
@@ -80,14 +124,14 @@
         "subject": "Religion"
       },
       {
-        "answer": "true",
+        "answer": "the Lord your God",
         "choices": [],
-        "difficulty": "easy",
-        "explanation": "The 1st Great Commandment states you shall love the Lord your God with all your heart, soul, mind, and strength.",
-        "format": "true_false",
-        "hint": "Think about the Great Commandment.",
+        "difficulty": "medium",
+        "explanation": "The 1st Great Commandment says: 'You shall love the Lord your God with all your heart...'",
+        "format": "short_answer",
+        "hint": "It is the first part of the commandment.",
         "id": "q2",
-        "prompt": "The 1st Great Commandment says you should love the Lord your God with all your heart.",
+        "prompt": "According to the 1st Great Commandment, who should you love with all your heart, soul, mind, and strength?",
         "subject": "Religion"
       },
       {
@@ -95,115 +139,174 @@
         "choices": [
           "offspring",
           "adult",
-          "mammal"
+          "groom"
         ],
-        "difficulty": "medium",
-        "explanation": "Offspring is the term used for the young of an animal.",
+        "difficulty": "easy",
+        "explanation": "Offspring is the vocabulary term for the young of a person or animal.",
         "format": "multiple_choice",
-        "hint": "It starts with 'o'.",
+        "hint": "It starts with 'off'.",
         "id": "q3",
-        "prompt": "Which vocabulary word means the young of an animal?",
+        "prompt": "Which word describes the young of an animal?",
         "subject": "Reading"
       },
       {
-        "answer": "An animal that feeds its babies milk",
-        "choices": [
-          "An animal that feeds its babies milk",
-          "An animal that has feathers",
-          "An insect that turns into a butterfly"
-        ],
-        "difficulty": "medium",
-        "explanation": "A mammal is a type of animal that feeds its babies milk.",
-        "format": "multiple_choice",
-        "hint": "It relates to how they feed their young.",
-        "id": "q4",
-        "prompt": "What is a mammal?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "giant",
+        "answer": "true",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "Giant means very large.",
-        "format": "word_build",
-        "hint": "Starts with 'g'.",
-        "id": "q5",
-        "prompt": "Build the vocabulary word that means very large.",
+        "explanation": "The vocabulary list defines a mammal as a type of animal that breathes air and has hair or fur.",
+        "format": "true_false",
+        "hint": "Think about the definition of mammal.",
+        "id": "q4",
+        "prompt": "A mammal is a type of animal that breathes air and has hair or fur.",
         "subject": "Reading"
       },
       {
         "answer": "scratch",
         "choices": [],
         "difficulty": "medium",
-        "explanation": "Scratch is a basic spelling word this week featuring a 3-letter blend.",
+        "explanation": "Scratch is one of the basic spelling words for this week.",
         "format": "word_build",
-        "hint": "Starts with the 3-letter blend 'scr'.",
-        "id": "q6",
+        "hint": "It starts with the 3-letter blend 'scr'.",
+        "id": "q5",
         "prompt": "Spell the word that means to use your nails to rub an itch.",
         "subject": "Spelling"
       },
       {
-        "answer": "until",
+        "answer": "throne",
+        "choices": [],
+        "difficulty": "medium",
+        "explanation": "Throne is a spelling word featuring a 3-letter blend.",
+        "format": "word_build",
+        "hint": "It starts with 'thr'.",
+        "id": "q6",
+        "prompt": "Spell the word for a chair used by a king or queen.",
+        "subject": "Spelling"
+      },
+      {
+        "answer": "because",
         "choices": [
-          "until",
-          "splash",
-          "throne"
+          "because",
+          "apple",
+          "jump"
         ],
         "difficulty": "easy",
-        "explanation": "Until, far, and flower are the high frequency words for this week.",
+        "explanation": "Because is listed under the sight words for this week.",
         "format": "multiple_choice",
-        "hint": "It is one of the three high frequency words.",
+        "hint": "It is a word used to explain why.",
         "id": "q7",
-        "prompt": "Which of these is a high frequency word from your list?",
+        "prompt": "Which of these is a sight word for this week?",
+        "subject": "Reading"
+      },
+      {
+        "answer": "To clean or brush an animal",
+        "choices": [
+          "To clean or brush an animal",
+          "To sleep in a den",
+          "To fly high in the sky"
+        ],
+        "difficulty": "easy",
+        "explanation": "Groom means to clean or brush an animal.",
+        "format": "multiple_choice",
+        "hint": "It is something you do to keep an animal neat.",
+        "id": "q8",
+        "prompt": "What does the word 'groom' mean?",
+        "subject": "Reading"
+      },
+      {
+        "answer": "shrub",
+        "choices": [],
+        "difficulty": "medium",
+        "explanation": "Shrub is a spelling word for this week.",
+        "format": "word_build",
+        "hint": "It starts with 'shr'.",
+        "id": "q9",
+        "prompt": "Spell the word that means a small bush.",
         "subject": "Spelling"
       },
       {
         "answer": "true",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "Groom means to clean or brush an animal.",
+        "explanation": "Cold is explicitly listed as a sight word.",
         "format": "true_false",
-        "hint": "Think about taking care of a pet's fur.",
-        "id": "q8",
-        "prompt": "The word 'groom' means to clean or brush an animal.",
+        "hint": "Check the sight word list.",
+        "id": "q10",
+        "prompt": "The word 'cold' is one of your sight words.",
         "subject": "Reading"
       },
       {
-        "answer": "throne",
+        "answer": "split",
         "choices": [],
         "difficulty": "medium",
-        "explanation": "Throne is a spelling word with a 3-letter blend.",
+        "explanation": "Split is a spelling word featuring a 3-letter blend.",
         "format": "word_build",
-        "hint": "Starts with 'thr'.",
-        "id": "q9",
-        "prompt": "Spell the word for a chair a king or queen sits on.",
+        "hint": "It starts with 'spl'.",
+        "id": "q11",
+        "prompt": "Spell the word that means to break into two or more parts.",
         "subject": "Spelling"
       },
       {
         "answer": "mule",
         "choices": [
           "mule",
-          "mud",
-          "bus"
+          "bus",
+          "cup"
         ],
         "difficulty": "medium",
-        "explanation": "The long u sound is often found in CVCe words like u_e.",
+        "explanation": "The phonics focus includes long u (u_e) words.",
         "format": "multiple_choice",
-        "hint": "Look for the silent 'e' at the end.",
-        "id": "q10",
+        "hint": "Look for the silent e pattern.",
+        "id": "q12",
         "prompt": "Which word has a long 'u' sound (u_e)?",
         "subject": "Reading"
+      },
+      {
+        "answer": "spring",
+        "choices": [],
+        "difficulty": "medium",
+        "explanation": "Spring is a spelling word for this week.",
+        "format": "word_build",
+        "hint": "It starts with 'spr'.",
+        "id": "q13",
+        "prompt": "Spell the word for a season when flowers bloom.",
+        "subject": "Spelling"
+      },
+      {
+        "answer": "labels",
+        "choices": [
+          "labels",
+          "index",
+          "title"
+        ],
+        "difficulty": "medium",
+        "explanation": "Reading comprehension includes diagrams and labels.",
+        "format": "multiple_choice",
+        "hint": "They are often found on diagrams.",
+        "id": "q14",
+        "prompt": "What text feature uses words to explain a picture or drawing?",
+        "subject": "Reading"
+      },
+      {
+        "answer": "stripe",
+        "choices": [],
+        "difficulty": "medium",
+        "explanation": "Stripe is a spelling word for this week.",
+        "format": "word_build",
+        "hint": "It starts with 'str'.",
+        "id": "q15",
+        "prompt": "Spell the word that means a long, thin line of color.",
+        "subject": "Spelling"
       }
     ],
     "reminders": [
-      "Last day to buy wounded warrior wrist bands ($5) is Tuesday Nov. 10",
-      "Pretzel money is due Friday Nov. 13",
-      "Keep Reading log and Behavior chart in the HW folder",
-      "Trimester 1 Book Project is due Thursday Nov. 19"
+      "Pretzel money is due Friday Nov. 13.",
+      "Nut Roll pick up is Tuesday Nov. 17.",
+      "Trimester 1 Book Project is due Thursday Nov. 19.",
+      "Keep Reading log and Behavior chart in the HW folder."
     ],
     "schemaVersion": 2,
-    "sourceCapturedAt": "2026-11-09T22:35:21.525Z",
-    "sourceHash": "a9895951f9061a4658bf569c122cdd2cd9ec2d3dc75800356e67f4dbf202264d",
+    "sourceCapturedAt": "2026-11-10T18:55:23.553Z",
+    "sourceHash": "da62e7a31d180fd3465d911e8634887035416d9e70285ce5547d38c48944d8ff",
     "sourceSufficient": true,
     "subjects": [
       {
@@ -221,29 +324,23 @@
       },
       {
         "studyNotes": [
-          "Focus on identifying the main idea and supporting details in texts.",
+          "Focus on identifying main ideas and supporting details.",
           "Learn to use diagrams and labels as text features.",
-          "Practice word structure with -ed and -ing endings on silent e and CVC words."
+          "Practice adding -ed and -ing endings to silent e and CVC words."
         ],
         "subject": "Reading",
         "topics": [
-          "Eagles and Eaglets",
-          "Baby Bears",
-          "From Caterpillar to Butterfly",
-          "Main idea and details",
-          "Diagrams and labels",
-          "Text features",
-          "Long o (o_e) and short o",
-          "Long u (u_e) and short u",
-          "Word endings -ed and -ing (silent e and CVC words)",
-          "CVCe words"
+          "Stories: Eagles and Eaglets, Baby Bears, From Caterpillar to Butterfly",
+          "Phonics: long o (o_e), short o, long u (u_e), short u",
+          "Reading Comprehension: main idea/details, diagrams & labels, text features",
+          "Word Structure: -ed and -ing endings (silent e & cvc words), CVCe words"
         ]
       },
       {
         "studyNotes": [
           "Basic words include: scratch, scrape, spring, throne, stripe, strange, shred, shrub, splash, split.",
           "Review words: catch, sting.",
-          "High frequency words: far, flower, until."
+          "High Frequency words: far, flower, until."
         ],
         "subject": "Spelling",
         "topics": [
@@ -252,15 +349,27 @@
       },
       {
         "studyNotes": [
-          "Test on singular and plural nouns scheduled for Thursday."
+          "Grammar test on singular and plural nouns is scheduled for Thursday Nov. 12.",
+          "Grammar test on compound words is scheduled for Thursday Nov. 19."
         ],
         "subject": "Grammar",
         "topics": [
-          "Singular and plural nouns"
+          "Singular and plural nouns",
+          "Compound words"
+        ]
+      },
+      {
+        "studyNotes": [
+          "Lessons 1-5 cover 2-digit addition.",
+          "Trimester 1 Math assessment is scheduled for Wednesday Nov. 18."
+        ],
+        "subject": "Math",
+        "topics": [
+          "2 digit addition with and without regrouping"
         ]
       }
     ],
-    "summary": "This week, students are exploring the life cycles of animals and insects in Reading, focusing on 3-letter blends in Spelling, and learning about the 10 Commandments and the Great Commandment in Religion. Key assessments include Reading, Grammar, and Spelling tests.",
+    "summary": "This week, students are exploring the life cycles of animals and insects in Reading, focusing on 3-letter blends in Spelling, and learning about the 10 Commandments and the Great Commandment in Religion. In Math, the focus is on 2-digit addition with and without regrouping, while Grammar covers singular, plural, and compound nouns.",
     "vocabulary": [
       {
         "meaning": "A fully grown person or animal",
@@ -268,17 +377,17 @@
         "term": "adult"
       },
       {
-        "meaning": "Having life; not dead",
+        "meaning": "Living; not dead",
         "subject": "Reading",
         "term": "alive"
       },
       {
-        "meaning": "To have something over the surface of",
+        "meaning": "Having something on top or around it",
         "subject": "Reading",
         "term": "covered"
       },
       {
-        "meaning": "The thick hair that covers the bodies of some animals",
+        "meaning": "The hair on an animal",
         "subject": "Reading",
         "term": "fur"
       },
@@ -293,16 +402,16 @@
         "term": "groom"
       },
       {
-        "meaning": "A type of animal that feeds its babies milk",
+        "meaning": "A type of animal that breathes air and has hair or fur",
         "subject": "Reading",
         "term": "mammal"
       },
       {
-        "meaning": "The young of an animal",
+        "meaning": "The young of a person or animal",
         "subject": "Reading",
         "term": "offspring"
       }
     ],
-    "weekLabel": "Week of November 9, 2026"
+    "weekLabel": "Week of November 10, 2026"
   }
 }
