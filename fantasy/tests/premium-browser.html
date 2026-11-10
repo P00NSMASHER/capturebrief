@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3">
-<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2"><link rel="stylesheet" href="/capturebrief/fantasy/assets/edge-v1.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/strategy-v1.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/future-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2"><link rel="stylesheet" href="/capturebrief/fantasy/assets/edge-v1.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/strategy-v1.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/future-v1.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/genius-v1.css?v=1">
 <title>Premium Fantasy HQ UI Acceptance</title></head>
 <body><div id="root">Checking premium league interface…</div>
 <script type="module">
@@ -17,7 +17,7 @@ try{
  if(raw.schemaVersion!==3||Object.keys(raw.teams||{}).join(',')!=='brock')throw Error('Brock-only fixture invalid');
  raw.syncedAtIso=new Date().toISOString();
  localStorage.setItem('fantasy-hq-private-v3',JSON.stringify(raw));
- await import('/capturebrief/fantasy/assets/app-v2.mjs?v=10');
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=11');
  const until=async(fn)=>{
   for(let i=0;i<100;i++){if(fn())return true;await new Promise(r=>setTimeout(r,30))}
   return false

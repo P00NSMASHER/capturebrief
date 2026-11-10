@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1">
 <link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2">
 <link rel="stylesheet" href="/capturebrief/fantasy/assets/edge-v1.css?v=1">
-<link rel="stylesheet" href="/capturebrief/fantasy/assets/strategy-v1.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/future-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/strategy-v1.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/future-v1.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/genius-v1.css?v=1">
 </head><body><div id="root">Checking strategic fantasy app…</div>
 <script type="module">
 try{
@@ -31,7 +31,7 @@ try{
   if(u.includes('/fantasy/intelligence.json?'))return Promise.resolve(new Response(JSON.stringify(intel),{status:200,headers:{'Content-Type':'application/json'}}));
   return fetchOrig(url,opts);
  };
- await import('/capturebrief/fantasy/assets/app-v2.mjs?v=10');
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=11');
  const until=async fn=>{
   for(let i=0;i<130;i++){if(fn())return true;await new Promise(r=>setTimeout(r,35))}
   return false

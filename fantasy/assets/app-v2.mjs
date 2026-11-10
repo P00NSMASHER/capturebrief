@@ -6,6 +6,8 @@ import {analyzeEdge} from './edge-engine.mjs';
 import {renderEdgeLab} from './edge-view.mjs';
 import {buildStrategicReport} from './strategy-engine.mjs';
 import {homeStrategy,lineupStrategy,playersStrategy,leagueStrategy,archivedStrategy} from './strategic-widgets.mjs';
+import {buildGeniusLab} from './genius-engine.mjs';
+import {geniusHome,geniusLineup,geniusPlayers,geniusLeague,geniusCoach,geniusArchived} from './genius-widgets.mjs';
 
 const BASE='/capturebrief/fantasy/';
 const root=document.getElementById('root');
@@ -14,6 +16,7 @@ const CACHE_KEY='fantasy-hq-public-last-good-v2';
 let current=null,source='published',loading=false,activeTab='overview',message='',waiverFilter='ALL';
 let edgeRaw=null,edgeMode='balanced',edgeLoadError='',edgeLoading=false,lastEdgeCheck=0;
 let intelRaw=null,intelLoading=false,lastIntelCheck=0,strategyCache=null;
+let geniusField=4,geniusRealization=.5,geniusCache=null;
 const $esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const txt=(v,empty='—')=>v===null||v===undefined||v===''?empty:String(v);
 const num=(v,dec=1)=>typeof v==='number'&&Number.isFinite(v)?v.toFixed(dec):'—';
@@ -147,7 +150,7 @@ function overviewQuickPanels(team){
  '<div class="preview-list">'+choices+'</div><p class="caption-note">Ranked by Yahoo-wide roster rate, not projected performance.</p></section></div>';
 }
 function summaryView(team){
- return homeStrategy(strategicReport())+matchupCard(team)+stats(team)+overviewQuickPanels(team)+alertList(team)+
+ return geniusHome(geniusReport())+homeStrategy(strategicReport())+matchupCard(team)+stats(team)+overviewQuickPanels(team)+alertList(team)+
  '<details class="small-disclosure"><summary>Provider details '+uiIcon('chevron')+'</summary>'+decision(team)+'</details>'+strategy(team);
 }
 function playerRow(p){
@@ -186,7 +189,7 @@ function lineupView(team){
     opt='<div class="subnote">Verified future player projections are absent, and a complete scored-player comparison could not be calculated: '+$esc(scored.reason)+'. Current assignments remain shown below without speculative recommendations.</div>';
   }
   const intel=strategicReport();
-  return lineupStrategy(intel)+
+  return geniusLineup(geniusReport())+lineupStrategy(intel)+
     (intel?.ready&&intel.model?.lineups?.balanced?.available?'':section(title,kicker,opt))+
 
     section('Starting roster','CURRENT SNAPSHOT',buckets.starters.length?'<div class="list">'+buckets.starters.map(playerRow).join('')+'</div>':empty('No starters found','Import a full roster snapshot.'))+
@@ -223,7 +226,7 @@ function waiverView(team){
  const intel=strategicReport();
  return '<div class="tab-intro"><span class="eyebrow">FANTASY WAIVER INTELLIGENCE</span><h1>Win the next roster spot.</h1>'+
  '<p>Position needs, Week 13 coverage and the actual projected advantage—not a popularity contest.</p></div>'+
- playersStrategy(intel)+
+ geniusPlayers(geniusReport())+playersStrategy(intel)+
  (intel?.ready?'':section('Most rostered available','YAHOO MARKET · FALLBACK',
  spotlight?'<div class="preview-list">'+spotlight+'</div>':'<div class="quiet-empty">Availability was not captured.</div>'))+
  section('Player pool',''+filtered.length+' MATCH'+(filtered.length===1?'':'ES'),
@@ -244,7 +247,7 @@ function labView(team){
    '<div class="quiet-empty">No bounded completed moves in this capture.</div>';
   return '<div class="tab-intro"><span class="eyebrow">LEAGUE WAR ROOM</span><h1>Know your competition.</h1>'+
    '<p>Conditional playoff paths, powerful opponents and forecast accuracy measured against actual scores.</p></div>'+
-   leagueStrategy(model)+
+   geniusLeague(geniusReport())+leagueStrategy(model)+
    '<details class="small-disclosure"><summary>All eight club crests '+uiIcon('chevron')+'</summary>'+leagueGallery()+'</details>'+
    section('Recent Brock Hard moves','SAVED COMPLETED TRANSACTIONS',list);
  }
@@ -361,19 +364,30 @@ function classicCoachView(team){
 function coachView(team){
  const scenario=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
  if(scenario.ready){
-  return renderEdgeLab(scenario)+
+  return geniusCoach(geniusReport(),{field:geniusField,realization:geniusRealization})+renderEdgeLab(scenario)+
   '<details class="edge-classic"><summary>Original source-only Coach checklist '+uiIcon('chevron')+'</summary>'+
   classicCoachView(team)+'</details>';
  }
  const status=edgeLoading?'Checking the published prediction model…':
  edgeLoadError?'Model data could not load: '+edgeLoadError:
  scenario.reason||'No matching, recent and complete forward forecasts are available.';
- return '<div class="edge-available-notice"><div><strong>Predictive Edge lab is not ready.</strong>'+
+ return geniusCoach(geniusReport(),{field:geniusField,realization:geniusRealization})+
+ '<div class="edge-available-notice"><div><strong>Predictive Edge lab is not ready.</strong>'+
  '<p>'+$esc(status)+'</p></div>'+
  '<button type="button" class="edge-button" data-action="edge-refresh">'+uiIcon('refresh')+' Recheck model</button></div>'+
  classicCoachView(team);
 }
 
+function geniusReport(){
+ if(!current||!intelRaw)return null;
+ const key=[current.syncedAtIso,current.week,edgeRaw?.observedAtIso||'none',
+  intelRaw.capturedAtIso,geniusField,geniusRealization,Math.floor(Date.now()/300000)].join('|');
+ if(geniusCache?.key===key)return geniusCache.report;
+ const report=buildGeniusLab(current,edgeRaw,intelRaw,{
+  now:Date.now(),field:geniusField,realization:geniusRealization,simulations:800});
+ geniusCache={key,report};
+ return report;
+}
 function strategicReport(){
  if(!current||!intelRaw)return null;
  const key=[current.syncedAtIso,current.week,edgeRaw?.observedAtIso||'none',
@@ -417,6 +431,7 @@ function archivedView(){
  const t=current?.teams?.brock;
  const savedReport=activeTab==='coach'?buildArchivedCoachReview(current):null;
  const historical=strategicReport();
+ const geniusHistory=geniusReport();
  return '<div class="container">'+masthead(t)+messageBox()+
  '<section class="archived-fallback panel"><div class="archive-logo">'+teamLogo('2','display')+'</div>'+
  '<div class="label">BROCK HARD · NO CURRENT CAPTURE</div><h1>Update your Yahoo data</h1>'+
@@ -428,6 +443,7 @@ function archivedView(){
  '<input id="importFile" type="file" accept=".json,application/json" hidden>'+
  '</section>'+(savedReport?coachAssessment(savedReport.summary,savedReport.captureAt,true):'')+
  (historical?.ready?archivedStrategy(historical):'')+
+ (geniusHistory?.ready?geniusArchived(geniusHistory):'')+
  '<p class="footnote">No Yahoo credentials or live provider access are used by this page.</p></div>'+nav();
 }
 function render(){
@@ -484,8 +500,8 @@ async function getIntelligenceData(force=false){
   if(parsed?.schemaVersion!==1||parsed.kind!=='brock-league-intelligence'||
    parsed.season!==2026||parsed.leagueId!=='470.l.290846'||String(parsed.teamId)!=='2')
     throw new Error('League intelligence belongs to the wrong team');
-  intelRaw=parsed;strategyCache=null;return true;
- }catch(error){intelRaw=null;strategyCache=null;return false}
+  intelRaw=parsed;strategyCache=null;geniusCache=null;return true;
+ }catch(error){intelRaw=null;strategyCache=null;geniusCache=null;return false}
  finally{intelLoading=false;if(current)render()}
 }
 
@@ -503,9 +519,9 @@ async function getEdgeData(force=false){
   if(parsed?.schemaVersion!==1||parsed.kind!=='brock-hard-prediction-inputs'||
     parsed.leagueId!=='470.l.290846'||String(parsed.teamId)!=='2'||parsed.season!==2026)
     throw new Error('Prediction artifact is not the authorized Brock Hard league');
-  edgeRaw=parsed;edgeLoadError='';strategyCache=null;return true;
+  edgeRaw=parsed;edgeLoadError='';strategyCache=null;geniusCache=null;return true;
  }catch(error){edgeLoadError=String(error?.message||'Source unavailable').slice(0,180);
-   edgeRaw=null;return false;}
+   edgeRaw=null;geniusCache=null;return false;}
  finally{edgeLoading=false;if(current)render();}
 }
 
@@ -551,6 +567,18 @@ async function handleImport(file){if(!file)return;
  }catch(e){message='Import rejected: '+e.message;render()}
 }
 document.addEventListener('click',event=>{
+ const realization=event.target.closest('button[data-genius-realization]');
+ if(realization){
+  const v=Number(realization.dataset.geniusRealization);
+  if([0,.25,.5,.75,1].includes(v)){geniusRealization=v;geniusCache=null;render();}
+  return;
+ }
+ const field=event.target.closest('button[data-genius-field]');
+ if(field){
+  const f=Number(field.dataset.geniusField);
+  if([4,6].includes(f)){geniusField=f;geniusCache=null;render();}
+  return;
+ }
  const modeButton=event.target.closest('button[data-edge-mode]');
  if(modeButton){
   const next=modeButton.dataset.edgeMode;
