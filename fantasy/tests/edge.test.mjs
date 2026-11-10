@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {analyzeEdge} from '../assets/edge-engine.mjs';
-const source=()=>JSON.parse(readFileSync('fantasy/data.json','utf8'));
-const inputs=()=>JSON.parse(readFileSync('fantasy/edge.json','utf8'));
+const source=()=>JSON.parse(readFileSync('fantasy/tests/fixtures/historical-week10/data.json','utf8'));
+const inputs=()=>JSON.parse(readFileSync('fantasy/tests/fixtures/historical-week10/edge.json','utf8'));
 // A scheduled Yahoo capture can legitimately advance after the independent model read.
 // Keep tests anchored AFTER both sources, not to a stale hard-coded capture time.
 const at=edge=>Math.max(Date.parse(edge.observedAtIso),Date.parse(source().syncedAtIso))+10*60000;
@@ -99,7 +99,7 @@ test('Incomplete forecast coverage withholds lineup optimality, not fabricated n
 });
 
 test('No private identity, tokens, current-week fake forecasts or provider writes appear in the model files',()=>{
- const src=readFileSync('fantasy/edge.json','utf8');
+ const src=readFileSync('fantasy/tests/fixtures/historical-week10/edge.json','utf8');
  const d=JSON.parse(src);
  assert.equal(d.kind,'brock-hard-prediction-inputs');
  assert.deepEqual(Object.keys(source().teams),['brock']);

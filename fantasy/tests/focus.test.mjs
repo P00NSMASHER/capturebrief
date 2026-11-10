@@ -9,7 +9,7 @@ import {focusHome,focusLineup,focusPlayers,focusLeague,focusCoach} from '../asse
 
 const read=x=>JSON.parse(readFileSync(x,'utf8'));
 const sources=()=>{
- const y=read('fantasy/data.json'),edge=read('fantasy/edge.json'),intel=read('fantasy/intelligence.json');
+ const y=read('fantasy/tests/fixtures/historical-week10/data.json'),edge=read('fantasy/tests/fixtures/historical-week10/edge.json'),intel=read('fantasy/tests/fixtures/historical-week10/intelligence.json');
  const now=Math.max(Date.parse(y.syncedAtIso),Date.parse(edge.observedAtIso),Date.parse(intel.capturedAtIso))+120000;
  return {y,edge,intel,now,team:y.teams.brock,model:analyzeEdge(y,edge,{now}),
   genius:buildGeniusLab(y,edge,intel,{now,simulations:300}),

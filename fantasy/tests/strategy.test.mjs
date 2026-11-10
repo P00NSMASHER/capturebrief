@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {buildStrategicReport} from '../assets/strategy-engine.mjs';
 const read=p=>JSON.parse(readFileSync(p,'utf8'));
-const yahoo=()=>read('fantasy/data.json');
-const edge=()=>read('fantasy/edge.json');
-const league=()=>read('fantasy/intelligence.json');
+const yahoo=()=>read('fantasy/tests/fixtures/historical-week10/data.json');
+const edge=()=>read('fantasy/tests/fixtures/historical-week10/edge.json');
+const league=()=>read('fantasy/tests/fixtures/historical-week10/intelligence.json');
 const now=()=>Math.max(Date.parse(league().capturedAtIso),Date.parse(yahoo().syncedAtIso),Date.parse(edge().observedAtIso))+2*60000;
 const run=(opts={})=>buildStrategicReport(yahoo(),edge(),league(),{now:now(),simulations:900,...opts});
 test('Brock-only evidence validates 32 actual league results and all 8 standings and 20 fixtures',()=>{
@@ -102,7 +102,7 @@ test('Source aging hides actionable available players but preserves labeled hist
  assert.ok(aged.calibration.matchups===32);
 });
 test('Intel sidecar public data excludes sensitive owner metadata and requires exact records',()=>{
- const s=readFileSync('fantasy/intelligence.json','utf8');
+ const s=readFileSync('fantasy/tests/fixtures/historical-week10/intelligence.json','utf8');
  assert.ok(s.length<250000);
  assert.doesNotMatch(s,/ownerId|ownerName|email|clientSecret|accessToken|refreshToken|cookie|password/i);
  const i=league();assert.deepEqual(Object.keys(i.teams.map(x=>x.id).reduce((m,id)=>({...m,[id]:true}),{})).sort(),['1','2','3','4','5','6','7','8']);
