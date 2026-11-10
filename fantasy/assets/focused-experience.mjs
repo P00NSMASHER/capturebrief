@@ -32,9 +32,10 @@ export function focusHome({team,genius,model,currentWeek}){
 const line=(label,body,tone='neutral')=>'<div class="focus-move focus-move--'+esc(tone)+'"><span>'+esc(label)+'</span><strong>'+esc(body)+'</strong></div>';
 const rosterRow=p=>'<div class="focus-roster-row"><span>'+esc(p.slot||'—')+'</span><strong>'+esc(p.name)+'</strong>'+
  '<small>'+esc(p.position||'')+(p.injury?' · '+esc(p.injury):'')+'</small></div>';
-export function focusLineup({team,model}){
+export function focusLineup({team,model,mode='balanced'}){
  const ready=model?.ready&&model.quality?.yahooFresh&&model.lineups?.balanced?.available;
- const best=model?.lineups?.balanced;
+ const selected=['safe','balanced','upside'].includes(mode)?mode:'balanced';
+ const best=model?.lineups?.[selected];
  const blocks=[];
  if(ready){
   const changedOut=(best.outPlayers||[]).filter(x=>valid(x));
@@ -51,6 +52,9 @@ export function focusLineup({team,model}){
   }
   for(const p of inPlayers)blocks.push(line('3 · START',p.name+' at '+p.slot,'in'));
  }
+ const modes='<div class="focus-scenario-modes" role="group" aria-label="Lineup risk preference">'+
+ [['safe','Cautious'],['balanced','Balanced'],['upside','Upside']].map(([id,label])=>
+ '<button type="button" data-edge-mode="'+id+'" aria-pressed="'+(selected===id)+'">'+label+'</button>').join('')+'</div>';
  const summary=ready?'<div class="focus-lineup-metrics"><div><span>CURRENT MODEL</span><strong>'+n(best.currentScore,1)+'</strong></div>'+
  '<div><span>BEST LEGAL SLOTS</span><strong>'+n(best.mean,1)+'</strong></div>'+
  '<div><span>ESTIMATED DIFFERENCE</span><strong>'+signed(best.gain,1)+'</strong></div></div>':'';
@@ -61,7 +65,7 @@ export function focusLineup({team,model}){
  const starters=team.roster.filter(p=>!['BN','BE','BENCH','IR','IR+','NA','TAXI'].includes(p.slot));
  const reserves=team.roster.filter(p=>!starters.includes(p));
  return card('focus-lineup',heading('START / SIT','Only the changes that affect your next score')+
- (ready?note():'')+summary+action+
+ (ready?modes+note():'')+summary+action+
  '<details class="focus-secondary"><summary>See the '+starters.length+' starting slots at capture '+uiIcon('chevron')+'</summary>'+
  '<div class="focus-roster">'+starters.map(rosterRow).join('')+'</div></details>'+
  '<details class="focus-secondary"><summary>Bench and reserve ('+reserves.length+') '+uiIcon('chevron')+'</summary>'+
@@ -85,7 +89,7 @@ export function focusPlayers({team,genius,model,filter='ALL'}){
  }).join('');
  const shortages=gap?
  '<div class="focus-need"><span>HIGHEST-COST ROSTER GAP</span>'+
- '<strong>Week '+esc(gap.week)+': zero healthy TE options unless the roster changes</strong>'+
+ '<strong>Week '+esc(gap.week)+': no rostered TE with an NFL game unless the roster changes</strong>'+
  '<p>Both saved tight ends share an NFL bye. Solve the coverage gap before a low-impact speculative pickup.</p></div>':
  empty('No verified single-position zero was found in the current supported bye calendar.');
  const marketNote=ready?'The Yahoo player pool was verified at capture; recheck before acting.':'Yahoo availability or model is outdated. No acquisition is recommended.';
