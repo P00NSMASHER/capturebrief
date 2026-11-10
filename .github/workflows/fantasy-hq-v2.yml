@@ -111,6 +111,14 @@ jobs:
             exit 1
           fi
           echo 'Browser smoke passed: archived Coach 3-paragraph recap without actionable advice'
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=25000 --window-size=390,844 --dump-dom "http://127.0.0.1:8797/capturebrief/fantasy/tests/edge-aging-browser.html" > /tmp/fantasy-edge-aging.html 2>/tmp/chrome-stderr.log
+          if ! grep -Fq 'EDGE_AGING_PASS' /tmp/fantasy-edge-aging.html; then
+            echo "::error::Aging Yahoo provider was presented as currently actionable or AI research failed"
+            grep -o 'EDGE_AGING_FAIL[^<]*' /tmp/fantasy-edge-aging.html || true
+            exit 1
+          fi
+          echo 'Browser smoke passed: independently verified forecast research with no stale Yahoo waiver claims'
+
 
 
           mkdir -p fantasy/screenshots
