@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3">
 <link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1">
-<link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2"><link rel="stylesheet" href="/capturebrief/fantasy/assets/edge-v1.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/strategy-v1.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/future-v1.css?v=1">
 <title>Brock Coach Archived Read-Only Acceptance</title></head>
 <body><div id="root">Testing archived Yahoo evidence…</div>
 <script type="module">
@@ -17,7 +17,7 @@ try{
  window.fetch=(url,opts)=>String(url).includes('/fantasy/data.json?')?
   Promise.resolve(new Response(JSON.stringify(raw),{status:200,headers:{'Content-Type':'application/json'}})):
   realFetch(url,opts);
- await import('/capturebrief/fantasy/assets/app-v2.mjs?v=7');
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=10');
  const until=async(check)=>{
   for(let i=0;i<100;i++){if(check())return true;await new Promise(r=>setTimeout(r,30))}
   return false
