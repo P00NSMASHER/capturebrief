@@ -6,7 +6,7 @@ const read=p=>JSON.parse(readFileSync(p,'utf8'));
 const yahoo=()=>read('fantasy/data.json');
 const edge=()=>read('fantasy/edge.json');
 const league=()=>read('fantasy/intelligence.json');
-const now=()=>Date.parse(league().capturedAtIso)+2*60000;
+const now=()=>Math.max(Date.parse(league().capturedAtIso),Date.parse(yahoo().syncedAtIso),Date.parse(edge().observedAtIso))+2*60000;
 const run=(opts={})=>buildStrategicReport(yahoo(),edge(),league(),{now:now(),simulations:900,...opts});
 test('Brock-only evidence validates 32 actual league results and all 8 standings and 20 fixtures',()=>{
  const m=run();
