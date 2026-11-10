@@ -173,7 +173,7 @@ export function analyzeEdge(snapshot,edge,{now=Date.now(),mode='balanced'}={}){
  if(!Number.isInteger(edge.week)||edge.week<snapshot.week||edge.week>snapshot.week+1)
   return fail('The AI predictions apply to a different fantasy week.');
  const capture=sourceDate(snapshot.syncedAtIso),observed=sourceDate(edge.observedAtIso),based=sourceDate(edge.yahooCapturedAtIso);
- if(capture===null||observed===null||based===null||capture>now+300_000||observed>now+300_000)
+ if(capture===null||observed===null||based===null||capture<based||capture>now+300_000||observed>now+300_000)
   return fail('A verified capture timestamp is missing or invalid.');
  if((now-observed)/3600000>36||observed<based||Math.abs(observed-based)>72*3600000)
   return fail('AI predictions are older than the accepted 36-hour decision window.');
