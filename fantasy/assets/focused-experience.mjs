@@ -32,7 +32,22 @@ export function focusHome({team,genius,model,currentWeek}){
 const line=(label,body,tone='neutral')=>'<div class="focus-move focus-move--'+esc(tone)+'"><span>'+esc(label)+'</span><strong>'+esc(body)+'</strong></div>';
 const rosterRow=p=>'<div class="focus-roster-row"><span>'+esc(p.slot||'—')+'</span><strong>'+esc(p.name)+'</strong>'+
  '<small>'+esc(p.position||'')+(p.injury?' · '+esc(p.injury):'')+'</small></div>';
-export function focusLineup({team,model,mode='balanced'}){
+export function focusLineup({team,model,mode='balanced',privateOptimizer=null}){
+ // Private, user-supplied complete projection sets retain the original exact
+ // assignment functionality, without invoking Yahoo or a different league.
+ if(privateOptimizer?.available){
+  const best=privateOptimizer;
+  const assignments=best.assignments||[];
+  const projected='<div class="focus-lineup-metrics">'+
+   '<div><span>MAXIMIZED PROJECTED POINTS</span><strong>'+n(best.score,2)+'</strong></div>'+
+   '<div><span>CURRENT STARTERS</span><strong>'+n(best.currentScore,2)+'</strong></div>'+
+   '<div><span>ESTIMATED DIFFERENCE</span><strong>'+signed(best.gain,2)+'</strong></div></div>'+
+   '<div class="focus-move-list">'+assignments.map(a=>
+    line(a.slot,a.player.name+' · '+n(a.player.projection,1)+' projected','in')).join('')+'</div>';
+  return card('focus-lineup',heading('PRIVATE PROJECTIONS / EXACT SLOTS','Your best projected configuration')+
+   '<span class="focus-model-tag">VERIFIED PRIVATE FILE · NOT LIVE YAHOO</span>'+projected+
+   sourceLine('PROVENANCE','Exact optimization from the complete private projection file; no transactions or lineup changes are submitted.'));
+ }
  const ready=model?.ready&&model.quality?.yahooFresh&&model.lineups?.balanced?.available;
  const selected=['safe','balanced','upside'].includes(mode)?mode:'balanced';
  const best=model?.lineups?.[selected];
