@@ -75,12 +75,19 @@ test('iPhone-sized CSS includes safe-area navigation, reduced motion, good touch
  assert.match(c,/focus-visible/);
  assert.match(c,/min-height:44px/);
  assert.match(c,/\.club-grid/);
+ const future=readFileSync('fantasy/assets/future-v1.css','utf8');
+ assert.match(future,/prefers-reduced-motion:reduce/);
+ assert.match(future,/\.bottomnav/);
+ assert.match(future,/\.teamhero/);
+ assert.match(future,/\.edge-hero/);
+ assert.match(future,/\.strat-card/);
  for(const path of ['fantasy/index.html','fantasy/brock/index.html']){
   const h=readFileSync(path,'utf8');
   assert.match(h,/premium-v3\.css\?v=1/);
   assert.match(h,/coach-v1\.css\?v=2/);
   assert.match(h,/edge-v1\.css\?v=1/);
   assert.match(h,/strategy-v1\.css\?v=1/);
-  assert.match(h,/app-v2\.mjs\?v=9/);
+  assert.match(h,/future-v1\.css\?v=1/);
+  assert.match(h,/app-v2\.mjs\?v=10/);
  }
 });
