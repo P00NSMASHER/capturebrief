@@ -178,7 +178,15 @@ export function analyzeEdge(snapshot,edge,{now=Date.now(),mode='balanced'}={}){
  if((now-observed)/3600000>36||observed<based||Math.abs(observed-based)>72*3600000)
   return fail('AI predictions are older than the accepted 36-hour decision window.');
  const f=getFreshness(snapshot.syncedAtIso,now);
- if(!f.actionable)return fail('The Yahoo roster snapshot needs refreshing before these decisions are actionable.');
+ const independentRosterRead=sourceDate(edge.rosterVerifiedAtIso);
+ const independentlyCovered=independentRosterRead!==null&&independentRosterRead<=now+300000&&
+  independentRosterRead>=based&&now-independentRosterRead<=24*3600000&&
+  Number.isInteger(edge.rosterCrossCheckCount)&&edge.rosterCrossCheckCount>=15&&
+  edge.rosterCrossCheckCount<=team.roster.length;
+ const yahooAgeHours=Math.max(0,(now-capture)/3600000);
+ if(!f.actionable&&(!independentlyCovered||yahooAgeHours>72))
+  return fail('No recent matching FantasyBot roster verification is available for this older Yahoo capture.');
+ const yahooFresh=f.actionable;
  if(!Array.isArray(edge.rosterProjections)||edge.rosterProjections.length!==team.roster.length)
   return fail('AI roster is not synchronized to Yahoo. No lineup recommendation will be made.');
  const yids=team.roster.map(p=>String(p.id)),mids=edge.rosterProjections.map(p=>String(p.id));
@@ -201,7 +209,9 @@ export function analyzeEdge(snapshot,edge,{now=Date.now(),mode='balanced'}={}){
  const calendar=edge.teamByeWeeks||{};
  const byes=investigateByes(team.roster,modelWeek,calendar);
  const sourceTeam={...team,_capture:snapshot.syncedAtIso};
- const waiver=evaluateWaivers(players,sourceTeam,edge,slots,lineups.balanced);
+ const waiver=yahooFresh?evaluateWaivers(players,sourceTeam,edge,slots,lineups.balanced):
+  {positive:[],watches:[],covered:0,total:team.availablePlayers?.length||0,
+   description:'Yahoo available-player inventory is older than six hours. No acquisition recommendation is made.'};
  const opp=(team.upcomingMatchups||[]).filter(x=>Number.isInteger(x.week)&&x.week>=snapshot.week&&x.week<=modelWeek+4&&typeof x.opponent==='string')
  .map(x=>{
   const power=rankForPower(edge.leaguePower||[],x.opponent);
@@ -225,7 +235,8 @@ export function analyzeEdge(snapshot,edge,{now=Date.now(),mode='balanced'}={}){
   coverage:{all:players.length,projected:players.filter(p=>p.forecast!==null).length,
     eligible:players.filter(active).length,eligibleCovered:players.filter(p=>active(p)&&p.forecast!==null).length,
     available:waiver.covered,availableTotal:waiver.total},
-  quality:{label:lineups.balanced.available?'Complete non-IR Week '+modelWeek+' projection coverage':'Partial projection coverage',
+  quality:{yahooFresh,yahooAgeHours:round(yahooAgeHours,1),independentRosterAt:edge.rosterVerifiedAtIso||null,
+    label:lineups.balanced.available?'Complete non-IR Week '+modelWeek+' projection coverage':'Partial projection coverage',
     notes:['FantasyBot PPR predictions, not official Yahoo league-bonus-adjusted numbers.',
       'One-week projection errors can be large; ranges are model illustrations, not validated percentiles.',
       'Player, waiver, lock and injury statuses require live Yahoo checks.',
