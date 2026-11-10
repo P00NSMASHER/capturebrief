@@ -7,6 +7,7 @@ import {analyzeEdge} from './edge-engine.mjs';
 const ok=n=>typeof n==='number'&&Number.isFinite(n);
 const prob=n=>ok(n)&&n>=0&&n<=1;
 const safe=n=>ok(n)&&n>=0&&n<=600;
+const seasonTotal=n=>ok(n)&&n>=0&&n<=10000;
 const round=(n,d=1)=>Math.round((n+Number.EPSILON)*10**d)/10**d;
 const pct=(n,d=1)=>round(n*100,d);
 const seedRandom=x=>{let a=x>>>0||1;return()=>{a^=a<<13;a^=a>>>17;a^=a<<5;return(a>>>0)/4294967296}};
@@ -27,7 +28,7 @@ function validateSource(y,edge,intel,now){
  !Array.isArray(intel.week9)||intel.week9.length!==4||!Array.isArray(intel.futureSchedule)||intel.futureSchedule.length!==20)
    return 'The full league evidence set is missing';
  const expected=['1','2','3','4','5','6','7','8'];
- if(intel.teams.some(t=>!expected.includes(String(t.id))||!Number.isInteger(t.wins)||!Number.isInteger(t.losses)||!safe(t.pointsFor)||!safe(t.pointsAgainst)&&t.pointsAgainst<0)||
+ if(intel.teams.some(t=>!expected.includes(String(t.id))||!Number.isInteger(t.wins)||!Number.isInteger(t.losses)||!seasonTotal(t.pointsFor)||!seasonTotal(t.pointsAgainst))||
  new Set(intel.teams.map(t=>String(t.id))).size!==8)return 'League standings invalid';
  if(!intel.teams.some(x=>String(x.id)==='2'&&x.wins+'-'+x.losses===String(t.record).replace('–','-')))return 'League data conflicts with Brock record';
  for(const [arr,needsActual] of [[intel.history,true],[intel.week9,true],[intel.futureSchedule,false]]){
