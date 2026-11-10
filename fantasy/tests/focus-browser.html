@@ -1,0 +1,138 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Brock Hard focused-five-tab acceptance</title>
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/edge-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/strategy-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/future-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/genius-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/focus-v1.css?v=1">
+</head><body><div id="root">Verifying the focused Brock experience…</div>
+<script type="module">
+try{
+ const fetchReal=window.fetch.bind(window);
+ const [raw,edge,intel]=await Promise.all([
+  fetchReal('/capturebrief/fantasy/data.json').then(r=>r.json()),
+  fetchReal('/capturebrief/fantasy/edge.json').then(r=>r.json()),
+  fetchReal('/capturebrief/fantasy/intelligence.json').then(r=>r.json())
+ ]);
+ if(raw.schemaVersion!==3||Object.keys(raw.teams||{}).join(',')!=='brock'||
+  raw.teams.brock.teamId!=='2'||edge.teamId!=='2'||intel.teamId!=='2'||intel.history.length!==32)
+  throw Error('Brock-only fixture identity failed');
+ const now=Date.now();
+ raw.syncedAtIso=new Date(now).toISOString();
+ edge.observedAtIso=new Date(now).toISOString();
+ edge.yahooCapturedAtIso=new Date(now-30000).toISOString();
+ edge.rosterVerifiedAtIso=new Date(now).toISOString();
+ intel.capturedAtIso=new Date(now).toISOString();
+ localStorage.removeItem('fantasy-hq-public-last-good-v2');
+ localStorage.setItem('fantasy-hq-private-v3',JSON.stringify(raw));
+ window.fetch=(url,opts)=>{
+  const u=String(url);
+  if(u.includes('/fantasy/edge.json?'))
+    return Promise.resolve(new Response(JSON.stringify(edge),{status:200,headers:{'Content-Type':'application/json'}}));
+  if(u.includes('/fantasy/intelligence.json?'))
+    return Promise.resolve(new Response(JSON.stringify(intel),{status:200,headers:{'Content-Type':'application/json'}}));
+  return fetchReal(url,opts);
+ };
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=12');
+ const until=async fn=>{
+  for(let i=0;i<130;i++){if(fn())return true;await new Promise(ok=>setTimeout(ok,35))}
+  return false;
+ };
+ const tab=id=>document.querySelector('button[data-tab="'+id+'"]')?.click();
+ const content=()=>document.querySelector('#tabPanel')?.textContent||'';
+ const unique=()=>{
+  if(document.querySelectorAll('#tabPanel .focus-panel').length!==1)
+   throw Error('The active tab must have exactly one primary intelligence panel');
+  if(document.querySelector('#tabPanel .genius-panel, #tabPanel .strat-card, #tabPanel .edge-shell, #tabPanel .coach-section'))
+   throw Error('Legacy stacked analytics panels were not removed');
+ };
+ if(!await until(()=>document.querySelector('.focus-home')))throw Error('Home focus card missing');
+ unique();
+ if(!document.querySelector('.matchup-panel .match-team.against svg.club-emblem'))
+  throw Error('Matchup scoreboard/opponent logo missing');
+ if(document.querySelectorAll('.bottomnav button').length!==5)throw Error('Expected five tab buttons');
+ if(!content().includes('Make one move that matters'))throw Error('Home should identify one decision');
+ if(content().includes('How strong are you really?')||content().includes('Make the next move count'))
+  throw Error('Duplicate historical analysis was retained on Home');
+ const homeLabel=document.querySelector('.focus-home .focus-lead-action strong')?.textContent;
+ if(!homeLabel||homeLabel.length<8)throw Error('Home recommendation empty');
+ tab('lineup');
+ if(!await until(()=>document.querySelector('.focus-lineup')))throw Error('Lineup focus view missing');
+ unique();
+ if(document.querySelectorAll('.focus-scenario-modes button').length!==3)
+  throw Error('Three distinct risk preferences must remain available');
+ if(!document.querySelector('.focus-move--shift')?.textContent.includes('Rhamondre Stevenson'))
+  throw Error('Legal RB/FLEX reshuffle missing');
+ if(!document.querySelector('.focus-move--in')?.textContent.includes('Zay Flowers'))
+  throw Error('Model promoted receiver is missing');
+ document.querySelector('[data-edge-mode="upside"]')?.click();
+ if(!await until(()=>document.querySelector('[data-edge-mode="upside"][aria-pressed="true"]')))
+  throw Error('Upside mode did not apply');
+ if(document.querySelector('.focus-lineup .genius-player-signal'))throw Error('Duplicated model signal panel');
+ tab('waivers');
+ if(!await until(()=>document.querySelector('.focus-players')))throw Error('Players focus view missing');
+ unique();
+ if(!content().includes('Week 13'))throw Error('Multi-week TE gap missing');
+ if(!content().includes('Woody Marks')||!content().includes('Travis Kelce'))
+  throw Error('Specific, sourced trade candidate missing');
+ const pool=document.querySelector('details[data-focus-pool]');
+ if(!pool)throw Error('Yahoo source-linked player list missing');
+ pool.open=true;
+ const all=document.querySelectorAll('.focus-market-row').length;
+ if(all!==25)throw Error('Expected 25 Yahoo-listed candidates, got '+all);
+ document.querySelector('[data-filter="WR"]')?.click();
+ if(!await until(()=>document.querySelector('[data-filter="WR"][aria-pressed="true"]')))
+  throw Error('WR filter not selected');
+ if(!document.querySelector('details[data-focus-pool][open]'))
+  throw Error('Player pool collapsed after selecting a position');
+ const wr=document.querySelectorAll('.focus-market-row').length;
+ if(wr<=0||wr>=all)throw Error('Position filter no longer reduces the pool');
+ if(content().includes('How strong are you really?'))throw Error('Players repeats Home strength widget');
+ tab('lab');
+ if(!await until(()=>document.querySelector('.focus-league')))throw Error('League focus view missing');
+ unique();
+ if(document.querySelectorAll('.focus-power-row').length!==8)throw Error('Eight team rankings not shown');
+ if(document.querySelectorAll('.focus-power-row svg.club-emblem').length!==8)
+  throw Error('Every league team must show its distinct crest');
+ if(!content().includes('Records do not equal roster strength'))throw Error('League purpose unclear');
+ if(document.querySelector('.strat-odds-table'))throw Error('Playoff scenario duplicated outside Coach');
+ if(!content().includes('20 held-out games'))throw Error('Out-of-sample evidence missing');
+ tab('coach');
+ if(!await until(()=>document.querySelector('.focus-coach')))throw Error('Coach view missing');
+ unique();
+ if(document.querySelectorAll('button[data-genius-realization]').length!==5||
+    document.querySelectorAll('button[data-genius-field]').length!==2)
+  throw Error('Five gain assumptions and two playoff formats must still work');
+ const paragraphs=document.querySelectorAll('.focus-brief>p');
+ if(paragraphs.length!==3)throw Error('Coach closing report requires exactly 3 paragraphs');
+ document.querySelector('[data-genius-realization="0"]')?.click();
+ if(!await until(()=>document.querySelector('[data-genius-realization="0"][aria-pressed="true"]')))
+  throw Error('No-gain scenario failed');
+ document.querySelector('[data-genius-field="6"]')?.click();
+ if(!await until(()=>document.querySelector('[data-genius-field="6"][aria-pressed="true"]')))
+  throw Error('Six-team playoff scenario failed');
+ if(!document.querySelector('.focus-sim-result')?.textContent.includes('TOP 6'))
+  throw Error('Six-team conditional result did not refresh');
+ if(document.querySelector('.edge-shell, .coach-hero, .coach-insights'))
+  throw Error('Coach still stacks old long-form models');
+ const overflow=document.documentElement.scrollWidth-window.innerWidth;
+ if(overflow>2)throw Error('Horizontal overflow on 390px iPhone: '+overflow+'px');
+ if(document.body.textContent.includes('Quick Snap Jamison')||document.body.textContent.includes('Highlight Reel Jamison'))
+  throw Error('Other privately owned teams leaked');
+ tab('overview');
+ if(!await until(()=>document.querySelector('.focus-home')))throw Error('Return Home navigation failed');
+ document.querySelector('.focus-home .focus-cta')?.click();
+ if(!await until(()=>document.querySelector('.focus-lineup')))
+  throw Error('Home recommendation does not navigate to the exact decision');
+ const el=document.createElement('strong');el.id='focus-browser-qa';
+ el.textContent='FOCUS_BROWSER_PASS · one purpose per tab · all five interactive screens · no duplicated analytics · archived and privacy safety';
+ document.body.appendChild(el);
+}catch(e){
+ const el=document.createElement('strong');el.id='focus-browser-qa';
+ el.textContent='FOCUS_BROWSER_FAIL: '+String(e.message||e);document.body.appendChild(el);
+}
+</script></body></html>
