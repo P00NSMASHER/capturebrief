@@ -156,7 +156,7 @@ export function geniusCoach(g,{field=4,realization=.5}={}){
  '<div class="genius-titleline">'+status(g)+badge('EXPLAINABLE SCENARIO','violet')+'</div>'+
  '<p class="genius-lead">Optimizing the roster and winning the matchup are different questions. Test how the estimated advantage changes if only part of a projected gain becomes real.</p>'+
  controls+fields+
- '<div class="genius-match-band"><div><span>Yahoo's W10 pregame gap</span><strong>'+signed(m?.yahooMargin,1)+' pts</strong></div>'+
+ '<div class="genius-match-band"><div><span>Yahoo’s W10 pregame gap</span><strong>'+signed(m?.yahooMargin,1)+' pts</strong></div>'+
  '<div><span>Historical outcome scenario frequency</span><strong>'+fixed(m?.historicalWinScenario,1)+'%</strong></div>'+
  '<div><span>10th–90th-percentile score margin</span><strong>'+fixed(m?.marginBand.low,0)+' to '+fixed(m?.marginBand.high,0)+'</strong></div></div>'+
  '<div class="genius-credibility"><div>'+badge('HOLDOUT AUDIT','cyan')+
