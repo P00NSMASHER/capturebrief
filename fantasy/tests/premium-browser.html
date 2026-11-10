@@ -1,16 +1,23 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3">
-<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2"><link rel="stylesheet" href="/capturebrief/fantasy/assets/edge-v1.css?v=1">
 <title>Premium Fantasy HQ UI Acceptance</title></head>
 <body><div id="root">Checking premium league interface…</div>
 <script type="module">
 try{
- const raw=await (await fetch('/capturebrief/fantasy/data.json',{cache:'no-store'})).json();
+ const realFetch=window.fetch.bind(window);
+ const raw=await (await realFetch('/capturebrief/fantasy/data.json',{cache:'no-store'})).json();
+ const edge=await (await realFetch('/capturebrief/fantasy/edge.json',{cache:'no-store'})).json();
+ edge.observedAtIso=new Date().toISOString();
+ edge.yahooCapturedAtIso=new Date(Date.now()-30000).toISOString();
+ window.fetch=(u,opts)=>String(u).includes('/fantasy/edge.json?')?
+   Promise.resolve(new Response(JSON.stringify(edge),{status:200,headers:{'Content-Type':'application/json'}})):
+   realFetch(u,opts);
  if(raw.schemaVersion!==3||Object.keys(raw.teams||{}).join(',')!=='brock')throw Error('Brock-only fixture invalid');
  raw.syncedAtIso=new Date().toISOString();
  localStorage.setItem('fantasy-hq-private-v3',JSON.stringify(raw));
- await import('/capturebrief/fantasy/assets/app-v2.mjs?v=7');
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=8');
  const until=async(fn)=>{
   for(let i=0;i<100;i++){if(fn())return true;await new Promise(r=>setTimeout(r,30))}
   return false
@@ -40,6 +47,26 @@ try{
 
  document.querySelector('[data-tab="coach"]').click();
  if(!await until(()=>document.querySelector('.coach-hero')))throw Error('Coach hero missing');
+ if(!await until(()=>document.querySelector('.edge-hero')))throw Error('Predictive Edge hero missing');
+ if(!document.getElementById('root').textContent.includes('Replace Jonah Coleman'))
+  throw Error('Critical Denver Week 10 bye is not prioritized');
+ if(!document.getElementById('root').textContent.includes('no available rostered TE'))
+  throw Error('Week 13 tight-end double bye was not detected');
+ if(!document.querySelector('.edge-mode button[data-edge-mode="upside"]'))
+  throw Error('Risk scenario switches missing');
+ document.querySelector('[data-edge-mode="upside"]').click();
+ if(!document.querySelector('[data-edge-mode="upside"][aria-pressed="true"]'))
+  throw Error('Upside scenario does not update');
+ document.querySelector('[data-edge-mode="balanced"]').click();
+ if(!document.querySelector('[data-edge-mode="balanced"][aria-pressed="true"]'))
+  throw Error('Balanced scenario does not update');
+ if(!document.querySelector('.edge-rival-list')||!document.querySelector('.edge-waiver-list'))
+  throw Error('Opponent or waiver intelligence failed to render');
+ if(document.querySelectorAll('.edge-brief-paragraphs p').length!==3)
+  throw Error('Predictive three-paragraph coach briefing incomplete');
+ if(!document.querySelector('.edge-public-note')?.textContent.includes('public'))
+  throw Error('Public strategy exposure warning not shown');
+
  if(document.querySelectorAll('.coach-section').length!==5)throw Error('Five Coach insight sections missing');
  const cards=document.querySelectorAll('.coach-insight');
  if(cards.length<7)throw Error('Coach did not render the full checklist');
