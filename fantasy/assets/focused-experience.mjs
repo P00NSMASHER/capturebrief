@@ -71,7 +71,7 @@ export function focusLineup({team,model,mode='balanced'}){
  '<details class="focus-secondary"><summary>Bench and reserve ('+reserves.length+') '+uiIcon('chevron')+'</summary>'+
  '<div class="focus-roster">'+reserves.map(rosterRow).join('')+'</div></details>');
 }
-export function focusPlayers({team,genius,model,filter='ALL'}){
+export function focusPlayers({team,genius,model,filter='ALL',poolOpen=false}){
  const ready=genius?.ready&&!historical(model)&&genius.sourceGrade==='source-checked-model';
  const gap=genius?.roster?.urgentTe;
  const trade=(genius?.tradeCandidates||[]).find(t=>t.isSupported&&t.opponentNeed&&t.opponentSurplus);
@@ -99,7 +99,7 @@ export function focusPlayers({team,genius,model,filter='ALL'}){
  '<strong>'+esc(trade.give)+' ⇄ '+esc(trade.receive)+'</strong>'+
  '<p>Opponent '+esc(trade.toTeam)+' has the matching positional need/surplus. Third-party market units: '+
  esc(trade.marketGive)+' / '+esc(trade.marketReceive)+'. No acceptance probability is established.</p></div>':'')+
- '<details class="focus-secondary"><summary>Browse '+all.length+' Yahoo-listed players at capture '+uiIcon('chevron')+'</summary>'+
+ '<details class="focus-secondary" data-focus-pool'+(poolOpen?' open':'')+'><summary>Browse '+all.length+' Yahoo-listed players at capture '+uiIcon('chevron')+'</summary>'+
  '<div class="filterbar focus-filters" role="group" aria-label="Filter by player position">'+positions.map(x=>
  '<button type="button" data-filter="'+x+'" aria-pressed="'+(x===filter)+'" class="'+(x===filter?'chosen':'')+'">'+
  (x==='ALL'?'All':x)+'</button>').join('')+'</div>'+
