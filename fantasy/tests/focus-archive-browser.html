@@ -1,0 +1,60 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Brock Hard archived source safety</title>
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/styles-v2.css?v=3">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/edge-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/strategy-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/future-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/genius-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/focus-v1.css?v=1">
+</head><body><div id="root">Checking archive safety…</div>
+<script type="module">
+try{
+ const fetchOrig=window.fetch.bind(window);
+ const [raw,edge,intel]=await Promise.all([
+  fetchOrig('/capturebrief/fantasy/data.json').then(r=>r.json()),
+  fetchOrig('/capturebrief/fantasy/edge.json').then(r=>r.json()),
+  fetchOrig('/capturebrief/fantasy/intelligence.json').then(r=>r.json())
+ ]);
+ if(Object.keys(raw.teams).join(',')!=='brock')throw Error('Wrong team scope');
+ raw.syncedAtIso=new Date(Date.now()-12*3600000).toISOString();
+ edge.observedAtIso=new Date().toISOString();
+ edge.yahooCapturedAtIso=new Date(Date.now()-12*3600000-30000).toISOString();
+ edge.rosterVerifiedAtIso=new Date().toISOString();
+ intel.capturedAtIso=new Date().toISOString();
+ localStorage.removeItem('fantasy-hq-private-v3');
+ localStorage.removeItem('fantasy-hq-public-last-good-v2');
+ window.fetch=(url,opts)=>{
+  const u=String(url);
+  const fake=obj=>Promise.resolve(new Response(JSON.stringify(obj),{status:200,headers:{'Content-Type':'application/json'}}));
+  if(u.includes('/fantasy/data.json?'))return fake(raw);
+  if(u.includes('/fantasy/edge.json?'))return fake(edge);
+  if(u.includes('/fantasy/intelligence.json?'))return fake(intel);
+  return fetchOrig(url,opts);
+ };
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=12');
+ const until=async fn=>{for(let i=0;i<110;i++){if(fn())return true;await new Promise(r=>setTimeout(r,35))}return false};
+ if(!await until(()=>document.querySelector('.archived-fallback')))
+  throw Error('Stale Yahoo capture must display archive warning');
+ for(const t of ['overview','lineup','waivers','lab','coach']){
+  document.querySelector('button[data-tab="'+t+'"]')?.click();
+  if(!await until(()=>document.querySelector('.archived-fallback')))throw Error('Archive missing on '+t);
+  if(document.querySelector('.focus-lineup,.focus-players,.focus-home,.focus-league,.focus-coach'))
+   throw Error('A stale Yahoo snapshot exposed current decisions on '+t);
+  if(document.querySelector('[data-genius-field],[data-genius-realization],[data-filter]'))
+   throw Error('Current controls visible on stale tab '+t);
+  if(!document.querySelector('.archived-fallback [data-action="refresh"]'))
+   throw Error('Recovery button missing on '+t);
+ }
+ if(document.body.textContent.includes('Quick Snap Jamison')||document.body.textContent.includes('Highlight Reel Jamison'))
+  throw Error('Other owned team leaked');
+ const mark=document.createElement('strong');mark.id='focus-archive-qa';
+ mark.textContent='FOCUS_ARCHIVE_PASS · five tabs fail closed · no current move recommendations';
+ document.body.append(mark);
+}catch(e){
+ const mark=document.createElement('strong');mark.id='focus-archive-qa';
+ mark.textContent='FOCUS_ARCHIVE_FAIL: '+String(e.message||e);document.body.append(mark);
+}
+</script></body></html>
