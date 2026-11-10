@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="/capturebrief/fantasy/assets/premium-v3.css?v=1">
 <link rel="stylesheet" href="/capturebrief/fantasy/assets/coach-v1.css?v=2">
 <link rel="stylesheet" href="/capturebrief/fantasy/assets/edge-v1.css?v=1">
-<link rel="stylesheet" href="/capturebrief/fantasy/assets/strategy-v1.css?v=1">
+<link rel="stylesheet" href="/capturebrief/fantasy/assets/strategy-v1.css?v=1"><link rel="stylesheet" href="/capturebrief/fantasy/assets/future-v1.css?v=1">
 </head><body><div id="root">Checking strategic fantasy app…</div>
 <script type="module">
 try{
@@ -31,13 +31,20 @@ try{
   if(u.includes('/fantasy/intelligence.json?'))return Promise.resolve(new Response(JSON.stringify(intel),{status:200,headers:{'Content-Type':'application/json'}}));
   return fetchOrig(url,opts);
  };
- await import('/capturebrief/fantasy/assets/app-v2.mjs?v=9');
+ await import('/capturebrief/fantasy/assets/app-v2.mjs?v=10');
  const until=async fn=>{
   for(let i=0;i<130;i++){if(fn())return true;await new Promise(r=>setTimeout(r,35))}
   return false
  };
  const hit=label=>document.querySelector('button[data-tab="'+label+'"]')?.click();
  if(!await until(()=>document.querySelector('.strat-card--home .strat-priority')))throw Error('Home priorities missing');
+ const futuristic=getComputedStyle(document.querySelector('.strat-card--home'));
+ if(!futuristic.backgroundImage.includes('gradient'))throw Error('Futuristic HUD gradient missing');
+ if(getComputedStyle(document.querySelector('.bottomnav')).backgroundImage==='none')
+  throw Error('Futuristic bottom nav gradient missing');
+ const ink=getComputedStyle(document.querySelector('.strat-card--home')).color;
+ if(!ink)throw Error('Futuristic information card lacks text color');
+
  if(!document.getElementById('root').textContent.includes('Make the next move count'))throw Error('Home is still score-only');
  if(!document.getElementById('root').textContent.includes('18 of 32'))throw Error('Historical winner accuracy missing');
  hit('lineup');
