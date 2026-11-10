@@ -32,7 +32,7 @@ test('Walk-forward calibration is 20 held-out games and never learns from future
  assert.ok(g.reliability.rollingBrier>0&&g.reliability.rollingBrier<1);
  assert.ok(g.reliability.grouped.reduce((s,r)=>s+r.cases,0)===20);
  assert.match(g.reliability.method,/only earlier weeks/);
- assert.match(g.reliability.caveat,/not validated/);
+ assert.match(g.reliability.caveat,/not validated/i);
 });
 test('Opponent uncertainty uses paired historical Yahoo forecast errors, not arbitrary 25-point sigma',()=>{
  const g=run(),m=g.matchup;
