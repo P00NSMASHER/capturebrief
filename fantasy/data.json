@@ -2,8 +2,8 @@
   "schemaVersion": 3,
   "season": 2026,
   "provider": "Yahoo",
-  "week": 9,
-  "syncedAtIso": "2026-11-10T03:26:15.000Z",
+  "week": 10,
+  "syncedAtIso": "2026-11-10T11:29:45.113Z",
   "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
   "captureType": "scheduled-provider-read",
   "teams": {
@@ -15,15 +15,15 @@
       "leagueId": "470.l.290846",
       "teamId": "2",
       "leagueUrl": "https://football.fantasysports.yahoo.com/f1/290846",
-      "record": "6-2",
+      "record": "7-2",
       "rank": "1 of 8",
       "waiver": "#1",
       "health": "Yahoo roster flags at capture",
       "nextMove": "No verified projected add/drop or lineup move available",
       "nextDetail": "Roster, standings, available players and matchup verified via Flaim. Individual player projections unavailable; no transaction was submitted.",
-      "score": "163.48–127.06",
+      "score": "0–0",
       "scoreState": "Yahoo score at capture",
-      "weekNote": "Week 9 vs Chasing Greatness",
+      "weekNote": "Week 10 vs Josh ❤️creampies",
       "confidence": "Source-backed capture",
       "roster": [
         {
@@ -36,10 +36,10 @@
           ],
           "nflTeam": "Jax",
           "injury": null,
-          "actualPoints": 13.58,
+          "actualPoints": 0,
           "projection": null,
           "cantCut": false,
-          "editable": false,
+          "editable": true,
           "locked": false
         },
         {
@@ -53,27 +53,27 @@
           ],
           "nflTeam": "Dal",
           "injury": null,
-          "actualPoints": 22.4,
+          "actualPoints": 0,
           "projection": null,
           "cantCut": false,
-          "editable": false,
+          "editable": true,
           "locked": false
         },
         {
-          "id": "42730",
-          "name": "Jonah Coleman",
+          "id": "33508",
+          "name": "Rhamondre Stevenson",
           "position": "RB",
           "slot": "RB",
           "eligiblePositions": [
             "RB",
             "W/R/T"
           ],
-          "nflTeam": "Den",
-          "injury": null,
-          "actualPoints": 18.8,
+          "nflTeam": "NE",
+          "injury": "Q",
+          "actualPoints": 0,
           "projection": null,
           "cantCut": false,
-          "editable": false,
+          "editable": true,
           "locked": false
         },
         {
@@ -87,10 +87,10 @@
           ],
           "nflTeam": "Cin",
           "injury": null,
-          "actualPoints": 31.5,
+          "actualPoints": 0,
           "projection": null,
           "cantCut": true,
-          "editable": false,
+          "editable": true,
           "locked": false
         },
         {
@@ -104,10 +104,10 @@
           ],
           "nflTeam": "Min",
           "injury": null,
-          "actualPoints": 5.9,
+          "actualPoints": 0,
           "projection": null,
           "cantCut": true,
-          "editable": false,
+          "editable": true,
           "locked": false
         },
         {
@@ -121,10 +121,10 @@
           ],
           "nflTeam": "LV",
           "injury": null,
-          "actualPoints": 22.3,
+          "actualPoints": 0,
           "projection": null,
           "cantCut": true,
-          "editable": false,
+          "editable": true,
           "locked": false
         },
         {
@@ -138,44 +138,27 @@
           ],
           "nflTeam": "Cin",
           "injury": null,
-          "actualPoints": 20.2,
+          "actualPoints": 0,
           "projection": null,
           "cantCut": false,
-          "editable": false,
-          "locked": false
-        },
-        {
-          "id": "33508",
-          "name": "Rhamondre Stevenson",
-          "position": "RB",
-          "slot": "W/R/T",
-          "eligiblePositions": [
-            "RB",
-            "W/R/T"
-          ],
-          "nflTeam": "NE",
-          "injury": "Q",
-          "actualPoints": 14.8,
-          "projection": null,
-          "cantCut": false,
-          "editable": false,
+          "editable": true,
           "locked": false
         },
         {
           "id": "40039",
           "name": "Zay Flowers",
           "position": "WR",
-          "slot": "BN",
+          "slot": "W/R/T",
           "eligiblePositions": [
             "WR",
             "W/R/T"
           ],
           "nflTeam": "Bal",
           "injury": null,
-          "actualPoints": 5.3,
+          "actualPoints": 0,
           "projection": null,
           "cantCut": false,
-          "editable": false,
+          "editable": true,
           "locked": false
         },
         {
@@ -189,44 +172,10 @@
           ],
           "nflTeam": "Hou",
           "injury": null,
-          "actualPoints": 8.4,
+          "actualPoints": 0,
           "projection": null,
           "cantCut": false,
-          "editable": false,
-          "locked": false
-        },
-        {
-          "id": "40877",
-          "name": "Xavier Worthy",
-          "position": "WR",
-          "slot": "BN",
-          "eligiblePositions": [
-            "WR",
-            "W/R/T"
-          ],
-          "nflTeam": "KC",
-          "injury": "Q",
-          "actualPoints": 10.8,
-          "projection": null,
-          "cantCut": false,
-          "editable": false,
-          "locked": false
-        },
-        {
-          "id": "31056",
-          "name": "Mark Andrews",
-          "position": "TE",
-          "slot": "BN",
-          "eligiblePositions": [
-            "TE",
-            "W/R/T"
-          ],
-          "nflTeam": "Bal",
-          "injury": null,
-          "actualPoints": 3.9,
-          "projection": null,
-          "cantCut": false,
-          "editable": false,
+          "editable": true,
           "locked": false
         },
         {
@@ -240,10 +189,61 @@
           ],
           "nflTeam": "NYJ",
           "injury": null,
-          "actualPoints": 11.7,
+          "actualPoints": 0,
           "projection": null,
           "cantCut": false,
-          "editable": false,
+          "editable": true,
+          "locked": false
+        },
+        {
+          "id": "42730",
+          "name": "Jonah Coleman",
+          "position": "RB",
+          "slot": "BN",
+          "eligiblePositions": [
+            "RB",
+            "W/R/T"
+          ],
+          "nflTeam": "Den",
+          "injury": null,
+          "actualPoints": 0,
+          "projection": null,
+          "cantCut": false,
+          "editable": true,
+          "locked": false
+        },
+        {
+          "id": "40877",
+          "name": "Xavier Worthy",
+          "position": "WR",
+          "slot": "BN",
+          "eligiblePositions": [
+            "WR",
+            "W/R/T"
+          ],
+          "nflTeam": "KC",
+          "injury": "Q",
+          "actualPoints": 0,
+          "projection": null,
+          "cantCut": false,
+          "editable": true,
+          "locked": false
+        },
+        {
+          "id": "31056",
+          "name": "Mark Andrews",
+          "position": "TE",
+          "slot": "BN",
+          "eligiblePositions": [
+            "TE",
+            "W/R/T"
+          ],
+          "nflTeam": "Bal",
+          "injury": null,
+          "actualPoints": 0,
+          "projection": null,
+          "cantCut": false,
+          "editable": true,
           "locked": false
         },
         {
@@ -257,10 +257,10 @@
           ],
           "nflTeam": "NO",
           "injury": null,
-          "actualPoints": 5,
+          "actualPoints": 0,
           "projection": null,
           "cantCut": false,
-          "editable": false,
+          "editable": true,
           "locked": false
         },
         {
@@ -295,7 +295,7 @@
           "actualPoints": 0,
           "projection": null,
           "cantCut": false,
-          "editable": false,
+          "editable": true,
           "locked": false
         },
         {
@@ -308,10 +308,10 @@
           ],
           "nflTeam": "Min",
           "injury": null,
-          "actualPoints": 9,
+          "actualPoints": 0,
           "projection": null,
           "cantCut": false,
-          "editable": false,
+          "editable": true,
           "locked": false
         },
         {
@@ -324,10 +324,10 @@
           ],
           "nflTeam": "NO",
           "injury": null,
-          "actualPoints": 5,
+          "actualPoints": 0,
           "projection": null,
           "cantCut": false,
-          "editable": false,
+          "editable": true,
           "locked": false
         }
       ],
@@ -537,7 +537,7 @@
           "nflTeam": "Min",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 53,
+          "percentOwned": 52,
           "projection": null
         },
         {
@@ -548,7 +548,7 @@
           "nflTeam": "Phi",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-11",
-          "percentOwned": 53,
+          "percentOwned": 52,
           "projection": null
         },
         {
@@ -624,19 +624,19 @@
           "teamKey": "470.l.290846.t.2",
           "teamId": "2",
           "teamName": "Brock Hard & Tee Baggin",
-          "points": 163.48,
-          "projectedPoints": 155.87,
+          "points": 0,
+          "projectedPoints": 143.96,
           "liveProjectedPoints": null,
-          "winProbability": 0.99
+          "winProbability": 0.6
         },
         "away": {
-          "teamKey": "470.l.290846.t.4",
-          "teamId": "4",
-          "teamName": "Chasing Greatness",
-          "points": 127.06,
-          "projectedPoints": 142.35,
+          "teamKey": "470.l.290846.t.6",
+          "teamId": "6",
+          "teamName": "Josh ❤️creampies",
+          "points": 0,
+          "projectedPoints": 129.1,
           "liveProjectedPoints": null,
-          "winProbability": 0.01
+          "winProbability": 0.4
         }
       },
       "transactions": [
@@ -745,20 +745,14 @@
       "standings": {
         "rank": 1,
         "leagueSize": 8,
-        "wins": 6,
+        "wins": 7,
         "losses": 2,
-        "pointsFor": 1200.34,
-        "pointsAgainst": 1125.9,
+        "pointsFor": 1366.72,
+        "pointsAgainst": 1252.96,
         "seasonPhase": "regular_season",
-        "asOfIso": "2026-11-10T03:26:15.000Z"
+        "asOfIso": "2026-11-10T11:29:45.113Z"
       },
       "upcomingMatchups": [
-        {
-          "week": 10,
-          "opponent": "Josh ❤️creampies",
-          "myProjected": 148.24,
-          "opponentProjected": 126.51
-        },
         {
           "week": 11,
           "opponent": "BEEFS GAY",
@@ -770,9 +764,15 @@
           "opponent": "Jersey junkyard",
           "myProjected": 149.7,
           "opponentProjected": 141.09
+        },
+        {
+          "week": 13,
+          "opponent": "Frenchville HornHog",
+          "myProjected": 110.6,
+          "opponentProjected": 131.89
         }
       ],
-      "analysisAsOfIso": "2026-11-10T03:26:15.000Z"
+      "analysisAsOfIso": "2026-11-10T11:29:45.113Z"
     }
   }
 }
