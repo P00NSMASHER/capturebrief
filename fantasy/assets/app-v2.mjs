@@ -14,7 +14,7 @@ const BASE='/capturebrief/fantasy/';
 const root=document.getElementById('root');
 const PRIVATE_KEY='fantasy-hq-private-v3';
 const CACHE_KEY='fantasy-hq-public-last-good-v2';
-let current=null,source='published',loading=false,activeTab='overview',message='',waiverFilter='ALL';
+let current=null,source='published',loading=false,activeTab='overview',message='',waiverFilter='ALL',playerPoolOpen=false;
 let edgeRaw=null,edgeMode='balanced',edgeLoadError='',edgeLoading=false,lastEdgeCheck=0;
 let intelRaw=null,intelLoading=false,lastIntelCheck=0,strategyCache=null;
 let geniusField=4,geniusRealization=.5,geniusCache=null;
@@ -174,7 +174,7 @@ function lineupView(team){
 function waiverView(team){
  const model=analyzeEdge(current,edgeRaw,{now:Date.now(),mode:edgeMode});
  return '<div class="focus-introline"><span>PLAYERS</span><h1>What improves your roster?</h1></div>'+
-  focusPlayers({team,genius:geniusReport(),model,filter:waiverFilter});
+  focusPlayers({team,genius:geniusReport(),model,filter:waiverFilter,poolOpen:playerPoolOpen});
 }
 function labView(team){
  return '<div class="focus-introline"><span>LEAGUE</span><h1>Who is the real competition?</h1></div>'+
@@ -475,9 +475,9 @@ document.addEventListener('click',event=>{
   return;
  }
  const tab=event.target.closest('button[data-tab]');
- if(tab){activeTab=tab.dataset.tab;location.hash=activeTab;waiverFilter=tab.dataset.coachFilter==='QB'&&activeTab==='waivers'?'QB':'ALL';render();window.scrollTo({top:0,behavior:'instant'});return}
+ if(tab){activeTab=tab.dataset.tab;location.hash=activeTab;waiverFilter=tab.dataset.coachFilter==='QB'&&activeTab==='waivers'?'QB':'ALL';playerPoolOpen=activeTab==='waivers'&&waiverFilter!=='ALL';render();window.scrollTo({top:0,behavior:'instant'});return}
  const chip=event.target.closest('button[data-filter]');
- if(chip){waiverFilter=chip.dataset.filter;render();return}
+ if(chip){waiverFilter=chip.dataset.filter;playerPoolOpen=true;render();return}
  const control=event.target.closest('[data-action]');if(!control)return;
  if(control.dataset.action==='refresh')refresh(false);
  if(control.dataset.action==='edge-refresh')getEdgeData(true);
