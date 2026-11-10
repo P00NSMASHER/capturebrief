@@ -105,6 +105,28 @@ function byes(model){
  '<div class="edge-bye-list">'+rows+'</div>'+
  '<p class="edge-context">NFL bye source: <a href="https://www.nfl.com/news/2026-nfl-schedule-release-every-team-bye-week" target="_blank" rel="noopener noreferrer">official 2026 bye schedule</a>.</p>');
 }
+function tradeLeverage(model){
+ const teWeek=model.byes.find(x=>x.week===13&&x.shortages.some(g=>g.position==='TE'&&g.available===0));
+ const benchReceivers=model.roster.filter(p=>['BN','BE','BENCH'].includes(p.slot)&&p.position==='WR'&&
+  Number.isFinite(p.forecast)).sort((a,b)=>b.forecast-a.forecast);
+ const benches=benchReceivers.slice(0,3).map(p=>p.name).join(', ');
+ const cards=[
+  {title:teWeek?'Trade or add for a Week 13 TE':'Trade to solve a persistent starting-position weakness',
+   copy:teWeek?'Bowers and Andrews share their Week 13 bye. A healthy tight end whose bye is NOT Week 13 is a specific roster need. Check Yahoo free agents before paying a trade premium.':
+    'Compare available players and opponent roster depth before giving up a strong starter for a one-week matchup edge.'},
+  {title:'Explore bench depth as negotiation leverage',
+   copy:benches?'Your captured bench includes '+benches+'. This is an inventory of possible negotiation pieces, not a recommendation to trade any of them without comparable rest-of-season value.':
+   'Player trade value cannot be estimated from a single week. Protect your regular starters and check other managers’ actual needs.'},
+  {title:'Do not confuse weekly forecast gain with trade value',
+   copy:'One-week PPR predictions do not measure playoff value, bye fit, injury probability, or an opponent’s needs. A fair trade requires independent rest-of-season values and the other side’s verified roster.'}
+ ];
+ const rows=cards.map((x,i)=>'<article class="edge-trade-row"><span class="edge-trade-index">'+(i+1)+'</span>'+
+ '<div><strong>'+esc(x.title)+'</strong><p>'+esc(x.copy)+'</p></div></article>').join('');
+ return block('Trade leverage','STRATEGY · NO FABRICATED OFFERS',
+ '<div class="edge-trade-list">'+rows+'</div><div class="edge-context">No trades were proposed or executed. These are roster-planning hypotheses, not a completed market-value analysis.</div>'+
+ button('Check available roster options','players'));
+}
+
 function opponents(model){
  const next=model.opponents.slice(0,3).map(x=>{
   const org=resolveTeam(x.teamName);
@@ -175,6 +197,7 @@ export function renderEdgeLab(model){
  '<div id="edge-priorities">'+recommendations(model)+'</div>'+
  '<div id="edge-lineup">'+lineups(model)+'</div>'+
  '<div id="edge-waivers">'+waivers(model)+'</div>'+
+ '<div id="edge-trades">'+tradeLeverage(model)+'</div>'+
  '<div id="edge-rivals">'+opponents(model)+'</div>'+
  '<div id="edge-byes">'+byes(model)+'</div>'+
  '<div id="edge-brief">'+briefing(model)+'</div>'+
