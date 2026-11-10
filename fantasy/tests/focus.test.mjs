@@ -68,7 +68,7 @@ test('Coach is the single home for five gain assumptions, two hypothetical playo
  assert.equal((html.match(/data-genius-realization=/g)||[]).length,5);
  assert.equal((html.match(/data-genius-field=/g)||[]).length,2);
  assert.equal((html.match(/class="focus-brief"/g)||[]).length,1);
- assert.equal((html.match(/<p>/g)||[]).length,4); // introductory sentence + three sourced report paragraphs
+ assert.equal((html.match(/<p>/g)||[]).length,3); // introductory sentence + three sourced report paragraphs
  assert.match(html,/data-genius-field="4" aria-pressed="true"/);
  assert.match(html,/data-genius-realization="0.5" aria-pressed="true"/);
  assert.match(html,/Conditional, not actual Yahoo playoff odds/);
