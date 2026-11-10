@@ -67,6 +67,12 @@ function lineups(model){
 }
 function waivers(model){
  const p=model.waivers;
+ if(model.quality?.yahooFresh===false)
+  return block('Waiver decisions on hold','CURRENT YAHOO INVENTORY NOT VERIFIED',
+   '<div class="edge-no-data"><strong>Forward-looking research remains available, but no pickup is rated.</strong>'+
+   '<p>The last Yahoo available-player capture is '+num(model.quality.yahooAgeHours,1)+
+   ' hours old. The model uses a separately reverified FantasyBot roster for hypothetical lineup research only. Recheck Yahoo before any add, drop or claim.</p></div>'+
+   button('View last saved player pool','players'));
  const upside=p.positive.slice(0,5).map(row=>'<article class="edge-waiver-row">'+
  '<div class="edge-waiver-position">'+esc(row.add.position)+'</div><div class="edge-waiver-identity"><strong>'+
  esc(row.add.name)+'</strong><small>Evaluate replacing '+esc(row.drop.name)+'</small><small>'+
@@ -161,7 +167,8 @@ function briefing(model){
     'A complete Week '+model.modelWeek+' lineup forecast is not available. ')+
   'The first strategic decision is not cosmetic: Denver has a Week '+model.modelWeek+' bye, so Jonah Coleman cannot supply starting RB points.';
  const second='I would treat waiver priority as a resource, not an obligation to make a claim. '+
-  (model.waivers.positive.length?'The current matched Yahoo player pool offers at least one positive one-week projected lineup experiment. ':
+  (model.quality?.yahooFresh===false?'The Yahoo available-player inventory is old, so I would not assume any saved pickup is still claimable. ':
+   model.waivers.positive.length?'The current matched Yahoo player pool offers at least one positive one-week projected lineup experiment. ':
    'The matched Yahoo waiver pool does not yet produce a material one-week starter improvement under this model. ')+
   'Before spending a claim, check injuries and NFL roles, then weigh the roster spot against your Week 13 tight-end exposure. '+
   (w13?'Both Brock Bowers and Mark Andrews have Week 13 byes; without another tight end, the roster currently has no eligible active option at that position. ':
@@ -183,7 +190,10 @@ export function renderEdgeLab(model){
  '<small>No speculative lineup swaps or fake win odds will be shown.</small></section>';
  const first=model.priorities[0];
  const lineup=model.lineups.balanced;
- return '<div class="edge-shell"><div class="edge-intro"><span class="edge-eyebrow">BROCK HARD · INTELLIGENCE LAB</span>'+
+ const yellow=model.quality?.yahooFresh===false?
+ '<div class="edge-stale-banner"><strong>Research mode · Yahoo capture aging</strong>'+
+ '<p>FantasyBot roster names were independently rechecked, but Yahoo lineup locks and acquisition status are not currently verified. This is a planning scenario, not an executable move list.</p></div>':'';
+ return '<div class="edge-shell">'+yellow+'<div class="edge-intro"><span class="edge-eyebrow">BROCK HARD · INTELLIGENCE LAB</span>'+
  '<h1>Win the next decision.</h1><p>Model-driven lineup changes, verified waiver opportunities, opponent scouting and playoff risk—beyond Yahoo’s scoreboard.</p></div>'+
  '<section class="edge-hero">'+notice(model)+
  '<div class="edge-hero-label">HIGHEST-PRIORITY FINDING</div>'+
