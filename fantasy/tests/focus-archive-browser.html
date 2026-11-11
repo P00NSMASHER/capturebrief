@@ -38,20 +38,30 @@ try{
  const until=async fn=>{for(let i=0;i<110;i++){if(fn())return true;await new Promise(r=>setTimeout(r,35))}return false};
  if(!await until(()=>document.querySelector('.archived-fallback')))
   throw Error('Stale Yahoo capture must display archive warning');
- for(const t of ['overview','lineup','waivers','lab','coach']){
-  document.querySelector('button[data-tab="'+t+'"]')?.click();
-  if(!await until(()=>document.querySelector('.archived-fallback')))throw Error('Archive missing on '+t);
-  if(document.querySelector('.focus-lineup,.focus-players,.focus-home,.focus-league,.focus-coach'))
-   throw Error('A stale Yahoo snapshot exposed current decisions on '+t);
-  if(document.querySelector('[data-genius-field],[data-genius-realization],[data-filter]'))
-   throw Error('Current controls visible on stale tab '+t);
+ const tabs={overview:'.focus-home',lineup:'.focus-lineup',waivers:'.focus-players',lab:'.focus-league'};
+ if(document.querySelectorAll('.bottomnav button[data-tab]').length!==4)
+  throw Error('Exactly four accessible jobs are required');
+ for(const [tab,view] of Object.entries(tabs)){
+  document.querySelector('button[data-tab="'+tab+'"]')?.click();
+  if(!await until(()=>document.querySelector('.archived-fallback')&&document.querySelector('#tabPanel '+view)))
+   throw Error('Historical '+tab+' evidence cannot be opened');
+  const panel=document.querySelector('#tabPanel');
+  if(panel.querySelector('[data-edge-mode],[data-genius-field],[data-genius-realization],.focus-move--in,.focus-move--out,.focus-trade'))
+   throw Error('Unsafe current decision leaked on the '+tab+' archive tab');
   if(!document.querySelector('.archived-fallback [data-action="refresh"]'))
-   throw Error('Recovery button missing on '+t);
+   throw Error('Refresh recovery missing on '+tab);
+  if(tab==='lineup' && !panel.querySelector('.focus-roster-row'))
+   throw Error('Historical starter slots must remain readable');
+  if(tab==='waivers' && !panel.querySelector('details[data-focus-pool]'))
+   throw Error('Last captured player pool must remain readable');
+  if(tab==='lab' && !panel.textContent.includes('YAHOO RANK'))
+   throw Error('Verified standings must remain readable');
  }
+
  if(document.body.textContent.includes('Quick Snap Jamison')||document.body.textContent.includes('Highlight Reel Jamison'))
   throw Error('Other owned team leaked');
  const mark=document.createElement('strong');mark.id='focus-archive-qa';
- mark.textContent='FOCUS_ARCHIVE_PASS · five tabs fail closed · no current move recommendations';
+ mark.textContent='FOCUS_ARCHIVE_PASS · four read-only archived tabs · no unsupported current moves';
  document.body.append(mark);
 }catch(e){
  const mark=document.createElement('strong');mark.id='focus-archive-qa';
