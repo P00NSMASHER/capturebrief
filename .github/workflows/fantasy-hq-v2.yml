@@ -65,8 +65,8 @@ jobs:
                   echo '::error::Archived Week 4 data was displayed as current'; exit 1;
                 fi
               else
-                grep -Fq 'class="teamhero' /tmp/fantasy-render.html || { echo '::error::No current team hero or archived explanation'; exit 1; }
-                grep -Fq 'BROCK HARD' /tmp/fantasy-render.html
+                grep -Fq 'class="focus-panel focus-home' /tmp/fantasy-render.html || { echo '::error::No current focused Today screen or archived explanation'; exit 1; }
+                grep -Fq 'aria-label="Brock Hard sections"' /tmp/fantasy-render.html || { echo '::error::Four-tab Brock navigation missing'; exit 1; }
               fi
               if grep -Fq 'class="tabs"' /tmp/fantasy-render.html; then echo '::error::Duplicate top tabs'; exit 1; fi
               if grep -Eq 'Quick Snap Jamison|Highlight Reel Jamison|THREE LEAGUES|All teams' /tmp/fantasy-render.html; then
@@ -104,18 +104,18 @@ jobs:
           echo 'Browser smoke passed: automatically prefer newer published capture'
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=30000 --window-size=390,844 --dump-dom "http://127.0.0.1:8797/capturebrief/fantasy/tests/focus-browser.html" > /tmp/focus-browser.html 2>/tmp/chrome-stderr.log
           if ! grep -Fq 'FOCUS_BROWSER_PASS' /tmp/focus-browser.html; then
-            echo "::error::Five-tab focused experience test failed"
+            echo "::error::Four-tab focused experience test failed"
             grep -o 'FOCUS_BROWSER_FAIL[^<]*' /tmp/focus-browser.html || true
             exit 1
           fi
-          echo 'Browser smoke passed: one primary decision per tab, exact lineup and all 8 club crests, interactive scenarios, no duplication'
+          echo 'Browser smoke passed: four navigable tabs, roster and available-player evidence, no duplicate legacy panels'
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=24000 --window-size=390,844 --dump-dom "http://127.0.0.1:8797/capturebrief/fantasy/tests/focus-archive-browser.html" > /tmp/focus-archive.html 2>/tmp/chrome-stderr.log
           if ! grep -Fq 'FOCUS_ARCHIVE_PASS' /tmp/focus-archive.html; then
-            echo "::error::Stale Yahoo archive failed to block actionable moves on all five tabs"
+            echo "::error::Archived Yahoo pages failed to preserve facts or block unsupported moves"
             grep -o 'FOCUS_ARCHIVE_FAIL[^<]*' /tmp/focus-archive.html || true
             exit 1
           fi
-          echo 'Browser smoke passed: every tab archives stale Yahoo safely'
+          echo 'Browser smoke passed: four archived tabs retain read-only facts and block unsupported moves'
 
           mkdir -p fantasy/screenshots
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=30000 --window-size=390,844 --screenshot=fantasy/screenshots/focus-mobile.png "http://127.0.0.1:8797/capturebrief/fantasy/tests/focus-browser.html" >/dev/null 2>/tmp/chrome-stderr.log
@@ -125,7 +125,7 @@ jobs:
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot=fantasy/screenshots/brock.png "http://127.0.0.1:8797/capturebrief/fantasy/brock/" >/dev/null 2>/tmp/chrome-stderr.log
           test -s fantasy/screenshots/home.png
           test -s fantasy/screenshots/brock.png
-          for tab in lineup waivers lab coach; do
+          for tab in lineup waivers lab; do
             "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --virtual-time-budget=12000 --window-size=390,844 --screenshot="fantasy/screenshots/$tab.png" "http://127.0.0.1:8797/capturebrief/fantasy/#$tab" >/dev/null 2>/tmp/chrome-stderr.log
             test -s "fantasy/screenshots/$tab.png"
           done

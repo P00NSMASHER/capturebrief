@@ -141,7 +141,7 @@ function teamView(team){
  const lead='<div class="subpage-context">'+teamLogo('2','sm')+
  '<div><strong>Brock Hard</strong><span>Week '+$esc(txt(current.week))+' · '+$esc(txt(team.record))+' · Read-only Yahoo snapshot</span></div>'+
  safeLeagueLink(team)+'</div>';
- return '<div class="container">'+masthead(team)+messageBox()+lead+
+ return '<div class="container">'+masthead(team)+messageBox()+lead+riskRibbon()+
  '<main id="tabPanel" role="tabpanel" aria-label="'+$esc(activeTab)+'">'+view+'</main>'+
  '<details class="settings-panel"><summary>'+uiIcon('info')+' Data & snapshot settings '+uiIcon('chevron')+'</summary>'+
  section('Data controls','PRESERVE YOUR SNAPSHOT',controls())+'</details>'+
@@ -149,22 +149,27 @@ function teamView(team){
 }
 
 function archivedView(){
- // Stale Yahoo captures must never bypass the archive screen on any tab.
+ // Archive the decisions, not the saved evidence: all four tabs remain usable
+ // for read-only historical roster, player-pool, standings and schedule review.
  const date=Number.isFinite(Date.parse(current?.syncedAtIso))?
- new Date(current.syncedAtIso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'unknown date';
+  new Date(current.syncedAtIso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'unknown date';
  const t=current?.teams?.brock;
- const geniusHistory=geniusReport();
+ const unavailable={ready:false,modelWeek:null,quality:{yahooFresh:false}};
+ const view=activeTab==='lineup'?focusLineup({team:t,model:unavailable}):
+  activeTab==='waivers'?focusPlayers({team:t,genius:null,model:unavailable,filter:waiverFilter,poolOpen:playerPoolOpen}):
+  activeTab==='lab'?focusLeague({team:t,genius:null,strategic:null}):
+  focusHome({team:t,genius:null,model:unavailable,currentWeek:current.week,freshness:freshness()});
  return '<div class="container">'+masthead(t)+messageBox()+
  '<section class="archived-fallback panel"><div class="archive-logo">'+teamLogo('2','display')+'</div>'+
- '<div class="label">BROCK HARD · NO CURRENT CAPTURE</div><h1>Update your Yahoo data</h1>'+
- '<p><strong>Outdated fantasy data.</strong> Your Week '+$esc(txt(current?.week))+' capture from '+$esc(date)+
- ' is archived. Older results are intentionally withheld from current-decision views.</p>'+
+ '<div class="label">BROCK HARD · SAVED CAPTURE</div><h1>Update your Yahoo data</h1>'+
+ '<p><strong>Outdated fantasy data.</strong> Week '+$esc(txt(current?.week))+' captured '+$esc(date)+
+ '. Historical roster, listed players and league standings remain available below, but they are not live and cannot justify lineup, waiver or trade decisions.</p>'+
  '<button type="button" class="primarybutton" data-action="refresh">'+uiIcon('refresh')+' Check published snapshot</button>'+
- '<details class="small-disclosure"><summary>Import a saved capture '+uiIcon('chevron')+'</summary>'+
- '<button type="button" class="minorbtn" data-action="import">↥ Import updated Yahoo snapshot</button></details>'+
- '<input id="importFile" type="file" accept=".json,application/json" hidden>'+
- '</section>'+(geniusHistory?.ready?geniusArchived(geniusHistory):'')+
- '<p class="footnote">No Yahoo credentials or live provider access are used by this page.</p></div>'+nav();
+ '</section>'+
+ '<main id="tabPanel" role="tabpanel" aria-label="'+$esc(activeTab)+'">'+view+'</main>'+
+ '<details class="settings-panel"><summary>'+uiIcon('info')+' Data & snapshot settings '+uiIcon('chevron')+'</summary>'+
+ section('Data controls','PRESERVE YOUR SNAPSHOT',controls())+'</details>'+
+ '<p class="footnote">Read-only historical view. No roster or provider changes can be submitted.</p></div>'+nav();
 }
 function render(){
  if(!root)return;
