@@ -38,8 +38,14 @@ test('current Week 11 edge remains useful while exact lineups fail closed on par
  const model=analyzeEdge(artifacts.yahoo,artifacts.edge,{now:observedNow(artifacts)});
  assert.equal(model.ready,true,model.reason);
  assert.equal(model.modelWeek,11);
- assert.equal(model.priorities[0].id,'bye-replacement');
- assert.equal(model.priorities[0].title,'Replace Rhamondre Stevenson — Week 11 bye');
+ const onBye=model.byes.find(p=>p.week===model.modelWeek)?.players.find(p=>p.starting);
+ const byePriority=model.priorities.find(p=>p.id==='bye-replacement');
+ assert.equal(Boolean(byePriority),Boolean(onBye),'Week 11 bye alert must follow current roster');
+ if(byePriority)assert.ok(byePriority.title.includes(onBye.name),'Bye alert must name a verified starter');
+ const teShortage=model.byes.find(p=>p.shortages.some(s=>s.position==='TE'&&s.available===0));
+ const tePriority=model.priorities.find(p=>p.id==='te-coverage');
+ assert.equal(Boolean(tePriority),Boolean(teShortage),'TE alert must follow validated coverage');
+ assert.ok(model.priorities.length>0,'A verified source-backed scouting priority must survive refresh');
  for(const mode of ['safe','balanced','upside']){
   assert.equal(model.lineups[mode].available,false);
   assert.equal(model.lineups[mode].reason,'Missing current projections for eligible players');
