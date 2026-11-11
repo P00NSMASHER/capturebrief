@@ -3,7 +3,7 @@
   "season": 2026,
   "provider": "Yahoo",
   "week": 10,
-  "syncedAtIso": "2026-11-11T15:35:32.539Z",
+  "syncedAtIso": "2026-11-11T19:32:13.011Z",
   "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
   "captureType": "scheduled-provider-read",
   "teams": {
@@ -356,7 +356,7 @@
           "nflTeam": "NO",
           "projection": null,
           "acquisitionState": "free_agent",
-          "percentOwned": 76
+          "percentOwned": 77
         },
         {
           "id": "31002",
@@ -379,21 +379,21 @@
           "percentOwned": 73
         },
         {
-          "id": "42025",
-          "name": "Kyle Monangai",
-          "position": "RB",
-          "team": "Chi",
-          "nflTeam": "Chi",
-          "projection": null,
-          "acquisitionState": "free_agent",
-          "percentOwned": 71
-        },
-        {
           "id": "33100",
           "name": "Rico Dowdle",
           "position": "RB",
           "team": "Pit",
           "nflTeam": "Pit",
+          "projection": null,
+          "acquisitionState": "free_agent",
+          "percentOwned": 72
+        },
+        {
+          "id": "42025",
+          "name": "Kyle Monangai",
+          "position": "RB",
+          "team": "Chi",
+          "nflTeam": "Chi",
           "projection": null,
           "acquisitionState": "free_agent",
           "percentOwned": 71
@@ -416,7 +416,7 @@
           "nflTeam": "Den",
           "projection": null,
           "acquisitionState": "free_agent",
-          "percentOwned": 69
+          "percentOwned": 68
         },
         {
           "id": "30180",
@@ -426,7 +426,7 @@
           "nflTeam": "NO",
           "projection": null,
           "acquisitionState": "free_agent",
-          "percentOwned": 63
+          "percentOwned": 62
         },
         {
           "id": "40877",
@@ -440,16 +440,6 @@
           "percentOwned": 62
         },
         {
-          "id": "41823",
-          "name": "TreVeyon Henderson",
-          "position": "RB",
-          "team": "NE",
-          "nflTeam": "NE",
-          "projection": null,
-          "acquisitionState": "free_agent",
-          "percentOwned": 59
-        },
-        {
           "id": "40078",
           "name": "Brenton Strange",
           "position": "TE",
@@ -458,6 +448,16 @@
           "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-13",
+          "percentOwned": 58
+        },
+        {
+          "id": "41823",
+          "name": "TreVeyon Henderson",
+          "position": "RB",
+          "team": "NE",
+          "nflTeam": "NE",
+          "projection": null,
+          "acquisitionState": "free_agent",
           "percentOwned": 58
         },
         {
@@ -508,7 +508,17 @@
           "nflTeam": "Phi",
           "projection": null,
           "acquisitionState": "free_agent",
-          "percentOwned": 51
+          "percentOwned": 50
+        },
+        {
+          "id": "32231",
+          "name": "Jakobi Meyers",
+          "position": "WR",
+          "team": "Jax",
+          "nflTeam": "Jax",
+          "projection": null,
+          "acquisitionState": "free_agent",
+          "percentOwned": 48
         },
         {
           "id": "41097",
@@ -521,16 +531,6 @@
           "percentOwned": 47
         },
         {
-          "id": "32231",
-          "name": "Jakobi Meyers",
-          "position": "WR",
-          "team": "Jax",
-          "nflTeam": "Jax",
-          "projection": null,
-          "acquisitionState": "free_agent",
-          "percentOwned": 47
-        },
-        {
           "id": "31833",
           "name": "Kyler Murray",
           "position": "QB",
@@ -538,7 +538,7 @@
           "nflTeam": "Min",
           "projection": null,
           "acquisitionState": "free_agent",
-          "percentOwned": 47
+          "percentOwned": 46
         },
         {
           "id": "40915",
@@ -548,7 +548,7 @@
           "nflTeam": "NYJ",
           "projection": null,
           "acquisitionState": "free_agent",
-          "percentOwned": 44
+          "percentOwned": 43
         },
         {
           "id": "30973",
@@ -578,18 +578,18 @@
           "teamId": "2",
           "teamName": "Brock Hard & Tee Baggin",
           "points": 0,
-          "projectedPoints": 151.7,
+          "projectedPoints": 152.74,
           "liveProjectedPoints": null,
-          "winProbability": 0.57
+          "winProbability": 0.58
         },
         "away": {
           "teamKey": "470.l.290846.t.6",
           "teamId": "6",
           "teamName": "Josh ❤️creampies",
           "points": 0,
-          "projectedPoints": 140.37,
+          "projectedPoints": 140.64,
           "liveProjectedPoints": null,
-          "winProbability": 0.43
+          "winProbability": 0.42
         }
       },
       "transactions": [
@@ -729,29 +729,29 @@
         "pointsFor": 1366.72,
         "pointsAgainst": 1252.96,
         "seasonPhase": "regular_season",
-        "asOfIso": "2026-11-11T15:35:32.539Z"
+        "asOfIso": "2026-11-11T19:32:13.011Z"
       },
       "upcomingMatchups": [
         {
           "week": 11,
           "opponent": "BEEFS GAY",
-          "myProjected": 149.63,
-          "opponentProjected": 108.6
+          "myProjected": 151.33,
+          "opponentProjected": 104.69
         },
         {
           "week": 12,
           "opponent": "Jersey junkyard",
-          "myProjected": 152.97,
-          "opponentProjected": 127.79
+          "myProjected": 154.06,
+          "opponentProjected": 127.27
         },
         {
           "week": 13,
           "opponent": "Frenchville HornHog",
-          "myProjected": 94.57,
-          "opponentProjected": 136.98
+          "myProjected": 94.9,
+          "opponentProjected": 135.67
         }
       ],
-      "analysisAsOfIso": "2026-11-11T15:35:32.539Z"
+      "analysisAsOfIso": "2026-11-11T19:32:13.011Z"
     }
   }
 }
