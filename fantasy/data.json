@@ -3,7 +3,7 @@
   "season": 2026,
   "provider": "Yahoo",
   "week": 10,
-  "syncedAtIso": "2026-11-12T11:28:34.919Z",
+  "syncedAtIso": "2026-11-12T23:29:29.711Z",
   "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
   "captureType": "scheduled-provider-read",
   "teams": {
@@ -163,7 +163,7 @@
             "W/R/T"
           ],
           "nflTeam": "NE",
-          "status": "D",
+          "status": "Q",
           "cantCut": false,
           "editable": true,
           "actualPoints": 0
@@ -246,7 +246,6 @@
             "W/R/T"
           ],
           "nflTeam": "Hou",
-          "status": "Q",
           "cantCut": false,
           "editable": true,
           "actualPoints": 0
@@ -350,23 +349,23 @@
           "percentOwned": 84
         },
         {
+          "id": "42661",
+          "name": "Denzel Boston",
+          "position": "WR",
+          "projection": null,
+          "nflTeam": "Cle",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-14",
+          "percentOwned": 80
+        },
+        {
           "id": "41825",
           "name": "Tyler Shough",
           "position": "QB",
           "projection": null,
           "nflTeam": "NO",
           "acquisitionState": "free_agent",
-          "percentOwned": 79
-        },
-        {
-          "id": "31905",
-          "name": "David Montgomery",
-          "position": "RB",
-          "projection": null,
-          "nflTeam": "Hou",
-          "acquisitionState": "waivers",
-          "waiverDate": "2026-11-13",
-          "percentOwned": 78
+          "percentOwned": 80
         },
         {
           "id": "40029",
@@ -375,7 +374,7 @@
           "projection": null,
           "nflTeam": "Car",
           "acquisitionState": "free_agent",
-          "percentOwned": 76
+          "percentOwned": 77
         },
         {
           "id": "31019",
@@ -396,33 +395,6 @@
           "percentOwned": 74
         },
         {
-          "id": "33100",
-          "name": "Rico Dowdle",
-          "position": "RB",
-          "projection": null,
-          "nflTeam": "Pit",
-          "acquisitionState": "free_agent",
-          "percentOwned": 74
-        },
-        {
-          "id": "31002",
-          "name": "Lamar Jackson",
-          "position": "QB",
-          "projection": null,
-          "nflTeam": "Bal",
-          "acquisitionState": "free_agent",
-          "percentOwned": 73
-        },
-        {
-          "id": "42025",
-          "name": "Kyle Monangai",
-          "position": "RB",
-          "projection": null,
-          "nflTeam": "Chi",
-          "acquisitionState": "free_agent",
-          "percentOwned": 70
-        },
-        {
           "id": "40875",
           "name": "Bo Nix",
           "position": "QB",
@@ -432,13 +404,32 @@
           "percentOwned": 67
         },
         {
-          "id": "30180",
-          "name": "Alvin Kamara",
+          "id": "42669",
+          "name": "Germie Bernard",
+          "position": "WR",
+          "projection": null,
+          "nflTeam": "Pit",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-13",
+          "percentOwned": 65
+        },
+        {
+          "id": "32725",
+          "name": "J.K. Dobbins",
           "position": "RB",
           "projection": null,
-          "nflTeam": "NO",
+          "nflTeam": "Den",
           "acquisitionState": "free_agent",
-          "percentOwned": 60
+          "percentOwned": 65
+        },
+        {
+          "id": "42652",
+          "name": "Omar Cooper Jr.",
+          "position": "WR",
+          "projection": null,
+          "nflTeam": "NYJ",
+          "acquisitionState": "free_agent",
+          "percentOwned": 64
         },
         {
           "id": "40078",
@@ -448,6 +439,15 @@
           "nflTeam": "Jax",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-13",
+          "percentOwned": 60
+        },
+        {
+          "id": "30180",
+          "name": "Alvin Kamara",
+          "position": "RB",
+          "projection": null,
+          "nflTeam": "NO",
+          "acquisitionState": "free_agent",
           "percentOwned": 59
         },
         {
@@ -458,25 +458,7 @@
           "nflTeam": "KC",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-13",
-          "percentOwned": 59
-        },
-        {
-          "id": "41823",
-          "name": "TreVeyon Henderson",
-          "position": "RB",
-          "projection": null,
-          "nflTeam": "NE",
-          "acquisitionState": "free_agent",
-          "percentOwned": 57
-        },
-        {
-          "id": "41845",
-          "name": "RJ Harvey",
-          "position": "RB",
-          "projection": null,
-          "nflTeam": "Den",
-          "acquisitionState": "free_agent",
-          "percentOwned": 55
+          "percentOwned": 58
         },
         {
           "id": "33998",
@@ -488,15 +470,6 @@
           "percentOwned": 53
         },
         {
-          "id": "31010",
-          "name": "Courtland Sutton",
-          "position": "WR",
-          "projection": null,
-          "nflTeam": "Den",
-          "acquisitionState": "free_agent",
-          "percentOwned": 52
-        },
-        {
           "id": "32231",
           "name": "Jakobi Meyers",
           "position": "WR",
@@ -506,13 +479,13 @@
           "percentOwned": 51
         },
         {
-          "id": "41058",
-          "name": "Malik Washington",
+          "id": "41087",
+          "name": "Ryan Flournoy",
           "position": "WR",
           "projection": null,
-          "nflTeam": "Mia",
+          "nflTeam": "Dal",
           "acquisitionState": "free_agent",
-          "percentOwned": 51
+          "percentOwned": 49
         },
         {
           "id": "42642",
@@ -521,7 +494,7 @@
           "projection": null,
           "nflTeam": "Phi",
           "acquisitionState": "free_agent",
-          "percentOwned": 49
+          "percentOwned": 48
         },
         {
           "id": "41097",
@@ -533,31 +506,13 @@
           "percentOwned": 43
         },
         {
-          "id": "31833",
-          "name": "Kyler Murray",
-          "position": "QB",
-          "projection": null,
-          "nflTeam": "Min",
-          "acquisitionState": "free_agent",
-          "percentOwned": 42
-        },
-        {
           "id": "40915",
           "name": "Adonai Mitchell",
           "position": "WR",
           "projection": null,
           "nflTeam": "NYJ",
           "acquisitionState": "free_agent",
-          "percentOwned": 39
-        },
-        {
-          "id": "30973",
-          "name": "Sam Darnold",
-          "position": "QB",
-          "projection": null,
-          "nflTeam": "Sea",
-          "acquisitionState": "free_agent",
-          "percentOwned": 33
+          "percentOwned": 38
         },
         {
           "id": "42693",
@@ -566,7 +521,52 @@
           "projection": null,
           "nflTeam": "Was",
           "acquisitionState": "free_agent",
-          "percentOwned": 28
+          "percentOwned": 27
+        },
+        {
+          "id": "34099",
+          "name": "Chig Okonkwo",
+          "position": "TE",
+          "projection": null,
+          "nflTeam": "Was",
+          "acquisitionState": "free_agent",
+          "percentOwned": 24
+        },
+        {
+          "id": "40889",
+          "name": "Michael Penix Jr.",
+          "position": "QB",
+          "projection": null,
+          "nflTeam": "Atl",
+          "acquisitionState": "free_agent",
+          "percentOwned": 22
+        },
+        {
+          "id": "26662",
+          "name": "Geno Smith",
+          "position": "QB",
+          "projection": null,
+          "nflTeam": "NYJ",
+          "acquisitionState": "free_agent",
+          "percentOwned": 21
+        },
+        {
+          "id": "40911",
+          "name": "Keon Coleman",
+          "position": "WR",
+          "projection": null,
+          "nflTeam": "Buf",
+          "acquisitionState": "free_agent",
+          "percentOwned": 21
+        },
+        {
+          "id": "41840",
+          "name": "Tre' Harris",
+          "position": "WR",
+          "projection": null,
+          "nflTeam": "LAC",
+          "acquisitionState": "free_agent",
+          "percentOwned": 4
         }
       ],
       "matchup": {
@@ -576,8 +576,8 @@
         "awayTeamId": "6",
         "homePoints": 0,
         "awayPoints": 0,
-        "homeProjected": 154.65,
-        "awayProjected": 140.74,
+        "homeProjected": 153.09,
+        "awayProjected": 139.62,
         "homeWinProbability": 0.59,
         "awayWinProbability": 0.41,
         "opponent": "Josh ❤️creampies"
@@ -683,23 +683,23 @@
         {
           "week": 11,
           "opponent": "BEEFS GAY",
-          "myProjected": 151.32,
-          "opponentProjected": 104.34
+          "myProjected": 151.39,
+          "opponentProjected": 104.39
         },
         {
           "week": 12,
           "opponent": "Jersey junkyard",
-          "myProjected": 154.06,
-          "opponentProjected": 127.27
+          "myProjected": 154.05,
+          "opponentProjected": 135.76
         },
         {
           "week": 13,
           "opponent": "Frenchville HornHog",
-          "myProjected": 94.9,
-          "opponentProjected": 135.67
+          "myProjected": 94.89,
+          "opponentProjected": 134.48
         }
       ],
-      "analysisAsOfIso": "2026-11-12T11:28:34.919Z"
+      "analysisAsOfIso": "2026-11-12T23:29:29.711Z"
     }
   }
 }
