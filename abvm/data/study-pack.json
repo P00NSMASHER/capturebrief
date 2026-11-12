@@ -3,31 +3,38 @@
   "syncPolicy": {
     "intervalHours": 4
   },
-  "sourceCapturedAt": "2026-11-11T23:20:22.097Z",
+  "sourceCapturedAt": "2026-11-12T15:35:20.055Z",
   "pack": {
     "gaps": [
-      "Reading comprehension topics and specific vocabulary meanings were not provided in the source text.",
-      "Specific homework due dates were not listed beyond general folder instructions."
+      "Reading comprehension topic and specific vocabulary meanings were not provided in the source.",
+      "Specific stories for the week were not listed.",
+      "Due dates for daily homework (Math pg 58, Spelling activity) were not explicitly stated beyond being 'homework'."
     ],
     "homework": [
       {
-        "day": "Weekly",
+        "day": "Daily",
         "due": "Not specified",
         "subject": "Spelling",
         "task": "Spelling Choice Board activity"
       },
       {
-        "day": "Weekly",
+        "day": "Daily",
+        "due": "Not specified",
+        "subject": "Math",
+        "task": "Math pg. 58"
+      },
+      {
+        "day": "Daily",
         "due": "Not specified",
         "subject": "Reading",
-        "task": "Read and complete Reading log"
+        "task": "Read and update Reading log"
       }
     ],
     "importantDates": [
       {
         "date": "Thursday Nov. 12",
         "kind": "test",
-        "label": "Grammar Test (singular & plural nouns)"
+        "label": "Grammar Test (Singular & Plural Nouns)"
       },
       {
         "date": "Friday Nov. 13",
@@ -52,7 +59,7 @@
       {
         "date": "Tuesday Nov. 17",
         "kind": "test",
-        "label": "Math Test (lessons 1-5)"
+        "label": "Math Test (Lessons 1-5)"
       },
       {
         "date": "Wednesday Nov. 18",
@@ -72,22 +79,12 @@
       {
         "date": "Thursday Nov. 19",
         "kind": "test",
-        "label": "Grammar Test (compound words)"
+        "label": "Grammar Test (Compound words)"
       },
       {
         "date": "Friday Nov. 20",
         "kind": "event",
         "label": "End of Trimester 1"
-      },
-      {
-        "date": "Friday Nov. 20",
-        "kind": "test",
-        "label": "Spelling Test (long a) and Handwriting"
-      },
-      {
-        "date": "Friday Nov. 20",
-        "kind": "test",
-        "label": "Phonics Test (long vowels)"
       }
     ],
     "questions": [
@@ -110,64 +107,90 @@
         "answer": "true",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "The text explicitly defines the 1st Great Commandment this way.",
+        "explanation": "The text explicitly lists this as the 1st Great Commandment.",
         "format": "true_false",
-        "hint": "This is the Great Commandment.",
+        "hint": "This is the first and greatest commandment.",
         "id": "q2",
         "prompt": "The 1st Great Commandment says you should love God with all your heart, soul, mind, and strength.",
         "subject": "Religion"
       },
       {
-        "answer": "Pray/Put God first",
+        "answer": "Talking to God",
         "choices": [
-          "Pray/Put God first",
-          "Go to Mass",
-          "Say God's name with love"
+          "Talking to God",
+          "Sleeping",
+          "Running a race"
         ],
         "difficulty": "easy",
-        "explanation": "Commandment 1 is listed as Pray/Put God first.",
+        "explanation": "The source lists talking to God, songs, Mass, and the Bible as ways to pray.",
         "format": "multiple_choice",
-        "hint": "It involves putting God before everything else.",
+        "hint": "Prayer is a way of communicating with God.",
         "id": "q3",
-        "prompt": "What is the first Commandment?",
+        "prompt": "Which of these is a way to pray mentioned in our lessons?",
         "subject": "Religion"
       },
       {
-        "answer": "Mass",
-        "choices": [],
-        "difficulty": "easy",
-        "explanation": "Commandment 3 is listed as 'Go to Mass'.",
-        "format": "short_answer",
-        "hint": "It is a place of worship on Sundays.",
-        "id": "q4",
-        "prompt": "According to the third Commandment, where should you go?",
-        "subject": "Religion"
-      },
-      {
-        "answer": "With love",
-        "choices": [
-          "With love",
-          "Loudly",
-          "Quickly"
-        ],
-        "difficulty": "easy",
-        "explanation": "The second Commandment is to say God's name with love.",
-        "format": "multiple_choice",
-        "hint": "It is the opposite of being disrespectful.",
-        "id": "q5",
-        "prompt": "How should you say God's name according to the second Commandment?",
-        "subject": "Religion"
-      },
-      {
-        "answer": "scratch",
+        "answer": "with love",
         "choices": [],
         "difficulty": "medium",
-        "explanation": "Scratch is one of the basic spelling words for the week.",
+        "explanation": "The source notes for the 2nd Commandment to 'Say God's name with love'.",
+        "format": "short_answer",
+        "hint": "Think about the feeling we should use.",
+        "id": "q4",
+        "prompt": "According to the 2nd Commandment, how should we say God's name?",
+        "subject": "Religion"
+      },
+      {
+        "answer": "Go to Mass",
+        "choices": [
+          "Go to Mass",
+          "Clean our room",
+          "Do our homework"
+        ],
+        "difficulty": "easy",
+        "explanation": "The source lists 'Go to Mass' under the 3rd Commandment.",
+        "format": "multiple_choice",
+        "hint": "It involves going to church.",
+        "id": "q5",
+        "prompt": "What does the 3rd Commandment ask us to do?",
+        "subject": "Religion"
+      },
+      {
+        "answer": "under",
+        "choices": [],
+        "difficulty": "easy",
+        "explanation": "Under is one of the sight words listed for this week.",
         "format": "word_build",
-        "hint": "Starts with the 3-letter blend 'scr'.",
+        "hint": "u-n-d-e-r",
         "id": "q6",
-        "prompt": "Build the spelling word that means to use your nails to rub an itch.",
-        "subject": "Spelling"
+        "prompt": "Build the sight word that means the opposite of 'over'.",
+        "subject": "Reading"
+      },
+      {
+        "answer": "wash",
+        "choices": [],
+        "difficulty": "easy",
+        "explanation": "Wash is one of the sight words listed for this week.",
+        "format": "word_build",
+        "hint": "w-a-s-h",
+        "id": "q7",
+        "prompt": "Build the sight word that means to clean something with water.",
+        "subject": "Reading"
+      },
+      {
+        "answer": "re-",
+        "choices": [
+          "re-",
+          "ing-",
+          "ed-"
+        ],
+        "difficulty": "medium",
+        "explanation": "The source lists re-, un-, and dis- as the prefixes being studied.",
+        "format": "multiple_choice",
+        "hint": "It means to do something again.",
+        "id": "q8",
+        "prompt": "Which of these is a prefix we are studying?",
+        "subject": "Reading"
       },
       {
         "answer": "shrub",
@@ -175,240 +198,126 @@
         "difficulty": "medium",
         "explanation": "Shrub is a basic spelling word from the list.",
         "format": "word_build",
-        "hint": "Starts with 'shr'.",
-        "id": "q7",
-        "prompt": "Build the spelling word that refers to a small bush.",
+        "hint": "s-h-r-u-b",
+        "id": "q9",
+        "prompt": "Build the spelling word: a three-letter blend word for a small bush.",
         "subject": "Spelling"
       },
       {
-        "answer": "split",
+        "answer": "scratch",
         "choices": [],
         "difficulty": "medium",
-        "explanation": "Split is a basic spelling word from the list.",
+        "explanation": "Scratch is a basic spelling word from the list.",
         "format": "word_build",
-        "hint": "Starts with 'spl'.",
-        "id": "q8",
-        "prompt": "Build the spelling word that means to break into two parts.",
+        "hint": "s-c-r-a-t-c-h",
+        "id": "q10",
+        "prompt": "Build the spelling word: what you do if you have an itch.",
         "subject": "Spelling"
       },
       {
         "answer": "catch",
         "choices": [
           "catch",
-          "scratch",
-          "spring"
+          "strange",
+          "splash"
         ],
-        "difficulty": "easy",
-        "explanation": "Catch is listed under Review Words.",
+        "difficulty": "medium",
+        "explanation": "Catch and sting are listed as Review Words.",
         "format": "multiple_choice",
-        "hint": "Look at the Review Words list.",
-        "id": "q9",
-        "prompt": "Which word is a review word from a previous week?",
+        "hint": "It is in the Review Words column.",
+        "id": "q11",
+        "prompt": "Which word is a 'Review Word' on our spelling list?",
         "subject": "Spelling"
       },
       {
         "answer": "flower",
         "choices": [
           "flower",
-          "throne",
+          "scrape",
           "shred"
         ],
-        "difficulty": "easy",
-        "explanation": "Flower is listed under High Frequency Words.",
+        "difficulty": "medium",
+        "explanation": "Far, flower, and until are listed as High Frequency Words.",
         "format": "multiple_choice",
-        "hint": "It is something that grows in a garden.",
-        "id": "q10",
-        "prompt": "Which word is a High Frequency word?",
+        "hint": "It is in the High Frequency Words column.",
+        "id": "q12",
+        "prompt": "Which word is a 'High Frequency Word' on our spelling list?",
         "subject": "Spelling"
       },
       {
-        "answer": "straight",
-        "choices": [
-          "straight",
-          "circle",
-          "around"
-        ],
-        "difficulty": "easy",
-        "explanation": "Straight is included in the sight word list.",
-        "format": "multiple_choice",
-        "hint": "It means not curved.",
-        "id": "q11",
-        "prompt": "Which of these is a sight word for this week?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "under",
-        "choices": [
-          "under",
-          "almost",
-          "pull"
-        ],
-        "difficulty": "easy",
-        "explanation": "Under is one of the sight words listed.",
-        "format": "multiple_choice",
-        "hint": "Below something.",
-        "id": "q12",
-        "prompt": "Which sight word means the opposite of over?",
-        "subject": "Reading"
-      },
-      {
         "answer": "true",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "The Reading Work page lists re-, un-, and dis- as the prefixes.",
+        "explanation": "The test page lists Math lessons 1-5 (2 digit with & without regrouping) for Nov 17.",
         "format": "true_false",
-        "hint": "Check the Word Structure section.",
+        "hint": "Check the test schedule.",
         "id": "q13",
-        "prompt": "The prefixes being studied this week are re-, un-, and dis-.",
-        "subject": "Reading"
-      },
-      {
-        "answer": "soft c and soft g",
-        "choices": [
-          "soft c and soft g",
-          "hard k and hard t",
-          "silent p and silent h"
-        ],
-        "difficulty": "easy",
-        "explanation": "The Phonics section lists soft c and soft g.",
-        "format": "multiple_choice",
-        "hint": "Think about the letters c and g.",
-        "id": "q14",
-        "prompt": "What specific sounds are being studied in Phonics?",
-        "subject": "Phonics"
-      },
-      {
-        "answer": "singular & plural nouns",
-        "choices": [
-          "singular & plural nouns",
-          "compound words",
-          "verbs"
-        ],
-        "difficulty": "easy",
-        "explanation": "The Tests page lists singular & plural nouns for Nov 12.",
-        "format": "multiple_choice",
-        "hint": "It is about one or more than one.",
-        "id": "q15",
-        "prompt": "What is the topic for the Grammar test on November 12?",
-        "subject": "Grammar"
-      },
-      {
-        "answer": "compound words",
-        "choices": [
-          "compound words",
-          "proper nouns",
-          "adjectives"
-        ],
-        "difficulty": "easy",
-        "explanation": "The Tests page lists compound words for Nov 19.",
-        "format": "multiple_choice",
-        "hint": "Two words joined together.",
-        "id": "q16",
-        "prompt": "What is the topic for the Grammar test on November 19?",
-        "subject": "Grammar"
-      },
-      {
-        "answer": "true",
-        "choices": [],
-        "difficulty": "easy",
-        "explanation": "The Tests page specifies 2-digit with & without regrouping for the Nov 17 test.",
-        "format": "true_false",
-        "hint": "Check the Math test description.",
-        "id": "q17",
-        "prompt": "The Math test on November 17 covers 2-digit addition with and without regrouping.",
+        "prompt": "The upcoming Math test covers lessons 1-5 on 2-digit addition.",
         "subject": "Math"
       },
       {
-        "answer": "throne",
-        "choices": [],
-        "difficulty": "medium",
-        "explanation": "Throne is a basic spelling word from the list.",
-        "format": "word_build",
-        "hint": "Starts with 'thr'.",
-        "id": "q18",
-        "prompt": "Build the spelling word that means a seat for a king or queen.",
-        "subject": "Spelling"
-      },
-      {
-        "answer": "splash",
-        "choices": [],
-        "difficulty": "medium",
-        "explanation": "Splash is a basic spelling word from the list.",
-        "format": "word_build",
-        "hint": "Starts with 'spl'.",
-        "id": "q19",
-        "prompt": "Build the spelling word that means to jump into water.",
-        "subject": "Spelling"
-      },
-      {
-        "answer": "wash",
+        "answer": "Compound words",
         "choices": [
-          "wash",
-          "buy",
-          "food"
+          "Compound words",
+          "Singular nouns",
+          "Plural nouns"
         ],
-        "difficulty": "easy",
-        "explanation": "Wash is one of the sight words listed.",
+        "difficulty": "medium",
+        "explanation": "The test page lists Grammar (compound words) for Nov 19.",
         "format": "multiple_choice",
-        "hint": "You do this to your hands.",
-        "id": "q20",
-        "prompt": "Which sight word means to clean something with water?",
-        "subject": "Reading"
+        "hint": "It is the second grammar test listed.",
+        "id": "q14",
+        "prompt": "What is the topic for the Grammar test on November 19?",
+        "subject": "Grammar"
       }
     ],
     "reminders": [
       "Pretzel money is due Friday Nov. 13",
       "Nut Roll pick up is Tuesday Nov. 17",
       "Trimester 1 Book Project is due Thursday Nov. 19",
-      "Pretzel day is Thursday Nov. 19"
+      "Keep Reading log and Behavior chart in the HW folder"
     ],
     "schemaVersion": 2,
-    "sourceCapturedAt": "2026-11-11T23:20:22.097Z",
-    "sourceHash": "cca3695a8551068a799b7c3fdf4a382205d3884a08fd93f3895c3b9271ff64cb",
+    "sourceCapturedAt": "2026-11-12T15:35:20.055Z",
+    "sourceHash": "50b60bc186c91fdbfd59d8735ec4d4a4527f54886f80f180cd1f43378cd9b6b9",
     "sourceSufficient": true,
     "subjects": [
       {
         "studyNotes": [
           "God gave us the 10 Commandments to follow so we can love God and others.",
-          "The 1st Great Commandment: You shall love the Lord your God with all your heart, with all your soul, with all your mind, and with all your strength.",
-          "Commandment 1: Pray/Put God first.",
+          "The 1st Great Commandment: You shall love the Lord your God with all your heart, soul, mind, and strength.",
+          "Commandment 1: Pray and put God first.",
           "Commandment 2: Say God's name with love.",
-          "Commandment 3: Go to Mass."
+          "Commandment 3: Go to Mass.",
+          "Ways to pray include traditional prayer, talking to God, songs, Mass, the Bible, and Psalms."
         ],
         "subject": "Religion",
         "topics": [
           "Unit 2: Jesus Call Us to Give Ourselves in Love",
           "Chapter 5: Jesus Shows Us How to Love God our Father",
           "The 10 Commandments",
-          "The 1st Great Commandment"
+          "The 1st Great Commandment",
+          "Ways to Pray"
         ]
       },
       {
         "studyNotes": [
-          "Focus on sight words: pull, wash, under, food, almost, saw, out, sky, buy, straight.",
-          "Study word structures using prefixes re-, un-, and dis-."
+          "Practice sight words: pull, wash, under, food, almost, saw, out, sky, buy, straight.",
+          "Study prefixes: re-, un-, and dis-.",
+          "Spelling skill: 3 letter blends (e.g., scratch, scrape, spring, splash)."
         ],
         "subject": "Reading and Phonics",
         "topics": [
           "Soft c and soft g",
-          "Prefixes (re-, un-, dis-)"
-        ]
-      },
-      {
-        "studyNotes": [
-          "Basic words include: scratch, scrape, spring, throne, stripe, strange, shred, shrub, splash, split.",
-          "Review words: catch, sting.",
-          "High frequency words: far, flower, until."
-        ],
-        "subject": "Spelling",
-        "topics": [
-          "3 letter blends"
+          "Prefixes (re-, un-, dis-)",
+          "Sight Words",
+          "Three-letter blends"
         ]
       },
       {
         "studyNotes": [
           "Review singular and plural nouns for the test on Nov 12.",
-          "Study compound words for the test on Nov 19."
+          "Study compound words for the upcoming test on Nov 19."
         ],
         "subject": "Grammar",
         "topics": [
@@ -423,28 +332,28 @@
         ],
         "subject": "Math",
         "topics": [
-          "2 digit addition with and without regrouping"
+          "Two-digit addition with and without regrouping"
         ]
       }
     ],
-    "summary": "This week, students are focusing on 3-letter blends in spelling, soft c and g sounds in phonics, and prefixes in word structure. In Religion, the class is exploring the 1st Great Commandment and the first three Commandments. Preparation is also underway for upcoming assessments in Grammar and Math.",
+    "summary": "This week focuses on Unit 2 in Religion, exploring the first three Commandments and the Great Commandment. In Reading and Language Arts, students are practicing soft c and g sounds, three-letter blends, and prefixes, while Math covers two-digit addition with and without regrouping.",
     "vocabulary": [
       {
-        "meaning": "A prefix meaning again",
-        "subject": "Reading",
-        "term": "re-"
+        "meaning": "To rub or scrape a surface with something sharp or rough",
+        "subject": "Spelling",
+        "term": "scratch"
       },
       {
-        "meaning": "A prefix meaning not or the opposite of",
-        "subject": "Reading",
-        "term": "un-"
+        "meaning": "A woody plant which is smaller than a tree and has several main stems",
+        "subject": "Spelling",
+        "term": "shrub"
       },
       {
-        "meaning": "A prefix meaning not or away",
-        "subject": "Reading",
-        "term": "dis-"
+        "meaning": "A ceremonial chair for a sovereign or bishop",
+        "subject": "Spelling",
+        "term": "throne"
       }
     ],
-    "weekLabel": "Week of November 11, 2026"
+    "weekLabel": "Week of November 12, 2026"
   }
 }
