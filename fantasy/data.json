@@ -16,7 +16,8 @@
       "provider": "yahoo",
       "record": {
         "wins": 7,
-        "losses": 2
+        "losses": 2,
+        "ties": 0
       },
       "rank": 1,
       "roster": [
@@ -568,108 +569,108 @@
         }
       ],
       "matchup": {
+        "week": 10,
         "status": "in_progress",
-        "home": {
-          "teamId": "2",
-          "points": 0,
-          "projectedPoints": 153.07,
-          "winProbability": 0.57
-        },
-        "away": {
-          "teamId": "6",
-          "points": 16.3,
-          "projectedPoints": 139.82,
-          "winProbability": 0.43
-        }
+        "homeTeamId": "2",
+        "awayTeamId": "6",
+        "homePoints": 0,
+        "awayPoints": 16.3,
+        "homeProjected": 153.07,
+        "awayProjected": 139.82,
+        "homeWinProbability": 0.57,
+        "awayWinProbability": 0.43,
+        "opponent": "Josh ❤️creampies"
       },
       "transactions": [
         {
           "date": "2026-11-11",
-          "summary": "Added Tank Dell; Dropped Xavier Worthy"
+          "summary": "Add Tank Dell; Drop Xavier Worthy"
         },
         {
           "date": "2026-11-11",
-          "summary": "Added Ravens; Dropped Saints"
+          "summary": "Add Ravens; Drop Saints"
         },
         {
           "date": "2026-11-11",
-          "summary": "Added Davante Adams"
+          "summary": "Add Davante Adams"
         },
         {
           "date": "2026-11-11",
-          "summary": "Dropped Dameon Pierce"
+          "summary": "Drop Dameon Pierce"
         },
         {
           "date": "2026-11-11",
-          "summary": "Dropped Mark Andrews"
+          "summary": "Drop Mark Andrews"
         },
         {
           "date": "2026-11-05",
-          "summary": "Added Saints; Dropped Patriots"
+          "summary": "Add Saints; Drop Patriots"
         },
         {
           "date": "2026-11-01",
-          "summary": "Added Jonah Coleman"
+          "summary": "Add Jonah Coleman"
         },
         {
           "date": "2026-11-01",
-          "summary": "Dropped Jalen Hurts"
+          "summary": "Drop Jalen Hurts"
         },
         {
           "date": "2026-10-28",
-          "summary": "Added Patriots; Dropped Texans"
+          "summary": "Add Patriots; Drop Texans"
         },
         {
           "date": "2026-10-28",
-          "summary": "Added Trevor Lawrence; Dropped Kirk Cousins"
+          "summary": "Add Trevor Lawrence; Drop Kirk Cousins"
         },
         {
           "date": "2026-10-22",
-          "summary": "Added Will Reichard; Dropped Blake Grupe"
+          "summary": "Add Will Reichard; Drop Blake Grupe"
         },
         {
           "date": "2026-10-22",
-          "summary": "Added Texans; Dropped Patriots"
+          "summary": "Add Texans; Drop Patriots"
         },
         {
           "date": "2026-10-18",
-          "summary": "Added Carnell Tate"
+          "summary": "Add Carnell Tate"
         },
         {
           "date": "2026-10-18",
-          "summary": "Dropped Jonathon Brooks"
+          "summary": "Drop Jonathon Brooks"
         },
         {
           "date": "2026-10-18",
-          "summary": "Added Dameon Pierce; Dropped MarShawn Lloyd"
+          "summary": "Add Dameon Pierce; Drop MarShawn Lloyd"
         },
         {
           "date": "2026-10-15",
-          "summary": "Added Kirk Cousins; Dropped RJ Harvey"
+          "summary": "Add Kirk Cousins; Drop RJ Harvey"
         },
         {
           "date": "2026-10-14",
-          "summary": "Added MarShawn Lloyd; Dropped Tony Pollard"
+          "summary": "Add MarShawn Lloyd; Drop Tony Pollard"
         },
         {
           "date": "2026-10-14",
-          "summary": "Added Blake Grupe; Dropped Will Reichard"
+          "summary": "Add Blake Grupe; Drop Will Reichard"
         },
         {
           "date": "2026-10-14",
-          "summary": "Added Xavier Worthy; Dropped Jordan Addison"
+          "summary": "Add Xavier Worthy; Drop Jordan Addison"
         },
         {
           "date": "2026-10-14",
-          "summary": "Added Patriots; Dropped Texans"
+          "summary": "Add Patriots; Drop Texans"
         },
         {
           "date": "2026-10-14",
-          "summary": "Added Woody Marks; Dropped Malik Washington"
+          "summary": "Add Woody Marks; Drop Malik Washington"
         }
       ],
-      "transactionsCoverage": "recent completed bounded window",
-      "waiver": 1,
+      "transactionsCoverage": "recent_completed_bounded",
+      "waiver": {
+        "priority": 1
+      },
       "standings": {
         "rank": 1,
         "leagueSize": 8,
