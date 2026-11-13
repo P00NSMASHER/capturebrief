@@ -3,7 +3,7 @@
   "season": 2026,
   "provider": "Yahoo",
   "week": 10,
-  "syncedAtIso": "2026-11-13T03:27:58.886Z",
+  "syncedAtIso": "2026-11-13T07:34:16.839Z",
   "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
   "captureType": "scheduled-provider-read",
   "teams": {
@@ -19,7 +19,6 @@
         "losses": 2,
         "ties": 0
       },
-      "rank": 1,
       "roster": [
         {
           "id": "33389",
@@ -574,11 +573,11 @@
         "homeTeamId": "2",
         "awayTeamId": "6",
         "homePoints": 0,
-        "awayPoints": 16.3,
-        "homeProjected": 153.07,
-        "awayProjected": 139.82,
-        "homeWinProbability": 0.57,
-        "awayWinProbability": 0.43,
+        "awayPoints": 22.76,
+        "homeProjected": 153.12,
+        "awayProjected": 139.84,
+        "homeWinProbability": 0.56,
+        "awayWinProbability": 0.44,
         "opponent": "Josh ❤️creampies"
       },
       "transactions": [
@@ -668,6 +667,7 @@
         }
       ],
       "transactionsCoverage": "recent_completed_bounded",
+      "rank": 1,
       "waiver": {
         "priority": 1
       },
@@ -701,7 +701,7 @@
           "opponentProjected": 134.48
         }
       ],
-      "analysisAsOfIso": "2026-11-13T03:27:58.886Z"
+      "analysisAsOfIso": "2026-11-13T07:34:16.839Z"
     }
   }
 }
