@@ -3,7 +3,7 @@
   "season": 2026,
   "provider": "Yahoo",
   "week": 10,
-  "syncedAtIso": "2026-11-13T07:34:16.839Z",
+  "syncedAtIso": "2026-11-13T15:29:23.039Z",
   "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
   "captureType": "scheduled-provider-read",
   "teams": {
@@ -339,232 +339,229 @@
           "id": "40126",
           "name": "Josh Downs",
           "position": "WR",
-          "projection": null,
           "nflTeam": "KC",
+          "percentOwned": 83,
           "acquisitionState": "free_agent",
-          "percentOwned": 83
+          "projection": null
         },
         {
           "id": "42661",
           "name": "Denzel Boston",
           "position": "WR",
-          "projection": null,
           "nflTeam": "Cle",
+          "percentOwned": 80,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-14",
-          "percentOwned": 80
+          "projection": null
         },
         {
           "id": "41825",
           "name": "Tyler Shough",
           "position": "QB",
-          "projection": null,
           "nflTeam": "NO",
+          "percentOwned": 80,
           "acquisitionState": "free_agent",
-          "percentOwned": 80
+          "projection": null
         },
         {
           "id": "40029",
           "name": "Bryce Young",
           "position": "QB",
-          "projection": null,
           "nflTeam": "Car",
+          "percentOwned": 78,
           "acquisitionState": "free_agent",
-          "percentOwned": 77
+          "projection": null
         },
         {
           "id": "31019",
           "name": "Dallas Goedert",
           "position": "TE",
-          "projection": null,
           "nflTeam": "Phi",
+          "percentOwned": 75,
           "acquisitionState": "free_agent",
-          "percentOwned": 75
+          "projection": null
         },
         {
           "id": "40042",
           "name": "Jordan Addison",
           "position": "WR",
-          "projection": null,
           "nflTeam": "Min",
+          "percentOwned": 75,
           "acquisitionState": "free_agent",
-          "percentOwned": 75
+          "projection": null
         },
         {
           "id": "40875",
           "name": "Bo Nix",
           "position": "QB",
-          "projection": null,
           "nflTeam": "Den",
+          "percentOwned": 66,
           "acquisitionState": "free_agent",
-          "percentOwned": 66
+          "projection": null
         },
         {
           "id": "42669",
           "name": "Germie Bernard",
           "position": "WR",
-          "projection": null,
           "nflTeam": "Pit",
-          "acquisitionState": "waivers",
-          "waiverDate": "2026-11-13",
-          "percentOwned": 66
+          "percentOwned": 66,
+          "acquisitionState": "free_agent",
+          "projection": null
         },
         {
           "id": "32725",
           "name": "J.K. Dobbins",
           "position": "RB",
-          "projection": null,
           "nflTeam": "Den",
+          "percentOwned": 64,
           "acquisitionState": "free_agent",
-          "percentOwned": 64
+          "projection": null
         },
         {
           "id": "42652",
           "name": "Omar Cooper Jr.",
           "position": "WR",
-          "projection": null,
           "nflTeam": "NYJ",
+          "percentOwned": 63,
           "acquisitionState": "free_agent",
-          "percentOwned": 63
+          "projection": null
         },
         {
           "id": "40078",
           "name": "Brenton Strange",
           "position": "TE",
-          "projection": null,
           "nflTeam": "Jax",
-          "acquisitionState": "waivers",
-          "waiverDate": "2026-11-13",
-          "percentOwned": 61
+          "percentOwned": 61,
+          "acquisitionState": "free_agent",
+          "projection": null
         },
         {
           "id": "30180",
           "name": "Alvin Kamara",
           "position": "RB",
-          "projection": null,
           "nflTeam": "NO",
+          "percentOwned": 59,
           "acquisitionState": "free_agent",
-          "percentOwned": 59
+          "projection": null
         },
         {
           "id": "40877",
           "name": "Xavier Worthy",
           "position": "WR",
-          "projection": null,
           "nflTeam": "KC",
-          "acquisitionState": "waivers",
-          "waiverDate": "2026-11-13",
-          "percentOwned": 58
+          "percentOwned": 58,
+          "acquisitionState": "free_agent",
+          "projection": null
         },
         {
           "id": "33998",
           "name": "Wan'Dale Robinson",
           "position": "WR",
-          "projection": null,
           "nflTeam": "Ten",
+          "percentOwned": 54,
           "acquisitionState": "free_agent",
-          "percentOwned": 53
+          "projection": null
         },
         {
           "id": "32231",
           "name": "Jakobi Meyers",
           "position": "WR",
-          "projection": null,
           "nflTeam": "Jax",
+          "percentOwned": 51,
           "acquisitionState": "free_agent",
-          "percentOwned": 51
+          "projection": null
         },
         {
           "id": "41087",
           "name": "Ryan Flournoy",
           "position": "WR",
-          "projection": null,
           "nflTeam": "Dal",
+          "percentOwned": 49,
           "acquisitionState": "free_agent",
-          "percentOwned": 49
+          "projection": null
         },
         {
           "id": "42642",
           "name": "Makai Lemon",
           "position": "WR",
-          "projection": null,
           "nflTeam": "Phi",
+          "percentOwned": 48,
           "acquisitionState": "free_agent",
-          "percentOwned": 48
+          "projection": null
         },
         {
           "id": "41097",
           "name": "Devaughn Vele",
           "position": "WR",
-          "projection": null,
           "nflTeam": "NO",
+          "percentOwned": 42,
           "acquisitionState": "free_agent",
-          "percentOwned": 42
+          "projection": null
         },
         {
           "id": "40915",
           "name": "Adonai Mitchell",
           "position": "WR",
-          "projection": null,
           "nflTeam": "NYJ",
+          "percentOwned": 37,
           "acquisitionState": "free_agent",
-          "percentOwned": 37
+          "projection": null
         },
         {
           "id": "42693",
           "name": "Antonio Williams",
           "position": "WR",
-          "projection": null,
           "nflTeam": "Was",
+          "percentOwned": 27,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-18",
-          "percentOwned": 27
+          "projection": null
         },
         {
           "id": "34099",
           "name": "Chig Okonkwo",
           "position": "TE",
-          "projection": null,
           "nflTeam": "Was",
+          "percentOwned": 24,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-18",
-          "percentOwned": 24
+          "projection": null
         },
         {
           "id": "40889",
           "name": "Michael Penix Jr.",
           "position": "QB",
-          "projection": null,
           "nflTeam": "Atl",
+          "percentOwned": 22,
           "acquisitionState": "free_agent",
-          "percentOwned": 22
+          "projection": null
         },
         {
           "id": "26662",
           "name": "Geno Smith",
           "position": "QB",
-          "projection": null,
           "nflTeam": "NYJ",
+          "percentOwned": 21,
           "acquisitionState": "free_agent",
-          "percentOwned": 21
+          "projection": null
         },
         {
           "id": "40911",
           "name": "Keon Coleman",
           "position": "WR",
-          "projection": null,
           "nflTeam": "Buf",
+          "percentOwned": 21,
           "acquisitionState": "free_agent",
-          "percentOwned": 21
+          "projection": null
         },
         {
           "id": "41840",
           "name": "Tre' Harris",
           "position": "WR",
-          "projection": null,
           "nflTeam": "LAC",
+          "percentOwned": 4,
           "acquisitionState": "free_agent",
-          "percentOwned": 4
+          "projection": null
         }
       ],
       "matchup": {
@@ -574,103 +571,131 @@
         "awayTeamId": "6",
         "homePoints": 0,
         "awayPoints": 22.76,
-        "homeProjected": 153.12,
-        "awayProjected": 139.84,
-        "homeWinProbability": 0.56,
-        "awayWinProbability": 0.44,
+        "homeProjected": 153.87,
+        "awayProjected": 139.31,
+        "homeWinProbability": 0.57,
+        "awayWinProbability": 0.43,
         "opponent": "Josh ❤️creampies"
       },
       "transactions": [
         {
+          "id": "470.l.290846.tr.154",
           "date": "2026-11-11",
-          "summary": "Add Tank Dell; Drop Xavier Worthy"
+          "type": "add",
+          "summary": "Added Tank Dell; dropped Xavier Worthy"
         },
         {
+          "id": "470.l.290846.tr.153",
           "date": "2026-11-11",
-          "summary": "Add Ravens; Drop Saints"
+          "type": "add",
+          "summary": "Added Ravens; dropped Saints"
         },
         {
+          "id": "470.l.290846.tr.152",
           "date": "2026-11-11",
-          "summary": "Add Davante Adams"
+          "type": "add",
+          "summary": "Added Davante Adams"
         },
         {
+          "id": "470.l.290846.tr.151",
           "date": "2026-11-11",
-          "summary": "Drop Dameon Pierce"
+          "type": "drop",
+          "summary": "dropped Dameon Pierce"
         },
         {
+          "id": "470.l.290846.tr.150",
           "date": "2026-11-11",
-          "summary": "Drop Mark Andrews"
+          "type": "drop",
+          "summary": "dropped Mark Andrews"
         },
         {
+          "id": "470.l.290846.tr.139",
           "date": "2026-11-05",
-          "summary": "Add Saints; Drop Patriots"
+          "type": "add",
+          "summary": "Added Saints; dropped Patriots"
         },
         {
+          "id": "470.l.290846.tr.125",
           "date": "2026-11-01",
-          "summary": "Add Jonah Coleman"
+          "type": "add",
+          "summary": "Added Jonah Coleman"
         },
         {
+          "id": "470.l.290846.tr.124",
           "date": "2026-11-01",
-          "summary": "Drop Jalen Hurts"
+          "type": "drop",
+          "summary": "dropped Jalen Hurts"
         },
         {
+          "id": "470.l.290846.tr.116",
           "date": "2026-10-28",
-          "summary": "Add Patriots; Drop Texans"
+          "type": "add",
+          "summary": "Added Patriots; dropped Texans"
         },
         {
+          "id": "470.l.290846.tr.115",
           "date": "2026-10-28",
-          "summary": "Add Trevor Lawrence; Drop Kirk Cousins"
+          "type": "add",
+          "summary": "Added Trevor Lawrence; dropped Kirk Cousins"
         },
         {
+          "id": "470.l.290846.tr.104",
           "date": "2026-10-22",
-          "summary": "Add Will Reichard; Drop Blake Grupe"
+          "type": "add",
+          "summary": "Added Will Reichard; dropped Blake Grupe"
         },
         {
+          "id": "470.l.290846.tr.103",
           "date": "2026-10-22",
-          "summary": "Add Texans; Drop Patriots"
+          "type": "add",
+          "summary": "Added Texans; dropped Patriots"
         },
         {
+          "id": "470.l.290846.tr.92",
           "date": "2026-10-18",
-          "summary": "Add Carnell Tate"
+          "type": "add",
+          "summary": "Added Carnell Tate"
         },
         {
+          "id": "470.l.290846.tr.91",
           "date": "2026-10-18",
-          "summary": "Drop Jonathon Brooks"
+          "type": "drop",
+          "summary": "dropped Jonathon Brooks"
         },
         {
+          "id": "470.l.290846.tr.90",
           "date": "2026-10-18",
-          "summary": "Add Dameon Pierce; Drop MarShawn Lloyd"
+          "type": "add",
+          "summary": "Added Dameon Pierce; dropped MarShawn Lloyd"
         },
         {
+          "id": "470.l.290846.tr.85",
           "date": "2026-10-15",
-          "summary": "Add Kirk Cousins; Drop RJ Harvey"
+          "type": "add",
+          "summary": "Added Kirk Cousins; dropped RJ Harvey"
         },
         {
+          "id": "470.l.290846.tr.84",
           "date": "2026-10-14",
-          "summary": "Add MarShawn Lloyd; Drop Tony Pollard"
+          "type": "add",
+          "summary": "Added MarShawn Lloyd; dropped Tony Pollard"
         },
         {
+          "id": "470.l.290846.tr.83",
           "date": "2026-10-14",
-          "summary": "Add Blake Grupe; Drop Will Reichard"
+          "type": "add",
+          "summary": "Added Blake Grupe; dropped Will Reichard"
         },
         {
+          "id": "470.l.290846.tr.82",
           "date": "2026-10-14",
-          "summary": "Add Xavier Worthy; Drop Jordan Addison"
-        },
-        {
-          "date": "2026-10-14",
-          "summary": "Add Patriots; Drop Texans"
-        },
-        {
-          "date": "2026-10-14",
-          "summary": "Add Woody Marks; Drop Malik Washington"
+          "type": "add",
+          "summary": "Added Xavier Worthy; dropped Jordan Addison"
         }
       ],
       "transactionsCoverage": "recent_completed_bounded",
       "rank": 1,
-      "waiver": {
-        "priority": 1
-      },
+      "waiver": 1,
       "standings": {
         "rank": 1,
         "leagueSize": 8,
@@ -685,8 +710,8 @@
         {
           "week": 11,
           "opponent": "BEEFS GAY",
-          "myProjected": 151.37,
-          "opponentProjected": 90.45
+          "myProjected": 151.56,
+          "opponentProjected": 90.57
         },
         {
           "week": 12,
@@ -701,7 +726,7 @@
           "opponentProjected": 134.48
         }
       ],
-      "analysisAsOfIso": "2026-11-13T07:34:16.839Z"
+      "analysisAsOfIso": "2026-11-13T15:29:23.039Z"
     }
   }
 }
