@@ -3,7 +3,7 @@
   "season": 2026,
   "provider": "Yahoo",
   "week": 10,
-  "syncedAtIso": "2026-11-13T15:29:23.039Z",
+  "syncedAtIso": "2026-11-13T19:26:49.693Z",
   "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
   "captureType": "scheduled-provider-read",
   "teams": {
@@ -19,280 +19,299 @@
         "losses": 2,
         "ties": 0
       },
+      "rank": 1,
+      "waiver": {
+        "priority": 1,
+        "faabBalance": null
+      },
       "roster": [
         {
           "id": "33389",
           "name": "Trevor Lawrence",
           "position": "QB",
           "slot": "QB",
+          "nflTeam": "Jax",
+          "status": null,
+          "cantCut": false,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "QB"
-          ],
-          "nflTeam": "Jax",
-          "cantCut": false,
-          "editable": true,
-          "actualPoints": 0
+          ]
         },
         {
           "id": "33423",
           "name": "Javonte Williams",
           "position": "RB",
           "slot": "RB",
+          "nflTeam": "Dal",
+          "status": null,
+          "cantCut": false,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "RB",
             "W/R/T"
-          ],
-          "nflTeam": "Dal",
-          "cantCut": false,
-          "editable": true,
-          "actualPoints": 0
+          ]
         },
         {
           "id": "33991",
           "name": "Breece Hall",
           "position": "RB",
           "slot": "RB",
+          "nflTeam": "NYJ",
+          "status": null,
+          "cantCut": false,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "RB",
             "W/R/T"
-          ],
-          "nflTeam": "NYJ",
-          "cantCut": false,
-          "editable": true,
-          "actualPoints": 0
+          ]
         },
         {
           "id": "33393",
           "name": "Ja'Marr Chase",
           "position": "WR",
           "slot": "WR",
+          "nflTeam": "Cin",
+          "status": null,
+          "cantCut": true,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "WR",
             "W/R/T"
-          ],
-          "nflTeam": "Cin",
-          "cantCut": true,
-          "editable": true,
-          "actualPoints": 0
+          ]
         },
         {
           "id": "32692",
           "name": "Justin Jefferson",
           "position": "WR",
           "slot": "WR",
+          "nflTeam": "Min",
+          "status": null,
+          "cantCut": true,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "WR",
             "W/R/T"
-          ],
-          "nflTeam": "Min",
-          "cantCut": true,
-          "editable": true,
-          "actualPoints": 0
+          ]
         },
         {
           "id": "40878",
           "name": "Brock Bowers",
           "position": "TE",
           "slot": "TE",
+          "nflTeam": "LV",
+          "status": null,
+          "cantCut": true,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "TE",
             "W/R/T"
-          ],
-          "nflTeam": "LV",
-          "cantCut": true,
-          "editable": true,
-          "actualPoints": 0
+          ]
         },
         {
           "id": "32703",
           "name": "Tee Higgins",
           "position": "WR",
           "slot": "W/R/T",
+          "nflTeam": "Cin",
+          "status": null,
+          "cantCut": false,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "WR",
             "W/R/T"
-          ],
-          "nflTeam": "Cin",
-          "cantCut": false,
-          "editable": true,
-          "actualPoints": 0
+          ]
         },
         {
           "id": "40039",
           "name": "Zay Flowers",
           "position": "WR",
           "slot": "W/R/T",
+          "nflTeam": "Bal",
+          "status": null,
+          "cantCut": false,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "WR",
             "W/R/T"
-          ],
-          "nflTeam": "Bal",
-          "cantCut": false,
-          "editable": true,
-          "actualPoints": 0
+          ]
         },
         {
           "id": "33508",
           "name": "Rhamondre Stevenson",
           "position": "RB",
           "slot": "BN",
+          "nflTeam": "NE",
+          "status": "Q",
+          "cantCut": false,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "RB",
             "W/R/T"
-          ],
-          "nflTeam": "NE",
-          "status": "Q",
-          "cantCut": false,
-          "editable": true,
-          "actualPoints": 0
+          ]
         },
         {
           "id": "41902",
           "name": "Woody Marks",
           "position": "RB",
           "slot": "BN",
+          "nflTeam": "Hou",
+          "status": "Q",
+          "cantCut": false,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "RB",
             "W/R/T"
-          ],
-          "nflTeam": "Hou",
-          "status": "Q",
-          "cantCut": false,
-          "editable": true,
-          "actualPoints": 0
+          ]
         },
         {
           "id": "42730",
           "name": "Jonah Coleman",
           "position": "RB",
           "slot": "BN",
+          "nflTeam": "Den",
+          "status": null,
+          "cantCut": false,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "RB",
             "W/R/T"
-          ],
-          "nflTeam": "Den",
-          "cantCut": false,
-          "editable": true,
-          "actualPoints": 0
+          ]
         },
         {
           "id": "42630",
           "name": "Jordyn Tyson",
           "position": "WR",
           "slot": "BN",
+          "nflTeam": "NO",
+          "status": null,
+          "cantCut": false,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "WR",
             "W/R/T"
-          ],
-          "nflTeam": "NO",
-          "cantCut": false,
-          "editable": true,
-          "actualPoints": 0
+          ]
         },
         {
           "id": "42626",
           "name": "Carnell Tate",
           "position": "WR",
           "slot": "BN",
-          "projection": null,
-          "locked": false,
-          "eligiblePositions": [
-            "WR",
-            "W/R/T"
-          ],
           "nflTeam": "Ten",
-          "status": "Q",
+          "status": "O",
           "cantCut": false,
           "editable": true,
-          "actualPoints": 0
-        },
-        {
-          "id": "40097",
-          "name": "Tank Dell",
-          "position": "WR",
-          "slot": "BN",
-          "projection": null,
-          "locked": false,
-          "eligiblePositions": [
-            "WR",
-            "W/R/T"
-          ],
-          "nflTeam": "Hou",
-          "cantCut": false,
-          "editable": true,
-          "actualPoints": 0
-        },
-        {
-          "id": "27581",
-          "name": "Davante Adams",
-          "position": "WR",
-          "slot": "IR",
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "WR",
             "W/R/T",
             "IR"
-          ],
+          ]
+        },
+        {
+          "id": "40097",
+          "name": "Tank Dell",
+          "position": "WR",
+          "slot": "BN",
+          "nflTeam": "Hou",
+          "status": null,
+          "cantCut": false,
+          "editable": true,
+          "actualPoints": 0,
+          "projection": null,
+          "locked": false,
+          "eligiblePositions": [
+            "WR",
+            "W/R/T"
+          ]
+        },
+        {
+          "id": "27581",
+          "name": "Davante Adams",
+          "position": "WR",
+          "slot": "IR",
           "nflTeam": "LAR",
           "status": "IR",
           "cantCut": false,
           "editable": true,
-          "actualPoints": 0
+          "actualPoints": 0,
+          "projection": null,
+          "locked": false,
+          "eligiblePositions": [
+            "WR",
+            "W/R/T",
+            "IR"
+          ]
         },
         {
           "id": "41093",
           "name": "Will Reichard",
           "position": "K",
           "slot": "K",
+          "nflTeam": "Min",
+          "status": null,
+          "cantCut": false,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "K"
-          ],
-          "nflTeam": "Min",
-          "cantCut": false,
-          "editable": true,
-          "actualPoints": 0
+          ]
         },
         {
           "id": "100033",
           "name": "Ravens",
           "position": "DEF",
           "slot": "DEF",
+          "nflTeam": "Bal",
+          "status": null,
+          "cantCut": false,
+          "editable": true,
+          "actualPoints": 0,
           "projection": null,
           "locked": false,
           "eligiblePositions": [
             "DEF"
-          ],
-          "nflTeam": "Bal",
-          "cantCut": false,
-          "editable": true,
-          "actualPoints": 0
+          ]
         }
       ],
       "lineupSlots": [
@@ -340,362 +359,345 @@
           "name": "Josh Downs",
           "position": "WR",
           "nflTeam": "KC",
-          "percentOwned": 83,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 83
         },
         {
           "id": "42661",
           "name": "Denzel Boston",
           "position": "WR",
           "nflTeam": "Cle",
-          "percentOwned": 80,
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-14",
-          "projection": null
+          "percentOwned": 80
         },
         {
           "id": "41825",
           "name": "Tyler Shough",
           "position": "QB",
           "nflTeam": "NO",
-          "percentOwned": 80,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 80
         },
         {
           "id": "40029",
           "name": "Bryce Young",
           "position": "QB",
           "nflTeam": "Car",
-          "percentOwned": 78,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
-        },
-        {
-          "id": "31019",
-          "name": "Dallas Goedert",
-          "position": "TE",
-          "nflTeam": "Phi",
-          "percentOwned": 75,
-          "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 78
         },
         {
           "id": "40042",
           "name": "Jordan Addison",
           "position": "WR",
           "nflTeam": "Min",
-          "percentOwned": 75,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 76
+        },
+        {
+          "id": "31019",
+          "name": "Dallas Goedert",
+          "position": "TE",
+          "nflTeam": "Phi",
+          "projection": null,
+          "acquisitionState": "free_agent",
+          "percentOwned": 75
         },
         {
           "id": "40875",
           "name": "Bo Nix",
           "position": "QB",
           "nflTeam": "Den",
-          "percentOwned": 66,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 66
         },
         {
           "id": "42669",
           "name": "Germie Bernard",
           "position": "WR",
           "nflTeam": "Pit",
-          "percentOwned": 66,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 66
         },
         {
           "id": "32725",
           "name": "J.K. Dobbins",
           "position": "RB",
           "nflTeam": "Den",
-          "percentOwned": 64,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 64
         },
         {
           "id": "42652",
           "name": "Omar Cooper Jr.",
           "position": "WR",
           "nflTeam": "NYJ",
-          "percentOwned": 63,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 63
         },
         {
           "id": "40078",
           "name": "Brenton Strange",
           "position": "TE",
           "nflTeam": "Jax",
-          "percentOwned": 61,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 61
         },
         {
           "id": "30180",
           "name": "Alvin Kamara",
           "position": "RB",
           "nflTeam": "NO",
-          "percentOwned": 59,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 59
         },
         {
           "id": "40877",
           "name": "Xavier Worthy",
           "position": "WR",
           "nflTeam": "KC",
-          "percentOwned": 58,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 57
         },
         {
           "id": "33998",
           "name": "Wan'Dale Robinson",
           "position": "WR",
           "nflTeam": "Ten",
-          "percentOwned": 54,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 54
         },
         {
           "id": "32231",
           "name": "Jakobi Meyers",
           "position": "WR",
           "nflTeam": "Jax",
-          "percentOwned": 51,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 52
         },
         {
           "id": "41087",
           "name": "Ryan Flournoy",
           "position": "WR",
           "nflTeam": "Dal",
-          "percentOwned": 49,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 49
         },
         {
           "id": "42642",
           "name": "Makai Lemon",
           "position": "WR",
           "nflTeam": "Phi",
-          "percentOwned": 48,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 48
         },
         {
           "id": "41097",
           "name": "Devaughn Vele",
           "position": "WR",
           "nflTeam": "NO",
-          "percentOwned": 42,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 42
         },
         {
           "id": "40915",
           "name": "Adonai Mitchell",
           "position": "WR",
           "nflTeam": "NYJ",
-          "percentOwned": 37,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 37
         },
         {
           "id": "42693",
           "name": "Antonio Williams",
           "position": "WR",
           "nflTeam": "Was",
-          "percentOwned": 27,
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-18",
-          "projection": null
+          "percentOwned": 27
         },
         {
           "id": "34099",
           "name": "Chig Okonkwo",
           "position": "TE",
           "nflTeam": "Was",
-          "percentOwned": 24,
+          "projection": null,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-18",
-          "projection": null
+          "percentOwned": 24
         },
         {
           "id": "40889",
           "name": "Michael Penix Jr.",
           "position": "QB",
           "nflTeam": "Atl",
-          "percentOwned": 22,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 22
         },
         {
           "id": "26662",
           "name": "Geno Smith",
           "position": "QB",
           "nflTeam": "NYJ",
-          "percentOwned": 21,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 21
         },
         {
           "id": "40911",
           "name": "Keon Coleman",
           "position": "WR",
           "nflTeam": "Buf",
-          "percentOwned": 21,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 21
         },
         {
           "id": "41840",
           "name": "Tre' Harris",
           "position": "WR",
           "nflTeam": "LAC",
-          "percentOwned": 4,
+          "projection": null,
           "acquisitionState": "free_agent",
-          "projection": null
+          "percentOwned": 4
         }
       ],
       "matchup": {
-        "week": 10,
         "status": "in_progress",
-        "homeTeamId": "2",
-        "awayTeamId": "6",
-        "homePoints": 0,
-        "awayPoints": 22.76,
-        "homeProjected": 153.87,
-        "awayProjected": 139.31,
-        "homeWinProbability": 0.57,
-        "awayWinProbability": 0.43,
-        "opponent": "Josh ❤️creampies"
+        "home": {
+          "teamId": "2",
+          "name": "Brock Hard & Tee Baggin",
+          "points": 0,
+          "projectedPoints": 153.62,
+          "winProbability": 0.57
+        },
+        "away": {
+          "teamId": "6",
+          "name": "Josh ❤️creampies",
+          "points": 22.76,
+          "projectedPoints": 139.18,
+          "winProbability": 0.43
+        }
       },
       "transactions": [
         {
-          "id": "470.l.290846.tr.154",
           "date": "2026-11-11",
-          "type": "add",
-          "summary": "Added Tank Dell; dropped Xavier Worthy"
+          "summary": "Added Tank Dell; Dropped Xavier Worthy",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.153",
           "date": "2026-11-11",
-          "type": "add",
-          "summary": "Added Ravens; dropped Saints"
+          "summary": "Added Ravens; Dropped Saints",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.152",
           "date": "2026-11-11",
-          "type": "add",
-          "summary": "Added Davante Adams"
+          "summary": "Added Davante Adams",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.151",
           "date": "2026-11-11",
-          "type": "drop",
-          "summary": "dropped Dameon Pierce"
+          "summary": "Dropped Dameon Pierce",
+          "type": "drop"
         },
         {
-          "id": "470.l.290846.tr.150",
           "date": "2026-11-11",
-          "type": "drop",
-          "summary": "dropped Mark Andrews"
+          "summary": "Dropped Mark Andrews",
+          "type": "drop"
         },
         {
-          "id": "470.l.290846.tr.139",
           "date": "2026-11-05",
-          "type": "add",
-          "summary": "Added Saints; dropped Patriots"
+          "summary": "Added Saints; Dropped Patriots",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.125",
           "date": "2026-11-01",
-          "type": "add",
-          "summary": "Added Jonah Coleman"
+          "summary": "Added Jonah Coleman",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.124",
           "date": "2026-11-01",
-          "type": "drop",
-          "summary": "dropped Jalen Hurts"
+          "summary": "Dropped Jalen Hurts",
+          "type": "drop"
         },
         {
-          "id": "470.l.290846.tr.116",
           "date": "2026-10-28",
-          "type": "add",
-          "summary": "Added Patriots; dropped Texans"
+          "summary": "Added Patriots; Dropped Texans",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.115",
           "date": "2026-10-28",
-          "type": "add",
-          "summary": "Added Trevor Lawrence; dropped Kirk Cousins"
+          "summary": "Added Trevor Lawrence; Dropped Kirk Cousins",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.104",
           "date": "2026-10-22",
-          "type": "add",
-          "summary": "Added Will Reichard; dropped Blake Grupe"
+          "summary": "Added Will Reichard; Dropped Blake Grupe",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.103",
           "date": "2026-10-22",
-          "type": "add",
-          "summary": "Added Texans; dropped Patriots"
+          "summary": "Added Texans; Dropped Patriots",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.92",
           "date": "2026-10-18",
-          "type": "add",
-          "summary": "Added Carnell Tate"
+          "summary": "Added Carnell Tate",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.91",
           "date": "2026-10-18",
-          "type": "drop",
-          "summary": "dropped Jonathon Brooks"
+          "summary": "Dropped Jonathon Brooks",
+          "type": "drop"
         },
         {
-          "id": "470.l.290846.tr.90",
           "date": "2026-10-18",
-          "type": "add",
-          "summary": "Added Dameon Pierce; dropped MarShawn Lloyd"
+          "summary": "Added Dameon Pierce; Dropped MarShawn Lloyd",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.85",
           "date": "2026-10-15",
-          "type": "add",
-          "summary": "Added Kirk Cousins; dropped RJ Harvey"
+          "summary": "Added Kirk Cousins; Dropped RJ Harvey",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.84",
           "date": "2026-10-14",
-          "type": "add",
-          "summary": "Added MarShawn Lloyd; dropped Tony Pollard"
+          "summary": "Added MarShawn Lloyd; Dropped Tony Pollard",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.83",
           "date": "2026-10-14",
-          "type": "add",
-          "summary": "Added Blake Grupe; dropped Will Reichard"
+          "summary": "Added Blake Grupe; Dropped Will Reichard",
+          "type": "add"
         },
         {
-          "id": "470.l.290846.tr.82",
           "date": "2026-10-14",
-          "type": "add",
-          "summary": "Added Xavier Worthy; dropped Jordan Addison"
+          "summary": "Added Xavier Worthy; Dropped Jordan Addison",
+          "type": "add"
         }
       ],
-      "transactionsCoverage": "recent_completed_bounded",
-      "rank": 1,
-      "waiver": 1,
+      "transactionsCoverage": "bounded-recent-completed-only",
       "standings": {
         "rank": 1,
         "leagueSize": 8,
@@ -704,14 +706,14 @@
         "pointsFor": 1366.72,
         "pointsAgainst": 1252.96,
         "seasonPhase": "regular_season",
-        "asOfIso": "2026-11-12T11:28:34.919Z"
+        "asOfIso": "2026-11-13T19:26:49.693Z"
       },
       "upcomingMatchups": [
         {
           "week": 11,
           "opponent": "BEEFS GAY",
-          "myProjected": 151.56,
-          "opponentProjected": 90.57
+          "myProjected": 151.28,
+          "opponentProjected": 90.47
         },
         {
           "week": 12,
@@ -726,7 +728,7 @@
           "opponentProjected": 134.48
         }
       ],
-      "analysisAsOfIso": "2026-11-13T15:29:23.039Z"
+      "analysisAsOfIso": "2026-11-13T19:26:49.693Z"
     }
   }
 }
