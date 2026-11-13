@@ -3,7 +3,7 @@
   "season": 2026,
   "provider": "Yahoo",
   "week": 10,
-  "syncedAtIso": "2026-11-12T23:29:29.711Z",
+  "syncedAtIso": "2026-11-13T03:27:58.886Z",
   "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
   "captureType": "scheduled-provider-read",
   "teams": {
@@ -16,13 +16,9 @@
       "provider": "yahoo",
       "record": {
         "wins": 7,
-        "losses": 2,
-        "ties": 0
+        "losses": 2
       },
       "rank": 1,
-      "waiver": {
-        "priority": 1
-      },
       "roster": [
         {
           "id": "33389",
@@ -346,7 +342,7 @@
           "projection": null,
           "nflTeam": "KC",
           "acquisitionState": "free_agent",
-          "percentOwned": 84
+          "percentOwned": 83
         },
         {
           "id": "42661",
@@ -383,7 +379,7 @@
           "projection": null,
           "nflTeam": "Phi",
           "acquisitionState": "free_agent",
-          "percentOwned": 76
+          "percentOwned": 75
         },
         {
           "id": "40042",
@@ -392,7 +388,7 @@
           "projection": null,
           "nflTeam": "Min",
           "acquisitionState": "free_agent",
-          "percentOwned": 74
+          "percentOwned": 75
         },
         {
           "id": "40875",
@@ -401,7 +397,7 @@
           "projection": null,
           "nflTeam": "Den",
           "acquisitionState": "free_agent",
-          "percentOwned": 67
+          "percentOwned": 66
         },
         {
           "id": "42669",
@@ -411,7 +407,7 @@
           "nflTeam": "Pit",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-13",
-          "percentOwned": 65
+          "percentOwned": 66
         },
         {
           "id": "32725",
@@ -420,7 +416,7 @@
           "projection": null,
           "nflTeam": "Den",
           "acquisitionState": "free_agent",
-          "percentOwned": 65
+          "percentOwned": 64
         },
         {
           "id": "42652",
@@ -429,7 +425,7 @@
           "projection": null,
           "nflTeam": "NYJ",
           "acquisitionState": "free_agent",
-          "percentOwned": 64
+          "percentOwned": 63
         },
         {
           "id": "40078",
@@ -439,7 +435,7 @@
           "nflTeam": "Jax",
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-13",
-          "percentOwned": 60
+          "percentOwned": 61
         },
         {
           "id": "30180",
@@ -503,7 +499,7 @@
           "projection": null,
           "nflTeam": "NO",
           "acquisitionState": "free_agent",
-          "percentOwned": 43
+          "percentOwned": 42
         },
         {
           "id": "40915",
@@ -512,7 +508,7 @@
           "projection": null,
           "nflTeam": "NYJ",
           "acquisitionState": "free_agent",
-          "percentOwned": 38
+          "percentOwned": 37
         },
         {
           "id": "42693",
@@ -520,7 +516,8 @@
           "position": "WR",
           "projection": null,
           "nflTeam": "Was",
-          "acquisitionState": "free_agent",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-18",
           "percentOwned": 27
         },
         {
@@ -529,7 +526,8 @@
           "position": "TE",
           "projection": null,
           "nflTeam": "Was",
-          "acquisitionState": "free_agent",
+          "acquisitionState": "waivers",
+          "waiverDate": "2026-11-18",
           "percentOwned": 24
         },
         {
@@ -570,105 +568,108 @@
         }
       ],
       "matchup": {
-        "week": 10,
         "status": "in_progress",
-        "homeTeamId": "2",
-        "awayTeamId": "6",
-        "homePoints": 0,
-        "awayPoints": 0,
-        "homeProjected": 153.09,
-        "awayProjected": 139.62,
-        "homeWinProbability": 0.59,
-        "awayWinProbability": 0.41,
-        "opponent": "Josh ❤️creampies"
+        "home": {
+          "teamId": "2",
+          "points": 0,
+          "projectedPoints": 153.07,
+          "winProbability": 0.57
+        },
+        "away": {
+          "teamId": "6",
+          "points": 16.3,
+          "projectedPoints": 139.82,
+          "winProbability": 0.43
+        }
       },
       "transactions": [
         {
           "date": "2026-11-11",
-          "summary": "Add Tank Dell; Drop Xavier Worthy"
+          "summary": "Added Tank Dell; Dropped Xavier Worthy"
         },
         {
           "date": "2026-11-11",
-          "summary": "Add Ravens; Drop Saints"
+          "summary": "Added Ravens; Dropped Saints"
         },
         {
           "date": "2026-11-11",
-          "summary": "Add Davante Adams"
+          "summary": "Added Davante Adams"
         },
         {
           "date": "2026-11-11",
-          "summary": "Drop Dameon Pierce"
+          "summary": "Dropped Dameon Pierce"
         },
         {
           "date": "2026-11-11",
-          "summary": "Drop Mark Andrews"
+          "summary": "Dropped Mark Andrews"
         },
         {
           "date": "2026-11-05",
-          "summary": "Add Saints; Drop Patriots"
+          "summary": "Added Saints; Dropped Patriots"
         },
         {
           "date": "2026-11-01",
-          "summary": "Add Jonah Coleman"
+          "summary": "Added Jonah Coleman"
         },
         {
           "date": "2026-11-01",
-          "summary": "Drop Jalen Hurts"
+          "summary": "Dropped Jalen Hurts"
         },
         {
           "date": "2026-10-28",
-          "summary": "Add Patriots; Drop Texans"
+          "summary": "Added Patriots; Dropped Texans"
         },
         {
           "date": "2026-10-28",
-          "summary": "Add Trevor Lawrence; Drop Kirk Cousins"
+          "summary": "Added Trevor Lawrence; Dropped Kirk Cousins"
         },
         {
           "date": "2026-10-22",
-          "summary": "Add Will Reichard; Drop Blake Grupe"
+          "summary": "Added Will Reichard; Dropped Blake Grupe"
         },
         {
           "date": "2026-10-22",
-          "summary": "Add Texans; Drop Patriots"
+          "summary": "Added Texans; Dropped Patriots"
         },
         {
           "date": "2026-10-18",
-          "summary": "Add Carnell Tate"
+          "summary": "Added Carnell Tate"
         },
         {
           "date": "2026-10-18",
-          "summary": "Drop Jonathon Brooks"
+          "summary": "Dropped Jonathon Brooks"
         },
         {
           "date": "2026-10-18",
-          "summary": "Add Dameon Pierce; Drop MarShawn Lloyd"
+          "summary": "Added Dameon Pierce; Dropped MarShawn Lloyd"
         },
         {
           "date": "2026-10-15",
-          "summary": "Add Kirk Cousins; Drop RJ Harvey"
+          "summary": "Added Kirk Cousins; Dropped RJ Harvey"
         },
         {
           "date": "2026-10-14",
-          "summary": "Add MarShawn Lloyd; Drop Tony Pollard"
+          "summary": "Added MarShawn Lloyd; Dropped Tony Pollard"
         },
         {
           "date": "2026-10-14",
-          "summary": "Add Blake Grupe; Drop Will Reichard"
+          "summary": "Added Blake Grupe; Dropped Will Reichard"
         },
         {
           "date": "2026-10-14",
-          "summary": "Add Xavier Worthy; Drop Jordan Addison"
+          "summary": "Added Xavier Worthy; Dropped Jordan Addison"
         },
         {
           "date": "2026-10-14",
-          "summary": "Add Patriots; Drop Texans"
+          "summary": "Added Patriots; Dropped Texans"
         },
         {
           "date": "2026-10-14",
-          "summary": "Add Woody Marks; Drop Malik Washington"
+          "summary": "Added Woody Marks; Dropped Malik Washington"
         }
       ],
-      "transactionsCoverage": "recent_completed_bounded",
+      "transactionsCoverage": "recent completed bounded window",
+      "waiver": 1,
       "standings": {
         "rank": 1,
         "leagueSize": 8,
@@ -683,8 +684,8 @@
         {
           "week": 11,
           "opponent": "BEEFS GAY",
-          "myProjected": 151.39,
-          "opponentProjected": 104.39
+          "myProjected": 151.37,
+          "opponentProjected": 90.45
         },
         {
           "week": 12,
@@ -699,7 +700,7 @@
           "opponentProjected": 134.48
         }
       ],
-      "analysisAsOfIso": "2026-11-12T23:29:29.711Z"
+      "analysisAsOfIso": "2026-11-13T03:27:58.886Z"
     }
   }
 }
