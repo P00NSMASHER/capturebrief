@@ -3,7 +3,7 @@
   "season": 2026,
   "provider": "Yahoo",
   "week": 10,
-  "syncedAtIso": "2026-11-14T11:29:54.213Z",
+  "syncedAtIso": "2026-11-14T15:29:37.254Z",
   "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
   "captureType": "scheduled-provider-read",
   "teams": {
@@ -570,8 +570,8 @@
         "awayTeamId": "6",
         "homePoints": 0,
         "awayPoints": 22.76,
-        "homeProjected": 154.77,
-        "awayProjected": 139.34,
+        "homeProjected": 154.8,
+        "awayProjected": 139.5,
         "homeWinProbability": 0.57,
         "awayWinProbability": 0.43,
         "opponent": "Josh ❤️creampies"
@@ -691,8 +691,8 @@
         {
           "week": 11,
           "opponent": "BEEFS GAY",
-          "myProjected": 151.23,
-          "opponentProjected": 90.55
+          "myProjected": 151.22,
+          "opponentProjected": 90.45
         },
         {
           "week": 12,
@@ -707,7 +707,7 @@
           "opponentProjected": 134.25
         }
       ],
-      "analysisAsOfIso": "2026-11-14T11:29:54.213Z"
+      "analysisAsOfIso": "2026-11-14T15:29:37.254Z"
     }
   }
 }
