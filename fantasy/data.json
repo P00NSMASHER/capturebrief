@@ -3,7 +3,7 @@
   "season": 2026,
   "provider": "Yahoo",
   "week": 10,
-  "syncedAtIso": "2026-11-14T19:29:36.481Z",
+  "syncedAtIso": "2026-11-15T07:27:37.526Z",
   "source": "Flaim Fantasy / Yahoo scheduled read-only capture (not real-time)",
   "captureType": "scheduled-provider-read",
   "teams": {
@@ -385,7 +385,7 @@
           "name": "Dallas Goedert",
           "position": "TE",
           "nflTeam": "Phi",
-          "percentOwned": 74,
+          "percentOwned": 73,
           "acquisitionState": "free_agent",
           "projection": null
         },
@@ -421,7 +421,7 @@
           "name": "J.K. Dobbins",
           "position": "RB",
           "nflTeam": "Den",
-          "percentOwned": 63,
+          "percentOwned": 62,
           "acquisitionState": "free_agent",
           "projection": null
         },
@@ -444,20 +444,20 @@
           "projection": null
         },
         {
-          "id": "40877",
-          "name": "Xavier Worthy",
+          "id": "33998",
+          "name": "Wan'Dale Robinson",
           "position": "WR",
-          "nflTeam": "KC",
+          "nflTeam": "Ten",
           "percentOwned": 57,
           "acquisitionState": "free_agent",
           "projection": null
         },
         {
-          "id": "33998",
-          "name": "Wan'Dale Robinson",
+          "id": "40877",
+          "name": "Xavier Worthy",
           "position": "WR",
-          "nflTeam": "Ten",
-          "percentOwned": 56,
+          "nflTeam": "KC",
+          "percentOwned": 57,
           "acquisitionState": "free_agent",
           "projection": null
         },
@@ -493,7 +493,7 @@
           "name": "Devaughn Vele",
           "position": "WR",
           "nflTeam": "NO",
-          "percentOwned": 42,
+          "percentOwned": 41,
           "acquisitionState": "free_agent",
           "projection": null
         },
@@ -502,7 +502,7 @@
           "name": "Adonai Mitchell",
           "position": "WR",
           "nflTeam": "NYJ",
-          "percentOwned": 35,
+          "percentOwned": 34,
           "acquisitionState": "free_agent",
           "projection": null
         },
@@ -521,7 +521,7 @@
           "name": "Chig Okonkwo",
           "position": "TE",
           "nflTeam": "Was",
-          "percentOwned": 24,
+          "percentOwned": 23,
           "acquisitionState": "waivers",
           "waiverDate": "2026-11-18",
           "projection": null
@@ -536,20 +536,20 @@
           "projection": null
         },
         {
-          "id": "40911",
-          "name": "Keon Coleman",
-          "position": "WR",
-          "nflTeam": "Buf",
-          "percentOwned": 21,
-          "acquisitionState": "free_agent",
-          "projection": null
-        },
-        {
           "id": "40889",
           "name": "Michael Penix Jr.",
           "position": "QB",
           "nflTeam": "Atl",
           "percentOwned": 21,
+          "acquisitionState": "free_agent",
+          "projection": null
+        },
+        {
+          "id": "40911",
+          "name": "Keon Coleman",
+          "position": "WR",
+          "nflTeam": "Buf",
+          "percentOwned": 20,
           "acquisitionState": "free_agent",
           "projection": null
         },
@@ -570,8 +570,8 @@
         "awayTeamId": "6",
         "homePoints": 0,
         "awayPoints": 22.76,
-        "homeProjected": 154.73,
-        "awayProjected": 140,
+        "homeProjected": 154.69,
+        "awayProjected": 139.37,
         "homeWinProbability": 0.57,
         "awayWinProbability": 0.43,
         "opponent": "Josh ❤️creampies"
@@ -666,12 +666,6 @@
           "date": "2026-10-18",
           "type": "add",
           "summary": "Added Dameon Pierce; dropped MarShawn Lloyd"
-        },
-        {
-          "id": "470.l.290846.tr.85",
-          "date": "2026-10-15",
-          "type": "add",
-          "summary": "Added Kirk Cousins; dropped RJ Harvey"
         }
       ],
       "transactionsCoverage": "recent_completed_bounded",
@@ -691,23 +685,23 @@
         {
           "week": 11,
           "opponent": "BEEFS GAY",
-          "myProjected": 151.22,
-          "opponentProjected": 90.49
+          "myProjected": 151.2,
+          "opponentProjected": 90.27
         },
         {
           "week": 12,
           "opponent": "Jersey junkyard",
           "myProjected": 154.05,
-          "opponentProjected": 135.76
+          "opponentProjected": 135.78
         },
         {
           "week": 13,
           "opponent": "Frenchville HornHog",
           "myProjected": 94.89,
-          "opponentProjected": 134.25
+          "opponentProjected": 134.28
         }
       ],
-      "analysisAsOfIso": "2026-11-14T19:29:36.481Z"
+      "analysisAsOfIso": "2026-11-15T07:27:37.526Z"
     }
   }
 }
