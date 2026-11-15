@@ -11,7 +11,11 @@
       "teamId": "2",
       "leagueUrl": "https://football.fantasysports.yahoo.com/f1/290846",
       "provider": "yahoo",
-      "record": null,
+      "record": {
+        "wins": 7,
+        "losses": 2,
+        "ties": 0
+      },
       "rank": 1,
       "waiver": 1,
       "roster": [
@@ -547,75 +551,106 @@
         "homeTeamId": "2",
         "awayTeamId": "6",
         "homePoints": 0,
-        "homeProjectedPoints": 154.64,
         "homeWinProbability": 0.57,
         "awayPoints": 22.76,
-        "awayProjectedPoints": 139.41,
-        "awayWinProbability": 0.43
+        "awayWinProbability": 0.43,
+        "homeProjected": 154.64,
+        "awayProjected": 139.41,
+        "opponent": "Josh ❤️creampies"
       },
       "transactions": [
         {
+          "id": "470.l.290846.tr.154",
           "date": "2026-11-11",
-          "summary": "Added Tank Dell; Dropped Xavier Worthy"
+          "type": "add",
+          "summary": "Added Tank Dell; dropped Xavier Worthy"
         },
         {
+          "id": "470.l.290846.tr.153",
           "date": "2026-11-11",
-          "summary": "Added Ravens; Dropped Saints"
+          "type": "add",
+          "summary": "Added Ravens; dropped Saints"
         },
         {
+          "id": "470.l.290846.tr.152",
           "date": "2026-11-11",
+          "type": "add",
           "summary": "Added Davante Adams"
         },
         {
+          "id": "470.l.290846.tr.151",
           "date": "2026-11-11",
+          "type": "drop",
           "summary": "Dropped Dameon Pierce"
         },
         {
+          "id": "470.l.290846.tr.150",
           "date": "2026-11-11",
+          "type": "drop",
           "summary": "Dropped Mark Andrews"
         },
         {
+          "id": "470.l.290846.tr.139",
           "date": "2026-11-05",
-          "summary": "Added Saints; Dropped Patriots"
+          "type": "add",
+          "summary": "Added Saints; dropped Patriots"
         },
         {
+          "id": "470.l.290846.tr.125",
           "date": "2026-11-01",
+          "type": "add",
           "summary": "Added Jonah Coleman"
         },
         {
+          "id": "470.l.290846.tr.124",
           "date": "2026-11-01",
+          "type": "drop",
           "summary": "Dropped Jalen Hurts"
         },
         {
+          "id": "470.l.290846.tr.116",
           "date": "2026-10-28",
-          "summary": "Added Patriots; Dropped Texans"
+          "type": "add",
+          "summary": "Added Patriots; dropped Texans"
         },
         {
+          "id": "470.l.290846.tr.115",
           "date": "2026-10-28",
-          "summary": "Added Trevor Lawrence; Dropped Kirk Cousins"
+          "type": "add",
+          "summary": "Added Trevor Lawrence; dropped Kirk Cousins"
         },
         {
+          "id": "470.l.290846.tr.104",
           "date": "2026-10-22",
-          "summary": "Added Will Reichard; Dropped Blake Grupe"
+          "type": "add",
+          "summary": "Added Will Reichard; dropped Blake Grupe"
         },
         {
+          "id": "470.l.290846.tr.103",
           "date": "2026-10-22",
-          "summary": "Added Texans; Dropped Patriots"
+          "type": "add",
+          "summary": "Added Texans; dropped Patriots"
         },
         {
+          "id": "470.l.290846.tr.92",
           "date": "2026-10-18",
+          "type": "add",
           "summary": "Added Carnell Tate"
         },
         {
+          "id": "470.l.290846.tr.91",
           "date": "2026-10-18",
+          "type": "drop",
           "summary": "Dropped Jonathon Brooks"
         },
         {
+          "id": "470.l.290846.tr.90",
           "date": "2026-10-18",
-          "summary": "Added Dameon Pierce; Dropped MarShawn Lloyd"
+          "type": "add",
+          "summary": "Added Dameon Pierce; dropped MarShawn Lloyd"
         }
       ],
-      "transactionsCoverage": "Yahoo recent completed transactions; bounded/non-exhaustive",
+      "transactionsCoverage": "recent_completed_bounded",
       "standings": {
         "rank": 1,
         "wins": 7,
@@ -624,7 +659,7 @@
         "pointsAgainst": 1252.96,
         "leagueSize": 8,
         "seasonPhase": "regular_season",
-        "asOfIso": "2026-11-15T11:29:25.344Z"
+        "asOfIso": "2026-11-12T11:28:34.919Z"
       },
       "upcomingMatchups": [
         {
