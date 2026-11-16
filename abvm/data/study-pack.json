@@ -3,40 +3,24 @@
   "syncPolicy": {
     "intervalHours": 4
   },
-  "sourceCapturedAt": "2026-11-12T23:40:22.926Z",
+  "sourceCapturedAt": "2026-11-13T19:55:23.703Z",
   "pack": {
     "gaps": [],
     "homework": [
       {
-        "day": "Thursday",
-        "due": "not specified",
-        "subject": "Spelling",
-        "task": "Spelling Choice Board activity"
+        "day": "Daily",
+        "due": "Ongoing",
+        "subject": "Religion",
+        "task": "Attend Mass"
       },
       {
-        "day": "Thursday",
-        "due": "not specified",
-        "subject": "Math",
-        "task": "Math pg. 58"
-      },
-      {
-        "day": "Thursday",
-        "due": "not specified",
+        "day": "Daily",
+        "due": "Ongoing",
         "subject": "Reading",
         "task": "Read and update Reading log"
       }
     ],
     "importantDates": [
-      {
-        "date": "Friday Nov. 13",
-        "kind": "deadline",
-        "label": "Pretzel money due"
-      },
-      {
-        "date": "Friday Nov. 13",
-        "kind": "test",
-        "label": "Spelling (3 letter blends) and Handwriting Test"
-      },
       {
         "date": "Tuesday Nov. 17",
         "kind": "event",
@@ -50,7 +34,7 @@
       {
         "date": "Tuesday Nov. 17",
         "kind": "test",
-        "label": "Math Test (Lessons 1-5)"
+        "label": "Math lessons 1-5 Test"
       },
       {
         "date": "Wednesday Nov. 18",
@@ -80,12 +64,32 @@
       {
         "date": "Friday Nov. 20",
         "kind": "test",
-        "label": "Spelling (long a) and Handwriting Test"
+        "label": "Spelling Test (long a)/Handwriting"
       },
       {
         "date": "Friday Nov. 20",
         "kind": "test",
         "label": "Phonics Test (long vowels)"
+      },
+      {
+        "date": "Monday Nov. 23",
+        "kind": "event",
+        "label": "Start of Trimester 2"
+      },
+      {
+        "date": "Tuesday Nov. 24",
+        "kind": "event",
+        "label": "DDD for SPCA"
+      },
+      {
+        "date": "Wednesday Nov. 25",
+        "kind": "event",
+        "label": "12:00 Dismissal / Report Cards"
+      },
+      {
+        "date": "Thursday Nov. 26-Monday Nov. 30",
+        "kind": "holiday",
+        "label": "Thanksgiving Break (No School)"
       }
     ],
     "questions": [
@@ -94,13 +98,12 @@
         "choices": [
           "So we can love God and others",
           "To help us learn to read",
-          "To tell us what to eat",
-          "To help us find our way home"
+          "To tell us what to eat"
         ],
         "difficulty": "easy",
-        "explanation": "The source states God gave us the 10 Commandments to follow so we can love God and others.",
+        "explanation": "The source states God gave us the 10 Commandments so we can love God and others.",
         "format": "multiple_choice",
-        "hint": "It is about showing love to God and the people around us.",
+        "hint": "It is about showing love.",
         "id": "q1",
         "prompt": "Why did God give us the 10 Commandments?",
         "subject": "Religion"
@@ -111,9 +114,9 @@
         "difficulty": "easy",
         "explanation": "The 1st Great Commandment is to love the Lord your God with all your heart, soul, mind, and strength.",
         "format": "true_false",
-        "hint": "This commandment covers every part of how we love God.",
+        "hint": "Think about the Great Commandment.",
         "id": "q2",
-        "prompt": "The 1st Great Commandment says you should love God with all your heart, soul, mind, and strength.",
+        "prompt": "The 1st Great Commandment tells us to love God with all our heart, soul, mind, and strength.",
         "subject": "Religion"
       },
       {
@@ -121,140 +124,130 @@
         "choices": [
           "Singing songs",
           "Sleeping",
-          "Running a race",
-          "Eating lunch"
+          "Running a race"
         ],
         "difficulty": "easy",
-        "explanation": "The source lists songs, Mass, the Bible, and talking to God as ways to pray.",
+        "explanation": "The source lists traditional prayer, talking to God, songs, Mass, Bible, and Psalms as ways to pray.",
         "format": "multiple_choice",
-        "hint": "Prayer can be done through music.",
+        "hint": "The source lists several ways to talk to God.",
         "id": "q3",
-        "prompt": "Which of these is a way to pray mentioned in our lessons?",
+        "prompt": "Which of these is a way to pray?",
         "subject": "Religion"
       },
       {
-        "answer": "with love",
+        "answer": "Moses",
         "choices": [],
         "difficulty": "medium",
-        "explanation": "The 2nd Commandment tells us to say God's name with love.",
+        "explanation": "The source mentions the 'Story of Moses and the Burning Bush'.",
         "format": "short_answer",
-        "hint": "We should use His name respectfully.",
+        "hint": "He is a famous figure from the Bible mentioned in Chapter 5.",
         "id": "q4",
-        "prompt": "According to the 2nd Commandment, how should we say God's name?",
+        "prompt": "Who is the story about that involves a Burning Bush?",
         "subject": "Religion"
       },
       {
-        "answer": "Go to Mass",
+        "answer": "Pray and put God first",
         "choices": [
-          "Go to Mass",
-          "Clean our room",
-          "Do our homework",
-          "Plant a garden"
+          "Pray and put God first",
+          "Go to bed early",
+          "Clean our rooms"
         ],
         "difficulty": "easy",
-        "explanation": "The 3rd Commandment listed is to go to Mass.",
+        "explanation": "The source lists Commandment 1 as 'Pray/Put God first'.",
         "format": "multiple_choice",
-        "hint": "It involves going to church.",
+        "hint": "It is about your relationship with God.",
         "id": "q5",
-        "prompt": "What does the 3rd Commandment ask us to do?",
+        "prompt": "What does the 1st Commandment tell us to do?",
         "subject": "Religion"
       },
       {
-        "answer": "The Boy Who Cried Wolf",
-        "choices": [
-          "The Boy Who Cried Wolf",
-          "The Three Little Pigs",
-          "Little Red Riding Hood",
-          "Cinderella"
-        ],
+        "answer": "true",
+        "choices": [],
         "difficulty": "easy",
-        "explanation": "The Reading Work page lists 'The Boy Who Cried Wolf' as the story.",
-        "format": "multiple_choice",
-        "hint": "It is about a boy and a wolf.",
+        "explanation": "The source states for the 2nd Commandment: 'Say God's name with love'.",
+        "format": "true_false",
+        "hint": "How should we speak God's name?",
         "id": "q6",
-        "prompt": "Which story are we reading this week?",
+        "prompt": "The 2nd Commandment says we should say God's name with love.",
+        "subject": "Religion"
+      },
+      {
+        "answer": "delicious",
+        "choices": [],
+        "difficulty": "medium",
+        "explanation": "Delicious is defined as highly pleasant to the taste.",
+        "format": "word_build",
+        "hint": "Starts with 'd'.",
+        "id": "q7",
+        "prompt": "Build the vocabulary word that means 'highly pleasant to the taste'.",
         "subject": "Reading"
       },
       {
         "answer": "un-",
         "choices": [
           "un-",
-          "-ing",
-          "-ed",
-          "-ly"
+          "re-",
+          "pre-"
         ],
         "difficulty": "medium",
-        "explanation": "The prefixes listed are re-, un-, and dis-.",
+        "explanation": "The source lists 'un-' as one of the prefixes being studied.",
         "format": "multiple_choice",
-        "hint": "It is a group of letters added to the beginning of a word.",
-        "id": "q7",
-        "prompt": "Which of these is a prefix we are studying?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "true",
-        "choices": [],
-        "difficulty": "easy",
-        "explanation": "Delicious is included in the vocabulary list for the week.",
-        "format": "true_false",
-        "hint": "Think about words that describe food.",
+        "hint": "Look at the prefixes listed in the Word Structure section.",
         "id": "q8",
-        "prompt": "The word 'delicious' is one of our vocabulary words.",
+        "prompt": "Which prefix means the opposite or 'not', as in the word 'unhappy'?",
         "subject": "Reading"
       },
       {
-        "answer": "believe",
-        "choices": [],
-        "difficulty": "medium",
-        "explanation": "Believe is defined as accepting something as true.",
-        "format": "word_build",
-        "hint": "It starts with 'b'.",
-        "id": "q9",
-        "prompt": "Build the vocabulary word that means 'to accept something as true'.",
-        "subject": "Reading"
-      },
-      {
-        "answer": "soft c and soft g",
+        "answer": "The Boy Who Cried Wolf",
         "choices": [
-          "soft c and soft g",
-          "hard k and hard t",
-          "silent p",
-          "short o"
+          "The Boy Who Cried Wolf",
+          "The Three Little Pigs",
+          "Little Red Riding Hood"
         ],
-        "difficulty": "medium",
-        "explanation": "The phonics focus is soft c and soft g.",
+        "difficulty": "easy",
+        "explanation": "The Reading Work page lists 'The Boy Who Cried Wolf' as the story.",
         "format": "multiple_choice",
-        "hint": "These letters can make different sounds depending on the word.",
-        "id": "q10",
-        "prompt": "What phonics sounds are we focusing on this week?",
+        "hint": "It's a story about a boy and a wolf.",
+        "id": "q9",
+        "prompt": "What story are we reading this week?",
         "subject": "Reading"
       },
       {
         "answer": "scratch",
         "choices": [],
         "difficulty": "medium",
-        "explanation": "Scratch is one of the basic spelling words with a 3-letter blend.",
+        "explanation": "Scratch is one of the basic spelling words for the 3-letter blend skill.",
         "format": "word_build",
         "hint": "It starts with the 'scr' blend.",
-        "id": "q11",
-        "prompt": "Spell the word that means to use your nails on an itch.",
+        "id": "q10",
+        "prompt": "Spell the word that means to itch or mark with your nails.",
         "subject": "Spelling"
       },
       {
-        "answer": "flower",
+        "answer": "until",
         "choices": [
-          "flower",
+          "until",
           "scratch",
-          "spring",
           "throne"
         ],
         "difficulty": "easy",
-        "explanation": "Flower is listed under High Frequency Words on the spelling list.",
+        "explanation": "Until is listed under High Frequency Words on the spelling list.",
         "format": "multiple_choice",
-        "hint": "It is something that grows in a garden.",
-        "id": "q12",
+        "hint": "Check the High Frequency section of the spelling list.",
+        "id": "q11",
         "prompt": "Which word is a 'High Frequency Word' this week?",
         "subject": "Spelling"
+      },
+      {
+        "answer": "true",
+        "choices": [],
+        "difficulty": "easy",
+        "explanation": "Remarkable is listed in the vocabulary words section.",
+        "format": "true_false",
+        "hint": "Check the vocab list.",
+        "id": "q12",
+        "prompt": "The word 'remarkable' is one of our vocabulary words.",
+        "subject": "Reading"
       },
       {
         "answer": "throne",
@@ -262,113 +255,112 @@
         "difficulty": "medium",
         "explanation": "Throne is a basic spelling word featuring a 3-letter blend.",
         "format": "word_build",
-        "hint": "It starts with 'thr'.",
+        "hint": "Starts with 'thr'.",
         "id": "q13",
-        "prompt": "Spell the word that means a chair for a king or queen.",
+        "prompt": "Spell the word for a seat used by a king or queen.",
+        "subject": "Spelling"
+      },
+      {
+        "answer": "saw",
+        "choices": [
+          "saw",
+          "buy",
+          "pull"
+        ],
+        "difficulty": "easy",
+        "explanation": "Saw is one of the sight words listed for this week.",
+        "format": "multiple_choice",
+        "hint": "It is something you do with your eyes.",
+        "id": "q14",
+        "prompt": "Which sight word fits here: 'I ___ a bird in the sky.'",
+        "subject": "Reading"
+      },
+      {
+        "answer": "To quickly seize something",
+        "choices": [
+          "To quickly seize something",
+          "To walk slowly",
+          "To sing a song"
+        ],
+        "difficulty": "medium",
+        "explanation": "Snatch means to quickly seize something in a rude or eager way.",
+        "format": "multiple_choice",
+        "hint": "It's a quick action.",
+        "id": "q15",
+        "prompt": "What does the word 'snatch' mean?",
+        "subject": "Reading"
+      },
+      {
+        "answer": "splash",
+        "choices": [],
+        "difficulty": "medium",
+        "explanation": "Splash is a basic spelling word with a 3-letter blend.",
+        "format": "word_build",
+        "hint": "Starts with 'spl'.",
+        "id": "q16",
+        "prompt": "Spell the word that means to jump into water.",
         "subject": "Spelling"
       },
       {
         "answer": "true",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "Sting is listed as a review word.",
+        "explanation": "The source lists prefixes (re-, un-, dis-).",
         "format": "true_false",
-        "hint": "Check the review words section of the list.",
-        "id": "q14",
-        "prompt": "The word 'sting' is a review word this week.",
-        "subject": "Spelling"
+        "hint": "Check the Word Structure section.",
+        "id": "q17",
+        "prompt": "The prefix 're-' is one of the word structures we are studying.",
+        "subject": "Reading"
       },
       {
-        "answer": "split",
+        "answer": "true",
         "choices": [],
-        "difficulty": "medium",
-        "explanation": "Split is one of the basic spelling words.",
-        "format": "word_build",
-        "hint": "It starts with 'spl'.",
-        "id": "q15",
-        "prompt": "Spell the word that means to divide something into two parts.",
-        "subject": "Spelling"
+        "difficulty": "easy",
+        "explanation": "The Tests page lists 'Math lessons 1-5 (2 digit with & without regrouping)' for Tuesday.",
+        "format": "true_false",
+        "hint": "Check the Tests page.",
+        "id": "q18",
+        "prompt": "The Math test on Tuesday covers 2-digit addition with and without regrouping.",
+        "subject": "Math"
       },
       {
         "answer": "Compound words",
         "choices": [
           "Compound words",
           "Nouns",
-          "Verbs",
-          "Punctuation"
+          "Verbs"
         ],
         "difficulty": "easy",
-        "explanation": "The test page lists Grammar (compound words) for Thursday Nov. 19.",
+        "explanation": "The Tests page lists 'Grammar (compound words)' for Thursday Nov. 19.",
         "format": "multiple_choice",
-        "hint": "It involves joining two words together.",
-        "id": "q16",
-        "prompt": "What is the topic for the Grammar test on Nov. 19?",
+        "hint": "Check the Tests page for Thursday.",
+        "id": "q19",
+        "prompt": "What is the topic for the Grammar test on Thursday?",
         "subject": "Grammar"
       },
       {
-        "answer": "true",
-        "choices": [],
-        "difficulty": "easy",
-        "explanation": "The test page specifies lessons 1-5 cover 2-digit with and without regrouping.",
-        "format": "true_false",
-        "hint": "This is the main topic for lessons 1-5.",
-        "id": "q17",
-        "prompt": "The Math test on Nov. 17 covers 2-digit addition with and without regrouping.",
-        "subject": "Math"
-      },
-      {
-        "answer": "under",
-        "choices": [
-          "under",
-          "almost",
-          "pull",
-          "saw"
-        ],
-        "difficulty": "easy",
-        "explanation": "Under is listed as one of the sight words.",
-        "format": "multiple_choice",
-        "hint": "It is a position word.",
-        "id": "q18",
-        "prompt": "Which sight word means the opposite of 'over'?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "feast",
+        "answer": "shrub",
         "choices": [],
         "difficulty": "medium",
-        "explanation": "Feast is defined as a large meal.",
+        "explanation": "Shrub is a basic spelling word with a 3-letter blend.",
         "format": "word_build",
-        "hint": "It starts with 'f'.",
-        "id": "q19",
-        "prompt": "Build the vocabulary word that means a large celebratory meal.",
-        "subject": "Reading"
-      },
-      {
-        "answer": "Predictions and character traits",
-        "choices": [
-          "Predictions and character traits",
-          "How to write a letter",
-          "How to use a dictionary",
-          "Rhyming words"
-        ],
-        "difficulty": "medium",
-        "explanation": "The Reading Work page lists predictions and character traits under comprehension.",
-        "format": "multiple_choice",
-        "hint": "It involves thinking about what will happen next and what characters are like.",
+        "hint": "Starts with 'shr'.",
         "id": "q20",
-        "prompt": "What are we practicing in Reading Comprehension?",
-        "subject": "Reading"
+        "prompt": "Spell the word that means a small bush.",
+        "subject": "Spelling"
       }
     ],
     "reminders": [
-      "Pretzel money is due Friday Nov. 13",
-      "Trimester 1 Book Project is due Thursday Nov. 19",
-      "Keep Reading log and Behavior chart in the HW folder",
-      "Return everything in the HW folder"
+      "Nut Roll pick up on Tuesday Nov. 17",
+      "Trimester 1 Book Project due Thursday Nov. 19",
+      "Pretzel day is Thursday Nov. 19",
+      "DDD for SPCA on Tuesday Nov. 24",
+      "12:00 Dismissal on Wednesday Nov. 25",
+      "Keep Reading log and Behavior chart in the HW folder"
     ],
     "schemaVersion": 2,
-    "sourceCapturedAt": "2026-11-12T23:40:22.926Z",
-    "sourceHash": "c56f16a9f64327561bc1030f1ce387b0cb31bf00e69fe65f1d2cd31572ee5697",
+    "sourceCapturedAt": "2026-11-13T19:55:23.703Z",
+    "sourceHash": "527611a1d9b37e2eff629a099c9d3e5eff72fac19aab040406645c407d61995c",
     "sourceSufficient": true,
     "subjects": [
       {
@@ -386,26 +378,30 @@
           "Chapter 5: Jesus Shows Us How to Love God our Father",
           "The 10 Commandments",
           "The 1st Great Commandment",
-          "Ways to Pray"
+          "Ways to Pray",
+          "Story of Moses and the Burning Bush"
         ]
       },
       {
         "studyNotes": [
-          "Focus on identifying character traits and making predictions while reading.",
-          "Learn to identify and use prefixes re-, un-, and dis-.",
-          "Practice words with soft c and soft g sounds."
+          "Focus on sight words: pull, wash, under, food, almost, saw, out, sky, buy, straight.",
+          "Identify soft c and soft g sounds in words.",
+          "Analyze character traits and plot sequence in stories.",
+          "Understand how prefixes re-, un-, and dis- change word meanings."
         ],
         "subject": "Reading",
         "topics": [
-          "Story: The Boy Who Cried Wolf",
-          "Phonics: Soft c and soft g",
-          "Reading Comprehension: Predictions and character traits",
-          "Word Structure: Prefixes (re-, un-, dis-)"
+          "The Boy Who Cried Wolf",
+          "Soft c and soft g",
+          "Predictions",
+          "Character traits",
+          "Plot and sequence of events",
+          "Prefixes (re-, un-, dis-)"
         ]
       },
       {
         "studyNotes": [
-          "Basic words include: scratch, scrape, spring, throne, stripe, strange, shred, shrub, splash, split.",
+          "Basic words: scratch, scrape, spring, throne, stripe, strange, shred, shrub, splash, split.",
           "Review words: catch, sting.",
           "High frequency words: far, flower, until."
         ],
@@ -416,17 +412,17 @@
       },
       {
         "studyNotes": [
-          "Practice 2-digit addition both with and without regrouping."
+          "Review lessons 1-5 for the upcoming test.",
+          "Prepare for the Trimester 1 Math assessment."
         ],
         "subject": "Math",
         "topics": [
-          "Lessons 1-5: 2 digit addition",
-          "Regrouping"
+          "2 digit addition with and without regrouping"
         ]
       },
       {
         "studyNotes": [
-          "A compound word is formed when two smaller words are joined together to create a new word."
+          "Study compound words for the test on Thursday."
         ],
         "subject": "Grammar",
         "topics": [
@@ -434,15 +430,15 @@
         ]
       }
     ],
-    "summary": "This week, students are exploring the story 'The Boy Who Cried Wolf' while focusing on soft c and g phonics, three-letter spelling blends, and prefixes. In Religion, the class is learning about the 1st Great Commandment and the first three Commandments, while Math focuses on two-digit addition with and without regrouping.",
+    "summary": "This week, students are exploring the life of Jesus and the 10 Commandments in Religion, reading 'The Boy Who Cried Wolf', and practicing three-letter blends in Spelling. The curriculum also covers soft c and g sounds, prefixes, and two-digit addition with and without regrouping in Math.",
     "vocabulary": [
       {
-        "meaning": "Tales or accounts of imaginary or real people and events",
+        "meaning": "Accounts of imaginary or real people and events told for entertainment",
         "subject": "Reading",
         "term": "stories"
       },
       {
-        "meaning": "Highly pleasing to the senses, especially taste",
+        "meaning": "Highly pleasant to the taste",
         "subject": "Reading",
         "term": "delicious"
       },
@@ -457,7 +453,7 @@
         "term": "lessons"
       },
       {
-        "meaning": "A large meal, typically a celebratory one",
+        "meaning": "A large meal, typically one in celebration of something",
         "subject": "Reading",
         "term": "feast"
       },
@@ -477,6 +473,6 @@
         "term": "believe"
       }
     ],
-    "weekLabel": "Week of November 12, 2026"
+    "weekLabel": "Week of November 13, 2026"
   }
 }
