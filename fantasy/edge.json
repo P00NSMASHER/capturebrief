@@ -7,15 +7,15 @@
   "week": 11,
   "yahooWeek": 10,
   "yahooCapturedAtIso": "2026-11-15T11:29:25.344Z",
-  "observedAtIso": "2026-11-15T14:14:21.088Z",
+  "observedAtIso": "2026-11-16T15:26:21.611Z",
   "scoring": "ppr",
   "projectionSource": "FantasyBot Week 11 2026 projected PPR player rankings",
   "sourceNotes": [
-    "FantasyBot Week 11 2026 projected PPR player rankings are estimates, not guaranteed Yahoo league-specific points.",
-    "Yahoo Brock-only capture 2026-11-15T11:29:25.344Z; available-player states may change.",
-    "FantasyBot The League matched 16/17 exact Yahoo names, NFL clubs and positions; no DST alias forced.",
-    "Official verified Week 11 byes: ATL, CLE, GB, LAR, NE, SEA; missing projections remain null.",
-    "FantasyBot roster injury flags do not establish future participation.",
+    "FantasyBot Week 11 2026 projected PPR player rankings are FantasyBot estimates, not guaranteed Yahoo league-specific points.",
+    "Yahoo Brock-only capture 2026-11-15T11:29:25.344Z; availability changes after capture are unknown.",
+    "FantasyBot The League matched 16/17 exact normalized player names, NFL clubs and positions; Yahoo DST 100033 Ravens/BAL/DEF was canonicalized only to official Baltimore Ravens/BAL/DEF (NFL.com team page). No other alias allowed.",
+    "Official verified Week 11 byes: ATL, CLE, GB, LAR, NE, SEA; unknown forecasts remain null.",
+    "FantasyBot roster injury flags are informational and do not establish future participation.",
     "FantasyBot league power ratings are not win probabilities; no transactions performed."
   ],
   "rosterProjections": [
@@ -25,16 +25,20 @@
       "position": "QB",
       "team": "Jax",
       "slot": "QB",
-      "projection": 20.02,
+      "projection": 20.58,
       "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
       "rank": 6,
-      "ppg": 20.02,
+      "ppg": 20.58,
       "trend": {
-        "last3Avg": 20.4,
-        "last5Avg": 20.4,
-        "direction": "stable"
+        "last3Avg": 20.3,
+        "last5Avg": 22.3,
+        "direction": "down"
       },
       "history": [
+        {
+          "week": 10,
+          "points": 27.8
+        },
         {
           "week": 9,
           "points": 13.6
@@ -58,16 +62,20 @@
       "position": "RB",
       "team": "Dal",
       "slot": "RB",
-      "projection": 18.95,
+      "projection": 19.99,
       "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
-      "rank": 3,
-      "ppg": 18.95,
+      "rank": 2,
+      "ppg": 19.99,
       "trend": {
-        "last3Avg": 16.9,
-        "last5Avg": 15.9,
-        "direction": "up"
+        "last3Avg": 12.3,
+        "last5Avg": 14.3,
+        "direction": "down"
       },
       "history": [
+        {
+          "week": 10,
+          "points": 7.7
+        },
         {
           "week": 9,
           "points": 22.4
@@ -95,16 +103,20 @@
       "position": "RB",
       "team": "NYJ",
       "slot": "RB",
-      "projection": 12.57,
+      "projection": 12.09,
       "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
-      "rank": 18,
-      "ppg": 12.57,
+      "rank": 20,
+      "ppg": 12.09,
       "trend": {
-        "last3Avg": 11.7,
-        "last5Avg": 11.7,
+        "last3Avg": 13.3,
+        "last5Avg": 13.3,
         "direction": "stable"
       },
       "history": [
+        {
+          "week": 10,
+          "points": 14.8
+        },
         {
           "week": 9,
           "points": 11.7
@@ -120,16 +132,20 @@
       "position": "WR",
       "team": "Cin",
       "slot": "WR",
-      "projection": 19.96,
+      "projection": 20.32,
       "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
       "rank": 2,
-      "ppg": 19.96,
+      "ppg": 20.32,
       "trend": {
-        "last3Avg": 26.6,
-        "last5Avg": 26.6,
-        "direction": "stable"
+        "last3Avg": 32.2,
+        "last5Avg": 28.5,
+        "direction": "up"
       },
       "history": [
+        {
+          "week": 10,
+          "points": 34.1
+        },
         {
           "week": 9,
           "points": 31.5
@@ -153,16 +169,20 @@
       "position": "WR",
       "team": "Min",
       "slot": "WR",
-      "projection": 18.99,
+      "projection": 19.04,
       "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
       "rank": 3,
-      "ppg": 18.99,
+      "ppg": 19.04,
       "trend": {
-        "last3Avg": 10.5,
-        "last5Avg": 10.5,
-        "direction": "stable"
+        "last3Avg": 13.2,
+        "last5Avg": 12,
+        "direction": "up"
       },
       "history": [
+        {
+          "week": 10,
+          "points": 16.4
+        },
         {
           "week": 9,
           "points": 8.8
@@ -186,16 +206,20 @@
       "position": "TE",
       "team": "LV",
       "slot": "TE",
-      "projection": 16.74,
+      "projection": 14.4,
       "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
-      "rank": 1,
-      "ppg": 16.74,
+      "rank": 2,
+      "ppg": 14.4,
       "trend": {
-        "last3Avg": 21.3,
-        "last5Avg": 18.7,
+        "last3Avg": 18.1,
+        "last5Avg": 15.7,
         "direction": "up"
       },
       "history": [
+        {
+          "week": 10,
+          "points": 3.8
+        },
         {
           "week": 9,
           "points": 22.3
@@ -213,7 +237,7 @@
           "points": 11
         }
       ],
-      "modelInjury": null,
+      "modelInjury": "Q",
       "modelOpponent": null,
       "matchupGrade": null
     },
@@ -223,16 +247,20 @@
       "position": "WR",
       "team": "Cin",
       "slot": "W/R/T",
-      "projection": 17.24,
+      "projection": 17.53,
       "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
       "rank": 5,
-      "ppg": 17.24,
+      "ppg": 17.53,
       "trend": {
-        "last3Avg": 28.2,
-        "last5Avg": 28.2,
+        "last3Avg": 23.1,
+        "last5Avg": 24,
         "direction": "stable"
       },
       "history": [
+        {
+          "week": 10,
+          "points": 11.6
+        },
         {
           "week": 9,
           "points": 20.2
@@ -256,10 +284,10 @@
       "position": "WR",
       "team": "Bal",
       "slot": "W/R/T",
-      "projection": 15.25,
+      "projection": 15.17,
       "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
       "rank": 10,
-      "ppg": 15.25,
+      "ppg": 15.17,
       "trend": {
         "last3Avg": 15.2,
         "last5Avg": 15.2,
@@ -294,11 +322,15 @@
       "rank": null,
       "ppg": null,
       "trend": {
-        "last3Avg": 16.4,
-        "last5Avg": 13.2,
-        "direction": "up"
+        "last3Avg": 9.4,
+        "last5Avg": 10.9,
+        "direction": "down"
       },
       "history": [
+        {
+          "week": 10,
+          "points": 1.5
+        },
         {
           "week": 9,
           "points": 14.8
@@ -316,7 +348,7 @@
           "points": 3.6
         }
       ],
-      "modelInjury": "Q",
+      "modelInjury": null,
       "modelOpponent": null,
       "matchupGrade": null,
       "byeWeek": 11,
@@ -328,16 +360,20 @@
       "position": "RB",
       "team": "Hou",
       "slot": "BN",
-      "projection": 10.76,
-      "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
-      "rank": 22,
-      "ppg": 10.76,
+      "projection": null,
+      "projectedSource": null,
+      "rank": null,
+      "ppg": null,
       "trend": {
-        "last3Avg": 9.2,
-        "last5Avg": 9.2,
-        "direction": "stable"
+        "last3Avg": 8.3,
+        "last5Avg": 8.8,
+        "direction": "down"
       },
       "history": [
+        {
+          "week": 10,
+          "points": 7.5
+        },
         {
           "week": 9,
           "points": 8.4
@@ -351,7 +387,7 @@
           "points": 10.1
         }
       ],
-      "modelInjury": null,
+      "modelInjury": "D",
       "modelOpponent": null,
       "matchupGrade": null
     },
@@ -361,10 +397,10 @@
       "position": "RB",
       "team": "Den",
       "slot": "BN",
-      "projection": 16.7,
+      "projection": 16.79,
       "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
       "rank": 8,
-      "ppg": 16.7,
+      "ppg": 16.79,
       "trend": {
         "last3Avg": 16,
         "last5Avg": 16,
@@ -394,16 +430,20 @@
       "position": "WR",
       "team": "NO",
       "slot": "BN",
-      "projection": 10.96,
+      "projection": 11.4,
       "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
-      "rank": 26,
-      "ppg": 10.96,
+      "rank": 24,
+      "ppg": 11.4,
       "trend": {
-        "last3Avg": 5,
-        "last5Avg": 5,
+        "last3Avg": 12,
+        "last5Avg": 12,
         "direction": "stable"
       },
       "history": [
+        {
+          "week": 10,
+          "points": 19
+        },
         {
           "week": 9,
           "points": 5
@@ -419,10 +459,10 @@
       "position": "WR",
       "team": "Ten",
       "slot": "BN",
-      "projection": 12.88,
+      "projection": 12.21,
       "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
-      "rank": 20,
-      "ppg": 12.88,
+      "rank": 21,
+      "ppg": 12.21,
       "trend": {
         "last3Avg": 14.5,
         "last5Avg": 14.5,
@@ -438,7 +478,7 @@
           "points": 19
         }
       ],
-      "modelInjury": "OUT",
+      "modelInjury": "Q",
       "modelOpponent": null,
       "matchupGrade": null
     },
@@ -448,16 +488,20 @@
       "position": "WR",
       "team": "Hou",
       "slot": "BN",
-      "projection": 6.34,
+      "projection": 6.32,
       "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
       "rank": 54,
-      "ppg": 6.34,
+      "ppg": 6.32,
       "trend": {
-        "last3Avg": 13,
-        "last5Avg": 13,
+        "last3Avg": 10.4,
+        "last5Avg": 10.4,
         "direction": "stable"
       },
       "history": [
+        {
+          "week": 10,
+          "points": 5.1
+        },
         {
           "week": 9,
           "points": 20.5
@@ -504,16 +548,20 @@
       "position": "K",
       "team": "Min",
       "slot": "K",
-      "projection": 8.84,
+      "projection": 8.96,
       "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
       "rank": 4,
-      "ppg": 8.84,
+      "ppg": 8.96,
       "trend": {
-        "last3Avg": 10.5,
-        "last5Avg": 10.5,
+        "last3Avg": 11,
+        "last5Avg": 11,
         "direction": "stable"
       },
       "history": [
+        {
+          "week": 10,
+          "points": 12
+        },
         {
           "week": 9,
           "points": 9
@@ -533,11 +581,15 @@
       "position": "DEF",
       "team": "Bal",
       "slot": "DEF",
-      "projection": null,
-      "projectedSource": null,
-      "rank": null,
-      "ppg": null,
-      "trend": null,
+      "projection": 6.23,
+      "projectedSource": "FantasyBot Week 11 2026 projected PPR player rankings",
+      "rank": 14,
+      "ppg": 6.23,
+      "trend": {
+        "last3Avg": 4.3,
+        "last5Avg": 4.3,
+        "direction": "stable"
+      },
       "history": [],
       "modelInjury": null,
       "modelOpponent": null,
@@ -551,7 +603,7 @@
       "position": "WR",
       "team": "KC",
       "projection": 8.5,
-      "rank": 43,
+      "rank": 42,
       "ppg": 8.5,
       "availability": "free_agent",
       "marketPercent": 83,
@@ -562,9 +614,9 @@
       "name": "Tyler Shough",
       "position": "QB",
       "team": "NO",
-      "projection": 17.44,
-      "rank": 13,
-      "ppg": 17.44,
+      "projection": 16.96,
+      "rank": 14,
+      "ppg": 16.96,
       "availability": "free_agent",
       "marketPercent": 81,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -588,9 +640,9 @@
       "name": "Bryce Young",
       "position": "QB",
       "team": "Car",
-      "projection": 18.47,
+      "projection": 18.63,
       "rank": 9,
-      "ppg": 18.47,
+      "ppg": 18.63,
       "availability": "free_agent",
       "marketPercent": 78,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -600,9 +652,9 @@
       "name": "Jordan Addison",
       "position": "WR",
       "team": "Min",
-      "projection": 9.11,
+      "projection": 9.13,
       "rank": 36,
-      "ppg": 9.11,
+      "ppg": 9.13,
       "availability": "free_agent",
       "marketPercent": 76,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -612,9 +664,9 @@
       "name": "Dallas Goedert",
       "position": "TE",
       "team": "Phi",
-      "projection": 10.27,
+      "projection": 10.24,
       "rank": 11,
-      "ppg": 10.27,
+      "ppg": 10.24,
       "availability": "free_agent",
       "marketPercent": 73,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -624,9 +676,9 @@
       "name": "Germie Bernard",
       "position": "WR",
       "team": "Pit",
-      "projection": 9.1,
+      "projection": 9.08,
       "rank": 37,
-      "ppg": 9.1,
+      "ppg": 9.08,
       "availability": "free_agent",
       "marketPercent": 67,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -636,9 +688,9 @@
       "name": "Bo Nix",
       "position": "QB",
       "team": "Den",
-      "projection": 17.87,
+      "projection": 17.78,
       "rank": 10,
-      "ppg": 17.87,
+      "ppg": 17.78,
       "availability": "free_agent",
       "marketPercent": 66,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -648,9 +700,9 @@
       "name": "Brenton Strange",
       "position": "TE",
       "team": "Jax",
-      "projection": 9.04,
-      "rank": 15,
-      "ppg": 9.04,
+      "projection": 9.17,
+      "rank": 13,
+      "ppg": 9.17,
       "availability": "free_agent",
       "marketPercent": 63,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -660,9 +712,9 @@
       "name": "J.K. Dobbins",
       "position": "RB",
       "team": "Den",
-      "projection": 8.06,
-      "rank": 33,
-      "ppg": 8.06,
+      "projection": 8.09,
+      "rank": 31,
+      "ppg": 8.09,
       "availability": "free_agent",
       "marketPercent": 62,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -672,9 +724,9 @@
       "name": "Omar Cooper Jr.",
       "position": "WR",
       "team": "NYJ",
-      "projection": 10.31,
-      "rank": 30,
-      "ppg": 10.31,
+      "projection": 9.9,
+      "rank": 31,
+      "ppg": 9.9,
       "availability": "free_agent",
       "marketPercent": 62,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -684,9 +736,9 @@
       "name": "Alvin Kamara",
       "position": "RB",
       "team": "NO",
-      "projection": 5.51,
-      "rank": 45,
-      "ppg": 5.51,
+      "projection": 6.3,
+      "rank": 41,
+      "ppg": 6.3,
       "availability": "free_agent",
       "marketPercent": 58,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -696,9 +748,9 @@
       "name": "Wan'Dale Robinson",
       "position": "WR",
       "team": "Ten",
-      "projection": 10.86,
-      "rank": 28,
-      "ppg": 10.86,
+      "projection": 9.92,
+      "rank": 30,
+      "ppg": 9.92,
       "availability": "free_agent",
       "marketPercent": 57,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -708,9 +760,9 @@
       "name": "Xavier Worthy",
       "position": "WR",
       "team": "KC",
-      "projection": 6.64,
-      "rank": 51,
-      "ppg": 6.64,
+      "projection": 6.65,
+      "rank": 52,
+      "ppg": 6.65,
       "availability": "free_agent",
       "marketPercent": 57,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -720,9 +772,9 @@
       "name": "Jakobi Meyers",
       "position": "WR",
       "team": "Jax",
-      "projection": 8.86,
+      "projection": 9,
       "rank": 39,
-      "ppg": 8.86,
+      "ppg": 9,
       "availability": "free_agent",
       "marketPercent": 53,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -732,9 +784,9 @@
       "name": "Ryan Flournoy",
       "position": "WR",
       "team": "Dal",
-      "projection": 9.5,
-      "rank": 33,
-      "ppg": 9.5,
+      "projection": 10.05,
+      "rank": 29,
+      "ppg": 10.05,
       "availability": "free_agent",
       "marketPercent": 48,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -744,9 +796,9 @@
       "name": "Makai Lemon",
       "position": "WR",
       "team": "Phi",
-      "projection": 5.63,
+      "projection": 5.61,
       "rank": 60,
-      "ppg": 5.63,
+      "ppg": 5.61,
       "availability": "free_agent",
       "marketPercent": 47,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -756,9 +808,9 @@
       "name": "Devaughn Vele",
       "position": "WR",
       "team": "NO",
-      "projection": 5.21,
-      "rank": 64,
-      "ppg": 5.21,
+      "projection": 5.66,
+      "rank": 59,
+      "ppg": 5.66,
       "availability": "free_agent",
       "marketPercent": 41,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -768,9 +820,9 @@
       "name": "Adonai Mitchell",
       "position": "WR",
       "team": "NYJ",
-      "projection": 8.53,
-      "rank": 42,
-      "ppg": 8.53,
+      "projection": 8.21,
+      "rank": 45,
+      "ppg": 8.21,
       "availability": "free_agent",
       "marketPercent": 34,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -780,9 +832,9 @@
       "name": "Antonio Williams",
       "position": "WR",
       "team": "Was",
-      "projection": 7.95,
-      "rank": 45,
-      "ppg": 7.95,
+      "projection": 7.97,
+      "rank": 46,
+      "ppg": 7.97,
       "availability": "waivers",
       "marketPercent": 26,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -792,9 +844,9 @@
       "name": "Chig Okonkwo",
       "position": "TE",
       "team": "Was",
-      "projection": 10.2,
+      "projection": 10.23,
       "rank": 12,
-      "ppg": 10.2,
+      "ppg": 10.23,
       "availability": "waivers",
       "marketPercent": 23,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -804,9 +856,9 @@
       "name": "Geno Smith",
       "position": "QB",
       "team": "NYJ",
-      "projection": 16.67,
-      "rank": 16,
-      "ppg": 16.67,
+      "projection": 15.32,
+      "rank": 19,
+      "ppg": 15.32,
       "availability": "free_agent",
       "marketPercent": 21,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -830,9 +882,9 @@
       "name": "Keon Coleman",
       "position": "WR",
       "team": "Buf",
-      "projection": 9.36,
+      "projection": 9.34,
       "rank": 34,
-      "ppg": 9.36,
+      "ppg": 9.34,
       "availability": "free_agent",
       "marketPercent": 20,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -842,9 +894,9 @@
       "name": "Tre' Harris",
       "position": "WR",
       "team": "LAC",
-      "projection": 5.22,
+      "projection": 5.13,
       "rank": 63,
-      "ppg": 5.22,
+      "ppg": 5.13,
       "availability": "free_agent",
       "marketPercent": 4,
       "source": "FantasyBot Week 11 2026 projected PPR player rankings / Yahoo captured available ID"
@@ -859,15 +911,15 @@
     {
       "teamName": "Hazleton Coal Mine",
       "rank": 2,
-      "rating": 98
-    },
-    {
-      "teamName": "Chasing Greatness",
-      "rank": 3,
-      "rating": 93
+      "rating": 96
     },
     {
       "teamName": "Jersey junkyard",
+      "rank": 3,
+      "rating": 94
+    },
+    {
+      "teamName": "Chasing Greatness",
       "rank": 4,
       "rating": 93
     },
@@ -877,25 +929,25 @@
       "rating": 88
     },
     {
-      "teamName": "Elmira Express",
+      "teamName": "Josh ❤️creampies",
       "rank": 6,
-      "rating": 88
+      "rating": 86
     },
     {
-      "teamName": "Josh ❤️creampies",
+      "teamName": "Elmira Express",
       "rank": 7,
-      "rating": 86
+      "rating": 85
     },
     {
       "teamName": "BEEFS GAY",
       "rank": 8,
-      "rating": 80
+      "rating": 77
     }
   ],
   "coverage": {
     "roster": 16,
     "rosterTotal": 17,
-    "starters": 9,
+    "starters": 10,
     "startersTotal": 10,
     "available": 25,
     "availableTotal": 25
@@ -903,11 +955,11 @@
   "sources": [
     {
       "label": "FantasyBot Week 11 2026 projected PPR player rankings",
-      "date": "2026-11-15T14:14:21.088Z"
+      "date": "2026-11-16T15:26:21.611Z"
     },
     {
       "label": "FantasyBot The League roster and power rankings",
-      "date": "2026-11-15T14:14:21.088Z"
+      "date": "2026-11-16T15:26:21.611Z"
     },
     {
       "label": "Flaim Fantasy / Yahoo Brock-only scheduled capture",
@@ -916,6 +968,10 @@
     {
       "label": "Official NFL bye schedule (previously verified)",
       "date": "2026-11-09T23:48:33.793Z"
+    },
+    {
+      "label": "NFL.com official Baltimore Ravens identity (DST name resolution)",
+      "date": "2026-11-16T15:26:21.611Z"
     }
   ],
   "scheduleSource": {
@@ -975,7 +1031,7 @@
       "DAL"
     ]
   },
-  "rosterVerifiedAtIso": "2026-11-15T14:14:21.088Z",
-  "rosterCrossCheckCount": 16,
-  "rosterCrossCheckSource": "FantasyBot The League exact name, club and position cross-check, no DST forced join"
+  "rosterVerifiedAtIso": "2026-11-16T15:26:21.611Z",
+  "rosterCrossCheckCount": 17,
+  "rosterCrossCheckSource": "FantasyBot The League: 16 exact roster name/club/position matches plus one authoritative Ravens/Baltimore Ravens BAL DEF canonical alias"
 }
