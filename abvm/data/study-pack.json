@@ -3,7 +3,7 @@
   "syncPolicy": {
     "intervalHours": 4
   },
-  "sourceCapturedAt": "2026-11-16T16:20:22.621Z",
+  "sourceCapturedAt": "2026-11-17T00:05:21.046Z",
   "pack": {
     "gaps": [],
     "homework": [
@@ -33,21 +33,6 @@
         "label": "Nut Roll pick up"
       },
       {
-        "date": "Tuesday Nov. 17",
-        "kind": "test",
-        "label": "Religion Test"
-      },
-      {
-        "date": "Tuesday Nov. 17",
-        "kind": "test",
-        "label": "Math Lessons 1-5 Test"
-      },
-      {
-        "date": "Wednesday Nov. 18",
-        "kind": "test",
-        "label": "Trimester 1 Math assessment"
-      },
-      {
         "date": "Thursday Nov. 19",
         "kind": "deadline",
         "label": "Trimester 1 Book Project due"
@@ -58,24 +43,29 @@
         "label": "Pretzel day"
       },
       {
-        "date": "Thursday Nov. 19",
-        "kind": "test",
-        "label": "Grammar Test (compound words)"
-      },
-      {
         "date": "Friday Nov. 20",
         "kind": "event",
         "label": "End of Trimester 1"
       },
       {
-        "date": "Friday Nov. 20",
-        "kind": "test",
-        "label": "Spelling (long a) and Handwriting Test"
+        "date": "Monday Nov. 23",
+        "kind": "event",
+        "label": "Start of Trimester 2"
       },
       {
-        "date": "Friday Nov. 20",
-        "kind": "test",
-        "label": "Phonics (long vowels) Test"
+        "date": "Tuesday Nov. 24",
+        "kind": "event",
+        "label": "DDD for SPCA"
+      },
+      {
+        "date": "Wednesday Nov. 25",
+        "kind": "event",
+        "label": "12:00 Dismissal and Report Cards"
+      },
+      {
+        "date": "Thursday Nov. 26-Monday Nov. 30",
+        "kind": "holiday",
+        "label": "Thanksgiving Break"
       }
     ],
     "questions": [
@@ -83,14 +73,13 @@
         "answer": "So we can love God and others",
         "choices": [
           "So we can love God and others",
-          "To help us learn to read",
-          "To tell us what to eat",
-          "To help us find our way home"
+          "To help us find the Burning Bush",
+          "To learn how to sing songs"
         ],
         "difficulty": "easy",
-        "explanation": "The source states God gave us the 10 Commandments to follow so we can love God and others.",
+        "explanation": "God gave us the 10 Commandments to follow so we can love God and others.",
         "format": "multiple_choice",
-        "hint": "It is about showing love.",
+        "hint": "It is about showing love to God and the people around us.",
         "id": "q1",
         "prompt": "Why did God give us the 10 Commandments?",
         "subject": "Religion"
@@ -99,38 +88,37 @@
         "answer": "true",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "The 1st Great Commandment is to love the Lord your God with all your heart, soul, mind, and strength.",
+        "explanation": "The 1st Great Commandment tells us to love the Lord our God with all our heart, soul, mind, and strength.",
         "format": "true_false",
-        "hint": "This is the first and greatest commandment.",
+        "hint": "This commandment is about loving God with everything you have.",
         "id": "q2",
         "prompt": "The 1st Great Commandment says you should love God with all your heart, soul, mind, and strength.",
         "subject": "Religion"
       },
       {
-        "answer": "Talking to God",
+        "answer": "Mass",
         "choices": [
-          "Talking to God",
+          "Mass",
           "Sleeping",
-          "Running a race",
-          "Eating lunch"
+          "Running"
         ],
         "difficulty": "easy",
-        "explanation": "The source lists talking to God, songs, Mass, Bible, and Psalms as ways to pray.",
+        "explanation": "Ways to pray include traditional prayer, talking to God, songs, Mass, the Bible, and Psalms.",
         "format": "multiple_choice",
-        "hint": "It involves communicating with God.",
+        "hint": "It is a special service at church.",
         "id": "q3",
-        "prompt": "Which of these is a way to pray mentioned in our lessons?",
+        "prompt": "Which of these is a way to pray mentioned in your lessons?",
         "subject": "Religion"
       },
       {
         "answer": "Moses",
         "choices": [],
-        "difficulty": "easy",
-        "explanation": "The Religion page lists the 'Story of Moses and the Burning Bush'.",
+        "difficulty": "medium",
+        "explanation": "The story of Moses and the Burning Bush is part of Chapter 5.",
         "format": "short_answer",
-        "hint": "His name starts with M.",
+        "hint": "His name starts with an M.",
         "id": "q4",
-        "prompt": "Who saw the Burning Bush in the Bible story we are studying?",
+        "prompt": "Who saw the Burning Bush in the Bible story?",
         "subject": "Religion"
       },
       {
@@ -138,11 +126,10 @@
         "choices": [
           "Say God's name with love",
           "Go to Mass",
-          "Put God first",
-          "Sing songs"
+          "Put God first"
         ],
         "difficulty": "medium",
-        "explanation": "The source notes for Commandment 2 are 'Say God's name with love'.",
+        "explanation": "The 2nd Commandment is to say God's name with love.",
         "format": "multiple_choice",
         "hint": "It is about how we use God's name.",
         "id": "q5",
@@ -150,198 +137,133 @@
         "subject": "Religion"
       },
       {
-        "answer": "Go to Mass",
-        "choices": [
-          "Go to Mass",
-          "Pray to Moses",
-          "Read the dictionary",
-          "Clean our room"
-        ],
-        "difficulty": "medium",
-        "explanation": "The source notes for Commandment 3 are 'Go to Mass'.",
-        "format": "multiple_choice",
-        "hint": "It involves going to church.",
-        "id": "q6",
-        "prompt": "What does the 3rd Commandment tell us to do?",
-        "subject": "Religion"
-      },
-      {
         "answer": "The Boy Who Cried Wolf",
         "choices": [
           "The Boy Who Cried Wolf",
           "The Three Little Pigs",
-          "Cinderella",
-          "Little Red Riding Hood"
+          "The Tortoise and the Hare"
         ],
         "difficulty": "easy",
-        "explanation": "The Reading Work page lists 'The Boy Who Cried Wolf' as the story.",
+        "explanation": "The reading work for this week is based on the story 'The Boy Who Cried Wolf'.",
         "format": "multiple_choice",
-        "hint": "It is about a boy and a forest animal.",
-        "id": "q7",
-        "prompt": "Which story are we reading this week?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "believe",
-        "choices": [],
-        "difficulty": "medium",
-        "explanation": "Believe is one of the vocabulary words for the week.",
-        "format": "word_build",
-        "hint": "Starts with b.",
-        "id": "q8",
-        "prompt": "Build the vocabulary word that means 'to accept something as true'.",
-        "subject": "Reading"
-      },
-      {
-        "answer": "feast",
-        "choices": [],
-        "difficulty": "medium",
-        "explanation": "Feast is one of the vocabulary words for the week.",
-        "format": "word_build",
-        "hint": "Starts with f.",
-        "id": "q9",
-        "prompt": "Build the vocabulary word that means 'a large meal'.",
+        "hint": "It is a story about a boy and a wolf.",
+        "id": "q6",
+        "prompt": "Which story are you reading this week?",
         "subject": "Reading"
       },
       {
         "answer": "un-",
         "choices": [
           "un-",
-          "-ing",
-          "-ed",
-          "-ly"
+          "re-",
+          "dis-"
         ],
         "difficulty": "medium",
-        "explanation": "The Reading Work page lists prefixes re-, un-, and dis-.",
+        "explanation": "The prefixes studied this week are re-, un-, and dis-.",
         "format": "multiple_choice",
-        "hint": "It goes at the beginning of a word.",
-        "id": "q10",
-        "prompt": "Which of these is a prefix we are studying?",
+        "hint": "Look at the beginning of the word.",
+        "id": "q7",
+        "prompt": "What prefix means the opposite of 'happy' in the word 'unhappy'?",
+        "subject": "Reading"
+      },
+      {
+        "answer": "snatch",
+        "choices": [],
+        "difficulty": "hard",
+        "explanation": "Snatch means to quickly seize something in a rude or eager way.",
+        "format": "word_build",
+        "hint": "It starts with 'sn'.",
+        "id": "q8",
+        "prompt": "Build the vocabulary word that means 'to quickly seize something'.",
+        "subject": "Reading"
+      },
+      {
+        "answer": "true",
+        "choices": [],
+        "difficulty": "easy",
+        "explanation": "Delicious means highly pleasant to the taste.",
+        "format": "true_false",
+        "hint": "Think about how you feel when you eat your favorite food.",
+        "id": "q9",
+        "prompt": "The word 'delicious' means something tastes very good.",
         "subject": "Reading"
       },
       {
         "answer": "scratch",
         "choices": [],
         "difficulty": "medium",
-        "explanation": "Scratch is a basic spelling word this week.",
+        "explanation": "Scratch is one of the basic spelling words focusing on 3-letter blends.",
         "format": "word_build",
-        "hint": "Starts with scr-.",
-        "id": "q11",
+        "hint": "It has the 3-letter blend 'scr'.",
+        "id": "q10",
         "prompt": "Build the spelling word that means to use your nails on an itch.",
+        "subject": "Spelling"
+      },
+      {
+        "answer": "until",
+        "choices": [
+          "until",
+          "splash",
+          "throne"
+        ],
+        "difficulty": "medium",
+        "explanation": "The High Frequency words for this week are far, flower, and until.",
+        "format": "multiple_choice",
+        "hint": "It is in the High Frequency Words column.",
+        "id": "q11",
+        "prompt": "Which word is a High Frequency word from your list?",
         "subject": "Spelling"
       },
       {
         "answer": "throne",
         "choices": [],
-        "difficulty": "medium",
-        "explanation": "Throne is a basic spelling word this week.",
+        "difficulty": "hard",
+        "explanation": "Throne is a basic spelling word with a 3-letter blend.",
         "format": "word_build",
-        "hint": "Starts with thr-.",
+        "hint": "It starts with the blend 'thr'.",
         "id": "q12",
-        "prompt": "Build the spelling word for a chair a king or queen sits on.",
+        "prompt": "Build the word for a king's chair.",
         "subject": "Spelling"
       },
       {
-        "answer": "shrub",
-        "choices": [],
-        "difficulty": "medium",
-        "explanation": "Shrub is a basic spelling word this week.",
-        "format": "word_build",
-        "hint": "Starts with shr-.",
+        "answer": "sky",
+        "choices": [
+          "sky",
+          "food",
+          "pull"
+        ],
+        "difficulty": "easy",
+        "explanation": "Sky is one of the sight words for this week.",
+        "format": "multiple_choice",
+        "hint": "It is where the clouds are.",
         "id": "q13",
-        "prompt": "Build the spelling word that means a small bush.",
-        "subject": "Spelling"
+        "prompt": "Which sight word fits: 'The bird flew high in the ___.'",
+        "subject": "Reading"
       },
       {
         "answer": "true",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "Splash is listed as a basic spelling word.",
+        "explanation": "The word structure focus includes the prefixes re-, un-, and dis-.",
         "format": "true_false",
-        "hint": "It has a 3-letter blend at the start.",
+        "hint": "Check the word structure section.",
         "id": "q14",
-        "prompt": "The word 'splash' is one of our spelling words this week.",
-        "subject": "Spelling"
+        "prompt": "The prefix 're-' is one of the word structures you are studying.",
+        "subject": "Reading"
       },
       {
-        "answer": "under",
+        "answer": "spring",
         "choices": [
-          "under",
-          "pull",
-          "wash",
-          "sky"
+          "spring",
+          "catch",
+          "far"
         ],
-        "difficulty": "easy",
-        "explanation": "Under is one of the sight words listed for the week.",
+        "difficulty": "medium",
+        "explanation": "Spring contains the 3-letter blend 'spr'.",
         "format": "multiple_choice",
-        "hint": "It starts with u.",
+        "hint": "Look for three consonants at the start.",
         "id": "q15",
-        "prompt": "Which sight word means the opposite of 'over'?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "remarkable",
-        "choices": [
-          "remarkable",
-          "fond",
-          "snatch",
-          "lessons"
-        ],
-        "difficulty": "hard",
-        "explanation": "Remarkable is defined as worthy of attention.",
-        "format": "multiple_choice",
-        "hint": "It starts with r.",
-        "id": "q16",
-        "prompt": "Which vocabulary word means 'worthy of attention'?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "snatch",
-        "choices": [
-          "snatch",
-          "delicious",
-          "believe",
-          "stories"
-        ],
-        "difficulty": "medium",
-        "explanation": "Snatch is defined as to quickly seize something.",
-        "format": "multiple_choice",
-        "hint": "It starts with s.",
-        "id": "q17",
-        "prompt": "Which vocabulary word means 'to quickly seize something'?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "strange",
-        "choices": [],
-        "difficulty": "medium",
-        "explanation": "Strange is a basic spelling word this week.",
-        "format": "word_build",
-        "hint": "Starts with str-.",
-        "id": "q18",
-        "prompt": "Build the spelling word that means 'not familiar' or 'odd'.",
-        "subject": "Spelling"
-      },
-      {
-        "answer": "shred",
-        "choices": [],
-        "difficulty": "medium",
-        "explanation": "Shred is a basic spelling word this week.",
-        "format": "word_build",
-        "hint": "Starts with shr-.",
-        "id": "q19",
-        "prompt": "Build the spelling word that means to tear into thin strips.",
-        "subject": "Spelling"
-      },
-      {
-        "answer": "split",
-        "choices": [],
-        "difficulty": "medium",
-        "explanation": "Split is a basic spelling word this week.",
-        "format": "word_build",
-        "hint": "Starts with spl-.",
-        "id": "q20",
-        "prompt": "Build the spelling word that means to divide into two parts.",
+        "prompt": "Which word has a 3-letter blend?",
         "subject": "Spelling"
       }
     ],
@@ -349,18 +271,18 @@
       "Nut Roll pick up on Tuesday Nov. 17",
       "Trimester 1 Book Project due Thursday Nov. 19",
       "Pretzel day is Thursday Nov. 19",
-      "Keep Reading log and Behavior chart in the HW folder",
-      "Return everything in the HW folder"
+      "12:00 Dismissal on Wednesday Nov. 25",
+      "Keep Reading log and Behavior chart in the HW folder"
     ],
     "schemaVersion": 2,
-    "sourceCapturedAt": "2026-11-16T16:20:22.621Z",
-    "sourceHash": "9f9e08fb12cb844456b1b35d6eb38237ef8c165839bc6b698837aeb1ea55b86b",
+    "sourceCapturedAt": "2026-11-17T00:05:21.046Z",
+    "sourceHash": "cf60cebf35ff9e935fc034e61efcb30428330a6d95abf718c93c4983b7590e67",
     "sourceSufficient": true,
     "subjects": [
       {
         "studyNotes": [
           "God gave us the 10 Commandments to follow so we can love God and others.",
-          "The 1st Great Commandment: You shall love the Lord your God with all your heart, with all your soul, with all your mind, and with all your strength.",
+          "The 1st Great Commandment: You shall love the Lord your God with all your heart, soul, mind, and strength.",
           "Ways to pray include traditional prayer, talking to God, songs, Mass, the Bible, and Psalms.",
           "Commandment 1: Pray and put God first.",
           "Commandment 2: Say God's name with love.",
@@ -373,20 +295,23 @@
           "The 10 Commandments",
           "The 1st Great Commandment",
           "Ways to pray",
-          "Story of Moses and the Burning Bush"
+          "Story of Moses and the Burning Bush",
+          "Commandments 1-3"
         ]
       },
       {
         "studyNotes": [
           "Sight words to practice: pull, wash, under, food, almost, saw, out, sky, buy, straight.",
-          "Prefixes to study: re-, un-, and dis-."
+          "Word structure focus: prefixes re-, un-, and dis-."
         ],
         "subject": "Reading",
         "topics": [
-          "Story: The Boy Who Cried Wolf",
-          "Phonics: soft c and soft g",
-          "Reading Comprehension: predictions, character traits, plot/sequence of events",
-          "Word Structure: prefixes (re-, un-, dis-)"
+          "The Boy Who Cried Wolf",
+          "Soft c and soft g",
+          "Predictions",
+          "Character traits",
+          "Plot and sequence of events",
+          "Prefixes (re-, un-, dis-)"
         ]
       },
       {
@@ -399,21 +324,12 @@
         "topics": [
           "3 letter blends"
         ]
-      },
-      {
-        "studyNotes": [
-          "Lessons 1-5 cover 2 digit math with and without regrouping."
-        ],
-        "subject": "Math",
-        "topics": [
-          "2 digit addition with and without regrouping"
-        ]
       }
     ],
-    "summary": "This week, Grade 2 students are exploring the 10 Commandments and the story of Moses in Religion, reading 'The Boy Who Cried Wolf', and practicing three-letter blends in Spelling. The week concludes Trimester 1 with several assessments in Math, Grammar, and Phonics.",
+    "summary": "This week, students are exploring the story of 'The Boy Who Cried Wolf' in Reading, focusing on soft c and g sounds and 3-letter blends in Phonics. In Religion, the class is learning about the 10 Commandments and the story of Moses and the Burning Bush.",
     "vocabulary": [
       {
-        "meaning": "Tales or accounts of events, which can be real or imaginary",
+        "meaning": "Tales or accounts of imaginary or real people and events",
         "subject": "Reading",
         "term": "stories"
       },
@@ -433,7 +349,7 @@
         "term": "lessons"
       },
       {
-        "meaning": "A large meal, typically one in celebration",
+        "meaning": "A large meal, typically one in celebration of something",
         "subject": "Reading",
         "term": "feast"
       },
