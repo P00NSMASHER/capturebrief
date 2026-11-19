@@ -4,63 +4,74 @@
     "intervalHours": 4
   },
   "publicationStatus": "current",
-  "sourceCapturedAt": "2026-11-18T16:20:22.237Z",
+  "sourceCapturedAt": "2026-11-19T20:50:21.417Z",
   "pack": {
     "gaps": [],
     "homework": [
       {
         "day": "Daily",
-        "due": "Daily",
+        "due": "Not specified",
         "subject": "Spelling",
         "task": "Spelling Choice Board activity"
       },
       {
         "day": "Daily",
-        "due": "Daily",
+        "due": "Not specified",
+        "subject": "Math",
+        "task": "Math pg. 62"
+      },
+      {
+        "day": "Daily",
+        "due": "Not specified",
         "subject": "Reading",
         "task": "Read and update Reading log"
       }
     ],
     "importantDates": [
       {
-        "date": "2026-11-19",
-        "kind": "project",
+        "date": "Thursday Nov. 19",
+        "kind": "deadline",
         "label": "Trimester 1 Book Project due"
       },
       {
-        "date": "2026-11-19",
-        "kind": "event",
-        "label": "Pretzel Day"
-      },
-      {
-        "date": "2026-11-20",
+        "date": "Friday Nov. 20",
         "kind": "event",
         "label": "End of Trimester 1"
       },
       {
-        "date": "2026-11-23",
+        "date": "Monday Nov. 23",
         "kind": "event",
         "label": "Start of Trimester 2"
       },
       {
-        "date": "2026-11-24",
+        "date": "Tuesday Nov. 24",
         "kind": "event",
         "label": "DDD for SPCA"
       },
       {
-        "date": "2026-11-24",
+        "date": "Tuesday Nov. 24",
         "kind": "test",
         "label": "Math Test (2 digit addition)"
       },
       {
-        "date": "2026-11-25",
+        "date": "Wednesday Nov. 25",
         "kind": "event",
-        "label": "12:00 Dismissal / Report Cards"
+        "label": "12:00 Dismissal and Report Cards"
       },
       {
-        "date": "2026-11-26",
+        "date": "Thursday Nov. 26-Monday Nov. 30",
         "kind": "holiday",
-        "label": "Thanksgiving Break"
+        "label": "Thanksgiving Break (No School)"
+      },
+      {
+        "date": "Tuesday Dec. 1",
+        "kind": "event",
+        "label": "School Resumes"
+      },
+      {
+        "date": "Tuesday Dec. 1",
+        "kind": "deadline",
+        "label": "Cash raffle tickets/money due"
       }
     ],
     "questions": [
@@ -69,7 +80,8 @@
         "choices": [
           "So we can love God and others",
           "To help us learn to read",
-          "To tell us what to eat"
+          "To tell us what to eat",
+          "To help us find our way home"
         ],
         "difficulty": "easy",
         "explanation": "God gave us the 10 Commandments to follow so we can love God and others.",
@@ -91,15 +103,15 @@
         "subject": "Religion"
       },
       {
-        "answer": "All of the above",
+        "answer": "All of these",
         "choices": [
           "Talking to God",
           "Singing songs",
           "Reading the Bible",
-          "All of the above"
+          "All of these"
         ],
         "difficulty": "easy",
-        "explanation": "There are many ways to pray: traditional, talking to God, songs, Mass, Bible, and Psalms.",
+        "explanation": "Ways to pray include traditional prayer, talking to God, songs, Mass, the Bible, and Psalms.",
         "format": "multiple_choice",
         "hint": "There are many ways to communicate with God.",
         "id": "q3",
@@ -110,9 +122,9 @@
         "answer": "Moses",
         "choices": [],
         "difficulty": "medium",
-        "explanation": "The Bible includes the story of Moses and the Burning Bush.",
+        "explanation": "The source mentions the story of Moses and the Burning Bush.",
         "format": "short_answer",
-        "hint": "His name starts with M.",
+        "hint": "He led the people out of Egypt.",
         "id": "q4",
         "prompt": "Who did God speak to through a burning bush?",
         "subject": "Religion"
@@ -122,10 +134,11 @@
         "choices": [
           "Say God's name with love",
           "Go to Mass",
-          "Put God first"
+          "Put God first",
+          "Help our neighbors"
         ],
         "difficulty": "medium",
-        "explanation": "The 2nd Commandment teaches us to say God's name with love.",
+        "explanation": "The 2nd Commandment is to say God's name with love.",
         "format": "multiple_choice",
         "hint": "It is about how we use God's name.",
         "id": "q5",
@@ -133,216 +146,220 @@
         "subject": "Religion"
       },
       {
-        "answer": "un- and dis-",
+        "answer": "Go to Mass",
         "choices": [
-          "un- and dis-",
-          "re-",
-          "pre-"
+          "Go to Mass",
+          "Pray every day",
+          "Be kind to animals",
+          "Listen to our parents"
         ],
         "difficulty": "medium",
-        "explanation": "The prefixes un- and dis- are used to change word meanings, often to the opposite.",
+        "explanation": "The 3rd Commandment is to go to Mass.",
         "format": "multiple_choice",
-        "hint": "Think about words like 'un' and 'dis'.",
+        "hint": "It involves a weekly church service.",
         "id": "q6",
-        "prompt": "Which prefix means 'not' or 'the opposite of' in words like 'unhappy' or 'dislike'?",
-        "subject": "Reading"
+        "prompt": "What does the 3rd Commandment tell us to do?",
+        "subject": "Religion"
       },
       {
-        "answer": "straight",
+        "answer": "The Boy Who Cried Wolf",
         "choices": [
-          "straight",
-          "circle",
-          "green"
+          "The Boy Who Cried Wolf",
+          "The Three Little Pigs",
+          "Little Red Riding Hood",
+          "Goldilocks"
         ],
         "difficulty": "easy",
-        "explanation": "Straight is one of the sight words listed for this week.",
+        "explanation": "The stories for the week are 'The Boy Who Cried Wolf' and 'Wolf! Wolf!'.",
         "format": "multiple_choice",
-        "hint": "It means without a bend.",
+        "hint": "It is about a boy and a wolf.",
         "id": "q7",
-        "prompt": "Which of these is a sight word for this week?",
+        "prompt": "Which story are we reading this week?",
         "subject": "Reading"
       },
       {
-        "answer": "nail",
+        "answer": "believe",
         "choices": [],
-        "difficulty": "easy",
-        "explanation": "Nail is a basic spelling word with the long a sound.",
+        "difficulty": "medium",
+        "explanation": "Believe is one of the vocabulary words for the week.",
         "format": "word_build",
-        "hint": "n-a-i-l",
+        "hint": "Starts with 'b'.",
         "id": "q8",
-        "prompt": "Build the word that means a metal fastener used in wood.",
-        "subject": "Spelling"
-      },
-      {
-        "answer": "sleigh",
-        "choices": [],
-        "difficulty": "hard",
-        "explanation": "Sleigh is a spelling word where 'eigh' makes the long a sound.",
-        "format": "word_build",
-        "hint": "s-l-e-i-g-h",
-        "id": "q9",
-        "prompt": "Build the word for a vehicle used in the snow, often pulled by reindeer.",
-        "subject": "Spelling"
-      },
-      {
-        "answer": "steak",
-        "choices": [
-          "steak",
-          "stake",
-          "stak"
-        ],
-        "difficulty": "medium",
-        "explanation": "Steak is the correct spelling for the food item in this week's list.",
-        "format": "multiple_choice",
-        "hint": "It uses the 'ea' spelling for long a.",
-        "id": "q10",
-        "prompt": "Which word is spelled correctly for a piece of meat?",
-        "subject": "Spelling"
-      },
-      {
-        "answer": "true",
-        "choices": [],
-        "difficulty": "easy",
-        "explanation": "Pull and wash are both included in the sight word list.",
-        "format": "true_false",
-        "hint": "Check the sight word list.",
-        "id": "q11",
-        "prompt": "The words 'pull' and 'wash' are sight words this week.",
+        "prompt": "Build the vocabulary word that means 'to accept something as true'.",
         "subject": "Reading"
       },
       {
-        "answer": "Again",
+        "answer": "Not",
         "choices": [
-          "Again",
           "Not",
-          "Before"
+          "Again",
+          "Before",
+          "Very"
         ],
         "difficulty": "medium",
-        "explanation": "The prefix 're-' means to do something again.",
+        "explanation": "The prefix 'un-' is studied this week and means 'not'.",
         "format": "multiple_choice",
-        "hint": "Think of 'redo' or 'rewrite'.",
-        "id": "q12",
-        "prompt": "What does the prefix 're-' usually mean?",
+        "hint": "Think of words like 'unhappy' or 'untrue'.",
+        "id": "q9",
+        "prompt": "What does the prefix 'un-' usually mean?",
+        "subject": "Reading"
+      },
+      {
+        "answer": "City",
+        "choices": [
+          "Cat",
+          "City",
+          "Cake",
+          "Cup"
+        ],
+        "difficulty": "medium",
+        "explanation": "The phonics focus is soft 'c' and soft 'g'.",
+        "format": "multiple_choice",
+        "hint": "A soft 'c' sounds like an 's'.",
+        "id": "q10",
+        "prompt": "Which word has a soft 'c' sound?",
+        "subject": "Reading"
+      },
+      {
+        "answer": "Giraffe",
+        "choices": [
+          "Goat",
+          "Giraffe",
+          "Game",
+          "Gum"
+        ],
+        "difficulty": "medium",
+        "explanation": "The phonics focus is soft 'c' and soft 'g'.",
+        "format": "multiple_choice",
+        "hint": "A soft 'g' sounds like a 'j'.",
+        "id": "q11",
+        "prompt": "Which word has a soft 'g' sound?",
         "subject": "Reading"
       },
       {
         "answer": "train",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "Train is a spelling word using 'ai' for the long a sound.",
+        "explanation": "Train is a basic spelling word for the week.",
         "format": "word_build",
-        "hint": "t-r-a-i-n",
-        "id": "q13",
-        "prompt": "Build the word that means a path for a train.",
+        "hint": "It has a long 'a' sound spelled with 'ai'.",
+        "id": "q12",
+        "prompt": "Spell the word for a vehicle that travels on tracks.",
         "subject": "Spelling"
-      },
-      {
-        "answer": "strange",
-        "choices": [
-          "strange",
-          "good",
-          "goat"
-        ],
-        "difficulty": "medium",
-        "explanation": "In the word 'strange', the 'g' makes a soft sound.",
-        "format": "multiple_choice",
-        "hint": "Soft g sounds like 'j'.",
-        "id": "q14",
-        "prompt": "Which word has a soft 'g' sound?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "face",
-        "choices": [
-          "scrape",
-          "cat",
-          "face"
-        ],
-        "difficulty": "medium",
-        "explanation": "Soft c sounds like 's', as in the word 'face' (though 'face' is not on the list, soft c is a phonics skill this week).",
-        "format": "multiple_choice",
-        "hint": "Soft c sounds like 's'.",
-        "id": "q15",
-        "prompt": "Which word has a soft 'c' sound?",
-        "subject": "Reading"
       },
       {
         "answer": "hay",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "Hay uses 'ay' to make the long a sound.",
+        "explanation": "Hay is a basic spelling word for the week.",
         "format": "word_build",
-        "hint": "h-a-y",
-        "id": "q16",
-        "prompt": "Build the word for dried grass used as animal feed.",
+        "hint": "It has a long 'a' sound spelled with 'ay'.",
+        "id": "q13",
+        "prompt": "Spell the word for dried grass used as animal feed.",
         "subject": "Spelling"
       },
       {
-        "answer": "Very good",
-        "choices": [
-          "Very good",
-          "Very bad",
-          "Salty"
-        ],
-        "difficulty": "easy",
-        "explanation": "Delicious means highly pleasing to the senses, especially taste.",
-        "format": "multiple_choice",
-        "hint": "It is a positive word for food.",
-        "id": "q17",
-        "prompt": "If something is 'delicious', how does it taste?",
-        "subject": "Reading"
+        "answer": "sleigh",
+        "choices": [],
+        "difficulty": "hard",
+        "explanation": "Sleigh is a basic spelling word for the week.",
+        "format": "word_build",
+        "hint": "It has a long 'a' sound spelled with 'eigh'.",
+        "id": "q14",
+        "prompt": "Spell the word for a sled pulled by animals.",
+        "subject": "Spelling"
       },
       {
-        "answer": "A large meal",
+        "answer": "often",
         "choices": [
-          "A large meal",
-          "A small snack",
-          "A type of drink"
-        ],
-        "difficulty": "easy",
-        "explanation": "A feast is a large meal, typically a celebratory one.",
-        "format": "multiple_choice",
-        "hint": "It is usually for a celebration.",
-        "id": "q18",
-        "prompt": "What is a 'feast'?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "3",
-        "choices": [
-          "3",
-          "1",
-          "2"
+          "often",
+          "steak",
+          "prey",
+          "main"
         ],
         "difficulty": "medium",
-        "explanation": "Commandment 3 is to go to Mass.",
+        "explanation": "Often is listed under High Frequency Words.",
         "format": "multiple_choice",
-        "hint": "It is the third one listed.",
-        "id": "q19",
-        "prompt": "Which commandment tells us to go to Mass?",
-        "subject": "Religion"
+        "hint": "It means many times.",
+        "id": "q15",
+        "prompt": "Which word is a High Frequency word this week?",
+        "subject": "Spelling"
       },
       {
-        "answer": "stay",
+        "answer": "true",
+        "choices": [],
+        "difficulty": "medium",
+        "explanation": "Both 'break' and 'steak' use 'ea' to make the long 'a' sound in this list.",
+        "format": "true_false",
+        "hint": "Look at the middle letters.",
+        "id": "q16",
+        "prompt": "The words 'break' and 'steak' have the same long 'a' vowel pattern.",
+        "subject": "Spelling"
+      },
+      {
+        "answer": "2 digit addition",
+        "choices": [
+          "2 digit addition",
+          "Subtraction",
+          "Telling time",
+          "Fractions"
+        ],
+        "difficulty": "easy",
+        "explanation": "The test page lists a Math test on 2 digit addition for Nov. 24.",
+        "format": "multiple_choice",
+        "hint": "It involves adding numbers like 25 + 14.",
+        "id": "q17",
+        "prompt": "What is the topic of the Math test on Tuesday, Nov. 24?",
+        "subject": "Math"
+      },
+      {
+        "answer": "under",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "Stay is a spelling word with the 'ay' long a sound.",
+        "explanation": "Under is one of the sight words for the week.",
         "format": "word_build",
-        "hint": "s-t-a-y",
+        "hint": "Starts with 'u'.",
+        "id": "q18",
+        "prompt": "Spell the sight word that means the opposite of 'over'.",
+        "subject": "Reading"
+      },
+      {
+        "answer": "wash",
+        "choices": [],
+        "difficulty": "easy",
+        "explanation": "Wash is one of the sight words for the week.",
+        "format": "word_build",
+        "hint": "Starts with 'w'.",
+        "id": "q19",
+        "prompt": "Spell the sight word that means to clean with water.",
+        "subject": "Reading"
+      },
+      {
+        "answer": "To grab quickly",
+        "choices": [
+          "To grab quickly",
+          "To walk slowly",
+          "To sing loudly",
+          "To sleep"
+        ],
+        "difficulty": "medium",
+        "explanation": "Snatch means to quickly seize in a rude or eager way.",
+        "format": "multiple_choice",
+        "hint": "It is a fast action.",
         "id": "q20",
-        "prompt": "Build the word that means to remain in one place.",
-        "subject": "Spelling"
+        "prompt": "What does the vocabulary word 'snatch' mean?",
+        "subject": "Reading"
       }
     ],
     "reminders": [
-      "Trimester 1 Book Project is due Thursday, Nov. 19",
-      "Keep Reading log & Behavior chart in the HW folder",
-      "Return everything in the HW folder",
-      "Cash raffle tickets/money due Tuesday, Dec. 1"
+      "Trimester 1 Book Project due Thursday Nov. 19",
+      "DDD for SPCA on Tuesday Nov. 24",
+      "Cash raffle tickets/money due Tuesday Dec. 1",
+      "Keep Reading log and Behavior chart in the HW folder"
     ],
     "schemaVersion": 2,
-    "sourceCapturedAt": "2026-11-18T16:20:22.237Z",
-    "sourceHash": "a7c1794da0379ffc4deab8a11e023cbe558f15bc87760b065184d7cc41507119",
+    "sourceCapturedAt": "2026-11-19T20:50:21.417Z",
+    "sourceHash": "a437be9cedba34f64a76647d9644b4117417513d116c606a09b18bfc63f7747a",
     "sourceSufficient": true,
     "subjects": [
       {
@@ -360,20 +377,20 @@
           "Chapter 5: Jesus Shows Us How to Love God our Father",
           "The 10 Commandments",
           "The 1st Great Commandment",
-          "Prayer",
+          "Ways to Pray",
           "Story of Moses and the Burning Bush"
         ]
       },
       {
         "studyNotes": [
-          "Focus on identifying character traits and the sequence of events in a plot.",
-          "Use text and picture clues to make predictions.",
-          "Practice identifying soft c and soft g sounds.",
-          "Learn how prefixes like re-, un-, and dis- change word meanings."
+          "Sight words to practice: pull, wash, under, food, almost, saw, out, sky, buy, straight.",
+          "Vocabulary focus: stories, delicious, fond, lessons, feast, snatch, remarkable, believe.",
+          "Phonics focus: soft c and soft g sounds.",
+          "Word structure focus: prefixes re-, un-, and dis-."
         ],
         "subject": "Reading",
         "topics": [
-          "Stories: The Boy Who Cried Wolf and Wolf! Wolf!",
+          "Stories: 'The Boy Who Cried Wolf' and 'Wolf! Wolf!'",
           "Phonics: soft c and soft g",
           "Reading Comprehension: predictions, character traits, plot/sequence of events, text & picture clues",
           "Word Structure: prefixes (re-, un-, dis-)"
@@ -381,7 +398,9 @@
       },
       {
         "studyNotes": [
-          "Long a can be spelled in various ways: ai (nail, train, main), ay (hay, stay), ea (break, steak), and eigh (weigh, sleigh, prey)."
+          "Basic words: nail, train, main, hay, stay, break, steak, weigh, sleigh, prey.",
+          "Review words: scrape, strange.",
+          "High Frequency words: good, often, two."
         ],
         "subject": "Spelling",
         "topics": [
@@ -390,23 +409,18 @@
       },
       {
         "studyNotes": [
-          "Prepare for the upcoming test on 2-digit addition."
+          "Upcoming test on 2-digit addition on Tuesday, Nov. 24."
         ],
         "subject": "Math",
         "topics": [
-          "2 digit addition"
+          "2-digit addition"
         ]
       }
     ],
-    "summary": "This week, students are exploring the 10 Commandments and the story of Moses in Religion, while focusing on long 'a' sounds and soft 'c' and 'g' in Language Arts. The class is also reading 'The Boy Who Cried Wolf' and 'Wolf! Wolf!' to practice character traits and plot sequencing.",
+    "summary": "This week, students are concluding Trimester 1 with a focus on the 10 Commandments in Religion, long 'a' vowel patterns in Spelling, and stories about wolves in Reading. The curriculum also covers soft 'c' and 'g' phonics, prefixes, and 2-digit addition in Math.",
     "vocabulary": [
       {
-        "meaning": "Tales or accounts of events, which can be real or imaginary",
-        "subject": "Reading",
-        "term": "stories"
-      },
-      {
-        "meaning": "Highly pleasing to the senses, especially taste",
+        "meaning": "Highly pleasant to the taste",
         "subject": "Reading",
         "term": "delicious"
       },
@@ -416,17 +430,12 @@
         "term": "fond"
       },
       {
-        "meaning": "Things to be learned or studied",
-        "subject": "Reading",
-        "term": "lessons"
-      },
-      {
-        "meaning": "A large meal, typically a celebratory one",
+        "meaning": "A large meal, typically one in celebration of something",
         "subject": "Reading",
         "term": "feast"
       },
       {
-        "meaning": "To quickly seize something in a rude or eager way",
+        "meaning": "To quickly seize in a rude or eager way",
         "subject": "Reading",
         "term": "snatch"
       },
@@ -441,6 +450,6 @@
         "term": "believe"
       }
     ],
-    "weekLabel": "Week of November 18, 2026"
+    "weekLabel": "Week of November 19, 2026"
   }
 }
