@@ -4,34 +4,18 @@
     "intervalHours": 4
   },
   "publicationStatus": "current",
-  "sourceCapturedAt": "2026-11-24T00:05:21.073Z",
+  "sourceCapturedAt": "2026-11-24T16:15:17.174Z",
   "pack": {
     "gaps": [],
     "homework": [
       {
         "day": "Daily",
-        "due": "Not specified",
-        "subject": "Math",
-        "task": "Math paper"
-      },
-      {
-        "day": "Daily",
-        "due": "Not specified",
+        "due": "Daily",
         "subject": "Reading",
         "task": "Read and complete Reading log"
       }
     ],
     "importantDates": [
-      {
-        "date": "Tuesday Nov. 24",
-        "kind": "event",
-        "label": "DDD for SPCA"
-      },
-      {
-        "date": "Tuesday Nov. 24",
-        "kind": "test",
-        "label": "Math Test (2 digit addition)"
-      },
       {
         "date": "Wednesday Nov. 25",
         "kind": "schedule",
@@ -39,344 +23,378 @@
       },
       {
         "date": "Wednesday Nov. 25",
-        "kind": "event",
+        "kind": "academic",
         "label": "Report Cards"
       },
       {
         "date": "Thursday Nov. 26-Monday Nov. 30",
         "kind": "holiday",
-        "label": "Thanksgiving Break - No School"
+        "label": "Thanksgiving Break (No School)"
+      },
+      {
+        "date": "Tuesday Dec. 1",
+        "kind": "schedule",
+        "label": "School Resumes"
+      },
+      {
+        "date": "Tuesday Dec. 1",
+        "kind": "deadline",
+        "label": "Cash raffle tickets/money due"
+      },
+      {
+        "date": "Tuesday Dec. 8",
+        "kind": "deadline",
+        "label": "Scholastic book orders due"
       }
     ],
     "questions": [
       {
-        "answer": "So we can love God and others",
+        "answer": "The 10 Commandments",
         "choices": [
-          "So we can love God and others",
-          "To help us learn to read",
-          "To tell us what to eat"
+          "The 10 Commandments",
+          "A map",
+          "A storybook",
+          "A list of names"
         ],
         "difficulty": "easy",
         "explanation": "God gave us the 10 Commandments to follow so we can love God and others.",
         "format": "multiple_choice",
-        "hint": "It is about showing love.",
+        "hint": "These are rules to follow.",
         "id": "q1",
-        "prompt": "Why did God give us the 10 Commandments?",
+        "prompt": "What did God give us so we can love God and others?",
         "subject": "Religion"
       },
       {
         "answer": "true",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "The 1st Great Commandment is: 'You shall love the Lord your God with all your heart, with all your soul, with all your mind, and with all your strength.'",
+        "explanation": "The 1st Great Commandment says to love God with all your heart, soul, mind, and strength.",
         "format": "true_false",
-        "hint": "This is the first and greatest commandment.",
+        "hint": "Think about the Great Commandment.",
         "id": "q2",
-        "prompt": "The 1st Great Commandment says you should love God with all your heart, soul, mind, and strength.",
+        "prompt": "The 1st Great Commandment says you should love God with all your heart.",
         "subject": "Religion"
       },
       {
-        "answer": "All of these",
+        "answer": "Commandment 2",
         "choices": [
-          "Talking to God",
-          "Singing songs",
-          "Reading the Bible",
-          "All of these"
+          "Commandment 1",
+          "Commandment 2",
+          "Commandment 3",
+          "Commandment 4"
         ],
-        "difficulty": "easy",
-        "explanation": "There are many ways to pray: traditional, talking to God, songs, Mass, Bible, and Psalms.",
-        "format": "multiple_choice",
-        "hint": "There are many ways to talk to and honor God.",
-        "id": "q3",
-        "prompt": "Which of these is a way to pray?",
-        "subject": "Religion"
-      },
-      {
-        "answer": "Moses",
-        "choices": [],
         "difficulty": "medium",
-        "explanation": "The Bible tells the story of Moses and the Burning Bush.",
-        "format": "short_answer",
-        "hint": "His name starts with M.",
-        "id": "q4",
-        "prompt": "Who did God speak to through a burning bush?",
+        "explanation": "Commandment 2 is to say God's name with love.",
+        "format": "multiple_choice",
+        "hint": "It is one of the first three.",
+        "id": "q3",
+        "prompt": "Which commandment tells us to say God's name with love?",
         "subject": "Religion"
       },
       {
-        "answer": "Pray and put God first",
+        "answer": "Moses and the Burning Bush",
         "choices": [
-          "Pray and put God first",
-          "Go to sleep early",
-          "Clean our rooms"
+          "Noah's Ark",
+          "Moses and the Burning Bush",
+          "David and Goliath",
+          "The Good Samaritan"
         ],
         "difficulty": "easy",
-        "explanation": "The 1st Commandment is to pray and put God first.",
+        "explanation": "The Religion curriculum includes the story of Moses and the Burning Bush.",
         "format": "multiple_choice",
-        "hint": "It is about who should be most important in our lives.",
-        "id": "q5",
-        "prompt": "What does the 1st Commandment tell us to do?",
+        "hint": "It involves a bush that does not burn up.",
+        "id": "q4",
+        "prompt": "Which story are we studying in Religion?",
         "subject": "Religion"
       },
       {
-        "answer": "true",
-        "choices": [],
+        "answer": "Watching sheep",
+        "choices": [
+          "Planting seeds",
+          "Watching sheep",
+          "Building a house",
+          "Fishing"
+        ],
         "difficulty": "easy",
-        "explanation": "The 2nd Commandment teaches us to say God's name with love.",
-        "format": "true_false",
-        "hint": "This is part of the commandments.",
+        "explanation": "The story is about a boy who watches sheep and falsely cries 'Wolf!'.",
+        "format": "multiple_choice",
+        "hint": "Think about what a shepherd boy does.",
+        "id": "q5",
+        "prompt": "In the story 'The Boy Who Cried Wolf', what is the boy doing?",
+        "subject": "Reading"
+      },
+      {
+        "answer": "re-",
+        "choices": [
+          "-ful",
+          "re-",
+          "soft c",
+          "ng"
+        ],
+        "difficulty": "medium",
+        "explanation": "The prefixes studied are re-, un-, and dis-.",
+        "format": "multiple_choice",
+        "hint": "A prefix goes at the beginning of a word.",
         "id": "q6",
-        "prompt": "We should say God's name with love.",
-        "subject": "Religion"
+        "prompt": "Which of these is a prefix?",
+        "subject": "Reading"
+      },
+      {
+        "answer": "City",
+        "choices": [
+          "Cat",
+          "Cake",
+          "City",
+          "Cup"
+        ],
+        "difficulty": "medium",
+        "explanation": "City uses the soft c sound.",
+        "format": "multiple_choice",
+        "hint": "Soft c sounds like 's'.",
+        "id": "q7",
+        "prompt": "Which word has a soft c sound?",
+        "subject": "Reading"
+      },
+      {
+        "answer": "Without",
+        "choices": [
+          "Full of",
+          "Without",
+          "Again",
+          "Before"
+        ],
+        "difficulty": "medium",
+        "explanation": "The suffix -less means without.",
+        "format": "multiple_choice",
+        "hint": "Think of the word 'homeless'.",
+        "id": "q8",
+        "prompt": "What does the suffix '-less' mean?",
+        "subject": "Reading"
       },
       {
         "answer": "nail",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "Nail is a basic spelling word for this week using the 'ai' spelling for long a.",
+        "explanation": "Nail is a basic spelling word for the long a sound.",
         "format": "word_build",
-        "hint": "n-a-i-l",
-        "id": "q7",
-        "prompt": "Build the word for a metal fastener used in wood that has the long 'a' sound.",
-        "subject": "Spelling"
-      },
-      {
-        "answer": "train",
-        "choices": [],
-        "difficulty": "easy",
-        "explanation": "Train uses the 'ai' spelling for the long a sound.",
-        "format": "word_build",
-        "hint": "t-r-a-i-n",
-        "id": "q8",
-        "prompt": "Build the word for a vehicle that travels on tracks.",
-        "subject": "Spelling"
-      },
-      {
-        "answer": "hay",
-        "choices": [],
-        "difficulty": "easy",
-        "explanation": "Hay uses the 'ay' spelling for the long a sound.",
-        "format": "word_build",
-        "hint": "h-a-y",
+        "hint": "Starts with 'n'.",
         "id": "q9",
-        "prompt": "Build the word for dried grass used as animal feed.",
-        "subject": "Spelling"
-      },
-      {
-        "answer": "break",
-        "choices": [
-          "break",
-          "nail",
-          "stay"
-        ],
-        "difficulty": "medium",
-        "explanation": "Break and steak are words where 'ea' makes the long a sound.",
-        "format": "multiple_choice",
-        "hint": "It is something you might do to a glass if you drop it.",
-        "id": "q10",
-        "prompt": "Which word uses 'ea' to make the long 'a' sound?",
+        "prompt": "Build the spelling word that means a metal fastener for wood.",
         "subject": "Spelling"
       },
       {
         "answer": "sleigh",
         "choices": [],
         "difficulty": "hard",
-        "explanation": "Sleigh uses the 'eigh' spelling for the long a sound.",
+        "explanation": "Sleigh is a spelling word for the long a sound.",
         "format": "word_build",
-        "hint": "s-l-e-i-g-h",
-        "id": "q11",
-        "prompt": "Build the word for a sled pulled by reindeer.",
+        "hint": "Uses 'eigh' for the long a sound.",
+        "id": "q10",
+        "prompt": "Build the spelling word that is a vehicle used for traveling over snow.",
         "subject": "Spelling"
       },
       {
-        "answer": "un-",
-        "choices": [
-          "un-",
-          "re-",
-          "dis-"
-        ],
-        "difficulty": "medium",
-        "explanation": "The prefix 'un-' is one of the word structures being studied this week.",
-        "format": "multiple_choice",
-        "hint": "It is the beginning of the word.",
-        "id": "q12",
-        "prompt": "Which prefix means 'not' or 'opposite of' in the word 'unhappy'?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "-ful",
-        "choices": [
-          "-ful",
-          "-less",
-          "re-"
-        ],
-        "difficulty": "medium",
-        "explanation": "The suffix '-ful' means full of, while '-less' means without.",
-        "format": "multiple_choice",
-        "hint": "Think of the word 'helpful'.",
-        "id": "q13",
-        "prompt": "Which suffix means 'full of'?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "true",
+        "answer": "steak",
         "choices": [],
+        "difficulty": "medium",
+        "explanation": "Steak is a spelling word for the long a sound.",
+        "format": "word_build",
+        "hint": "Uses 'ea' for the long a sound.",
+        "id": "q11",
+        "prompt": "Build the spelling word that means a thick piece of meat.",
+        "subject": "Spelling"
+      },
+      {
+        "answer": "weigh",
+        "choices": [],
+        "difficulty": "medium",
+        "explanation": "Weigh is a spelling word for the long a sound.",
+        "format": "word_build",
+        "hint": "Ends in 'eigh'.",
+        "id": "q12",
+        "prompt": "Build the spelling word that means to find out how heavy something is.",
+        "subject": "Spelling"
+      },
+      {
+        "answer": "Almost",
+        "choices": [
+          "Wolf",
+          "Almost",
+          "Commandment",
+          "Bush"
+        ],
         "difficulty": "easy",
-        "explanation": "Digraphs like ph, sh, and th are part of this week's phonics lessons.",
-        "format": "true_false",
-        "hint": "A digraph is two letters that make one sound.",
-        "id": "q14",
-        "prompt": "The letters 'ph' in the word 'phone' are an example of a digraph.",
+        "explanation": "Almost is listed as one of the sight words for this unit.",
+        "format": "multiple_choice",
+        "hint": "It is on the sight word list.",
+        "id": "q13",
+        "prompt": "Which word is a sight word?",
         "subject": "Reading"
       },
       {
-        "answer": "To grab it quickly",
+        "answer": "ph",
         "choices": [
-          "To grab it quickly",
-          "To look at it",
-          "To give it away"
+          "ch",
+          "sh",
+          "ph",
+          "th"
         ],
         "difficulty": "easy",
+        "explanation": "The digraph 'ph' is one of the phonics skills being studied.",
+        "format": "multiple_choice",
+        "hint": "Look at the first two letters.",
+        "id": "q14",
+        "prompt": "Which digraph is found in the word 'phone'?",
+        "subject": "Reading"
+      },
+      {
+        "answer": "Singing songs",
+        "choices": [
+          "Singing songs",
+          "Sleeping",
+          "Running",
+          "Eating"
+        ],
+        "difficulty": "easy",
+        "explanation": "Ways to pray include traditional prayer, talking to God, songs, Mass, Bible, and Psalms.",
+        "format": "multiple_choice",
+        "hint": "Think about how we talk to God.",
+        "id": "q15",
+        "prompt": "Which of these is a way to pray?",
+        "subject": "Religion"
+      },
+      {
+        "answer": "To seize quickly",
+        "choices": [
+          "To give away",
+          "To seize quickly",
+          "To look at",
+          "To sleep"
+        ],
+        "difficulty": "medium",
         "explanation": "Snatch means to quickly seize in a rude or eager way.",
         "format": "multiple_choice",
-        "hint": "It is a fast action.",
-        "id": "q15",
-        "prompt": "What does it mean to 'snatch' something?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "Worthy of attention",
-        "choices": [
-          "Worthy of attention",
-          "Very boring",
-          "Invisible"
-        ],
-        "difficulty": "medium",
-        "explanation": "Remarkable means worthy of attention or striking.",
-        "format": "multiple_choice",
-        "hint": "It is something you would notice.",
+        "hint": "It is a vocabulary word.",
         "id": "q16",
-        "prompt": "If something is 'remarkable', it is:",
-        "subject": "Reading"
-      },
-      {
-        "answer": "false",
-        "choices": [],
-        "difficulty": "easy",
-        "explanation": "Delicious means highly pleasing to the senses, especially taste.",
-        "format": "true_false",
-        "hint": "Think about your favorite food.",
-        "id": "q17",
-        "prompt": "The word 'delicious' means something tastes very bad.",
-        "subject": "Reading"
-      },
-      {
-        "answer": "face",
-        "choices": [
-          "face",
-          "cat",
-          "cup"
-        ],
-        "difficulty": "medium",
-        "explanation": "Soft 'c' sounds like /s/, as in 'face'.",
-        "format": "multiple_choice",
-        "hint": "A soft 'c' sounds like an 's'.",
-        "id": "q18",
-        "prompt": "Which word has a soft 'c' sound?",
-        "subject": "Reading"
-      },
-      {
-        "answer": "cage",
-        "choices": [
-          "cage",
-          "goat",
-          "gum"
-        ],
-        "difficulty": "medium",
-        "explanation": "Soft 'g' sounds like /j/, as in 'cage'.",
-        "format": "multiple_choice",
-        "hint": "A soft 'g' sounds like a 'j'.",
-        "id": "q19",
-        "prompt": "Which word has a soft 'g' sound?",
+        "prompt": "What does the word 'snatch' mean?",
         "subject": "Reading"
       },
       {
         "answer": "true",
         "choices": [],
         "difficulty": "easy",
-        "explanation": "The test page lists a Math test on Nov. 24 covering 2 digit addition.",
+        "explanation": "Character traits are part of the reading comprehension focus.",
         "format": "true_false",
-        "hint": "Check the test schedule.",
+        "hint": "Think about reading comprehension.",
+        "id": "q17",
+        "prompt": "A character trait is a clue about what a person in a story is like.",
+        "subject": "Reading"
+      },
+      {
+        "answer": "stay",
+        "choices": [],
+        "difficulty": "easy",
+        "explanation": "Stay is a basic spelling word for the long a sound.",
+        "format": "word_build",
+        "hint": "Ends in 'ay'.",
+        "id": "q18",
+        "prompt": "Build the spelling word that means the opposite of 'go'.",
+        "subject": "Spelling"
+      },
+      {
+        "answer": "Helpful",
+        "choices": [
+          "Helpful",
+          "Unkind",
+          "Redo",
+          "Dislike"
+        ],
+        "difficulty": "easy",
+        "explanation": "-ful is a suffix being studied.",
+        "format": "multiple_choice",
+        "hint": "Look for the ending.",
+        "id": "q19",
+        "prompt": "Which word has the suffix '-ful'?",
+        "subject": "Reading"
+      },
+      {
+        "answer": "Go to Mass",
+        "choices": [
+          "Pray",
+          "Go to Mass",
+          "Love your neighbor",
+          "Be kind"
+        ],
+        "difficulty": "medium",
+        "explanation": "Commandment 3 is to go to Mass.",
+        "format": "multiple_choice",
+        "hint": "It is about the day of rest.",
         "id": "q20",
-        "prompt": "The math test on Tuesday is about 2 digit addition.",
-        "subject": "Math"
+        "prompt": "What is the 3rd Commandment?",
+        "subject": "Religion"
       }
     ],
     "reminders": [
-      "Tuesday Nov. 24: DDD for SPCA",
-      "Wednesday Nov. 25: 12:00 Dismissal",
-      "Wednesday Nov. 25: Report Cards",
-      "Thursday Nov. 26-Monday Nov. 30: No School; Thanksgiving Break",
-      "Return Reading log and Behavior chart in the HW folder"
+      "Return everything in the HW folder",
+      "Cash raffle tickets and money are due Tuesday Dec. 1",
+      "Scholastic book orders are due Tuesday Dec. 8"
     ],
     "schemaVersion": 2,
-    "sourceCapturedAt": "2026-11-24T00:05:21.073Z",
-    "sourceHash": "7133cd00acbe81a7ba9e106f0197ce35fffa7b6f67ce8de98f707f20c1e80751",
+    "sourceCapturedAt": "2026-11-24T16:15:17.174Z",
+    "sourceHash": "072a802c64d27da8fc908e539f58ada965cb0656e91035ba51484b6b1bbc4f16",
     "sourceSufficient": true,
     "subjects": [
       {
         "studyNotes": [
           "God gave us the 10 Commandments to follow so we can love God and others.",
-          "The 1st Great Commandment is to love God with all your heart, soul, mind, and strength.",
+          "The 1st Great Commandment: You shall love the Lord your God with all your heart, with all your soul, with all your mind, and with all your strength.",
+          "Ways to pray include traditional prayer, talking to God, songs, Mass, the Bible, and Psalms.",
           "Commandment 1: Pray and put God first.",
           "Commandment 2: Say God's name with love.",
-          "Commandment 3: Go to Mass.",
-          "Ways to pray include traditional prayer, talking to God, songs, Mass, the Bible, and Psalms."
+          "Commandment 3: Go to Mass."
         ],
         "subject": "Religion",
         "topics": [
-          "The 10 Commandments",
           "The 1st Great Commandment",
-          "Moses and the Burning Bush",
+          "Story of Moses and the Burning Bush",
+          "Commandments 1-3",
           "Ways to pray"
         ]
       },
       {
         "studyNotes": [
-          "Reading comprehension focuses on making predictions and using text and picture clues.",
-          "Phonics practice includes soft c, soft g, and various digraphs.",
-          "Word structure study includes prefixes like re-, un-, and dis-, and suffixes like -less and -ful."
+          "Reading comprehension focuses on predictions, character traits, plot/sequence of events, and using text and picture clues.",
+          "Phonics skills include soft c, soft g, and digraphs like ch, tch, sh, ph, th, ng, and wh.",
+          "Word structure study includes prefixes re-, un-, and dis-, and suffixes -less and -ful."
         ],
-        "subject": "Reading and Phonics",
+        "subject": "Reading",
         "topics": [
-          "Stories: The Boy Who Cried Wolf and Wolf! Wolf!",
+          "The Boy Who Cried Wolf",
+          "Wolf! Wolf!",
           "Soft c and soft g",
           "Digraphs (ch, tch, sh, ph, th, ng, wh)",
           "Prefixes (re-, un-, dis-)",
           "Suffixes (-less, -ful)",
-          "Character traits and plot sequence"
+          "Character traits and plot"
         ]
       },
       {
         "studyNotes": [
-          "Long a can be spelled with ai (nail, train, main), ay (hay, stay), ea (break, steak), or eigh (weigh, sleigh)."
+          "Spelling words focus on different ways to spell the long a sound, including ai, ay, ea, ei, and eigh."
         ],
         "subject": "Spelling",
         "topics": [
-          "Long a vowel sounds"
-        ]
-      },
-      {
-        "studyNotes": [
-          "Review 2 digit addition for the test on Tuesday."
-        ],
-        "subject": "Math",
-        "topics": [
-          "2 digit addition"
+          "Long a vowel patterns"
         ]
       }
     ],
-    "summary": "This week, students are exploring the 10 Commandments and the story of Moses in Religion, while focusing on long 'a' spelling patterns and soft 'c' and 'g' sounds in Reading. The week is shortened by the Thanksgiving break, with a 12:00 dismissal on Wednesday and no school on Thursday or Friday.",
+    "summary": "This week, students are exploring the 1st Great Commandment and the story of Moses in Religion, while focusing on long 'a' vowel patterns in Spelling. In Reading, the class is studying fables like 'The Boy Who Cried Wolf' and practicing phonics including soft c, soft g, and various digraphs. Note the upcoming Thanksgiving break and early dismissal on Wednesday.",
     "vocabulary": [
+      {
+        "meaning": "Tales or accounts of imaginary or real people and events",
+        "subject": "Reading",
+        "term": "stories"
+      },
       {
         "meaning": "Highly pleasing to the senses, especially taste",
         "subject": "Reading",
@@ -413,6 +431,6 @@
         "term": "believe"
       }
     ],
-    "weekLabel": "Monday November 23, 2026"
+    "weekLabel": "Week of November 24, 2026"
   }
 }
